@@ -1,7 +1,7 @@
 from pandas import DataFrame, Series, set_option as set_pandas_options
 
 from .inp_helpers import InpSection, dataframe_to_inp_string
-from swmm_api.type_converter import type2str
+from .helpers.type_converter import type2str
 import yaml
 
 set_pandas_options("display.max_colwidth", 10000)

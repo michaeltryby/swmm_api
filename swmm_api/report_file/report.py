@@ -1,8 +1,6 @@
 import pandas as pd
 from io import StringIO
 
-from mp.helpers import timeit
-
 
 def get_item_in_line(line, item):
     return float([v.strip() for v in line.split()][item])

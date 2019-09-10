@@ -1,4 +1,3 @@
-from mp.helpers import OUTPUT_PATH
 from os import path
 from pandas import to_datetime, Timedelta
 from datetime import datetime
@@ -12,10 +11,11 @@ from swmm_api import read_inp_file, write_inp_file
 """
 
 if __name__ == '__main__':
+    from mp.helpers import OUTPUT_PATH
+
     # out = SwmmOutHandler('test.out')
     # print(out.to_frame())
     # exit()
-
 
     if 0:
         check()

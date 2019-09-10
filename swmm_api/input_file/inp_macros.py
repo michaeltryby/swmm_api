@@ -1,15 +1,15 @@
 from os import path, remove
 from warnings import warn
+from pandas import Series, DataFrame
 
-from swmm_api import swmm5_run
-from swmm_api.output_file.out import SwmmOutHandler
-from sww.libs.timeseries.io import parquet
+from ..run import swmm5_run
+from ..output_file.out import SwmmOutHandler
 from .inp_reader import read_inp_file
 from .inp_writer import write_inp_file, inp2string
-from swmm_api.type_converter import offset2delta
+from .helpers.type_converter import offset2delta
 from .inp_helpers import MyUserDict
-import networkx as nx
-from pandas import Series, DataFrame
+
+from sww.libs.timeseries.io import parquet
 
 
 class InpMacros(MyUserDict):
@@ -313,6 +313,7 @@ class InpMacros(MyUserDict):
             # print()
 
     def networkx(self, draw=True):  # TODO
+        import networkx as nx
         g = nx.Graph()
         for edge_kind in ['CONDUITS',
                           'WEIRS',

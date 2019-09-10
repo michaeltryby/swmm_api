@@ -1,11 +1,9 @@
 import re
 
 from .inp_sections import *
-from .inp_helpers import InpSection, optional_args
-from swmm_api.type_converter import infer_type
+from .inp_helpers import InpSection
+from .helpers.type_converter import infer_type
 from pandas import DataFrame, Series, to_datetime
-from numpy import NaN
-from mp.helpers import timeit
 
 
 def convert_title(lines):

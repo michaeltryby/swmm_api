@@ -1,6 +1,7 @@
 from pandas import DataFrame
 from numpy import isnan, NaN
-from swmm_api.type_converter import type2str
+
+from .helpers.type_converter import type2str
 
 
 def convert_name(name, new_name='J'):
