@@ -1,224 +1,166 @@
+__author__ = "Markus Pichler"
+__credits__ = ["Markus Pichler"]
+__maintainer__ = "Markus Pichler"
+__email__ = "markus.pichler@tugraz.at"
+__version__ = "0.1"
+__license__ = "MIT"
+
 import pandas as pd
 from io import StringIO
+from .helpers import _get_title_of_part, _remove_lines, _part_to_frame
+
+"""
+not ready to use
+experimental
+
+reading generated report (*.rpt) files
+"""
+
+
+class Report:
+    def __init__(self, filename):
+        self.raw_parts = dict()
+        self.converted_parts = dict()
+        self._report_to_dict(filename)
+
+        # ________________
+        # TODO
+        self._version_title = None
+        self._note = None
+        self._analysis_options = None
+        self._runoff_quantity_continuity = None
+        self._flow_routing_continuity = None
+        self._time_step_critical_elements = None
+        self._highest_flow_instability_indexes = None
+
+        self._routing_time_step_summary = None
+
+        # ________________
+        self._subcatchment_runoff_summary = None
+        self._node_depth_summary = None
+        self._node_inflow_summary = None
+        self._node_surcharge_summary = None
+        self._node_flooding_summary = None
+        self._storage_volume_summary = None
+        self._outfall_loading_summary = None
+        self._link_flow_summary = None
+
+        # ________________
+        # TODO
+        self._flow_classification_summary = None
+        self._conduit_surcharge_summary = None
+
+    def _report_to_dict(self, fn):
+        """
+        convert the report file into a dictionary depending of the different parts
+
+        Args:
+            fn (str): path to the report file
+
+        Returns:
+            dict: dictionary of parts of the report file
+        """
+        with open(fn, 'r') as file:
+            lines = file.readlines()
+
+        self.raw_parts['Simulation Infos'] = ''.join(lines[-3:])
+        parts0 = ''.join(lines).split('\n  \n  ****')
+
+        for i, part in enumerate(parts0):
+            if part.startswith('*'):
+                part = '  ****' + part
+
+            self.raw_parts[_get_title_of_part(part, str(i))] = _remove_lines(part, title=False, empty=True, sep=False)
+
+    def converted(self, key):
+        if key not in self.converted_parts:
+            self.converted_parts[key] = _remove_lines(self.raw_parts[key], title=True, empty=False)
+
+        return self.converted_parts[key]
+
+    @property
+    def subcatchment_runoff_summary(self):
+        if self._subcatchment_runoff_summary is None:
+            p = self.converted('Subcatchment Runoff Summary')
+            self._subcatchment_runoff_summary = _part_to_frame(p)
+        return self._subcatchment_runoff_summary
+
+    @property
+    def node_depth_summary(self):
+        if self._node_depth_summary is None:
+            p = self.converted('Node Depth Summary')
+            self._node_depth_summary = _part_to_frame(p)
+        return self._node_depth_summary
+
+    @property
+    def node_inflow_summary(self):
+        if self._node_inflow_summary is None:
+            p = self.converted('Node Inflow Summary')
+            self._node_inflow_summary = _part_to_frame(p)
+        return self._node_inflow_summary
+
+    @property
+    def node_surcharge_summary(self):
+        if self._node_surcharge_summary is None:
+            p = self.converted('Node Surcharge Summary')
+            self._node_surcharge_summary = _part_to_frame(p)
+        return self._node_surcharge_summary
+
+    @property
+    def node_flooding_summary(self):
+        # parts = report_to_dict(fn)
+        if self._node_flooding_summary is None:
+            # --------------------------------------------
+            p = self.converted('Node Flooding Summary')
+
+            # --------------------------------------------
+            if 'No nodes were flooded.' in p:
+                self._node_flooding_summary = pd.DataFrame()
+
+            # --------------------------------------------
+            else:
+                self._node_flooding_summary = _part_to_frame(p)
+        return self._node_flooding_summary
+
+    @property
+    def storage_volume_summary(self):
+        if self._storage_volume_summary is None:
+            p = self.converted('Storage Volume Summary')
+
+            # for reading the table and accepting names shorten than 8 characters
+            p = p.replace('Storage Unit', 'Storage_Unit')
+
+            self._storage_volume_summary = _part_to_frame(p)
+        return self._storage_volume_summary
+
+    @property
+    def outfall_loading_summary(self):
+        if self._outfall_loading_summary is None:
+            p = self.converted('Outfall Loading Summary')
+            self._outfall_loading_summary = _part_to_frame(p)
+        return self._outfall_loading_summary
+
+    @property
+    def link_flow_summary(self):
+        if self._link_flow_summary is None:
+            p = self.converted('Link Flow Summary')
+            self._link_flow_summary = _part_to_frame(p)
+        return self._link_flow_summary
+
+    @property
+    def flow_classification_summary(self):
+        if self._flow_classification_summary is None:
+            p = self.converted('Flow Classification Summary')
+            self._flow_classification_summary = _part_to_frame(p)
+        return self._flow_classification_summary
+
+    @property
+    def conduit_surcharge_summary(self):
+        if self._conduit_surcharge_summary is None:
+            p = self.converted('Conduit Surcharge Summary')
+            self._conduit_surcharge_summary = _part_to_frame(p)
+        return self._conduit_surcharge_summary
 
 
 def get_item_in_line(line, item):
     return float([v.strip() for v in line.split()][item])
-
-
-def report_to_dict(fn):
-    parts = dict()
-
-    with open(fn, 'r') as file:
-        lines = file.readlines()
-    parts0 = ''.join(lines).split('\n  \n  ****')
-
-    for i, part in enumerate(parts0):
-        if part.startswith('*'):
-            part = '  ****' + part
-
-        parts[get_title_of_part(part, i)] = convert_part(part, remove_title=False, remove_empty=True, remove_sep=False)
-
-    return parts
-
-
-def get_title_of_part(part, alt):
-    if 'EPA STORM WATER MANAGEMENT MODEL - VERSION' in part:
-        return 'Version+Titel'
-
-    elif 'NOTE:' in part:
-        return 'Note'
-
-    else:
-        lines = part.split('\n')
-        for no, line in enumerate(lines):
-            if no == 0 or no == len(lines) - 1:
-                continue
-            if '***' in lines[no + 1] and '***' in lines[no - 1]:
-                start_char = lines[no - 1].index('*')
-                len_title = lines[no - 1].count('*')
-                return line[start_char:start_char + len_title].strip()
-        return str(alt)
-
-
-def convert_part(part, remove_title=True, remove_empty=False, remove_sep=False):
-    """ remove title lines and empty lines """
-    lines = part.split('\n')
-    remove_lines = list()
-    for no, line in enumerate(lines):
-
-        if remove_title:
-            if no == 0 or no == len(lines) - 1:
-                continue
-            if '***' in lines[no + 1] and '***' in lines[no - 1]:
-                remove_lines.append(no - 1)
-                remove_lines.append(no)
-                remove_lines.append(no + 1)
-
-        if remove_empty:
-            if len(line.strip()) == 0:
-                remove_lines.append(no)
-
-        if remove_sep:
-            if len(line.replace('-', '').strip()) == 0:
-                remove_lines.append(no)
-
-    new_lines = lines
-    for r in sorted(remove_lines, reverse=True):
-        new_lines.pop(r)
-
-    return '\n'.join(new_lines)
-
-
-def part_to_df(part):
-    df = pd.read_fwf(StringIO(part), index_col=0)
-    df.replace('-', ' ')
-    return df
-
-
-def check_report(fn):
-    parts = report_to_dict(fn)
-    res = dict()
-    #########################################################################
-    p = parts['Flow Routing Continuity']
-    for line in p.split('\n'):
-        if 'Wet Weather Inflow' in line:
-            res['Gesamter Oberflächenabfluss'] = get_item_in_line(line, -1) * 1000
-
-        elif 'Continuity Error (%)' in line:
-            res['Routingfehler'] = get_item_in_line(line, -1)
-
-    #########################################################################
-    p = parts['Outfall Loading Summary']
-    res['Überlaufvolumen MÜB'] = 0
-    for line in p.split('\n'):
-        if 'OF_MUEN' in line:
-            res['Überlaufvolumen MÜ-Nord'] = get_item_in_line(line, -1) * 1000
-
-        elif 'OF_MUEB_BUE' in line:
-            res['Überlaufvolumen MÜB'] += get_item_in_line(line, -1) * 1000
-
-        elif 'OF_MUEB_KUE' in line:
-            res['Überlaufvolumen MÜB'] += get_item_in_line(line, -1) * 1000
-
-        elif 'OF_ARA' in line:
-            vals = [v.strip() for v in line.split()]
-            res['Abfluss zur ARA'] = float(vals[-1]) * 1000
-    return res
-
-
-def check_report2(fn):
-    df = get_flooding_report(fn)
-    return df.index.tolist()
-
-
-def get_flooding_report(fn):
-    parts = report_to_dict(fn)
-
-    # --------------------------------------------
-    p = convert_part(parts['Node Flooding Summary'], remove_title=True, remove_empty=False)
-
-    if 'No nodes were flooded.' in p:
-        return pd.DataFrame()
-
-    lines = p.split('\n')
-
-    notes = []
-    data = []
-    header = []
-
-    sep_count = 0
-
-    for line in lines:
-        if '-----' in line:
-            sep_count += 1
-        else:
-            if sep_count == 0:
-                notes.append(line)
-            elif sep_count == 1:
-                header.append(line)
-            else:
-                data.append(line)
-
-    # --------------------------------------------
-    f = StringIO('\n'.join(header + data))
-    df = pd.read_fwf(f, header=list(range(len(header))), index_col=0)
-    df.columns = ['_'.join(str(c) for c in col if 'Unnamed:' not in c).strip() for col in df.columns.values]
-
-    return df
-
-
-def get_runoff_report(fn):
-    df = get_subcatchment_report(fn)
-    return df['Total_Runoff_10^6 ltr'].copy() * 1000
-
-
-def get_subcatchment_report(fn):
-    parts = report_to_dict(fn)
-
-    # --------------------------------------------
-    p = convert_part(parts['Subcatchment Runoff Summary'], remove_title=True, remove_empty=False)
-
-    lines = p.split('\n')
-
-    notes = []
-    data = []
-    header = []
-
-    sep_count = 0
-
-    for line in lines:
-        if '-----' in line:
-            sep_count += 1
-        else:
-            if sep_count == 0:
-                notes.append(line)
-            elif sep_count == 1:
-                header.append(line)
-            else:
-                data.append(line)
-
-    # --------------------------------------------
-    f = StringIO('\n'.join(header + data))
-    df = pd.read_fwf(f, header=list(range(len(header))), index_col=0)
-    df.columns = ['_'.join(str(c) for c in col if 'Unnamed:' not in c).strip() for col in df.columns.values]
-
-    return df
-
-
-def get_overflow_report(fn):
-    df = get_outfall_report(fn)
-    return df['Total_Volume_10^6 ltr'].copy() * 1000
-
-
-def get_outfall_report(fn):
-    parts = report_to_dict(fn)
-
-    # --------------------------------------------
-    p = convert_part(parts['Outfall Loading Summary'], remove_title=True, remove_empty=False)
-
-    lines = p.split('\n')
-
-    notes = []
-    data = []
-    header = []
-
-    sep_count = 0
-
-    for line in lines:
-        if '-----' in line:
-            sep_count += 1
-        else:
-            if sep_count == 0:
-                notes.append(line)
-            elif sep_count == 1:
-                header.append(line)
-            else:
-                data.append(line)
-
-    # --------------------------------------------
-    f = StringIO('\n'.join(header + data))
-    df = pd.read_fwf(f, header=list(range(len(header))), index_col=0)
-    df.columns = ['_'.join(str(c) for c in col if 'Unnamed:' not in c).strip() for col in df.columns.values]
-
-    return df
