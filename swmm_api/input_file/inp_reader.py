@@ -75,9 +75,7 @@ def convert_options(lines):
 
         new_lines[sub_head] = opt
 
-    series = DataFrame.from_dict(new_lines, 'index')[0]  # .rename_axis('Name', axis='columns')
-    # print(general_category2string(series))
-    return series
+    return new_lines
 
 
 def convert_report(lines):
@@ -114,9 +112,7 @@ def convert_report(lines):
 
         new_lines[sub_head] = opt
 
-    series = DataFrame.from_dict(new_lines, 'index')[0]  # .rename_axis('Name', axis='columns')
-    # print(general_category2string(series))
-    return series
+    return new_lines
 
 
 def convert_evaporation(lines):
@@ -175,18 +171,125 @@ def convert_evaporation(lines):
         else:
             raise UserWarning('Too much evaporation')
 
-    try:
-        evaporation = DataFrame.from_dict(new_lines, 'index')[0]  # .rename_axis('Name', axis='columns')
-    except:
-        evaporation = Series()
-        for i in new_lines:
-            evaporation.loc[i] = new_lines[i]
-
-    # print(general_category2string(report))
-    return evaporation
+    return new_lines
 
 
-def line_split(line):
+def convert_temperature(lines):
+    """
+    Section:
+        [TEMPERATURE]
+
+    Purpose:
+        Specifies daily air temperatures, monthly wind speed, and various snowmelt
+        parameters for the study area. Required only when snowmelt is being modeled or
+        when evaporation rates are computed from daily temperatures or are read from an
+        external climate file.
+
+    Formats:
+        TIMESERIES Tseries
+        FILE Fname (Start)
+        WINDSPEED MONTHLY s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12
+        WINDSPEED FILE
+        SNOWMELT Stemp ATIwt RNM Elev Lat DTLong
+        ADC IMPERVIOUS f.0 f.1 f.2 f.3 f.4 f.5 f.6 f.7 f.8 f.9
+        ADC PERVIOUS f.0 f.1 f.2 f.3 f.4 f.5 f.6 f.7 f.8 f.9
+
+    Remarks:
+        Tseries
+            name of time series in [TIMESERIES] section with temperature data.
+        Fname
+            name of external Climate file with temperature data.
+        Start
+            date to begin reading from the file in month/day/year format (default is the beginning of the file).
+        s1
+            average wind speed in January (mph or km/hr).
+        ...
+
+        s12
+            average wind speed in December (mph or km/hr).
+        Stemp
+            air temperature at which precipitation falls as snow (deg F or C).
+        ATIwt
+            antecedent temperature index weight (default is 0.5).
+        RNM
+            negative melt ratio (default is 0.6).
+        Elev
+            average elevation of study area above mean sea level (ft or m) (default is 0).
+        Lat
+            latitude of the study area in degrees North (default is 50).
+        DTLong
+            correction, in minutes of time, between true solar time and the standard clock time (default is 0).
+        f.0
+            fraction of area covered by snow when ratio of snow depth to depth at 100% cover is 0
+        ....
+        f.9
+            fraction of area covered by snow when ratio of snow depth to depth at 100% cover is 0.9
+
+    Use the TIMESERIES line to read air temperature from a time series or the FILE line
+    to read it from an external Climate file. Climate files are discussed in Section 11.4
+
+    Climate Files. If neither format is used, then air temperature remains constant at 70 degrees F.
+
+    Wind speed can be specified either by monthly average values or by the same
+    Climate file used for air temperature. If neither option appears, then wind speed is
+    assumed to be 0.
+
+    Separate Areal Depletion Curves (ADC) can be defined for impervious and pervious
+    sub-areas. The ADC parameters will default to 1.0 (meaning no depletion) if no data
+    are supplied for a particular type of sub-area.
+    """
+    new_lines = {}
+    for line in lines:
+
+        sub_head = line.pop(0)
+        n_options = len(line)
+
+        if sub_head == 'TIMESERIES':
+            assert n_options == 1
+            opt = line[0]
+
+        elif sub_head =='FILE':
+            if n_options == 1:
+                opt = line[0]
+            else:
+                opt = line
+
+        elif sub_head == 'WINDSPEED':
+            subsub_head = line[0]
+            if subsub_head == 'FILE':
+                assert n_options == 1
+                opt = line[0]
+            elif subsub_head == 'MONTHLY':
+                assert n_options == 13
+                opt = line
+            else:
+                raise NotImplementedError()
+
+        elif sub_head == 'SNOWMELT':
+            assert n_options == 6
+            opt = line
+
+        elif sub_head == 'ADC':
+            subsub_head = line.pop(0)
+            sub_head += ' ' + subsub_head
+            if subsub_head == 'IMPERVIOUS':
+                assert n_options == 11
+                opt = line
+            elif subsub_head == 'PERVIOUS':
+                assert n_options == 11
+                opt = line
+            else:
+                raise NotImplementedError()
+
+        else:
+            opt = line
+
+        new_lines[sub_head] = opt
+
+    return new_lines
+
+
+def _line_split(line):
     # but don't split quoted text
     return re.findall(r'[^"\s]\S*|".+?"', line)
 
@@ -221,7 +324,7 @@ def convert_timeseries(lines):
         name = line[0]
         l = len(line)
         if line[1] == 'FILE':
-            line = line_split(' '.join(line))
+            line = _line_split(' '.join(line))
             l = len(line)
             if l == 3:
                 typ = line[1]
@@ -392,27 +495,37 @@ def convert_map(lines):
     return new_lines
 
 
+def convert_tags(lines):
+    df = DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
+    # df[0].unique()
+    # ['Subcatch', 'Node', 'Link']
+    return df
+
+
 class InpReader:
     def __init__(self, drop_gui_part=True):
-        self.inp_data = None
+        self._data = dict()
         self.drop_gui_part = drop_gui_part
-        self.gui_part = None
+        self._gui_data = dict()
 
-    convert_handler = {
+    convert_handler_old = {
         'REPORT': convert_report,
         'TITLE': convert_title,
         'OPTIONS': convert_options,
         'EVAPORATION': convert_evaporation,
+        'TEMPERATURE': convert_temperature,
 
         'CURVES': convert_curves,
         'TIMESERIES': convert_timeseries,
 
         'LOADINGS': convert_loadings,
 
-        'COORDINATES': convert_coordinates,
-        'MAP': convert_map,
+        # 'COORDINATES': convert_coordinates,
+        # 'MAP': convert_map,
+
+        'TAGS': convert_tags,
     }
-    new_convert_handler = {
+    convert_handler_new = {
         'CONDUITS': Conduit,
         'ORIFICES': Orifice,
         'JUNCTIONS': Junction,
@@ -433,22 +546,25 @@ class InpReader:
         'POLLUTANTS': Pollutant,
     }
 
-    @staticmethod
-    def new_convert_handler_func(lines, head):
-        return InpSection.from_lines(lines, InpReader.new_convert_handler[head])  # .to_frame_()
-
     GUI_SECTIONS = [
-                       'MAP', 'POLYGONS', 'VERTICES', 'LABELS', 'SYMBOLS', 'BACKDROP'
-                   ] + ['TAGS', 'PROFILES'] + ['COORDINATES']
+        'MAP',
+        'POLYGONS',
+        'VERTICES',
+        'LABELS',
+        'SYMBOLS',
+        'BACKDROP',
+        'COORDINATES',
+    ]
 
-    # @timeit
+    UNKNOWN_SECTIONS = [
+        'PROFILES',
+    ]
+
     def read_inp(self, filename):
         if isinstance(filename, str):
             inp_file = open(filename, 'r', encoding='iso-8859-1')
         else:
             inp_file = filename
-
-        inp_data = {}
 
         head = None
         for line in inp_file:
@@ -458,53 +574,37 @@ class InpReader:
 
             elif line.startswith('[') and line.endswith(']'):
                 head = line.replace('[', '').replace(']', '').upper()
-                inp_data[head] = list()
+                self._data[head] = list()
 
             else:
-                if (head == 'TIMESERIES') or (self.drop_gui_part and head in InpReader.GUI_SECTIONS):
-                    # to much data
-                    # saves time
-                    # type conversion in "convert_timeseries"
-                    inp_data[head].append(line.split())
-                else:
-                    inp_data[head].append([infer_type(i) for i in line.split() if i != ''])
+                self._data[head].append(line.split())
+                # if (head == 'TIMESERIES') or (
+                #         self.drop_gui_part and head in InpReader.GUI_SECTIONS + self.UNKNOWN_SECTIONS):
+                #     # to much data
+                #     # saves time
+                #     # type conversion in "convert_timeseries"
+                #     self._data[head].append(line.split())
+                # else:
+                #     self._data[head].append(line.split())
+                #     # self._data[head].append([infer_type(i) for i in line.split() if i != ''])  # infer_type(i)
 
-        self.inp_data = inp_data
-
-    # @timeit
     def convert_sections(self):
-        # very slowly, i still make somethink wrong
-        # from dask import delayed
+        for head, lines in self._data.items():
 
-        # @delayed
-        def convert_head(head, lines):
-            if head in InpReader.convert_handler:
-                return InpReader.convert_handler[head](lines)
-            elif head in InpReader.new_convert_handler:
-                return InpReader.new_convert_handler_func(lines, head)
+            if self.drop_gui_part and head in self.GUI_SECTIONS + self.UNKNOWN_SECTIONS:
+                self._gui_data[head] = lines
 
-        # ----------------------------------------------------------------------
-        inp_data = self.inp_data
+            elif head in self.convert_handler_old:
+                self._data[head] = self.convert_handler_old[head](lines)
+            elif head in self.convert_handler_new:
+                self._data[head] = InpSection.from_lines(lines, self.convert_handler_new[head])
+            else:
+                self._data[head] = lines
 
-        for head in inp_data:
-            if (head in InpReader.new_convert_handler) or (head in InpReader.convert_handler):
-                inp_data[head] = convert_head(head, inp_data[head])
-
-        return inp_data
-        # return delayed(inp_data).compute()
-
-    def del_not_important(self):
-        if self.drop_gui_part:
-            self.gui_part = dict()
-            for head in InpReader.GUI_SECTIONS:
-                if head in self.inp_data:
-                    self.gui_part[head] = self.inp_data.pop(head)
-
-
-# @timeit
-def read_inp_file(filename, drop_gui_part=True):
-    reader = InpReader(drop_gui_part=drop_gui_part)
-    reader.read_inp(filename)
-    reader.del_not_important()
-    reader.convert_sections()
-    return reader.inp_data
+    @classmethod
+    def from_file(cls, filename, drop_gui_part=True, convert_sections=True):
+        inp_reader = cls(drop_gui_part=drop_gui_part)
+        inp_reader.read_inp(filename)
+        if convert_sections:
+            inp_reader.convert_sections()
+        return inp_reader._data

@@ -1,22 +1,29 @@
+__author__ = "Markus Pichler"
+__credits__ = ["Markus Pichler"]
+__maintainer__ = "Markus Pichler"
+__email__ = "markus.pichler@tugraz.at"
+__version__ = "0.1"
+__license__ = "MIT"
+
 import pandas as pd
 from swmmtoolbox.swmmtoolbox import SwmmExtract
-from sww.libs.timeseries.io import parquet
-# from mp.helpers import class_timeit
 import numpy as np
 
-from sww.libs.timeseries.io.parquet import _index_to_multiindex
+from . import parquet
 
 
 class SwmmOutHandler(SwmmExtract):
-
+    """
+    read the binary .out file from EPA-SWMM and return a pandas Dataframe
+    """
     def __init__(self, filename):
         self.filename = filename
         SwmmExtract.__init__(self, filename)
-        self.names_by_type = self.get_names_by_type()
-        self.variables_by_type = self.get_variables_by_type()
+        self.names_by_type = self._get_names_by_type()
+        self.variables_by_type = self._get_variables_by_type()
         self.frame = None
 
-    def get_names_by_type(self):
+    def _get_names_by_type(self):
         new_catalog = dict()
         for i, name in enumerate(self.itemlist):
             l = self.names[i]
@@ -24,7 +31,7 @@ class SwmmOutHandler(SwmmExtract):
                 new_catalog[name] = self.names[i]
         return new_catalog
 
-    def get_variables_by_type(self):
+    def _get_variables_by_type(self):
         new_catalog = dict()
         for item_type in self.itemlist:
             if item_type == 'pollutant':
@@ -36,8 +43,17 @@ class SwmmOutHandler(SwmmExtract):
         return new_catalog
 
     def to_frame(self):
+        """
+        read the binary .out file from EPA-SWMM and return a pandas Dataframe
+
+        Returns:
+            pandas.DataFrame: data
+        """
         if self.frame is None:
             self.fp.seek(self.startpos, 0)
+
+            def col_name(kind, name, var_name):
+                return '{kind}/{name}/{var_name}'.format(kind=kind, name=name, var_name=var_name)
 
             types = [('date', 'f8')]
             kind = 'subcatchment'
@@ -45,44 +61,57 @@ class SwmmOutHandler(SwmmExtract):
                 name = self.names_by_type[kind][i]
                 for v in range(self.swmm_nsubcatchvars):
                     var_name = self.variables_by_type[kind][v]
-                    types.append((f'{kind}/{name}/{var_name}', 'f4'))
+                    types.append((col_name(kind, name, var_name), 'f4'))
 
             kind = 'node'
             for i in range(self.swmm_nnodes):
                 name = self.names_by_type[kind][i]
                 for v in range(self.nnodevars):
                     var_name = self.variables_by_type[kind][v]
-                    types.append((f'{kind}/{name}/{var_name}', 'f4'))
+                    types.append((col_name(kind, name, var_name), 'f4'))
 
             kind = 'link'
             for i in range(self.swmm_nlinks):
                 name = self.names_by_type[kind][i]
                 for v in range(self.nlinkvars):
                     var_name = self.variables_by_type[kind][v]
-                    types.append((f'{kind}/{name}/{var_name}', 'f4'))
+                    types.append((col_name(kind, name, var_name), 'f4'))
 
             kind = 'system'
             for i in range(self.nsystemvars):
                 var_name = self.variables_by_type[kind][i]
-                types.append((f'{kind}/{var_name}/{var_name}', 'f4'))
+                types.append((col_name(kind, var_name, var_name), 'f4'))
 
             dt = np.dtype(types)
             data = np.fromfile(self.fp, dtype=dt)
             df = pd.DataFrame(data, columns=data.dtype.names)
             del df['date']
-            df.columns = _index_to_multiindex(df.columns.astype(str))
+            df.columns = parquet._index_to_multiindex(df.columns.astype(str))
             df.index = pd.date_range(self.startdate, periods=self.swmm_nperiods, freq=self.reportinterval)
             self.frame = df.copy()
         return self.frame
 
     def to_parquet(self):
+        """
+        read the binary .out file from EPA-SWMM and write the data to a parquet file
+        multi-column-names are separated by a slash ("/")
+        read parquet files with parquet.read to get the original column-name-structure
+        """
         parquet.write(self.to_frame(), self.filename.replace('.out', '.parquet'))
 
 
 def out2frame(out_file):
+    """
+    read the binary .out file from EPA-SWMM and return a pandas Dataframe
+
+    Args:
+        out_file (str): path to out file
+
+    Returns:
+        pandas.DataFrame:
+    """
     out = SwmmOutHandler(out_file)
     return out.to_frame()
-
 
 # def out2parquet(out_file):
 #     out = SwmmOutHandler(out_file)

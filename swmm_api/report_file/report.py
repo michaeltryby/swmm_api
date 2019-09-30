@@ -7,7 +7,7 @@ __license__ = "MIT"
 
 import pandas as pd
 from io import StringIO
-from .helpers import _get_title_of_part, _remove_lines, _part_to_frame
+from .helpers import _get_title_of_part, _remove_lines, _part_to_frame, _continuity_part_to_dict
 
 """
 not ready to use
@@ -44,9 +44,6 @@ class Report:
         self._storage_volume_summary = None
         self._outfall_loading_summary = None
         self._link_flow_summary = None
-
-        # ________________
-        # TODO
         self._flow_classification_summary = None
         self._conduit_surcharge_summary = None
 
@@ -64,6 +61,7 @@ class Report:
             lines = file.readlines()
 
         self.raw_parts['Simulation Infos'] = ''.join(lines[-3:])
+        lines = lines[:-3]
         parts0 = ''.join(lines).split('\n  \n  ****')
 
         for i, part in enumerate(parts0):
@@ -77,6 +75,53 @@ class Report:
             self.converted_parts[key] = _remove_lines(self.raw_parts[key], title=True, empty=False)
 
         return self.converted_parts[key]
+
+    @property
+    def analysis_options(self):
+        if self._analysis_options is None:
+            p = self.converted('Analysis Options')
+
+            res = dict()
+            last_key = None
+            last_initial_spaces = 0
+
+            for line in p.split('\n'):
+                initial_spaces = len(line) - len(line.lstrip())
+
+                if '..' in line:
+                    key = line[:line.find('..')].strip()
+                    value = line[line.rfind('..') + 2:].strip()
+
+                    if last_initial_spaces > initial_spaces:
+                        last_key = None
+
+                    if last_key is not None:
+                        res[last_key].update({key: value})
+                    else:
+                        res[key] = value
+
+                    last_initial_spaces = initial_spaces
+
+                else:
+                    last_key = line.replace(':', '').strip()
+                    res[last_key] = dict()
+
+            self._analysis_options = res
+        return self._analysis_options
+
+    @property
+    def flow_routing_continuity(self):
+        if self._flow_routing_continuity is None:
+            raw = self.raw_parts['Flow Routing Continuity']
+            self._flow_routing_continuity = _continuity_part_to_dict(raw)
+        return self._flow_routing_continuity
+
+    @property
+    def runoff_quantity_continuity(self):
+        if self._runoff_quantity_continuity is None:
+            raw = self.raw_parts['Runoff Quantity Continuity']
+            self._runoff_quantity_continuity = _continuity_part_to_dict(raw)
+        return self._runoff_quantity_continuity
 
     @property
     def subcatchment_runoff_summary(self):

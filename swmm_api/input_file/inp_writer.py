@@ -8,6 +8,9 @@ set_pandas_options("display.max_colwidth", 10000)
 
 
 def curves2string(cat):
+    if isinstance(cat, list):  # fast: not converted
+        return general_category2string(cat)
+
     def get_names(shape):
         return {'shape': ['x', 'y'],
                 'storage': ['h', 'A']}.get(shape.lower(), ['x', 'y'])
@@ -31,6 +34,8 @@ def curves2string(cat):
 
 
 def timeseries2string(cat):
+    if isinstance(cat, list):  # fast: not converted
+        return general_category2string(cat)
     f = ''
     for n in cat:
         if n == 'Files':
@@ -49,56 +54,54 @@ def timeseries2string(cat):
     return f
 
 
-def list2string(line):
-    return ' '.join(type2str(l) for l in line)
-
-
 def line2string(line):
     f = ''
     if isinstance(line, str):
         f += line
     elif isinstance(line, list):
-        f += list2string(line)
+        f += ' '.join(type2str(l) for l in line)
     else:
         f += type2str(line)
     f += '\n'
     return f
 
 
-def pandas2string(cat):
-    if cat.empty:
-        return '; NO data'
-    f = ''
-    if isinstance(cat, DataFrame):
-        f += dataframe_to_inp_string(cat)
-
-    elif isinstance(cat, Series):
-        f += cat.apply(type2str).to_string()
-    else:
-        raise NotImplementedError()
-    return f
-
-
-def general_category2string(cat):
+def general_category2string(cat, fast=False):
     f = ''
 
+    # ----------------------
     if isinstance(cat, str):  # Title
         f += cat
 
+    # ----------------------
     elif isinstance(cat, list):  # V0.1
         for line in cat:
             f += line2string(line)
 
+    # ----------------------
     elif isinstance(cat, dict):  # V0.2
+
+        max_len = len(max(cat.keys(), key=len)) + 2
         for sub in cat:
-            f += sub + ' ' + line2string(cat[sub])
+            f += '{key}{value}'.format(key=sub.ljust(max_len),
+                                       value=line2string(cat[sub]))
 
+    # ----------------------
     elif isinstance(cat, (DataFrame, Series)):  # V0.3
-        f += pandas2string(cat)
+        if cat.empty:
+            f += '; NO data'
 
+        if isinstance(cat, DataFrame):
+            f += dataframe_to_inp_string(cat)
+
+        elif isinstance(cat, Series):
+            f += cat.apply(type2str).to_string()
+
+    # ----------------------
     elif isinstance(cat, InpSection):  # V0.4
-        f += str(cat)
+        f += cat.to_inp(fast=fast)
 
+    # ----------------------
     f += '\n'
     return f
 
@@ -107,6 +110,7 @@ sections = ['TITLE',
             'OPTIONS',
             'REPORT',
             'EVAPORATION',
+            'TEMPERATURE',
 
             'JUNCTIONS',
             'DWF',
@@ -136,7 +140,16 @@ sections = ['TITLE',
             'PATTERNS']
 
 
-def inp2string(network):
+def inp2string(network, fast=False):
+    """
+
+    Args:
+        network:
+        fast:
+
+    Returns:
+
+    """
     f = ''
     for head in sections:
         if head not in network:
@@ -147,19 +160,17 @@ def inp2string(network):
 
         if head == 'CURVES':
             f += curves2string(cat)
-            continue
-
-        if head == 'TIMESERIES':
+        elif head == 'TIMESERIES':
             f += timeseries2string(cat)
-            continue
+        else:
+            f += general_category2string(cat, fast=fast)
 
-        f += general_category2string(cat)
     return f
 
 
-def write_inp_file(network, filename):
+def write_inp_file(network, filename, fast=False):
     with open(filename, 'w') as f:
-        f.write(inp2string(network))
+        f.write(inp2string(network, fast=fast))
 
 
 def network2yaml(network, fn):

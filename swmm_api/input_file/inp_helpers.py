@@ -1,7 +1,7 @@
 from pandas import DataFrame
 from numpy import isnan, NaN
 
-from .helpers.type_converter import type2str
+from .helpers.type_converter import type2str, infer_type
 
 
 def convert_name(name, new_name='J'):
@@ -97,6 +97,17 @@ class BaseSection:
                 args.append('{} = {}'.format(k, d))
         return '{}({})'.format(self.__class__.__name__, ', '.join(args))
 
+    def inp_line(self):
+        di = self.to_dict_().copy()
+        s = ''
+        if isinstance(self.index, list):
+            s += ' '.join([str(di.pop(i)) for i in self.index])
+        else:
+            s += str(di.pop(self.index))
+
+        s += ' ' + ' '.join([type2str(i) for i in di.values()])
+        return s
+
     # @property
     # def string(self):
     #     return str(self)
@@ -143,6 +154,7 @@ class InpSection(MyUserDict):
 
         # -----------------------
         # section with multiple line entries
+        # ie.: Pattern
         if inp_section is not None and hasattr(section_class, 'convert_lines'):
             for section_class_line in section_class.convert_lines(lines):
                 inp_section.append(section_class_line)
@@ -150,7 +162,9 @@ class InpSection(MyUserDict):
 
         # -----------------------
         for line in lines:
+            line = [infer_type(i) for i in line]
             if inp_section is None:
+                # if multiple types are possible and ie.: Infiltration
                 first_section_line = section_class(*line)
                 inp_section = cls(type(first_section_line))
                 inp_section.append(first_section_line)
@@ -189,6 +203,19 @@ class InpSection(MyUserDict):
     def __str__(self):
         return dataframe_to_inp_string(self.to_frame_())
 
+    def to_inp(self, fast=False):
+        if fast:
+            if bool(self):
+                s = ''
+                for i in self.values():
+                    s += i.inp_line() + '\n'
+                return s
+            else:
+                return ''
+
+        else:
+            return str(self)
+
 
 def dataframe_to_inp_string(df):
     if df.empty:
@@ -211,14 +238,3 @@ def dataframe_to_inp_string(df):
                 c.index.levels[0].name = ';' + c.index.levels[0].name
 
     return c.applymap(type2str).to_string(sparsify=False, line_width=9999)
-
-
-def optional_args(data, names, defaults):
-    d = {}
-    len_ = len(data)
-    for i, item in enumerate(names):
-        if len_ >= (i + 1):
-            d[names[i]] = data[i]
-        else:
-            d[names[i]] = defaults[i]
-    return d

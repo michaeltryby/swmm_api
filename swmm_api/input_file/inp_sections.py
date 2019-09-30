@@ -834,7 +834,7 @@ class InfiltrationCurveNumber(_Infiltration):
 class DryWeatherFlow(BaseSection):
     index = ['node', 'kind']
 
-    def __init__(self, node, kind, Base, monthly=NaN, daily=NaN, hourly=NaN, weekend_hourly=NaN):
+    def __init__(self, node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN):
         """
         Type: FLOW, <pollutant>
         Base: baseline
@@ -848,10 +848,10 @@ class DryWeatherFlow(BaseSection):
         self.node = node
         self.kind = kind
         self.Base = Base
-        self.monthly = monthly
-        self.daily = daily
-        self.hourly = hourly
-        self.weekend_hourly = weekend_hourly
+        self.pattern1 = pattern1
+        self.pattern2 = pattern2
+        self.pattern3 = pattern3
+        self.pattern4 = pattern4
         # BaseSection.__init__(self, vars(self))
 
 
@@ -1122,7 +1122,7 @@ class Pattern(BaseSection):
     def __init__(self, Name, Type, *Factors):
         self.Name = Name
         self.Type = Type
-        self.Factors = Factors
+        self.Factors = list(Factors)
         # BaseSection.__init__(self, vars(self))
 
     @classmethod
@@ -1133,7 +1133,7 @@ class Pattern(BaseSection):
             if line[1] in ['MONTHLY', 'DAILY', 'HOURLY', 'WEEKEND']:
                 new_lines.append(line)
             else:
-                new_lines[-1].append(line[1:])
+                new_lines[-1] += line[1:]
 
         # sec_lines = list()
         for line in new_lines:

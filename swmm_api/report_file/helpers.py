@@ -113,3 +113,30 @@ def _part_to_frame(part):
     df = pd.read_fwf(f, header=list(range(len(header))), index_col=0)
     df.columns = ['_'.join(str(c) for c in col if 'Unnamed:' not in c).strip() for col in df.columns.values]
     return df
+
+
+def _continuity_part_to_dict(raw):
+    # p = self.converted('Flow Routing Continuity')
+    # title = raw[:raw.index(p)]
+    df = pd.read_fwf(StringIO(raw), index_col=0, header=[0, 1, 2])
+
+    df.columns = df.columns.droplevel(2)
+    df.columns.name = None
+    # df.columns.names = [None, None]
+    df.columns = ['_'.join(str(c) for c in col).strip() for col in df.columns.values]
+
+    df.index.name = None
+    df.index = df.index.str.replace('.', '').str.strip()
+
+    res = df.to_dict(orient='index')
+    res['Continuity Error (%)'] = res['Continuity Error (%)']['Volume_hectare-m']
+
+    # res = dict()
+    # for line in p.split('\n'):
+    #     key, *values = line.split()
+    #     if '..' in line:
+    #         key = line[:line.find('..')].strip()
+    #         value = line[line.rfind('..') + 2:].strip()
+    #         res[key] = value
+
+    return res
