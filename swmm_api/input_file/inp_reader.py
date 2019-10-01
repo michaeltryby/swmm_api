@@ -520,8 +520,8 @@ class InpReader:
 
         'LOADINGS': convert_loadings,
 
-        # 'COORDINATES': convert_coordinates,
-        # 'MAP': convert_map,
+        'COORDINATES': convert_coordinates,
+        'MAP': convert_map,
 
         'TAGS': convert_tags,
     }
@@ -596,8 +596,10 @@ class InpReader:
 
             elif head in self.convert_handler_old:
                 self._data[head] = self.convert_handler_old[head](lines)
+
             elif head in self.convert_handler_new:
                 self._data[head] = InpSection.from_lines(lines, self.convert_handler_new[head])
+
             else:
                 self._data[head] = lines
 
