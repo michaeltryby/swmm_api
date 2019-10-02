@@ -22,7 +22,7 @@ setup(
     license='MIT',
     author='Markus Pichler',
     author_email='markus.pichler@tugraz.at',
-    description='EPA-SWMM python interface',
+    description='US-EPA-SWMM python interface',
     # scripts=['bin/idf_analysis'],
     install_requires=requirements,
     long_description=long_description,
