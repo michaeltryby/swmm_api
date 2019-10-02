@@ -64,7 +64,7 @@ class Storage(BaseSection):
             Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
             IMD (float): soil initial moisture deficit (fraction).
         """
-        self.Name = Name
+        self.Name = str(Name)
         self.Elevation = Elevation
         self.MaxDepth = MaxDepth
         self.InitDepth = InitDepth
@@ -199,7 +199,7 @@ class Outfall(BaseSection):
             RouteTo (str): optional name of a subcatchment that receives the outfall's discharge.
                            The default is not to route the outfall’s discharge.
         """
-        self.Name = Name
+        self.Name = str(Name)
         self.Elevation = Elevation
         self.Type = Type
 
@@ -273,7 +273,7 @@ class Conduit(BaseSection):
             InitFlow ():
             MaxFlow ():
         """
-        self.Name = Name
+        self.Name = str(Name)
         self.FromNode = FromNode
         self.ToNode = ToNode
         self.Length = Length
@@ -430,7 +430,7 @@ class Outlet(BaseSection):
         FUNCTIONAL_HEAD = 'FUNCTIONAL/HEAD'
 
     def __init__(self, Name, FromNode, ToNode, Offset, Type, *args, Curve=None, Gated=False):
-        self.Name = Name
+        self.Name = str(Name)
 
         self.FromNode = FromNode
         self.ToNode = ToNode
@@ -496,7 +496,7 @@ class Orifice(BaseSection):
         The geometry of an orifice’s opening must be described in the [XSECTIONS] section.
         The only allowable shapes are CIRCULAR and RECT_CLOSED (closed rectangular).
         """
-        self.Name = Name
+        self.Name = str(Name)
         self.FromNode = FromNode
         self.ToNode = ToNode
         self.Type = Type
@@ -532,7 +532,7 @@ class Junction(BaseSection):
             SurDepth ():
             Aponded ():
         """
-        self.Name = Name
+        self.Name = str(Name)
         self.Elevation = Elevation
         self.MaxDepth = MaxDepth
         self.InitDepth = InitDepth
@@ -700,7 +700,7 @@ class SubCatchment(BaseSection):
         Name RainGage Outlet Area %Imperv Width %Slope CurbLen SnowPack
         """
 
-        self.Name = Name
+        self.Name = str(Name)
         self.RainGage = RainGage
         self.Outlet = Outlet
         self.Area = Area
@@ -715,24 +715,59 @@ class SubCatchment(BaseSection):
 class SubArea(BaseSection):
     index = 'subcatchment'
 
-    def __init__(self, subcatchment, N_Imperv, N_Perv, S_Imperv, S_Perv, PctZero, RouteTo, PctRouted=100):
+    class RoutToOption:
+        __class__ = 'RoutTo Option'
+        IMPERVIOUS = 'IMPERVIOUS'
+        PERVIOUS = 'PERVIOUS'
+        OUTLET = 'OUTLET'
+
+    def __init__(self, subcatchment, N_Imperv, N_Perv, S_Imperv, S_Perv, PctZero, RouteTo=RoutToOption.OUTLET, PctRouted=100):
         """
-        Subcat Nimp Nperv Simp Sperv %Zero RouteTo (%Routed)
+        Section:
+            [SUBAREAS]
 
+        Purpose:
+            Supplies information about pervious and impervious areas for each subcatchment.
+            Each subcatchment can consist of a pervious sub-area, an impervious sub-area with
+            depression storage, and an impervious sub-area without depression storage.
 
-        Subcatchment N-Imperv N-Perv S-Imperv S-Perv PctZero RouteTo PctRouted
+        Format:
+            Subcat Nimp Nperv Simp Sperv %Zero RouteTo (%Routed)
+
+        Format-PCSWMM:
+            Subcatchment N-Imperv N-Perv S-Imperv S-Perv PctZero RouteTo PctRouted
+
+        Remarks:
+            Subcat
+                subcatchment name.
+            Nimp
+                Manning's n for overland flow over the impervious sub-area.
+            Nperv
+                Manning's n for overland flow over the pervious sub-area.
+            Simp
+                depression storage for impervious sub-area (inches or mm).
+            Sperv
+                depression storage for pervious sub-area (inches or mm).
+            %Zero
+                percent of impervious area with no depression storage.
+            RouteTo
+                IMPERVIOUS if pervious area runoff runs onto impervious area,
+                PERVIOUS if impervious runoff runs onto pervious area,
+                or OUTLET if both areas drain to the subcatchment's outlet (default = OUTLET).
+            %Routed
+                percent of runoff routed from one type of area to another (default = 100).
 
         Args:
-            subcatchment ():
-            N_Imperv ():
-            N_Perv ():
-            S_Imperv ():
-            S_Perv ():
-            PctZero ():
-            RouteTo ():
-            PctRouted ():
+            subcatchment (str):
+            N_Imperv (float):
+            N_Perv (float):
+            S_Imperv (float):
+            S_Perv (float):
+            PctZero (float):
+            RouteTo (str):
+            PctRouted (float):
         """
-        self.subcatchment = subcatchment
+        self.subcatchment = str(subcatchment)
         self.N_Imperv = N_Imperv
         self.N_Perv = N_Perv
         self.S_Imperv = S_Imperv
@@ -747,7 +782,7 @@ class _Infiltration(BaseSection):
     index = 'subcatchment'
 
     def __init__(self, subcatchment):
-        self.subcatchment = subcatchment
+        self.subcatchment = str(subcatchment)
 
         # BaseSection.__init__(self, vars(self))
 
@@ -779,12 +814,12 @@ class InfiltrationHorton(_Infiltration):
         Returns:
 
         """
+        _Infiltration.__init__(self, subcatchment)
         self.MaxRate = MaxRate
         self.MinRate = MinRate
         self.Decay = Decay
         self.DryTime = DryTime
         self.MaxInf = MaxInf
-        _Infiltration.__init__(self, subcatchment)
 
 
 class InfiltrationGreenAmpt(_Infiltration):
@@ -803,10 +838,10 @@ class InfiltrationGreenAmpt(_Infiltration):
         Returns:
 
         """
+        _Infiltration.__init__(self, subcatchment)
         self.Psi = Psi
         self.Ksat = Ksat
         self.IMD = IMD
-        _Infiltration.__init__(self, subcatchment)
 
 
 class InfiltrationCurveNumber(_Infiltration):
@@ -825,10 +860,10 @@ class InfiltrationCurveNumber(_Infiltration):
         Returns:
 
         """
+        _Infiltration.__init__(self, subcatchment)
         self.CurveNo = CurveNo
         self.Ksat = Ksat
         self.DryTime = DryTime
-        _Infiltration.__init__(self, subcatchment)
 
 
 class DryWeatherFlow(BaseSection):
@@ -1011,7 +1046,7 @@ class RainGauge(BaseSection):
             Station (str): name of recording station used in the rain file.
             Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
         """
-        self.Name = Name
+        self.Name = str(Name)
         self.Format = Format
         self.Interval = Interval
         self.SCF = SCF
@@ -1073,7 +1108,7 @@ class Pump(BaseSection):
         OFF = 'OFF'
 
     def __init__(self, Name, FromNode, ToNode, Pcurve, Status='ON', Startup=0, Shutoff=0):
-        self.Name = Name
+        self.Name = str(Name)
         self.FromNode = FromNode
         self.ToNode = ToNode
         self.Pcurve = Pcurve
@@ -1119,10 +1154,13 @@ class Pattern(BaseSection):
         HOURLY = 'HOURLY'
         WEEKEND = 'WEEKEND'
 
-    def __init__(self, Name, Type, *Factors):
-        self.Name = Name
+    def __init__(self, Name, Type, *factors, Factors=None):
+        self.Name = str(Name)
         self.Type = Type
-        self.Factors = list(Factors)
+        if Factors is not None:
+            self.Factors = Factors
+        else:
+            self.Factors = list(float(f) for f in factors)
         # BaseSection.__init__(self, vars(self))
 
     @classmethod
@@ -1205,7 +1243,7 @@ class Pollutant(BaseSection):
 
     def __init__(self, Name, Units, Crain, Cgw, Crdii, Kdecay,
                  SnowOnly=False, Co_Pollutant='*', Co_Frac=0, Cdwf=0, Cinit=0):
-        self.Name = Name
+        self.Name = str(Name)
         self.Units = Units
         self.Crain = Crain
         self.Cgw = Cgw

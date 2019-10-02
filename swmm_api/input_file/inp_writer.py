@@ -2,6 +2,7 @@ from pandas import DataFrame, Series, set_option as set_pandas_options
 
 from .inp_helpers import InpSection, dataframe_to_inp_string
 from .helpers.type_converter import type2str
+from .helpers.sections import *
 import yaml
 
 set_pandas_options("display.max_colwidth", 10000)
@@ -51,6 +52,16 @@ def timeseries2string(cat):
         df = df[['Date  Time', 'Value']].copy()
         f += df.to_string()
         f += '\n'
+    return f
+
+
+def tags2string(cat):
+    f = ''
+    max_len_type = len(max(cat.keys(), key=len)) + 2
+    for type_, tags in cat.items():
+        max_len_name = len(max(tags.keys(), key=len)) + 2
+        for name, tag in tags.items():
+            f += '{{:<{len1}}} {{:<{len2}}} {{}}\n'.format(len1=max_len_type, len2=max_len_name).format(type_, name, tag)
     return f
 
 
@@ -106,38 +117,45 @@ def general_category2string(cat, fast=False):
     return f
 
 
-sections = ['TITLE',
-            'OPTIONS',
-            'REPORT',
-            'EVAPORATION',
-            'TEMPERATURE',
+sections_order = [TITLE,
+                  OPTIONS,
+                  REPORT,
+                  EVAPORATION,
+                  TEMPERATURE,
 
-            'JUNCTIONS',
-            'DWF',
-            'OUTFALLS',
-            'STORAGE',
+                  JUNCTIONS,
+                  DWF,
+                  OUTFALLS,
+                  STORAGE,
 
-            'CONDUITS',
-            'WEIRS',
-            'ORIFICES',
-            'OUTLETS',
+                  CONDUITS,
+                  WEIRS,
+                  ORIFICES,
+                  OUTLETS,
 
-            'LOSSES',
-            'XSECTIONS',
+                  LOSSES,
+                  XSECTIONS,
 
-            'INFLOWS',
-            'CURVES',
-            'TIMESERIES',
-            'RAINGAGES',
+                  INFLOWS,
+                  CURVES,
+                  TIMESERIES,
+                  RAINGAGES,
 
-            'SUBCATCHMENTS',
-            'SUBAREAS',
-            'INFILTRATION',
+                  SUBCATCHMENTS,
+                  SUBAREAS,
+                  INFILTRATION,
 
-            'POLLUTANTS',
-            'LOADINGS',
+                  POLLUTANTS,
+                  LOADINGS,
 
-            'PATTERNS']
+                  PATTERNS]
+
+
+def _sort_by(key):
+    if key in sections_order:
+        return sections_order.index(key)
+    else:
+        return len(sections_order)
 
 
 def inp2string(network, fast=False):
@@ -151,17 +169,17 @@ def inp2string(network, fast=False):
 
     """
     f = ''
-    for head in sections:
-        if head not in network:
-            continue
+    for head in sorted(network.keys(), key=_sort_by):
         f += ('\n;' + '_' * 100 + '\n')
         f += ('[{}]\n'.format(head))
         cat = network[head]
 
-        if head == 'CURVES':
+        if head == CURVES:
             f += curves2string(cat)
-        elif head == 'TIMESERIES':
+        elif head == TIMESERIES:
             f += timeseries2string(cat)
+        elif head == TAGS:
+            f += tags2string(cat)
         else:
             f += general_category2string(cat, fast=fast)
 

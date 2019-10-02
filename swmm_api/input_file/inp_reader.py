@@ -4,6 +4,7 @@ from .inp_sections import *
 from .inp_helpers import InpSection
 from .helpers.type_converter import infer_type
 from pandas import DataFrame, Series, to_datetime
+from .helpers.sections import *
 
 
 def convert_title(lines):
@@ -14,164 +15,240 @@ def convert_title(lines):
 
 def convert_options(lines):
     """
-    * .. defaults
+    Section:
+        [OPTIONS]
 
-    FLOW_UNITS           CFS*/GPM/MGD/CMS/LPS/MLD
-    INFILTRATION         HORTON* / MODIFIED_HORTON / GREEN_AMPT / MODIFIED_GREEN_AMPT / CURVE_NUMBER
-    FLOW_ROUTING         STEADY / KINWAVE* / DYNWAVE
-    LINK_OFFSETS         DEPTH* / ELEVATION
-    FORCE_MAIN_EQUATION  H-W* / D-W
-    IGNORE_RAINFALL      YES / NO*
-    IGNORE_SNOWMELT      YES / NO*
-    IGNORE_GROUNDWATER   YES / NO*
-    IGNORE_RDII          YES / NO*
-    IGNORE_ROUTING       YES / NO*
-    IGNORE_QUALITY       YES / NO*
-    ALLOW_PONDING        YES / NO*
-    SKIP_STEADY_STATE    YES / NO*
-    SYS_FLOW_TOL         value (5)
-    LAT_FLOW_TOL         value (5)
-    START_DATE           month/day/year (1/1/2002)
-    START_TIME           hours:minutes (0:00:00)
-    END_DATE             month/day/year (START_DATE)
-    END_TIME             hours:minutes (24:00:00)
-    REPORT_START_DATE    month/day/year (START_DATE)
-    REPORT_START_TIME    hours:minutes (START_TIME)
-    SWEEP_START          month/day (1/1)
-    SWEEP_END            month/day (12/31)
-    DRY_DAYS             days (0)
-    REPORT_STEP          hours:minutes:seconds (0:15:00)
-    WET_STEP             hours:minutes:seconds (0:05:00)
-    DRY_STEP             hours:minutes:seconds (1:00:00)
-    ROUTING_STEP         seconds (600)
-    LENGTHENING_STEP     seconds (0)
-    VARIABLE_STEP        value (0)
-    MINIMUM_STEP         seconds (0.5)
-    INERTIAL_DAMPING     NONE / PARTIAL / FULL
-    NORMAL_FLOW_LIMITED  SLOPE / FROUDE / BOTH*
+    Purpose:
+        Provides values for various analysis options.
 
-    MIN_SURFAREA        value (12.566 ft2 (i.e., the area of a 4-ft diameter manhole))
-    MIN_SLOPE           value (0)
-    MAX_TRIALS          value (8)
-    HEAD_TOLERANCE      value (0.0015)
-    THREADS             value (1)
-    TEMPDIR             directory
+    Format:
+        * .. defaults
+
+        FLOW_UNITS           CFS*/GPM/MGD/CMS/LPS/MLD
+        INFILTRATION         HORTON* / MODIFIED_HORTON / GREEN_AMPT / MODIFIED_GREEN_AMPT / CURVE_NUMBER
+        FLOW_ROUTING         STEADY / KINWAVE* / DYNWAVE
+        LINK_OFFSETS         DEPTH* / ELEVATION
+        FORCE_MAIN_EQUATION  H-W* / D-W
+        IGNORE_RAINFALL      YES / NO*
+        IGNORE_SNOWMELT      YES / NO*
+        IGNORE_GROUNDWATER   YES / NO*
+        IGNORE_RDII          YES / NO*
+        IGNORE_ROUTING       YES / NO*
+        IGNORE_QUALITY       YES / NO*
+        ALLOW_PONDING        YES / NO*
+        SKIP_STEADY_STATE    YES / NO*
+        SYS_FLOW_TOL         value (5)
+        LAT_FLOW_TOL         value (5)
+        START_DATE           month/day/year (1/1/2002)
+        START_TIME           hours:minutes (0:00:00)
+        END_DATE             month/day/year (START_DATE)
+        END_TIME             hours:minutes (24:00:00)
+        REPORT_START_DATE    month/day/year (START_DATE)
+        REPORT_START_TIME    hours:minutes (START_TIME)
+        SWEEP_START          month/day (1/1)
+        SWEEP_END            month/day (12/31)
+        DRY_DAYS             days (0)
+        REPORT_STEP          hours:minutes:seconds (0:15:00)
+        WET_STEP             hours:minutes:seconds (0:05:00)
+        DRY_STEP             hours:minutes:seconds (1:00:00)
+        ROUTING_STEP         seconds (600)
+        LENGTHENING_STEP     seconds (0)
+        VARIABLE_STEP        value (0)
+        MINIMUM_STEP         seconds (0.5)
+        INERTIAL_DAMPING     NONE / PARTIAL / FULL
+        NORMAL_FLOW_LIMITED  SLOPE / FROUDE / BOTH*
+
+        MIN_SURFAREA        value (12.566 ft2 (i.e., the area of a 4-ft diameter manhole))
+        MIN_SLOPE           value (0)
+        MAX_TRIALS          value (8)
+        HEAD_TOLERANCE      value (0.0015)
+        THREADS             value (1)
+        TEMPDIR             directory
 
     Args:
-        lines (list):
+        lines (list): section lines from input file
 
     Returns:
-        pandas.Series: options
+        dict: options
     """
-    new_lines = {}
+    options = {}
     for line in lines:
-        sub_head = line[0]
-        if len(line) == 2:
-            pass
-            opt = line[1]
-
-        else:
-            raise UserWarning('?')
-
-        new_lines[sub_head] = opt
-
-    return new_lines
+        label = line.pop(0)
+        assert len(line) == 1
+        options[label] = infer_type(line[0])
+    return options
 
 
 def convert_report(lines):
     """
-    * .. defaults
-    INPUT          YES / NO*
-    CONTINUITY     YES* / NO
-    FLOWSTATS      YES* / NO
-    CONTROLS       YES / NO*
-    SUBCATCHMENTS  ALL / NONE* / <list of subcatchment names>
-    NODES          ALL / NONE* / <list of node names>
-    LINKS          ALL / NONE* / <list of link names>
-    LID            Name Subcatch Fname
+    Section:
+        [REPORT]
+
+    Purpose:
+        Describes the contents of the report file that is produced.
+
+    Formats:
+        INPUT          YES / NO*
+        CONTINUITY     YES* / NO
+        FLOWSTATS      YES* / NO
+        CONTROLS       YES / NO*
+        SUBCATCHMENTS  ALL / NONE* / <list of subcatchment names>
+        NODES          ALL / NONE* / <list of node names>
+        LINKS          ALL / NONE* / <list of link names>
+        LID            Name Subcatch Fname
+
+        * .. defaults
+
+    Remarks:
+        INPUT specifies whether or not a summary of the input data should be provided in
+        the output report. The default is NO.
+
+        CONTINUITY specifies whether continuity checks should be reported or not. The
+        default is YES.
+
+        FLOWSTATS specifies whether summary flow statistics should be reported or not. The
+        default is YES.
+
+        CONTROLS specifies whether all control actions taken during a simulation should be
+        listed or not. The default is NO.
+
+        SUBCATCHMENTS gives a list of subcatchments whose results are to be reported. The
+        default is NONE.
+
+        NODES gives a list of nodes whose results are to be reported. The default is NONE.
+
+        LINKS gives a list of links whose results are to be reported. The default is NONE.
+
+        LID specifies that the LID control Name in subcatchment Subcatch should have a
+        detailed performance report for it written to file Fname.
+
+        The SUBCATCHMENTS, NODES, LINKS, and LID lines can be repeated multiple times.
 
     Args:
-        lines (list):
+        lines (list): section lines from input file
 
     Returns:
-        pandas.Series: report
+        dict: report
     """
-    new_lines = {}
+    options = {}
     for line in lines:
-        sub_head = line[0]
-        if len(line) == 2:
-            opt = line[1]
+        label = line.pop(0)
+        if len(line) == 1:
+            value = infer_type(line[0])
 
-        elif (sub_head == 'LID') and (len(line) == 4):
-            opt = {'Name': line[1],
-                   'Subcatch': line[2],
-                   'Fname': line[3]}
+        elif (label == 'LID') and (len(line) == 3):
+            value = {'Name': line[0],
+                     'Subcatch': line[1],
+                     'Fname': line[2]}
 
         else:
-            opt = line[1:]
+            value = infer_type(line)
 
-        new_lines[sub_head] = opt
+        options[label] = value
 
-    return new_lines
+    return options
 
 
 def convert_evaporation(lines):
     """
-    CONSTANT    evap (0)
-    MONTHLY     e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12
-    TIMESERIES  Tseries
-    TEMPERATURE
-    FILE        (p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 p11 p12)
+    Section:
+        [EVAPORATION]
 
-    RECOVERY    patternID
-    DRY_ONLY    NO / YES
+    Purpose:
+        Specifies how daily evaporation rates vary with time for the study area.
 
-    Use only one of the above formats (CONSTANT, MONTHLY, TIMESERIES, TEMPERATURE, or FILE)
+    Formats:
+        CONSTANT    evap (0)
+        MONTHLY     e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12
+        TIMESERIES  Tseries
+        TEMPERATURE
+        FILE        (p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 p11 p12)
 
-    :param lines:
-    :return:
+        RECOVERY    patternID
+        DRY_ONLY    NO / YES
+
+    Remarks:
+        evap
+             constant evaporation rate (in/day or mm/day).
+        e1
+             evaporation rate in January (in/day or mm/day).
+        ...
+        e12
+             evaporation rate in December (in/day or mm/day).
+        Tseries
+             name of time series in [TIMESERIES] section with evaporation data.
+        p1
+             pan coefficient for January.
+        ...
+        p12
+             pan coefficient for December.
+        patID
+             name of a monthly time pattern.
+
+        Use only one of the above formats (CONSTANT, MONTHLY, TIMESERIES,
+        TEMPERATURE, or FILE). If no [EVAPORATION] section appears, then evaporation is
+        assumed to be 0.
+
+        TEMPERATURE indicates that evaporation rates will be computed from the daily air
+        temperatures contained in an external climate file whose name is provided in the
+        [TEMPERATURE] section (see below). This method also uses the site’s latitude, which
+        can also be specified in the [TEMPERATURE] section.
+
+        FILE indicates that evaporation data will be read directly from the same external
+        climate file used for air temperatures as specified in the [TEMPERATURE] section
+        (see below).
+
+        RECOVERY identifies an optional monthly time pattern of multipliers used to modify
+        infiltration recovery rates during dry periods. For example, if the normal infiltration
+        recovery rate was 1% during a specific time period and a pattern factor of 0.8 applied
+        to this period, then the actual recovery rate would be 0.8%.
+
+        DRY_ONLY determines if evaporation only occurs during periods with no precipitation.
+        The default is NO.
+
+    Args:
+        lines (list): section lines from input file
+
+    Returns:
+        dict: evaporation_options
     """
-    new_lines = {}
+    options = {}
     for line in lines:
 
-        sub_head = line[0]
-        if len(line) == 2:
-            opt = line[1]
+        label = line.pop(0)
+        if len(line) == 1:
+            value = line[0]
 
-        elif sub_head == 'TEMPERATURE':
-            if len(line) == 1:
-                opt = ''
-            else:
-                raise NotImplementedError()
+        elif label == 'TEMPERATURE':
+            assert len(line) == 0
+            value = ''
 
-        elif sub_head == 'MONTHLY':
-            if len(line) == 13:
-                opt = line[1:]
-            else:
-                raise NotImplementedError()
+        elif label == 'MONTHLY':
+            assert len(line) == 12
+            value = line[1:]
 
-        elif sub_head == 'FILE':
-            if len(line) == 13:
-                opt = line[1:]
-            elif len(line) == 1:
-                opt = ''
+        elif label == 'FILE':
+            if len(line) == 12:
+                value = line[1:]
+            elif len(line) == 0:
+                value = ''
             else:
                 raise NotImplementedError()
 
         else:
-            opt = line[1:]
+            value = line
 
-        new_lines[sub_head] = opt
+        options[label] = infer_type(value)
 
-    mult_infos = [x in new_lines for x in ['CONSTANT', 'MONTHLY', 'TIMESERIES', 'TEMPERATURE', 'FILE']]
+    mult_infos = [x in options for x in ['CONSTANT', 'MONTHLY', 'TIMESERIES', 'TEMPERATURE', 'FILE']]
 
     if sum(mult_infos) != 1:
         if sum(mult_infos) == 0:
-            new_lines['CONSTANT'] = 0
+            options['CONSTANT'] = 0
         else:
             raise UserWarning('Too much evaporation')
 
-    return new_lines
+    return options
 
 
 def convert_temperature(lines):
@@ -248,7 +325,7 @@ def convert_temperature(lines):
             assert n_options == 1
             opt = line[0]
 
-        elif sub_head =='FILE':
+        elif sub_head == 'FILE':
             if n_options == 1:
                 opt = line[0]
             else:
@@ -496,69 +573,83 @@ def convert_map(lines):
 
 
 def convert_tags(lines):
-    df = DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
+    # TAGS AS DATAFRAME
+    # tags = DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
+
+    tags = dict()
+    for line in lines:
+        type_, name, tag = line
+        if type_ not in tags:
+            tags[type_] = dict()
+
+        tags[type_][name] = tag
+
+    # ---------------------------------------
+    # MAKE TAGS TO SERIES
+    # tags_df = dict()
+    # for type_ in tags:
+    #     tags_df[type_] = DataFrame.from_dict(tags[type_], orient='index')
+
     # df[0].unique()
     # ['Subcatch', 'Node', 'Link']
-    return df
+    return tags
 
 
 class InpReader:
-    def __init__(self, drop_gui_part=True):
+    def __init__(self):
         self._data = dict()
-        self.drop_gui_part = drop_gui_part
-        self._gui_data = dict()
 
     convert_handler_old = {
-        'REPORT': convert_report,
-        'TITLE': convert_title,
-        'OPTIONS': convert_options,
-        'EVAPORATION': convert_evaporation,
-        'TEMPERATURE': convert_temperature,
+        REPORT: convert_report,
+        TITLE: convert_title,
+        OPTIONS: convert_options,
+        EVAPORATION: convert_evaporation,
+        TEMPERATURE: convert_temperature,
 
-        'CURVES': convert_curves,
-        'TIMESERIES': convert_timeseries,
+        CURVES: convert_curves,
+        TIMESERIES: convert_timeseries,
 
-        'LOADINGS': convert_loadings,
+        LOADINGS: convert_loadings,
 
-        'COORDINATES': convert_coordinates,
-        'MAP': convert_map,
+        COORDINATES: convert_coordinates,
+        MAP: convert_map,
 
-        'TAGS': convert_tags,
+        TAGS: convert_tags,
     }
     convert_handler_new = {
-        'CONDUITS': Conduit,
-        'ORIFICES': Orifice,
-        'JUNCTIONS': Junction,
-        'SUBCATCHMENTS': SubCatchment,
-        'SUBAREAS': SubArea,
-        'DWF': DryWeatherFlow,
-        'XSECTIONS': CrossSection,
-        'INFILTRATION': Infiltration,
-        'OUTFALLS': Outfall,
-        'WEIRS': Weir,
-        'STORAGE': Storage,
-        'OUTLETS': Outlet,
-        'LOSSES': Loss,
-        'INFLOWS': Inflow,
-        'RAINGAGES': RainGauge,
-        'PUMPS': Pump,
-        'PATTERNS': Pattern,
-        'POLLUTANTS': Pollutant,
+        CONDUITS: Conduit,
+        ORIFICES: Orifice,
+        JUNCTIONS: Junction,
+        SUBCATCHMENTS: SubCatchment,
+        SUBAREAS: SubArea,
+        DWF: DryWeatherFlow,
+        XSECTIONS: CrossSection,
+        INFILTRATION: Infiltration,
+        OUTFALLS: Outfall,
+        WEIRS: Weir,
+        STORAGE: Storage,
+        OUTLETS: Outlet,
+        LOSSES: Loss,
+        INFLOWS: Inflow,
+        RAINGAGES: RainGauge,
+        PUMPS: Pump,
+        PATTERNS: Pattern,
+        POLLUTANTS: Pollutant,
     }
 
     GUI_SECTIONS = [
-        'MAP',
-        'POLYGONS',
-        'VERTICES',
-        'LABELS',
-        'SYMBOLS',
-        'BACKDROP',
-        'COORDINATES',
+        MAP,
+        POLYGONS,
+        VERTICES,
+        LABELS,
+        SYMBOLS,
+        BACKDROP,
+        COORDINATES,
     ]
 
-    UNKNOWN_SECTIONS = [
-        'PROFILES',
-    ]
+    # UNKNOWN_SECTIONS = [
+    #     'PROFILES',
+    # ]
 
     def read_inp(self, filename):
         if isinstance(filename, str):
@@ -588,25 +679,44 @@ class InpReader:
                 #     self._data[head].append(line.split())
                 #     # self._data[head].append([infer_type(i) for i in line.split() if i != ''])  # infer_type(i)
 
-    def convert_sections(self):
+    def convert_sections(self, ignore_sections=None, convert_sections=None):
         for head, lines in self._data.items():
+            if ignore_sections is not None and head in ignore_sections:
+                continue
 
-            if self.drop_gui_part and head in self.GUI_SECTIONS + self.UNKNOWN_SECTIONS:
-                self._gui_data[head] = lines
+            if convert_sections is not None and head not in convert_sections:
+                continue
 
-            elif head in self.convert_handler_old:
+            # if self.drop_gui_part and head in self.GUI_SECTIONS + self.UNKNOWN_SECTIONS:
+            #     self._gui_data[head] = lines
+
+            if head in self.convert_handler_old:
                 self._data[head] = self.convert_handler_old[head](lines)
 
             elif head in self.convert_handler_new:
                 self._data[head] = InpSection.from_lines(lines, self.convert_handler_new[head])
 
-            else:
-                self._data[head] = lines
+            # else:
+            #     self._data[head] = lines
 
     @classmethod
-    def from_file(cls, filename, drop_gui_part=True, convert_sections=True):
-        inp_reader = cls(drop_gui_part=drop_gui_part)
+    def from_file(cls, filename, drop_gui_part=True, ignore_sections=None, convert_sections=None):
+        """
+        Args:
+            filename:
+            drop_gui_part:
+            ignore_sections:
+            convert_sections:
+
+        Returns:
+
+        """
+        inp_reader = cls()
         inp_reader.read_inp(filename)
-        if convert_sections:
-            inp_reader.convert_sections()
+        if drop_gui_part:
+            if ignore_sections is None:
+                ignore_sections = list()
+            ignore_sections += cls.GUI_SECTIONS
+
+        inp_reader.convert_sections(ignore_sections=ignore_sections, convert_sections=convert_sections)
         return inp_reader._data

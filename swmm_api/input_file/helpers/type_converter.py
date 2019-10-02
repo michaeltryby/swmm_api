@@ -4,7 +4,9 @@ from pandas.tseries.frequencies import to_offset
 
 
 def infer_type(x):
-    if x == 'YES':
+    if isinstance(x, list):
+        return [infer_type(i) for i in x]
+    elif x == 'YES':
         return True
     elif x == 'NO':
         return False
@@ -12,7 +14,7 @@ def infer_type(x):
         return None
     elif x.replace('-', '').isdecimal():
         return int(x)
-    elif ('.' in x) and (x.replace('.', '').replace('-', '').replace('E', '').isdecimal()):
+    elif ('.' in x) and (x.lower().replace('.', '').replace('-', '').replace('e', '').isdecimal()):
         return float(x)
     elif x.count('/') == 2:
         return to_datetime(x, format='%m/%d/%Y').date()

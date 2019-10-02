@@ -1,3 +1,4 @@
+import pickle
 from os import path, remove
 from warnings import warn
 from pandas import Series, DataFrame
@@ -41,6 +42,7 @@ class InpMacros(MyUserDict):
         self.filename = None
         self.basename = None
         self.dirname = None
+        self.input_reader = InpReader
 
     def set_name(self, name):
         self.filename = name
@@ -65,19 +67,37 @@ class InpMacros(MyUserDict):
     def __str__(self):
         return inp2string(self)
 
-    def _read_inp(self, drop_gui_part=True):
-        MyUserDict.__init__(self, **InpReader.from_file(self.filename, drop_gui_part=drop_gui_part, convert_sections=True))
+    def _read_inp(self, drop_gui_part=True, ignore_sections=None, convert_sections=None):
+        MyUserDict.__init__(self, **self.input_reader.from_file(self.filename, drop_gui_part=drop_gui_part,
+                                                                ignore_sections=ignore_sections,
+                                                                convert_sections=convert_sections))
 
     @classmethod
-    def from_file(cls, filename, drop_gui_part=True):
+    def from_file(cls, filename, drop_gui_part=True, custom_inp_reader=None, ignore_sections=None,
+                  convert_sections=None):
         inp = cls()
         inp.set_name(filename)
-        inp._read_inp(drop_gui_part=drop_gui_part)
+        if custom_inp_reader is not None:
+            inp.input_reader = custom_inp_reader
+        inp._read_inp(drop_gui_part=drop_gui_part, ignore_sections=ignore_sections, convert_sections=convert_sections)
         return inp
 
     # @class_timeit
     def write(self, fast=False):
         write_inp_file(self, self.filename, fast=fast)
+
+    @classmethod
+    def from_pickle(cls, fn):
+        new = cls()
+        pkl_file = open(fn, 'rb')
+        new._data = pickle.load(pkl_file)
+        pkl_file.close()
+        return new
+
+    def to_pickle(self, fn):
+        output = open(fn, 'wb')
+        pickle.dump(self._data, output)
+        output.close()
 
     # ------------------------------------------------------------------------------------------------------------------
     # @class_timeit
@@ -129,40 +149,40 @@ class InpMacros(MyUserDict):
         return parquet.read(self.parquet_filename)
 
     ####################################################################################################################
-    @property
-    def report(self):
-        if 'REPORT' in self:
-            return self['REPORT']
-        else:
-            return None
-
-    @property
-    def options(self):
-        if 'OPTIONS' in self:
-            return self['OPTIONS']
-        else:
-            return None
-
-    @property
-    def curves(self):
-        if 'CURVES' in self:
-            return self['CURVES']
-        else:
-            return None
-
-    @property
-    def timeseries(self):
-        if 'TIMESERIES' in self:
-            return self['TIMESERIES']
-        else:
-            return None
-
-    @property
-    def inflows(self):
-        if 'INFLOWS' in self:
-            return self['INFLOWS']
-        else:
-            return None
+    # @property
+    # def report(self):
+    #     if 'REPORT' in self:
+    #         return self['REPORT']
+    #     else:
+    #         return None
+    #
+    # @property
+    # def options(self):
+    #     if 'OPTIONS' in self:
+    #         return self['OPTIONS']
+    #     else:
+    #         return None
+    #
+    # @property
+    # def curves(self):
+    #     if 'CURVES' in self:
+    #         return self['CURVES']
+    #     else:
+    #         return None
+    #
+    # @property
+    # def timeseries(self):
+    #     if 'TIMESERIES' in self:
+    #         return self['TIMESERIES']
+    #     else:
+    #         return None
+    #
+    # @property
+    # def inflows(self):
+    #     if 'INFLOWS' in self:
+    #         return self['INFLOWS']
+    #     else:
+    #         return None
 
     ####################################################################################################################
     def reset_section(self, cat, cls):

@@ -162,7 +162,7 @@ class InpSection(MyUserDict):
 
         # -----------------------
         for line in lines:
-            line = [infer_type(i) for i in line]
+            line = infer_type(line)
             if inp_section is None:
                 # if multiple types are possible and ie.: Infiltration
                 first_section_line = section_class(*line)
