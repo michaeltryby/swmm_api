@@ -4,19 +4,9 @@ from numpy import isnan, NaN
 from .helpers.type_converter import type2str, infer_type
 
 
-def convert_name(name, new_name='J'):
-    if isinstance(name, str):
-        if '_' in name:
-            return name
-        new_name += name
-    elif isinstance(name, int):
-        new_name += '{:02d}'.format(name)
-    else:
-        new_name += str(name)
-    return new_name
-
-
+########################################################################################################################
 class MyUserDict:
+    """imitate UserDict / user class like dict but operations only effect self._data"""
 
     def __init__(self, d=None, **kwargs):
         if d is None:
@@ -72,7 +62,10 @@ class MyUserDict:
         return self._data.pop(key)
 
 
+########################################################################################################################
 class BaseSection:
+    """base class for all section objects to unify operations
+    sections objects only have __init__ with object parameters"""
     index = ''
 
     def get(self, key):
@@ -80,13 +73,40 @@ class BaseSection:
             return tuple([self.get(k) for k in key])
         return self.to_dict_().get(key)
 
+    def set(self, key, value):
+        assert key in self.to_dict_()
+        vars(self)[key] = value
+
+    def __getitem__(self, key):
+        return self.get(key)
+
+    def __setitem__(self, key, item):
+        self.set(key, item)
+
     def to_dict_(self):
-        return vars(self)
+        """
+        get all object parameters as dictionary
+
+        Returns:
+            dict:
+        """
+        return vars(self).copy()
 
     def __repr__(self):
         return str(self)
 
     def __str__(self):
+        return self.to_debug_string()
+
+    def to_debug_string(self):
+        """
+        for debugging purposes
+        string is almost equal to python syntax
+        so you could copy it and past it into your code
+
+        Returns:
+            str: debug string of the object
+        """
         args = list()
         for k, d in self.to_dict_().items():
             if isinstance(d, float) and isnan(d):
@@ -98,7 +118,14 @@ class BaseSection:
         return '{}({})'.format(self.__class__.__name__, ', '.join(args))
 
     def inp_line(self):
-        di = self.to_dict_().copy()
+        """
+        convert object to one line of the .inp file
+        for .inp file writing
+
+        Returns:
+            str: SWMM .inp file compatible string
+        """
+        di = self.to_dict_()
         s = ''
         if isinstance(self.index, list):
             s += ' '.join([str(di.pop(i)) for i in self.index])
@@ -108,12 +135,10 @@ class BaseSection:
         s += ' ' + ' '.join([type2str(i) for i in di.values()])
         return s
 
-    # @property
-    # def string(self):
-    #     return str(self)
 
-
+########################################################################################################################
 class InpSection(MyUserDict):
+    """each section of the .inp file is converted to such a section"""
     def __init__(self, index):
         if isinstance(index, str):
             self.index = index
@@ -126,6 +151,7 @@ class InpSection(MyUserDict):
 
     def append(self, item):
         """
+        add object(s)/item(s) to section
 
         Args:
             item (BaseSection | list[BaseSection]):
@@ -139,13 +165,15 @@ class InpSection(MyUserDict):
     @classmethod
     def from_lines(cls, lines, section_class):
         """
+        for .inp file reading
+        convert all lines of a section to this class and each line to a object
 
         Args:
-            lines (list):
+            lines (list[str]): lines of a section in a .inp file
             section_class (BaseSection):
 
         Returns:
-            InpSection:
+            InpSection: of one section
         """
         if isinstance(section_class, type):
             inp_section = cls(section_class)
@@ -175,6 +203,8 @@ class InpSection(MyUserDict):
 
     def to_frame_(self):
         """
+        convert section to a data-frame
+        for debugging purpose
 
         Returns:
             pandas.DataFrame:
@@ -198,12 +228,22 @@ class InpSection(MyUserDict):
         return self.to_frame_()
 
     def __repr__(self):
-        return str(self)
+        return dataframe_to_inp_string(self.to_frame_())
 
     def __str__(self):
         return dataframe_to_inp_string(self.to_frame_())
 
     def to_inp(self, fast=False):
+        """
+        section to a multi-line string
+        for .inp file writing
+
+        Args:
+            fast (bool): dont use any formatting else format as table
+
+        Returns:
+            str: .inp file string
+        """
         if fast:
             if bool(self):
                 s = ''
@@ -214,10 +254,20 @@ class InpSection(MyUserDict):
                 return ''
 
         else:
-            return str(self)
+            return dataframe_to_inp_string(self.to_frame_())
 
 
 def dataframe_to_inp_string(df):
+    """
+    convert a data-frame into a multi-line string
+    used to make a better readable .inp file and for debugging
+
+    Args:
+        df (pandas.DataFrame): section table
+
+    Returns:
+        str: .inp file conform string for one section
+    """
     if df.empty:
         return '; NO data'
 

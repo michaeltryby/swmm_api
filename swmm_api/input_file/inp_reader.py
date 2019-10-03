@@ -1,15 +1,30 @@
 import re
+from pandas import DataFrame, to_datetime
 
 from .inp_sections import *
 from .inp_helpers import InpSection
 from .helpers.type_converter import infer_type
-from pandas import DataFrame, Series, to_datetime
 from .helpers.sections import *
 
 
 def convert_title(lines):
+    """
+    Section:
+        [TITLE]
+
+    Purpose:
+        Attaches a descriptive title to the problem being analyzed.
+
+    Format:
+        Any number of lines may be entered. The first line will be used as a page header in the output report.
+
+    Args:
+        lines (list):
+
+    Returns:
+        str: the title
+    """
     title = '\n'.join([' '.join([str(word) for word in line]) for line in lines])
-    # print(general_category2string(title))
     return title
 
 
@@ -366,8 +381,10 @@ def convert_temperature(lines):
     return new_lines
 
 
+# ######################################################################################################################
 def _line_split(line):
     # but don't split quoted text
+    # for convert_timeseries
     return re.findall(r'[^"\s]\S*|".+?"', line)
 
 
@@ -461,15 +478,71 @@ def convert_timeseries(lines):
 
 def convert_curves(lines):
     """
-    * .. defaults
-    Name Type X-value Y-value ...
+    Section:
+        [CURVES]
 
-    Type STORAGE / SHAPE / DIVERSION / TIDAL / PUMP1 / PUMP2 / PUMP3 / PUMP4 / RATING / CONTROL
+    Purpose:
+        Describes a relationship between two variables in tabular format.
 
-    Name Type X-Value Y-Value
+    Format:
+        Name Type X-value Y-value ...
 
-    :param lines:
-    :return:
+    Format-PCSWMM:
+            Name Type X-Value Y-Value
+
+    Remarks:
+        Name
+            name assigned to table
+        Type
+            STORAGE / SHAPE / DIVERSION / TIDAL / PUMP1 / PUMP2 / PUMP3 / PUMP4 / RATING / CONTROL
+        X-value
+            an x (independent variable) value
+
+        Y-value
+            the y (dependent variable) value corresponding to x
+
+        Multiple pairs of x-y values can appear on a line. If more than one line is needed,
+        repeat the curve's name (but not the type) on subsequent lines. The x-values must
+        be entered in increasing order.
+
+        Choices for curve type have the following meanings (flows are expressed in the
+        user’s choice of flow units set in the [OPTIONS] section):
+
+        STORAGE
+            surface area in ft2 (m2) v. depth in ft (m) for a storage unit node
+        SHAPE
+            width v. depth for a custom closed cross-section, both normalized with respect to full depth
+        DIVERSION
+            diverted outflow v. total inflow for a flow divider node
+        TIDAL
+            water surface elevation in ft (m) v. hour of the day for an outfall node
+        PUMP1
+            pump outflow v. increment of inlet node volume in ft3 (m3)
+        PUMP2
+            pump outflow v. increment of inlet node depth in ft (m)
+        PUMP3
+            pump outflow v. head difference between outlet and inlet nodes in ft (m)
+        PUMP4
+            pump outflow v. continuous depth in ft (m)
+        RATING
+            outlet flow v. head in ft (m)
+        CONTROL
+            control setting v. controller variable
+
+    Examples:
+        ;Storage curve (x = depth, y = surface area)
+        AC1 STORAGE 0 1000 2 2000 4 3500 6 4200
+         8
+         5000
+        ;Type1 pump curve (x = inlet wet well volume, y = flow )
+        PC1 PUMP1
+        PC1 100 5 300 10 500 20
+
+    Args:
+        lines (list):
+
+    Returns:
+        dict[pandas.DataFrame]:
     """
     new_lines = {}
     kind = ''
@@ -507,24 +580,49 @@ def convert_curves(lines):
 
     curves = new_lines.copy()
 
+    # from dict to pandas dataframe
     for k in curves:
         for n in curves[k]:
             curves[k][n] = DataFrame.from_dict(curves[k][n], 'columns')
 
-    # print(curves2string(curves))
     return curves
 
 
 def convert_loadings(lines):
     """
-    * .. defaults
+    Section:
+        [LOADINGS]
 
-    Subcat  Pollut  InitBuildup  Pollut  InitBuildup ...
+    Purpose:
+        Specifies the pollutant buildup that exists on each subcatchment at the start of a simulation.
 
-    Subcatchment Pollutant Buildup
+    Format:
+        Subcat Pollut InitBuildup Pollut InitBuildup ...
 
-    :param lines:
-    :return:
+    Format-PCSWMM:
+        Subcatchment Pollutant Buildup
+
+    Remarks:
+        Subcat
+            name of a subcatchment.
+        Pollut
+            name of a pollutant.
+        InitBuildup
+            initial buildup of pollutant (lbs/acre or kg/hectare).
+
+        More than one pair of pollutant - buildup values can be entered per line. If more than
+        one line is needed, then the subcatchment name must still be entered first on the
+        succeeding lines.
+
+        If an initial buildup is not specified for a pollutant, then its initial buildup is computed
+        by applying the DRY_DAYS option (specified in the [OPTIONS] section) to the
+        pollutant’s buildup function for each land use in the subcatchment.
+
+    Args:
+        lines (list):
+
+    Returns:
+        pandas.DataFrame:
     """
     new_lines = {}
     for line in lines:
@@ -547,6 +645,30 @@ def convert_loadings(lines):
 
 
 def convert_coordinates(lines):
+    """
+    Section:
+        [COORDINATES]
+
+    Purpose:
+        Assigns X,Y coordinates to drainage system nodes.
+
+    Format:
+        Node Xcoord Ycoord
+
+    Remarks:
+        Node
+            name of node.
+        Xcoord
+            horizontal coordinate relative to origin in lower left of map.
+        Ycoord
+            vertical coordinate relative to origin in lower left of map.
+
+    Args:
+        lines (list):
+
+    Returns:
+        pandas.DataFrame:
+    """
     new_lines = {}
     for line in lines:
         name = line[0]
@@ -559,6 +681,33 @@ def convert_coordinates(lines):
 
 
 def convert_map(lines):
+    """
+    Section:
+        [MAP]
+
+    Purpose:
+        Provides dimensions and distance units for the map.
+
+    Formats:
+        DIMENSIONS X1 Y1 X2 Y2
+        UNITS FEET / METERS / DEGREES / NONE
+
+    Remarks:
+    X1
+        lower-left X coordinate of full map extent
+    Y1
+        lower-left Y coordinate of full map extent
+    X2
+        upper-right X coordinate of full map extent
+    Y2
+         upper-right Y coordinate of full map extent
+
+    Args:
+        lines (list):
+
+    Returns:
+        dict:
+    """
     new_lines = {}
     for line in lines:
         name = line[0]
@@ -573,6 +722,7 @@ def convert_map(lines):
 
 
 def convert_tags(lines):
+    """PC-SWMM ?"""
     # TAGS AS DATAFRAME
     # tags = DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
 
@@ -596,6 +746,7 @@ def convert_tags(lines):
 
 
 class InpReader:
+    """read SWMM .inp file and convert the data to a more usable format"""
     def __init__(self):
         self._data = dict()
 
@@ -639,19 +790,21 @@ class InpReader:
 
     GUI_SECTIONS = [
         MAP,
-        POLYGONS,
-        VERTICES,
-        LABELS,
-        SYMBOLS,
-        BACKDROP,
         COORDINATES,
+        VERTICES,
+        POLYGONS,
+        SYMBOLS,
+        LABELS,
+        BACKDROP,
     ]
 
-    # UNKNOWN_SECTIONS = [
-    #     'PROFILES',
-    # ]
-
     def read_inp(self, filename):
+        """
+        reads full .inp file and splits the lines into a list and each line into a list of strings
+
+        Args:
+            filename (str): path to .inp file
+        """
         if isinstance(filename, str):
             inp_file = open(filename, 'r', encoding='iso-8859-1')
         else:
@@ -660,35 +813,31 @@ class InpReader:
         head = None
         for line in inp_file:
             line = line.strip()
-            if line == '' or line.startswith(';'):
+            if line == '' or line.startswith(';'):  # ignore empty and comment lines
                 continue
 
-            elif line.startswith('[') and line.endswith(']'):
+            elif line.startswith('[') and line.endswith(']'):  # section head
                 head = line.replace('[', '').replace(']', '').upper()
                 self._data[head] = list()
 
             else:
                 self._data[head].append(line.split())
-                # if (head == 'TIMESERIES') or (
-                #         self.drop_gui_part and head in InpReader.GUI_SECTIONS + self.UNKNOWN_SECTIONS):
-                #     # to much data
-                #     # saves time
-                #     # type conversion in "convert_timeseries"
-                #     self._data[head].append(line.split())
-                # else:
-                #     self._data[head].append(line.split())
-                #     # self._data[head].append([infer_type(i) for i in line.split() if i != ''])  # infer_type(i)
 
     def convert_sections(self, ignore_sections=None, convert_sections=None):
-        for head, lines in self._data.items():
-            if ignore_sections is not None and head in ignore_sections:
-                continue
+        """
+        convert sections into special Sections Objects (InpSection)
+        and for each section into special separate objects (BaseSection)
 
+        Args:
+            ignore_sections (list[str]): don't convert ignored sections
+            convert_sections (list[str]): only convert these sections
+        """
+        for head, lines in self._data.items():
             if convert_sections is not None and head not in convert_sections:
                 continue
 
-            # if self.drop_gui_part and head in self.GUI_SECTIONS + self.UNKNOWN_SECTIONS:
-            #     self._gui_data[head] = lines
+            elif ignore_sections is not None and head in ignore_sections:
+                continue
 
             if head in self.convert_handler_old:
                 self._data[head] = self.convert_handler_old[head](lines)
@@ -696,20 +845,19 @@ class InpReader:
             elif head in self.convert_handler_new:
                 self._data[head] = InpSection.from_lines(lines, self.convert_handler_new[head])
 
-            # else:
-            #     self._data[head] = lines
-
     @classmethod
     def from_file(cls, filename, drop_gui_part=True, ignore_sections=None, convert_sections=None):
         """
+        read .inp file and convert given/all sections
+
         Args:
-            filename:
-            drop_gui_part:
-            ignore_sections:
-            convert_sections:
+            filename (str): path/filename to .inp file
+            drop_gui_part (bool): don't convert gui sections (ie. for commandline use)
+            ignore_sections (list[str]): don't convert ignored sections
+            convert_sections (list[str]): only convert these sections
 
         Returns:
-
+            dict: of sections of the .inp file
         """
         inp_reader = cls()
         inp_reader.read_inp(filename)

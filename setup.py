@@ -5,7 +5,7 @@ __email__ = "markus.pichler@tugraz.at"
 __version__ = "0.1"
 __license__ = "MIT"
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 with open("README.md", "r") as fh:
@@ -16,8 +16,13 @@ with open('requirements.txt') as f:
 
 setup(
     name='swmm-api',
-    version='0.1-alpha',
-    packages=['swmm_api'],
+    version='0.1.alpha2',
+    packages=['swmm_api',
+              'swmm_api.report_file',
+              'swmm_api.output_file',
+              'swmm_api.input_file',
+              'swmm_api.input_file.helpers',
+              'swmm_api.input_file.misc'],
     url='https://gitlab.tugraz.at/pichler/swmm_api',
     license='MIT',
     author='Markus Pichler',

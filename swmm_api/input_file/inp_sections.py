@@ -152,8 +152,8 @@ class Outfall(BaseSection):
         - Name Elev TIDAL      Tcurve  (Gated) (RouteTo)
         - Name Elev TIMESERIES Tseries (Gated) (RouteTo)
 
-    PC-SWMM-Format:
-        Name Elevation Type Data Gated Route-To
+    Formats-PCSWMM:
+        - Name Elevation Type Data Gated Route-To
 
     Remarks:
         - Name:
@@ -253,25 +253,54 @@ class Conduit(BaseSection):
 
     def __init__(self, Name, FromNode, ToNode, Length, Roughness, InOffset, OutOffset, InitFlow=0, MaxFlow=NaN):
         """
-        * .. defaults
+        Section:
+            [CONDUITS]
 
-        Name  Node1  Node2  Length  N  Z1  Z2  (Q0  Qmax)
+        Purpose:
+            Identifies each conduit link of the drainage system. Conduits are pipes or channels that convey water
+            from one node to another.
 
-        Q0 (0)
-        Qmax ()
+        Format:
+            Name  Node1  Node2  Length  N  Z1  Z2  (Q0  Qmax)
 
-        Name FromNode ToNode Length Roughness InOffset OutOffset InitFlow MaxFlow
+        Format-PCSWMM:
+            Name FromNode ToNode Length Roughness InOffset OutOffset InitFlow MaxFlow
+
+        Remarks:
+            Name
+                name assigned to conduit link.
+            Node1
+                name of upstream node.
+            Node2
+                name of downstream node.
+            Length
+                conduit length (ft or m).
+            N
+                value of n (i.e., roughness parameter) in Manning’s equation.
+            Z1
+                offset of upstream end of conduit invert above the invert elevation of its upstream node (ft or m).
+            Z2
+                offset of downstream end of conduit invert above the invert elevation of its downstream node (ft or m).
+            Q0
+                flow in conduit at start of simulation (flow units) (default is 0).
+            Qmax
+                maximum flow allowed in the conduit (flow units) (default is no limit).
+
+            These offsets are expressed as a relative distance above the node invert if the LINK_OFFSETS option is set
+            to DEPTH (the default) or as an absolute elevation if it is set to ELEVATION.
 
         Args:
-            Name ():
-            FromNode ():
-            ToNode ():
-            Length ():
-            Roughness ():
-            InOffset ():
-            OutOffset ():
-            InitFlow ():
-            MaxFlow ():
+            Name (str): name assigned to conduit link.
+            FromNode (str): name of upstream node.
+            ToNode (str): name of downstream node.
+            Length (float): conduit length (ft or m).
+            Roughness (float): value of n (i.e., roughness parameter) in Manning’s equation.
+            InOffset (float): offset of upstream end of conduit invert above the invert elevation of its
+                              upstream node (ft or m).
+            OutOffset (float): offset of downstream end of conduit invert above the invert elevation of its
+                              downstream node (ft or m).
+            InitFlow (float): flow in conduit at start of simulation (flow units) (default is 0).
+            MaxFlow (float): maximum flow allowed in the conduit (flow units) (default is no limit).
         """
         self.Name = str(Name)
         self.FromNode = FromNode
@@ -326,7 +355,8 @@ class Weir(BaseSection):
         PAVED = 'PAVED'
         GRAVEL = 'GRAVEL'
 
-    def __init__(self, Name, FromNode, ToNode, Type, CrestHeight, Qcoeff, FlapGate=False, EndContractions=0, EndCoeff=NaN,
+    def __init__(self, Name, FromNode, ToNode, Type, CrestHeight, Qcoeff, FlapGate=False, EndContractions=0,
+                 EndCoeff=NaN,
                  Surcharge=True, RoadWidth=NaN, RoadSurface=NaN):
         """
 
@@ -721,7 +751,8 @@ class SubArea(BaseSection):
         PERVIOUS = 'PERVIOUS'
         OUTLET = 'OUTLET'
 
-    def __init__(self, subcatchment, N_Imperv, N_Perv, S_Imperv, S_Perv, PctZero, RouteTo=RoutToOption.OUTLET, PctRouted=100):
+    def __init__(self, subcatchment, N_Imperv, N_Perv, S_Imperv, S_Perv, PctZero, RouteTo=RoutToOption.OUTLET,
+                 PctRouted=100):
         """
         Section:
             [SUBAREAS]
@@ -869,7 +900,7 @@ class InfiltrationCurveNumber(_Infiltration):
 class DryWeatherFlow(BaseSection):
     index = ['node', 'kind']
 
-    def __init__(self, node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN):
+    def __init__(self, node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN, pattern5=NaN):
         """
         Type: FLOW, <pollutant>
         Base: baseline
