@@ -4,6 +4,15 @@ from pandas.tseries.frequencies import to_offset
 
 
 def infer_type(x):
+    """
+    infer generic type of inp-file-string
+
+    Args:
+        x (str | list[str]):
+
+    Returns:
+        object: object depending on string
+    """
     if isinstance(x, list):
         return [infer_type(i) for i in x]
     elif x == 'YES':
@@ -20,9 +29,9 @@ def infer_type(x):
         return to_datetime(x, format='%m/%d/%Y').date()
     # elif x.count('/') == 1:
     #     return to_datetime(x, format='%m/%d').date()
-    elif x.count(':') == 2 and len(x) == 6:
+    elif (x.count(':') == 2) and (len(x) == 8):
         return to_datetime(x, format='%H:%M:%S').time()
-    elif x.count(':') == 1 and len(x) == 5:
+    elif (x.count(':') == 1) and (len(x) == 5):
         return to_datetime(x, format='%H:%M').time()
     else:
         return x
@@ -59,11 +68,12 @@ def delta2str(d):
 
 
 def type2str(x):
-    if isinstance(x, bool):
-        if x:
-            return 'YES'
-        else:
-            return 'NO'
+    if isinstance(x, str):
+        return x
+    elif isinstance(x, list):
+        return ' '.join([type2str(i) for i in x])
+    elif isinstance(x, bool):
+        return 'YES' if x else 'NO'
     elif x is None:
         return 'NONE'
     elif isinstance(x, int):
@@ -78,9 +88,7 @@ def type2str(x):
         return x.strftime(format='%m/%d/%Y')
     elif isinstance(x, time):
         return x.strftime(format='%H:%M:%S')
-    elif isinstance(x, list):
-        return ' '.join([type2str(i) for i in x])
     elif isinstance(x, (Timedelta, timedelta)):
-        return delta2time(x)
+        return delta2str(x)
     else:
         return str(x)

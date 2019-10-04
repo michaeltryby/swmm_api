@@ -135,10 +135,31 @@ class BaseSection:
         s += ' ' + ' '.join([type2str(i) for i in di.values()])
         return s
 
+    @classmethod
+    def from_line(cls, *line):
+        return cls(*line)
+
+
+########################################################################################################################
+# class InpSectionGeneric:
+#     @classmethod
+#     def from_lines(cls, lines):
+#         pass
+#
+#     def __repr__(self):
+#         pass
+#
+#     def __str__(self):
+#         pass
+#
+#     def to_inp(self, fast=False):
+#         pass
+
 
 ########################################################################################################################
 class InpSection(MyUserDict):
     """each section of the .inp file is converted to such a section"""
+
     def __init__(self, index):
         if isinstance(index, str):
             self.index = index
@@ -175,15 +196,9 @@ class InpSection(MyUserDict):
         Returns:
             InpSection: of one section
         """
-        if isinstance(section_class, type):
-            inp_section = cls(section_class)
-        else:
-            inp_section = None
+        inp_section = cls(section_class)
 
-        # -----------------------
-        # section with multiple line entries
-        # ie.: Pattern
-        if inp_section is not None and hasattr(section_class, 'convert_lines'):
+        if hasattr(section_class, 'convert_lines'):
             for section_class_line in section_class.convert_lines(lines):
                 inp_section.append(section_class_line)
             return inp_section
@@ -191,17 +206,12 @@ class InpSection(MyUserDict):
         # -----------------------
         for line in lines:
             line = infer_type(line)
-            if inp_section is None:
-                # if multiple types are possible and ie.: Infiltration
-                first_section_line = section_class(*line)
-                inp_section = cls(type(first_section_line))
-                inp_section.append(first_section_line)
+            inp_section.append(section_class.from_line(*line))
 
-            else:
-                inp_section.append(section_class(*line))
         return inp_section
 
-    def to_frame_(self):
+    @property
+    def frame(self):
         """
         convert section to a data-frame
         for debugging purpose
@@ -218,20 +228,11 @@ class InpSection(MyUserDict):
         else:
             return DataFrame()
 
-    @property
-    def frame(self):
-        """
-
-        Returns:
-            pandas.DataFrame:
-        """
-        return self.to_frame_()
-
     def __repr__(self):
-        return dataframe_to_inp_string(self.to_frame_())
+        return dataframe_to_inp_string(self.frame)
 
     def __str__(self):
-        return dataframe_to_inp_string(self.to_frame_())
+        return dataframe_to_inp_string(self.frame)
 
     def to_inp(self, fast=False):
         """
@@ -254,7 +255,7 @@ class InpSection(MyUserDict):
                 return ''
 
         else:
-            return dataframe_to_inp_string(self.to_frame_())
+            return dataframe_to_inp_string(self.frame)
 
 
 def dataframe_to_inp_string(df):
@@ -288,3 +289,7 @@ def dataframe_to_inp_string(df):
                 c.index.levels[0].name = ';' + c.index.levels[0].name
 
     return c.applymap(type2str).to_string(sparsify=False, line_width=9999)
+
+
+class InpData(MyUserDict):
+    pass

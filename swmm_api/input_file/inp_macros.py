@@ -5,44 +5,19 @@ from pandas import Series, DataFrame
 
 from ..run import swmm5_run
 from ..output_file import SwmmOutHandler, parquet
-from .inp_reader import InpReader
+from .inp_reader import read_inp_file
+from .inp_helpers import InpData
 from .inp_writer import write_inp_file, inp2string
+from .helpers.sections import REPORT
 from .helpers.type_converter import offset2delta
-from .inp_helpers import MyUserDict
 
 
-class InpMacros(MyUserDict):
-    """
-    'REPORT'
-    'TITLE'
-    'OPTIONS'
-    'EVAPORATION'
-    'JUNCTIONS'
-    'OUTFALLS'
-    'STORAGE'
-    'CONDUITS'
-    'WEIRS'
-    'XSECTIONS'
-    'INFLOWS'
-    'CURVES'
-    'TIMESERIES'
-    'RAINGAGES'
-    'SUBCATCHMENTS'
-    'SUBAREAS'
-    'INFILTRATION'
-    'POLLUTANTS'
-    'LOADINGS'
-    'DWF'
-    'PATTERNS'
-    'ORIFICES'
-    """
-
+class InpMacros(InpData):
     def __init__(self):
-        MyUserDict.__init__(self, {})
+        InpData.__init__(self, {})
         self.filename = None
         self.basename = None
         self.dirname = None
-        self.input_reader = InpReader
 
     def set_name(self, name):
         self.filename = name
@@ -67,19 +42,19 @@ class InpMacros(MyUserDict):
     def __str__(self):
         return inp2string(self)
 
-    def _read_inp(self, drop_gui_part=True, ignore_sections=None, convert_sections=None):
-        MyUserDict.__init__(self, **self.input_reader.from_file(self.filename, drop_gui_part=drop_gui_part,
-                                                                ignore_sections=ignore_sections,
-                                                                convert_sections=convert_sections))
+    def read_file(self, ignore_sections=None, convert_sections=None, custom_converter=None,
+                  ignore_gui_sections=True):
+        data = read_inp_file(self.filename, ignore_sections=ignore_sections, convert_sections=convert_sections,
+                                   custom_converter=custom_converter, ignore_gui_sections=ignore_gui_sections)
+        InpData.__init__(self, data)
 
     @classmethod
-    def from_file(cls, filename, drop_gui_part=True, custom_inp_reader=None, ignore_sections=None,
-                  convert_sections=None):
+    def from_file(cls, filename, ignore_sections=None, convert_sections=None, custom_converter=None,
+                  ignore_gui_sections=True):
         inp = cls()
         inp.set_name(filename)
-        if custom_inp_reader is not None:
-            inp.input_reader = custom_inp_reader
-        inp._read_inp(drop_gui_part=drop_gui_part, ignore_sections=ignore_sections, convert_sections=convert_sections)
+        inp.read_file(ignore_sections=ignore_sections, convert_sections=convert_sections,
+                      custom_converter=custom_converter, ignore_gui_sections=ignore_gui_sections)
         return inp
 
     # @class_timeit
@@ -269,7 +244,7 @@ class InpMacros(MyUserDict):
         else:
             raise NotImplementedError('Type: {} not implemented!'.format(type(new_obj)))
 
-        old_obj = self.report[obj_kind]
+        old_obj = self[REPORT][obj_kind]
         if isinstance(old_obj, str):
             old_obj = [old_obj]
         elif isinstance(old_obj, (int, float)):
@@ -281,7 +256,7 @@ class InpMacros(MyUserDict):
         else:
             raise NotImplementedError('Type: {} not implemented!'.format(type(old_obj)))
 
-        self.report[obj_kind] = old_obj + new_obj
+        self[REPORT][obj_kind] = old_obj + new_obj
 
     def add_nodes_to_report(self, new_nodes):
         self.add_obj_to_report(new_nodes, 'NODES')

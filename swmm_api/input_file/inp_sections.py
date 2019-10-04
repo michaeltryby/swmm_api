@@ -82,7 +82,6 @@ class Storage(BaseSection):
         else:
             self.Curve = Curve
             self._optional_args(Apond, Fevap, Psi, Ksat, IMD)
-        # BaseSection.__init__(self, vars(self))
 
     def _functional_init(self, A1, A2, A0, Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
         """
@@ -214,7 +213,6 @@ class Outfall(BaseSection):
         self.Data = Data
         self.FlapGate = FlapGate
         self.RouteTo = RouteTo
-        # BaseSection.__init__(self, vars(self))
 
     def _no_data_init(self, Gated=False, RouteTo=NaN):
         """
@@ -312,8 +310,6 @@ class Conduit(BaseSection):
         self.InitFlow = InitFlow
         self.MaxFlow = MaxFlow
 
-        # BaseSection.__init__(self, vars(self))
-
 
 class Weir(BaseSection):
     """
@@ -405,7 +401,6 @@ class Weir(BaseSection):
         self.Surcharge = bool(Surcharge)
         self.RoadWidth = float(RoadWidth)
         self.RoadSurf = RoadSurface
-        # BaseSection.__init__(self, vars(self))
 
 
 class Outlet(BaseSection):
@@ -480,7 +475,6 @@ class Outlet(BaseSection):
         else:
             self.Curve = Curve
             self.Gated = Gated
-        # BaseSection.__init__(self, vars(self))
 
     def _tabular_init(self, Qcurve, Gated=False):
         self.Curve = Qcurve
@@ -535,8 +529,6 @@ class Orifice(BaseSection):
         self.FlapGate = FlapGate
         self.Orate = Orate
 
-        # BaseSection.__init__(self, vars(self))
-
 
 class Junction(BaseSection):
     index = 'Name'
@@ -569,10 +561,8 @@ class Junction(BaseSection):
         self.SurDepth = SurDepth
         self.Aponded = Aponded
 
-        # BaseSection.__init__(self, vars(self))
 
-
-class _CrossSection(BaseSection):
+class CrossSection(BaseSection):
     index = 'Link'
 
     class Shapes:
@@ -603,29 +593,48 @@ class _CrossSection(BaseSection):
 
     def __init__(self, Link):
         self.Link = Link
-        # BaseSection.__init__(self, vars(self))
+
+    @classmethod
+    def from_line(cls, Link, Shape, *line):
+        """
+
+        Link Shape Geom1 Geom2 Geom3 Geom4 Barrels Culvert
+
+        Args:
+            line ():
+
+        Returns:
+
+        """
+        if Shape == cls.Shapes.IRREGULAR:
+            return CrossSectionIrregular(Link, *line)
+        elif Shape == cls.Shapes.CUSTOM:
+            return CrossSectionCustom(Link, *line)
+        else:
+            return CrossSectionShape(Link, Shape, *line)
+        pass
 
 
-def CrossSection(Link, Shape, *line):
-    """
+# def CrossSection(Link, Shape, *line):
+#     """
+#
+#     Link Shape Geom1 Geom2 Geom3 Geom4 Barrels Culvert
+#
+#     Args:
+#         line ():
+#
+#     Returns:
+#
+#     """
+#     if Shape == _CrossSection.Shapes.IRREGULAR:
+#         return CrossSectionIrregular(Link, *line)
+#     elif Shape == _CrossSection.Shapes.CUSTOM:
+#         return CrossSectionCustom(Link, *line)
+#     else:
+#         return CrossSectionShape(Link, Shape, *line)
 
-    Link Shape Geom1 Geom2 Geom3 Geom4 Barrels Culvert
 
-    Args:
-        line ():
-
-    Returns:
-
-    """
-    if Shape == _CrossSection.Shapes.IRREGULAR:
-        return CrossSectionIrregular(Link, *line)
-    elif Shape == _CrossSection.Shapes.CUSTOM:
-        return CrossSectionCustom(Link, *line)
-    else:
-        return CrossSectionShape(Link, Shape, *line)
-
-
-class CrossSectionShape(_CrossSection):
+class CrossSectionShape(CrossSection):
     def __init__(self, Link, Shape, Geom1, Geom2=0, Geom3=0, Geom4=0, Barrels=1, Culvert=NaN):
         """
         PC-SWMM-Format:
@@ -649,10 +658,10 @@ class CrossSectionShape(_CrossSection):
         self.Geom4 = Geom4
         self.Culvert = Culvert
         self.Barrels = Barrels
-        _CrossSection.__init__(self, Link)
+        CrossSection.__init__(self, Link)
 
 
-class CrossSectionIrregular(_CrossSection):
+class CrossSectionIrregular(CrossSection):
     def __init__(self, Link, Tsect):
         """
         Link IRREGULAR Tsect
@@ -661,12 +670,12 @@ class CrossSectionIrregular(_CrossSection):
             Link ():
             Tsect ():
         """
-        self.Shape = _CrossSection.Shapes.IRREGULAR
+        self.Shape = CrossSection.Shapes.IRREGULAR
         self.Tsect = Tsect
-        _CrossSection.__init__(self, Link)
+        CrossSection.__init__(self, Link)
 
 
-class CrossSectionCustom(_CrossSection):
+class CrossSectionCustom(CrossSection):
     def __init__(self, Link, Geom1, Curve, Geom3=0, Geom4=0, Barrels=1):
         """
         Link CUSTOM Geom1 Curve (Barrels)
@@ -679,14 +688,14 @@ class CrossSectionCustom(_CrossSection):
             Geom4 ():
             Barrels ():
         """
-        self.Shape = _CrossSection.Shapes.CUSTOM
+        self.Shape = CrossSection.Shapes.CUSTOM
         self.Geom1 = Geom1
         self.Geom2 = NaN
         self.Curve = Curve
         self.Geom3 = Geom3  # TODO not documentation conform
         self.Geom4 = Geom4  # TODO not documentation conform
         self.Barrels = Barrels
-        _CrossSection.__init__(self, Link)
+        CrossSection.__init__(self, Link)
 
 
 class SubCatchment(BaseSection):
@@ -739,7 +748,6 @@ class SubCatchment(BaseSection):
         self.Slope = Slope
         self.CurbLen = CurbLen
         self.SnowPack = SnowPack
-        # BaseSection.__init__(self, vars(self))
 
 
 class SubArea(BaseSection):
@@ -806,30 +814,38 @@ class SubArea(BaseSection):
         self.PctZero = PctZero
         self.RouteTo = RouteTo
         self.PctRouted = PctRouted
-        # BaseSection.__init__(self, vars(self))
 
 
-class _Infiltration(BaseSection):
+class Infiltration(BaseSection):
     index = 'subcatchment'
 
     def __init__(self, subcatchment):
         self.subcatchment = str(subcatchment)
 
-        # BaseSection.__init__(self, vars(self))
+    @classmethod
+    def from_line(cls, subcatchment, *args, **kwargs):
+        n_args = len(args) + len(kwargs.keys()) + 1
+        if n_args == 6:  # hortn
+            return InfiltrationHorton(subcatchment, *args, **kwargs)
+        elif n_args == 4:
+            return InfiltrationGreenAmpt(subcatchment, *args, **kwargs)
+        else:
+            # TODO
+            return InfiltrationCurveNumber(subcatchment, *args, **kwargs)
 
 
-def Infiltration(subcatchment, *args, **kwargs):
-    n_args = len(args) + len(kwargs.keys()) + 1
-    if n_args == 6:  # hortn
-        return InfiltrationHorton(subcatchment, *args, **kwargs)
-    elif n_args == 4:
-        return InfiltrationGreenAmpt(subcatchment, *args, **kwargs)
-    else:
-        # TODO
-        return InfiltrationCurveNumber(subcatchment, *args, **kwargs)
+# def Infiltration(subcatchment, *args, **kwargs):
+#     n_args = len(args) + len(kwargs.keys()) + 1
+#     if n_args == 6:  # hortn
+#         return InfiltrationHorton(subcatchment, *args, **kwargs)
+#     elif n_args == 4:
+#         return InfiltrationGreenAmpt(subcatchment, *args, **kwargs)
+#     else:
+#         # TODO
+#         return InfiltrationCurveNumber(subcatchment, *args, **kwargs)
 
 
-class InfiltrationHorton(_Infiltration):
+class InfiltrationHorton(Infiltration):
 
     def __init__(self, subcatchment, MaxRate, MinRate, Decay, DryTime, MaxInf):
         """
@@ -845,7 +861,7 @@ class InfiltrationHorton(_Infiltration):
         Returns:
 
         """
-        _Infiltration.__init__(self, subcatchment)
+        Infiltration.__init__(self, subcatchment)
         self.MaxRate = MaxRate
         self.MinRate = MinRate
         self.Decay = Decay
@@ -853,7 +869,7 @@ class InfiltrationHorton(_Infiltration):
         self.MaxInf = MaxInf
 
 
-class InfiltrationGreenAmpt(_Infiltration):
+class InfiltrationGreenAmpt(Infiltration):
 
     def __init__(self, subcatchment, Psi, Ksat, IMD):
         """
@@ -869,13 +885,13 @@ class InfiltrationGreenAmpt(_Infiltration):
         Returns:
 
         """
-        _Infiltration.__init__(self, subcatchment)
+        Infiltration.__init__(self, subcatchment)
         self.Psi = Psi
         self.Ksat = Ksat
         self.IMD = IMD
 
 
-class InfiltrationCurveNumber(_Infiltration):
+class InfiltrationCurveNumber(Infiltration):
 
     def __init__(self, subcatchment, CurveNo, Ksat, DryTime):
         """
@@ -891,7 +907,7 @@ class InfiltrationCurveNumber(_Infiltration):
         Returns:
 
         """
-        _Infiltration.__init__(self, subcatchment)
+        Infiltration.__init__(self, subcatchment)
         self.CurveNo = CurveNo
         self.Ksat = Ksat
         self.DryTime = DryTime
@@ -918,7 +934,6 @@ class DryWeatherFlow(BaseSection):
         self.pattern2 = pattern2
         self.pattern3 = pattern3
         self.pattern4 = pattern4
-        # BaseSection.__init__(self, vars(self))
 
 
 class Loss(BaseSection):
@@ -977,7 +992,6 @@ class Loss(BaseSection):
         self.Average = Average
         self.FlapGate = FlapGate
         self.SeepageRate = SeepageRate
-        # BaseSection.__init__(self, vars(self))
 
 
 class Inflow(BaseSection):
@@ -1008,7 +1022,6 @@ class Inflow(BaseSection):
         self.Sfactor = Sfactor
         self.Baseline = Baseline
         self.Pattern = Pattern
-        # BaseSection.__init__(self, vars(self))
 
 
 class RainGauge(BaseSection):
@@ -1100,8 +1113,6 @@ class RainGauge(BaseSection):
             else:
                 raise NotImplementedError()
 
-        # BaseSection.__init__(self, vars(self))
-
 
 class Pump(BaseSection):
     """
@@ -1146,7 +1157,6 @@ class Pump(BaseSection):
         self.Status = Status
         self.Startup = Startup
         self.Shutoff = Shutoff
-        # BaseSection.__init__(self, vars(self))
 
 
 class Pattern(BaseSection):
@@ -1192,7 +1202,6 @@ class Pattern(BaseSection):
             self.Factors = Factors
         else:
             self.Factors = list(float(f) for f in factors)
-        # BaseSection.__init__(self, vars(self))
 
     @classmethod
     def convert_lines(cls, lines):

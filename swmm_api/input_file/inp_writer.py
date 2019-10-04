@@ -3,7 +3,6 @@ from pandas import DataFrame, Series, set_option as set_pandas_options
 from .inp_helpers import InpSection, dataframe_to_inp_string
 from .helpers.type_converter import type2str
 from .helpers.sections import *
-import yaml
 
 set_pandas_options("display.max_colwidth", 10000)
 
@@ -61,7 +60,8 @@ def tags2string(cat):
     for type_, tags in cat.items():
         max_len_name = len(max(tags.keys(), key=len)) + 2
         for name, tag in tags.items():
-            f += '{{:<{len1}}} {{:<{len2}}} {{}}\n'.format(len1=max_len_type, len2=max_len_name).format(type_, name, tag)
+            f += '{{:<{len1}}} {{:<{len2}}} {{}}\n'.format(len1=max_len_type, len2=max_len_name).format(type_, name,
+                                                                                                        tag)
     return f
 
 
@@ -158,21 +158,22 @@ def _sort_by(key):
         return len(sections_order)
 
 
-def inp2string(network, fast=False):
+def inp2string(inp, fast=False):
     """
+    create string of inp file
 
     Args:
-        network:
-        fast:
+        inp (swmm_api.input_file.inp_helpers.InpData):
+        fast (bool): dont use any formatting else format as table
 
     Returns:
-
+        str: string of input file
     """
     f = ''
-    for head in sorted(network.keys(), key=_sort_by):
+    for head in sorted(inp.keys(), key=_sort_by):
         f += ('\n;' + '_' * 100 + '\n')
         f += ('[{}]\n'.format(head))
-        cat = network[head]
+        cat = inp[head]
 
         if head == CURVES:
             f += curves2string(cat)
@@ -186,17 +187,14 @@ def inp2string(network, fast=False):
     return f
 
 
-def write_inp_file(network, filename, fast=False):
+def write_inp_file(inp, filename, fast=False):
+    """
+    write new .inp file
+
+    Args:
+        inp (swmm_api.input_file.inp_helpers.InpData):
+        filename (str): path/filename of resulting .inp-file
+        fast (bool): dont use any formatting else format as table
+    """
     with open(filename, 'w') as f:
-        f.write(inp2string(network, fast=fast))
-
-
-def network2yaml(network, fn):
-    basic_nw = network.copy()
-    for head, data in basic_nw.items():
-        if isinstance(data, DataFrame):
-            basic_nw[head] = data.applymap(type2str).to_dict(orient='index')
-        elif isinstance(data, Series):
-            basic_nw[head] = data.apply(type2str).to_dict()
-
-    yaml.dump(basic_nw, open(fn + '.yaml', 'w'), default_flow_style=False)
+        f.write(inp2string(inp, fast=fast))
