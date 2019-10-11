@@ -292,4 +292,6 @@ def dataframe_to_inp_string(df):
 
 
 class InpData(MyUserDict):
-    pass
+    def copy(self):
+        return InpData(self._data.copy())
+

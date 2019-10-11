@@ -3,6 +3,7 @@ from os import path, remove
 from warnings import warn
 from pandas import Series, DataFrame
 
+from .inp_sections import CrossSectionCustom
 from ..run import swmm5_run
 from ..output_file import SwmmOutHandler, parquet
 from .inp_reader import read_inp_file
@@ -45,7 +46,7 @@ class InpMacros(InpData):
     def read_file(self, ignore_sections=None, convert_sections=None, custom_converter=None,
                   ignore_gui_sections=True):
         data = read_inp_file(self.filename, ignore_sections=ignore_sections, convert_sections=convert_sections,
-                                   custom_converter=custom_converter, ignore_gui_sections=ignore_gui_sections)
+                             custom_converter=custom_converter, ignore_gui_sections=ignore_gui_sections)
         InpData.__init__(self, data)
 
     @classmethod
@@ -221,20 +222,8 @@ class InpMacros(InpData):
         self['REPORT'].loc['FLOWSTATS'] = flowstats
         self['REPORT'].loc['CONTROLS'] = controls
 
-    def reduce_curves(self):  # TODO no frame
-        curves = set(self['XSECTIONS']['Curve'].dropna().unique().tolist())
-        # curves |= set(self['OUTFALLS']['Data'].dropna().unique().tolist())
-
-        # self['CURVES']['shape'].update(self['CURVES']['Shape'])
-
-        old_shapes = self['CURVES'].pop('shape')
-
-        new_curves = {}
-        for c in curves:
-            if c in old_shapes:
-                new_curves.update({c: old_shapes[c]})
-
-        self['CURVES'].update({'shape': new_curves})
+    def reduce_curves(self):
+        reduce_curves(self)
 
     def add_obj_to_report(self, new_obj, obj_kind):
         if isinstance(new_obj, str):
@@ -272,3 +261,23 @@ class InpMacros(InpData):
         self['TIMESERIES']['Files'] = self['TIMESERIES']['Files'].append(
             Series({'Fname': '"' + fn + '.dat"'}, name=path.basename(fn)))
         self['TIMESERIES']['Files']['Type'] = 'FILE'
+
+
+def reduce_curves(inp):
+    """
+
+    :type inp: InpData
+    """
+    curves = set([xs.Curve for xs in inp['XSECTIONS'].values() if isinstance(xs, CrossSectionCustom)])
+    # curves |= set(self['OUTFALLS']['Data'].dropna().unique().tolist())
+    # self['CURVES']['shape'].update(self['CURVES']['Shape'])
+
+    old_shapes = inp['CURVES'].pop('shape')
+
+    new_curves = {}
+    for c in curves:
+        if c in old_shapes:
+            new_curves.update({c: old_shapes[c]})
+
+    inp['CURVES'].update({'shape': new_curves})
+    return inp
