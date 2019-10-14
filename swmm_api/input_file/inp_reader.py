@@ -1,6 +1,7 @@
 from .inp_sections_generic import (convert_title, convert_options, convert_report, convert_evaporation,
                                    convert_temperature, convert_timeseries, convert_curves, convert_loadings,
                                    convert_coordinates, convert_map, convert_tags)
+from .inp_sections_generic import CurvesSection
 from .inp_sections import *
 from .inp_helpers import InpSection, InpData
 from .helpers.sections import *
@@ -16,7 +17,8 @@ CONVERTER = {
     EVAPORATION: convert_evaporation,
     TEMPERATURE: convert_temperature,
 
-    CURVES: convert_curves,
+    CURVES: CurvesSection,
+    # CURVES: convert_curves,
     TIMESERIES: convert_timeseries,
 
     LOADINGS: convert_loadings,
@@ -120,7 +122,10 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
                 inp[head] = section_(lines)
 
             elif isclass(section_):  # section_ ... type
-                inp[head] = InpSection.from_lines(lines, section_)
+                if hasattr(section_, 'from_lines'):
+                    inp[head] = section_.from_lines(lines)
+                else:
+                    inp[head] = InpSection.from_lines(lines, section_)
 
             else:
                 raise NotImplemented()

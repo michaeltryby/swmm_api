@@ -5,7 +5,7 @@ from .helpers.type_converter import type2str, infer_type
 
 
 ########################################################################################################################
-class MyUserDict:
+class UserDict_:
     """imitate UserDict / user class like dict but operations only effect self._data"""
 
     def __init__(self, d=None, **kwargs):
@@ -44,7 +44,7 @@ class MyUserDict:
         return self._data.get(key) if key in self else default
 
     def copy(self):
-        return MyUserDict(self._data.copy())
+        return UserDict_(self._data.copy())
 
     def values(self):
         return self._data.values()
@@ -58,12 +58,16 @@ class MyUserDict:
     def update(self, d=None, **kwargs):
         self._data.update(d, **kwargs)
 
+    @property
+    def empty(self):
+        return not bool(self._data)
+
     def pop(self, key):
         return self._data.pop(key)
 
 
 ########################################################################################################################
-class BaseSection:
+class BaseSectionObject:
     """base class for all section objects to unify operations
     sections objects only have __init__ with object parameters"""
     index = ''
@@ -141,23 +145,23 @@ class BaseSection:
 
 
 ########################################################################################################################
-# class InpSectionGeneric:
-#     @classmethod
-#     def from_lines(cls, lines):
-#         pass
-#
-#     def __repr__(self):
-#         pass
-#
-#     def __str__(self):
-#         pass
-#
-#     def to_inp(self, fast=False):
-#         pass
+class InpSectionGeneric:
+    @classmethod
+    def from_lines(cls, lines):
+        pass
+
+    def __repr__(self):
+        pass
+
+    def __str__(self):
+        pass
+
+    def to_inp(self, fast=False):
+        pass
 
 
 ########################################################################################################################
-class InpSection(MyUserDict):
+class InpSection(UserDict_):
     """each section of the .inp file is converted to such a section"""
 
     def __init__(self, index):
@@ -166,16 +170,16 @@ class InpSection(MyUserDict):
         if isinstance(index, list):
             self.index = index
         elif isinstance(index, type):
-            if issubclass(index, BaseSection):
+            if issubclass(index, BaseSectionObject):
                 self.index = index.index
-        MyUserDict.__init__(self)
+        UserDict_.__init__(self)
 
     def append(self, item):
         """
         add object(s)/item(s) to section
 
         Args:
-            item (BaseSection | list[BaseSection]):
+            item (BaseSectionObject | list[BaseSectionObject]):
         """
         if isinstance(item, list):
             for i in item:
@@ -191,7 +195,7 @@ class InpSection(MyUserDict):
 
         Args:
             lines (list[str]): lines of a section in a .inp file
-            section_class (BaseSection):
+            section_class (BaseSectionObject):
 
         Returns:
             InpSection: of one section
@@ -220,19 +224,18 @@ class InpSection(MyUserDict):
             pandas.DataFrame:
         """
         di = {}
-        if bool(self):
+        if not self.empty:
             for n, i in enumerate(self.values()):
-                d = i.to_dict_()
-                di[n] = d
+                di[n] = i.to_dict_()
             return DataFrame.from_dict(di, 'index').set_index(self.index)
         else:
             return DataFrame()
 
-    def __repr__(self):
-        return dataframe_to_inp_string(self.frame)
-
-    def __str__(self):
-        return dataframe_to_inp_string(self.frame)
+    # def __repr__(self):
+    #     return dataframe_to_inp_string(self.frame)
+    #
+    # def __str__(self):
+    #     return dataframe_to_inp_string(self.frame)
 
     def to_inp(self, fast=False):
         """
@@ -246,7 +249,7 @@ class InpSection(MyUserDict):
             str: .inp file string
         """
         if fast:
-            if bool(self):
+            if not self.empty:
                 s = ''
                 for i in self.values():
                     s += i.inp_line() + '\n'
@@ -291,7 +294,7 @@ def dataframe_to_inp_string(df):
     return c.applymap(type2str).to_string(sparsify=False, line_width=9999)
 
 
-class InpData(MyUserDict):
+class InpData(UserDict_):
     def copy(self):
         return InpData(self._data.copy())
 

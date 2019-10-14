@@ -2,8 +2,8 @@ import re
 
 from pandas import DataFrame, to_datetime
 
-from .helpers.type_converter import infer_type
-# from .inp_helpers import InpSectionGeneric
+from .helpers.type_converter import infer_type, type2str
+from .inp_helpers import InpSectionGeneric
 
 
 # class Title(InpSectionGeneric):
@@ -530,6 +530,58 @@ def convert_timeseries(lines):
 
 def convert_curves(lines):
     """
+    Args:
+        lines (list):
+
+    Returns:
+        dict[pandas.DataFrame]:
+    """
+    new_lines = {}
+    kind = ''
+
+    def get_names(shape):
+        return {'shape': ['x', 'y'],
+                'storage': ['h', 'A']}.get(shape.lower(), ['x', 'y'])
+
+    for line in lines:
+
+        name = line[0]
+        l = len(line)
+
+        if (l % 2) == 0:
+            kind = line[1].lower()
+
+            if kind not in new_lines:
+                new_lines[kind] = {}
+
+            remains = line[2:]
+        else:
+            remains = line[1:]
+
+        a, b = get_names(kind)
+
+        it = iter(remains)
+        for x in it:
+            y = next(it)
+            if name not in new_lines[kind]:
+                new_lines[kind].update({name: {a: [x],
+                                               b: [y]}})
+            else:
+                new_lines[kind][name][a].append(x)
+                new_lines[kind][name][b].append(y)
+
+    curves = new_lines.copy()
+
+    # from dict to pandas dataframe
+    for k in curves:
+        for n in curves[k]:
+            curves[k][n] = DataFrame.from_dict(curves[k][n], 'columns')
+
+    return curves
+
+
+class CurvesSection(InpSectionGeneric):
+    """
     Section:
         [CURVES]
 
@@ -590,54 +642,100 @@ def convert_curves(lines):
         PC1 PUMP1
         PC1 100 5 300 10 500 20
 
-    Args:
-        lines (list):
-
-    Returns:
-        dict[pandas.DataFrame]:
     """
-    new_lines = {}
-    kind = ''
 
-    def get_names(shape):
-        return {'shape': ['x', 'y'],
-                'storage': ['h', 'A']}.get(shape.lower(), ['x', 'y'])
+    def __init__(self):
+        self._data = dict()
 
-    for line in lines:
+    class TYPES:
+        STORAGE = 'STORAGE'
+        SHAPE = 'SHAPE'
+        DIVERSION = 'DIVERSION'
+        TIDAL = 'TIDAL'
+        PUMP1 = 'PUMP1'
+        PUMP2 = 'PUMP2'
+        PUMP3 = 'PUMP3'
+        PUMP4 = 'PUMP4'
+        RATING = 'RATING'
+        CONTROL = 'CONTROL'
 
-        name = line[0]
-        l = len(line)
+    def append_lines(self, lines):
+        new_lines = {}
+        kind = ''
 
-        if (l % 2) == 0:
-            kind = line[1].lower()
+        def get_names(shape):
+            return {self.TYPES.SHAPE: ['x', 'y'],
+                    self.TYPES.STORAGE: ['h', 'A']}.get(shape.uper(), ['x', 'y'])
 
-            if kind not in new_lines:
-                new_lines[kind] = {}
+        for line in lines:
 
-            remains = line[2:]
-        else:
-            remains = line[1:]
+            name = line[0]
+            l = len(line)
 
-        a, b = get_names(kind)
+            if (l % 2) == 0:
+                kind = line[1].lower()
 
-        it = iter(remains)
-        for x in it:
-            y = next(it)
-            if name not in new_lines[kind]:
-                new_lines[kind].update({name: {a: [x],
-                                               b: [y]}})
+                if kind not in new_lines:
+                    new_lines[kind] = {}
+
+                remains = line[2:]
             else:
-                new_lines[kind][name][a].append(x)
-                new_lines[kind][name][b].append(y)
+                remains = line[1:]
 
-    curves = new_lines.copy()
+            a, b = get_names(kind)
 
-    # from dict to pandas dataframe
-    for k in curves:
-        for n in curves[k]:
-            curves[k][n] = DataFrame.from_dict(curves[k][n], 'columns')
+            it = iter(remains)
+            for x in it:
+                y = next(it)
+                if name not in new_lines[kind]:
+                    new_lines[kind].update({name: {a: [x],
+                                                   b: [y]}})
+                else:
+                    new_lines[kind][name][a].append(x)
+                    new_lines[kind][name][b].append(y)
 
-    return curves
+        self._data.update(new_lines)
+
+    @classmethod
+    def from_lines(cls, lines):
+        new_curves = cls()
+        new_curves.append_lines(lines)
+        return new_curves
+
+    @property
+    def pretty_data(self):
+        # from dict to pandas dataframe
+        frame_di = dict()
+        for k in self._data:
+            frame_di[k] = dict()
+            for n in self._data[k]:
+                frame_di[k][n] = DataFrame.from_dict(self._data[k][n], 'columns')
+
+        return frame_di
+
+    def to_inp(self, fast=False):
+        cat = self.pretty_data
+
+        def get_names(shape):
+            return {'shape': ['x', 'y'],
+                    'storage': ['h', 'A']}.get(shape.lower(), ['x', 'y'])
+
+        f = ''
+        for k in cat:
+            for n in cat[k]:
+                a, b = get_names(k)
+                df = cat[k][n].copy()
+                if k == 'shape':
+                    df = df[(df[a] != 0.) & (df[a] != 1.)].copy()
+                    df = df.reset_index(drop=True)
+                df['Name'] = n
+                df['Type'] = ''
+                df.loc[0, 'Type'] = k
+                df = df[['Name', 'Type', a, b]].copy().rename(columns={'Name': ';Name'})
+                # print(df.applymap(type2str).to_string(index=None, justify='center'))
+                f += (df.applymap(type2str).to_string(index=None, justify='center'))
+                f += '\n'
+        return f
 
 
 def convert_loadings(lines):

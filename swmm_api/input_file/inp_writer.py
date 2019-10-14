@@ -1,6 +1,6 @@
 from pandas import DataFrame, Series, set_option as set_pandas_options
 
-from .inp_helpers import InpSection, dataframe_to_inp_string
+from .inp_helpers import InpSection, dataframe_to_inp_string, InpSectionGeneric
 from .helpers.type_converter import type2str
 from .helpers.sections import *
 
@@ -65,18 +65,6 @@ def tags2string(cat):
     return f
 
 
-def line2string(line):
-    f = ''
-    if isinstance(line, str):
-        f += line
-    elif isinstance(line, list):
-        f += ' '.join(type2str(l) for l in line)
-    else:
-        f += type2str(line)
-    f += '\n'
-    return f
-
-
 def general_category2string(cat, fast=False):
     f = ''
 
@@ -87,7 +75,7 @@ def general_category2string(cat, fast=False):
     # ----------------------
     elif isinstance(cat, list):  # V0.1
         for line in cat:
-            f += line2string(line)
+            f += type2str(line) + '\n'
 
     # ----------------------
     elif isinstance(cat, dict):  # V0.2
@@ -95,7 +83,7 @@ def general_category2string(cat, fast=False):
         max_len = len(max(cat.keys(), key=len)) + 2
         for sub in cat:
             f += '{key}{value}'.format(key=sub.ljust(max_len),
-                                       value=line2string(cat[sub]))
+                                       value=type2str(cat[sub]) + '\n')
 
     # ----------------------
     elif isinstance(cat, (DataFrame, Series)):  # V0.3
@@ -110,6 +98,10 @@ def general_category2string(cat, fast=False):
 
     # ----------------------
     elif isinstance(cat, InpSection):  # V0.4
+        f += cat.to_inp(fast=fast)
+
+    # ----------------------
+    elif isinstance(cat, InpSectionGeneric):  # V0.5
         f += cat.to_inp(fast=fast)
 
     # ----------------------
@@ -175,9 +167,9 @@ def inp2string(inp, fast=False):
         f += ('[{}]\n'.format(head))
         cat = inp[head]
 
-        if head == CURVES:
-            f += curves2string(cat)
-        elif head == TIMESERIES:
+        # if head == CURVES:
+        #     f += curves2string(cat)
+        if head == TIMESERIES:
             f += timeseries2string(cat)
         elif head == TAGS:
             f += tags2string(cat)

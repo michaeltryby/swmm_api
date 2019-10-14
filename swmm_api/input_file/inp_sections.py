@@ -1,9 +1,9 @@
 from numpy import NaN, isnan
 
-from .inp_helpers import BaseSection
+from .inp_helpers import BaseSectionObject
 
 
-class Storage(BaseSection):
+class Storage(BaseSectionObject):
     """
     Section:
         [STORAGE]
@@ -135,7 +135,7 @@ class Storage(BaseSection):
         self.IMD = IMD
 
 
-class Outfall(BaseSection):
+class Outfall(BaseSectionObject):
     """
     Section:
         [OUTFALLS]
@@ -246,7 +246,7 @@ class Outfall(BaseSection):
         self.RouteTo = RouteTo
 
 
-class Conduit(BaseSection):
+class Conduit(BaseSectionObject):
     index = 'Name'
 
     def __init__(self, Name, FromNode, ToNode, Length, Roughness, InOffset, OutOffset, InitFlow=0, MaxFlow=NaN):
@@ -311,7 +311,7 @@ class Conduit(BaseSection):
         self.MaxFlow = MaxFlow
 
 
-class Weir(BaseSection):
+class Weir(BaseSectionObject):
     """
     Section:
         [WEIRS]
@@ -403,7 +403,7 @@ class Weir(BaseSection):
         self.RoadSurf = RoadSurface
 
 
-class Outlet(BaseSection):
+class Outlet(BaseSectionObject):
     """
     Section:
         [OUTLETS]
@@ -485,7 +485,7 @@ class Outlet(BaseSection):
         self.Gated = Gated
 
 
-class Orifice(BaseSection):
+class Orifice(BaseSectionObject):
     index = 'Name'
 
     class Types:
@@ -530,7 +530,7 @@ class Orifice(BaseSection):
         self.Orate = Orate
 
 
-class Junction(BaseSection):
+class Junction(BaseSectionObject):
     index = 'Name'
 
     def __init__(self, Name, Elevation, MaxDepth=0, InitDepth=0, SurDepth=0, Aponded=0):
@@ -562,7 +562,7 @@ class Junction(BaseSection):
         self.Aponded = Aponded
 
 
-class CrossSection(BaseSection):
+class CrossSection(BaseSectionObject):
     index = 'Link'
 
     class Shapes:
@@ -698,7 +698,7 @@ class CrossSectionCustom(CrossSection):
         CrossSection.__init__(self, Link)
 
 
-class SubCatchment(BaseSection):
+class SubCatchment(BaseSectionObject):
     """
     Section:
         [SUBCATCHMENTS]
@@ -750,7 +750,7 @@ class SubCatchment(BaseSection):
         self.SnowPack = SnowPack
 
 
-class SubArea(BaseSection):
+class SubArea(BaseSectionObject):
     index = 'subcatchment'
 
     class RoutToOption:
@@ -816,7 +816,7 @@ class SubArea(BaseSection):
         self.PctRouted = PctRouted
 
 
-class Infiltration(BaseSection):
+class Infiltration(BaseSectionObject):
     index = 'subcatchment'
 
     def __init__(self, subcatchment):
@@ -913,7 +913,7 @@ class InfiltrationCurveNumber(Infiltration):
         self.DryTime = DryTime
 
 
-class DryWeatherFlow(BaseSection):
+class DryWeatherFlow(BaseSectionObject):
     index = ['node', 'kind']
 
     def __init__(self, node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN, pattern5=NaN):
@@ -936,7 +936,7 @@ class DryWeatherFlow(BaseSection):
         self.pattern4 = pattern4
 
 
-class Loss(BaseSection):
+class Loss(BaseSectionObject):
     index = 'Link'
 
     def __init__(self, Link, Inlet, Outlet, Average, FlapGate=False, SeepageRate=0):
@@ -994,7 +994,7 @@ class Loss(BaseSection):
         self.SeepageRate = SeepageRate
 
 
-class Inflow(BaseSection):
+class Inflow(BaseSectionObject):
     index = ['Node', 'Constituent']
 
     def __init__(self, Node, Constituent, TimeSeries, Type, Mfactor=1.0, Sfactor=1.0, Baseline=0., Pattern=NaN):
@@ -1024,7 +1024,7 @@ class Inflow(BaseSection):
         self.Pattern = Pattern
 
 
-class RainGauge(BaseSection):
+class RainGauge(BaseSectionObject):
     """
     Section:
         [RAINGAGES]
@@ -1114,7 +1114,7 @@ class RainGauge(BaseSection):
                 raise NotImplementedError()
 
 
-class Pump(BaseSection):
+class Pump(BaseSectionObject):
     """
     Section:
         [PUMPS]
@@ -1159,7 +1159,7 @@ class Pump(BaseSection):
         self.Shutoff = Shutoff
 
 
-class Pattern(BaseSection):
+class Pattern(BaseSectionObject):
     """
     Section:
         [PATTERNS]
@@ -1221,7 +1221,7 @@ class Pattern(BaseSection):
         # return sec_lines
 
 
-class Pollutant(BaseSection):
+class Pollutant(BaseSectionObject):
     """
     Section:
         [POLLUTANTS]
