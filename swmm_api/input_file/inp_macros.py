@@ -3,13 +3,14 @@ from os import path, remove
 from warnings import warn
 from pandas import Series, DataFrame
 
+from swmm_api.input_file.inp_sections_generic import CurvesSection
 from .inp_sections import CrossSectionCustom
 from ..run import swmm5_run
 from ..output_file import SwmmOutHandler, parquet
 from .inp_reader import read_inp_file
 from .inp_helpers import InpData
 from .inp_writer import write_inp_file, inp2string
-from .helpers.sections import REPORT
+from .helpers.sections import REPORT, XSECTIONS, CURVES
 from .helpers.type_converter import offset2delta
 
 
@@ -59,7 +60,7 @@ class InpMacros(InpData):
         return inp
 
     # @class_timeit
-    def write(self, fast=False):
+    def write(self, fast=True):
         write_inp_file(self, self.filename, fast=fast)
 
     @classmethod
@@ -268,16 +269,16 @@ def reduce_curves(inp):
 
     :type inp: InpData
     """
-    curves = set([xs.Curve for xs in inp['XSECTIONS'].values() if isinstance(xs, CrossSectionCustom)])
-    # curves |= set(self['OUTFALLS']['Data'].dropna().unique().tolist())
-    # self['CURVES']['shape'].update(self['CURVES']['Shape'])
+    curves = set([xs.Curve for xs in inp[XSECTIONS].values() if isinstance(xs, CrossSectionCustom)])
+    # curves |= set(self[OUTFALLS]['Data'].dropna().unique().tolist())
+    # self[CURVES][CurvesSection.TYPES.SHAPE].update(self[CURVES][CurvesSection.TYPES.SHAPE])
 
-    old_shapes = inp['CURVES'].pop('shape')
+    old_shapes = inp[CURVES].pop(CurvesSection.TYPES.SHAPE)
 
     new_curves = {}
     for c in curves:
         if c in old_shapes:
             new_curves.update({c: old_shapes[c]})
 
-    inp['CURVES'].update({'shape': new_curves})
+    inp[CURVES].update({CurvesSection.TYPES.SHAPE: new_curves})
     return inp

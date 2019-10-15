@@ -261,6 +261,11 @@ class InpSection(UserDict_):
             return dataframe_to_inp_string(self.frame)
 
 
+class InpData(UserDict_):
+    def copy(self):
+        return InpData(self._data.copy())
+
+
 def dataframe_to_inp_string(df):
     """
     convert a data-frame into a multi-line string
@@ -292,9 +297,3 @@ def dataframe_to_inp_string(df):
                 c.index.levels[0].name = ';' + c.index.levels[0].name
 
     return c.applymap(type2str).to_string(sparsify=False, line_width=9999)
-
-
-class InpData(UserDict_):
-    def copy(self):
-        return InpData(self._data.copy())
-

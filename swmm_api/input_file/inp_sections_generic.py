@@ -3,7 +3,7 @@ import re
 from pandas import DataFrame, to_datetime
 
 from .helpers.type_converter import infer_type, type2str
-from .inp_helpers import InpSectionGeneric
+from .inp_helpers import InpSectionGeneric, UserDict_, dataframe_to_inp_string
 
 
 # class Title(InpSectionGeneric):
@@ -127,24 +127,6 @@ def convert_options(lines):
         assert len(line) == 1
         options[label] = infer_type(line[0])
     return options
-
-
-# class Report(InpSectionGeneric):
-#     def __init__(self):
-#         pass
-#
-#     @classmethod
-#     def from_lines(cls, lines):
-#         pass
-#
-#     def __repr__(self):
-#         pass
-#
-#     def __str__(self):
-#         pass
-#
-#     def to_inp(self, fast=False):
-#         pass
 
 
 def convert_report(lines):
@@ -434,153 +416,159 @@ def convert_temperature(lines):
     return new_lines
 
 
-def _line_split(line):
-    # but don't split quoted text
-    # for convert_timeseries
-    return re.findall(r'[^"\s]\S*|".+?"', line)
-
-
-def convert_timeseries(lines):
+class TimeseriesSection(UserDict_, InpSectionGeneric):
     """
-    * .. defaults
+    Section:
+        [TIMESERIES]
 
-    Name ( Date ) Hour Value ...
-    Name Time Value ...
-    Name FILE Fname
+    Purpose:
+        Describes how a quantity varies over time.
 
-    Name    name assigned to time series.
-    Date    date in Month/Day/Year format (e.g., June 15, 2001 would be 6/15/2001).
-    Hour    24-hour military time (e.g., 8:40 pm would be 20:40) relative to the last date specified (or to midnight of the starting date of the simulation if no previous date was specified).
-    Time    hours since the start of the simulation, expressed as a decimal number or as hours:minutes.
-    Value   value corresponding to given date and time.
-    Fname   name of a file in which the time series data are stored
+    Formats:
+        - Name ( Date ) Hour Value ...
+        - Name Time Value ...
+        - Name FILE Fname
 
+    Remarks:
+        - Name: name assigned to time series.
+        - Date: date in Month/Day/Year format (e.g., June 15, 2001 would be 6/15/2001).
+        - Hour: 24-hour military time (e.g., 8:40 pm would be 20:40) relative to the last date specified
+               (or to midnight of the starting date of the simulation if no previous date was specified).
+        - Time: hours since the start of the simulation, expressed as a decimal number or as hours:minutes.
+        - Value: value corresponding to given date and time.
+        - Fname: name of a file in which the time series data are stored
 
-    :param lines:
-    :return:
+        There are two options for supplying the data for a time series:
+        i.: directly within this input file section as described by the first two formats
+        ii.: through an external data file named with the third format.
+
+        When direct data entry is used, multiple date-time-value or time-value entries can
+        appear on a line. If more than one line is needed, the table's name must be repeated
+        as the first entry on subsequent lines.
+
+        When an external file is used, each line in the file must use the same formats listed
+        above, except that only one date-time-value (or time-value) entry is allowed per line.
+        Any line that begins with a semicolon is considered a comment line and is ignored.
+        Blank lines are not allowed.
+
+        Note that there are two methods for describing the occurrence time of time series data:
+
+        - as calendar date/time of day (which requires that at least one date, at the start of the series, be entered)
+        - as elapsed hours since the start of the simulation.
+
+        For the first method, dates need only be entered at points in time when a new day occurs.
+
+    Examples:
+        ;Rainfall time series with dates specified
+        TS1 6-15-2001 7:00 0.1 8:00 0.2 9:00 0.05 10:00 0
+        TS1 6-21-2001 4:00 0.2 5:00 0 14:00 0.1 15:00 0 335
+
+        ;Inflow hydrograph - time relative to start of simulation
+        HY1 0 0 1.25 100 2:30 150 3.0 120 4.5 0
+        HY1 32:10 0 34.0 57 35.33 85 48.67 24 50 0
     """
-    new_lines = {}
-    name = None
-    for line in lines:
 
-        if line[0] != name:
-            # first line of new timeseries
-            pass
+    def __init__(self):
+        UserDict_.__init__(self)
 
-        name = line[0]
-        l = len(line)
-        if line[1] == 'FILE':
-            line = _line_split(' '.join(line))
-            l = len(line)
-            if l == 3:
-                typ = line[1]
-                if 'Files' not in new_lines:
-                    new_lines['Files'] = {}
+    @staticmethod
+    def _line_split(line):
+        # but don't split quoted text
+        # for convert_timeseries
+        return re.findall(r'[^"\s]\S*|".+?"', line)
 
-                new_lines['Files'][name] = {'Type': typ,
-                                            'Fname': line[2]}
+    class TYPES:
+        FILE = 'FILE'
+
+    @classmethod
+    def from_lines(cls, lines):
+        new = cls()
+        new_lines = new._data
+        for name, *line in lines:
+            # ---------------------------------
+            if line[0].upper() == cls.TYPES.FILE:
+                kind, *fn = line
+                new_lines[name] = {'Type': kind,
+                                   'Fname': ' '.join(fn)}
+
+            # ---------------------------------
             else:
-                raise NotImplementedError()
-        else:
-            it = iter(line[1:])
-            for date in it:
-                if not '/' in date:
-                    time = date
-                    date = old_date
-                else:
-                    time = next(it)
-                old_date = date
+                it = iter(line)
+                for date in it:
+                    if '/' not in date:
+                        time = date
+                        date = old_date
+                    else:
+                        time = next(it)
+                    old_date = date
 
-                if time.count(':') > 1:
-                    # 00:00:00 -> 00:00
-                    time = time[:5]
+                    # if time.count(':') > 1:
+                    #     # 00:00:00 -> 00:00
+                    #     time = time[:5]
 
-                # dt = datetime.datetime.combine(date, to_datetime(time, format='%H:%M').time())
-                dt = '{} {}'.format(date, time)
+                    dt = '{} {}'.format(date, time)
+                    # dt = datetime.datetime.combine(date, to_datetime(time, format='%H:%M').time())
 
-                # value = infer_type(next(it))
-                value = next(it)
+                    # value = infer_type(next(it))
+                    value = next(it)
 
-                if name not in new_lines:
-                    new_lines[name] = {'Datetime': [dt],
-                                       'Value': [value]}
-                else:
+                    if name not in new_lines:
+                        new_lines[name] = {'Datetime': list(),
+                                           'Value': list()}
+
                     new_lines[name]['Datetime'].append(dt)
                     new_lines[name]['Value'].append(value)
-            # TODO timeseries in .inp file
-            # raise NotImplementedError('Only timeseries with FILE are allowed.')
 
-    timeseries = new_lines.copy()
+        return new
 
-    for n in timeseries:
-        if 'Datetime' in timeseries[n]:
-            timeseries[n] = DataFrame.from_dict(timeseries[n], 'columns')
-            timeseries[n]['Datetime'] = to_datetime(timeseries[n]['Datetime'], format='%m/%d/%Y %H:%M')
-            timeseries[n] = timeseries[n].set_index('Datetime')
+    @property
+    def to_pandas(self):
+        timeseries = dict()
+
+        for n, series in self._data.items():
+            if 'Type' in series:
+                timeseries[n] = self._data[n]
+            elif 'Datetime' in series:
+                timeseries[n] = DataFrame.from_dict(self._data[n], 'columns')
+                timeseries[n]['Datetime'] = to_datetime(timeseries[n]['Datetime'])
+                timeseries[n] = timeseries[n].set_index('Datetime')
+                timeseries[n]['Value'] = timeseries[n]['Value'].astype(float)
+
+        return timeseries
+
+    def to_inp(self, fast=False):
+        if fast:
+            cat = self._data
         else:
-            timeseries[n] = DataFrame.from_dict(timeseries[n], 'index')
-            timeseries[n].columns.name = 'Files'
+            cat = self.to_pandas
 
-        if 'Value' in timeseries[n]:
-            timeseries[n]['Value'] = timeseries[n]['Value'].astype(float)
+        f = ''
 
-    # print(timeseries2string(timeseries))
-    return timeseries
+        max_len = len(max(cat.keys(), key=len)) + 2
 
+        for n, series in self._data.items():
+            if 'Type' in series:
+                f += '{} {} {}\n'.format(n.ljust(max_len), series['Type'], series['Fname'])
 
-def convert_curves(lines):
-    """
-    Args:
-        lines (list):
+            elif 'Datetime' in series:
+                if fast:
+                    for datetime, value in zip(series['Datetime'], series['Value']):
+                        f += '{} {} {}\n'.format(n, datetime, value)
+                else:
+                    df = cat[n].copy()
+                    df['Date  Time'] = df.index.strftime('%m/%d/%Y %H:%M')
+                    df.columns.name = ';Name'
+                    df['<'] = n
+                    df.index = df['<'].rename(None)
+                    del df['<']
+                    df = df[['Date  Time', 'Value']].copy()
+                    f += df.to_string()
+                    f += '\n'
 
-    Returns:
-        dict[pandas.DataFrame]:
-    """
-    new_lines = {}
-    kind = ''
-
-    def get_names(shape):
-        return {'shape': ['x', 'y'],
-                'storage': ['h', 'A']}.get(shape.lower(), ['x', 'y'])
-
-    for line in lines:
-
-        name = line[0]
-        l = len(line)
-
-        if (l % 2) == 0:
-            kind = line[1].lower()
-
-            if kind not in new_lines:
-                new_lines[kind] = {}
-
-            remains = line[2:]
-        else:
-            remains = line[1:]
-
-        a, b = get_names(kind)
-
-        it = iter(remains)
-        for x in it:
-            y = next(it)
-            if name not in new_lines[kind]:
-                new_lines[kind].update({name: {a: [x],
-                                               b: [y]}})
-            else:
-                new_lines[kind][name][a].append(x)
-                new_lines[kind][name][b].append(y)
-
-    curves = new_lines.copy()
-
-    # from dict to pandas dataframe
-    for k in curves:
-        for n in curves[k]:
-            curves[k][n] = DataFrame.from_dict(curves[k][n], 'columns')
-
-    return curves
+        return f
 
 
-class CurvesSection(InpSectionGeneric):
+class CurvesSection(UserDict_, InpSectionGeneric):
     """
     Section:
         [CURVES]
@@ -645,7 +633,12 @@ class CurvesSection(InpSectionGeneric):
     """
 
     def __init__(self):
-        self._data = dict()
+        UserDict_.__init__(self)
+
+    def copy(self):
+        new = CurvesSection()
+        new._data = self._data.copy()
+        return new
 
     class TYPES:
         STORAGE = 'STORAGE'
@@ -660,41 +653,28 @@ class CurvesSection(InpSectionGeneric):
         CONTROL = 'CONTROL'
 
     def append_lines(self, lines):
-        new_lines = {}
         kind = ''
-
-        def get_names(shape):
-            return {self.TYPES.SHAPE: ['x', 'y'],
-                    self.TYPES.STORAGE: ['h', 'A']}.get(shape.uper(), ['x', 'y'])
-
         for line in lines:
-
             name = line[0]
             l = len(line)
 
             if (l % 2) == 0:
-                kind = line[1].lower()
+                kind = line[1].upper()
 
-                if kind not in new_lines:
-                    new_lines[kind] = {}
+                if kind not in self._data:
+                    self._data[kind] = dict()
 
                 remains = line[2:]
             else:
                 remains = line[1:]
 
-            a, b = get_names(kind)
-
             it = iter(remains)
-            for x in it:
-                y = next(it)
-                if name not in new_lines[kind]:
-                    new_lines[kind].update({name: {a: [x],
-                                                   b: [y]}})
-                else:
-                    new_lines[kind][name][a].append(x)
-                    new_lines[kind][name][b].append(y)
+            for a in it:
+                b = next(it)
+                if name not in self._data[kind]:
+                    self._data[kind][name] = list()
 
-        self._data.update(new_lines)
+                self._data[kind][name].append(infer_type([a, b]))
 
     @classmethod
     def from_lines(cls, lines):
@@ -702,39 +682,67 @@ class CurvesSection(InpSectionGeneric):
         new_curves.append_lines(lines)
         return new_curves
 
+    @classmethod
+    def _get_names(cls, kind):
+        TYPES = cls.TYPES
+        if kind == TYPES.STORAGE:
+            return ['depth', 'area']
+        elif kind == TYPES.SHAPE:
+            return ['depth', 'width']
+        elif kind == TYPES.DIVERSION:
+            return ['inflow', 'outflow']
+        elif kind == TYPES.TIDAL:
+            return ['hour', 'elevation']
+        elif kind == TYPES.PUMP1:
+            return ['volume', 'outflow']
+        elif kind == TYPES.PUMP2:
+            return ['depth', 'outflow']
+        elif kind == TYPES.PUMP3:
+            return ['head diff', 'outflow']
+        elif kind == TYPES.PUMP4:
+            return ['depth', 'outflow']
+        elif kind == TYPES.RATING:
+            return ['head', 'flow']
+        elif kind == TYPES.CONTROL:
+            return ['variable', 'setting']
+
     @property
-    def pretty_data(self):
+    def to_pandas(self):
         # from dict to pandas dataframe
         frame_di = dict()
-        for k in self._data:
-            frame_di[k] = dict()
-            for n in self._data[k]:
-                frame_di[k][n] = DataFrame.from_dict(self._data[k][n], 'columns')
+        for kind in self._data:
+            frame_di[kind] = dict()
+            columns = self._get_names(kind)
+            for name in self._data[kind]:
+                frame_di[kind][name] = DataFrame.from_records(self._data[kind][name], columns=columns)
 
         return frame_di
 
     def to_inp(self, fast=False):
-        cat = self.pretty_data
-
-        def get_names(shape):
-            return {'shape': ['x', 'y'],
-                    'storage': ['h', 'A']}.get(shape.lower(), ['x', 'y'])
-
         f = ''
-        for k in cat:
-            for n in cat[k]:
-                a, b = get_names(k)
-                df = cat[k][n].copy()
-                if k == 'shape':
-                    df = df[(df[a] != 0.) & (df[a] != 1.)].copy()
-                    df = df.reset_index(drop=True)
-                df['Name'] = n
-                df['Type'] = ''
-                df.loc[0, 'Type'] = k
-                df = df[['Name', 'Type', a, b]].copy().rename(columns={'Name': ';Name'})
-                # print(df.applymap(type2str).to_string(index=None, justify='center'))
-                f += (df.applymap(type2str).to_string(index=None, justify='center'))
-                f += '\n'
+
+        if fast:
+            cat = self._data
+            for k in cat:
+                for n in cat[k]:
+                    f += '{} {} {}\n'.format(n, k, type2str(cat[k][n]))
+
+        else:
+            cat = self.to_pandas
+            for k in cat:
+                for n in cat[k]:
+                    a, b = self._get_names(k)
+                    df = cat[k][n].copy()
+                    if k == self.TYPES.SHAPE:
+                        df = df[(df[a] != 0.) & (df[a] != 1.)].copy()
+                        df = df.reset_index(drop=True)
+                    df['Name'] = n
+                    df['Type'] = ''
+                    df.loc[0, 'Type'] = k
+                    df = df[['Name', 'Type', a, b]].copy().rename(columns={'Name': ';Name'})
+                    # print(df.applymap(type2str).to_string(index=None, justify='center'))
+                    f += (df.applymap(type2str).to_string(index=None, justify='center'))
+                    f += '\n'
         return f
 
 
@@ -871,25 +879,42 @@ def convert_map(lines):
     return new_lines
 
 
-def convert_tags(lines):
+class TagsSection(UserDict_, InpSectionGeneric):
     """PC-SWMM ?"""
-    # TAGS AS DATAFRAME
-    # tags = DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
 
-    tags = dict()
-    for line in lines:
-        type_, name, tag = line
-        if type_ not in tags:
-            tags[type_] = dict()
+    def __init__(self):
+        UserDict_.__init__(self)
 
-        tags[type_][name] = tag
+    @classmethod
+    def from_lines(cls, lines):
+        # TAGS AS DATAFRAME
+        # tags = DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
+        new = cls()
+        for line in lines:
+            kind, name, tag = line
+            if kind not in new._data:
+                new._data[kind] = dict()
 
-    # ---------------------------------------
-    # MAKE TAGS TO SERIES
-    # tags_df = dict()
-    # for type_ in tags:
-    #     tags_df[type_] = DataFrame.from_dict(tags[type_], orient='index')
+            new._data[kind][name] = tag
+        return new
 
-    # df[0].unique()
-    # ['Subcatch', 'Node', 'Link']
-    return tags
+    @property
+    def to_pandas(self):
+        # MAKE TAGS TO SERIES
+        tags_df = dict()
+        for type_ in self._data:
+            tags_df[type_] = DataFrame.from_dict(self._data[type_], orient='index')
+
+        # df[0].unique()
+        # ['Subcatch', 'Node', 'Link']
+        return tags_df
+
+    def to_inp(self, fast=False):
+        f = ''
+        max_len_type = len(max(self._data.keys(), key=len)) + 2
+        for type_, tags in self._data.items():
+            max_len_name = len(max(tags.keys(), key=len)) + 2
+            for name, tag in tags.items():
+                f += '{{:<{len1}}} {{:<{len2}}} {{}}\n'.format(len1=max_len_type, len2=max_len_name).format(type_, name,
+                                                                                                            tag)
+        return f

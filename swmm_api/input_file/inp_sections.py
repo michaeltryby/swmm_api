@@ -612,26 +612,6 @@ class CrossSection(BaseSectionObject):
             return CrossSectionCustom(Link, *line)
         else:
             return CrossSectionShape(Link, Shape, *line)
-        pass
-
-
-# def CrossSection(Link, Shape, *line):
-#     """
-#
-#     Link Shape Geom1 Geom2 Geom3 Geom4 Barrels Culvert
-#
-#     Args:
-#         line ():
-#
-#     Returns:
-#
-#     """
-#     if Shape == _CrossSection.Shapes.IRREGULAR:
-#         return CrossSectionIrregular(Link, *line)
-#     elif Shape == _CrossSection.Shapes.CUSTOM:
-#         return CrossSectionCustom(Link, *line)
-#     else:
-#         return CrossSectionShape(Link, Shape, *line)
 
 
 class CrossSectionShape(CrossSection):
@@ -832,17 +812,6 @@ class Infiltration(BaseSectionObject):
         else:
             # TODO
             return InfiltrationCurveNumber(subcatchment, *args, **kwargs)
-
-
-# def Infiltration(subcatchment, *args, **kwargs):
-#     n_args = len(args) + len(kwargs.keys()) + 1
-#     if n_args == 6:  # hortn
-#         return InfiltrationHorton(subcatchment, *args, **kwargs)
-#     elif n_args == 4:
-#         return InfiltrationGreenAmpt(subcatchment, *args, **kwargs)
-#     else:
-#         # TODO
-#         return InfiltrationCurveNumber(subcatchment, *args, **kwargs)
 
 
 class InfiltrationHorton(Infiltration):

@@ -1,7 +1,6 @@
 from .inp_sections_generic import (convert_title, convert_options, convert_report, convert_evaporation,
-                                   convert_temperature, convert_timeseries, convert_curves, convert_loadings,
-                                   convert_coordinates, convert_map, convert_tags)
-from .inp_sections_generic import CurvesSection
+                                   convert_temperature, convert_loadings, convert_coordinates, convert_map)
+from .inp_sections_generic import TimeseriesSection, TagsSection, CurvesSection
 from .inp_sections import *
 from .inp_helpers import InpSection, InpData
 from .helpers.sections import *
@@ -11,6 +10,7 @@ from inspect import isclass, isfunction
 """read SWMM .inp file and convert the data to a more usable format"""
 
 CONVERTER = {
+    # options = dict
     REPORT: convert_report,
     TITLE: convert_title,
     OPTIONS: convert_options,
@@ -18,15 +18,15 @@ CONVERTER = {
     TEMPERATURE: convert_temperature,
 
     CURVES: CurvesSection,
-    # CURVES: convert_curves,
-    TIMESERIES: convert_timeseries,
-
+    TIMESERIES: TimeseriesSection,
     LOADINGS: convert_loadings,
+    TAGS: TagsSection,
 
+    # GUI data
     COORDINATES: convert_coordinates,
     MAP: convert_map,
 
-    TAGS: convert_tags,
+    # custom section objects
     CONDUITS: Conduit,
     ORIFICES: Orifice,
     JUNCTIONS: Junction,
@@ -108,11 +108,13 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
     if custom_converter is not None:
         converter.update(custom_converter)
 
+    # from mp.helpers.check_time import Timer
     for head, lines in inp.items():
-        if convert_sections is not None and head not in convert_sections:
+        # with Timer(head):
+        if (convert_sections is not None) and (head not in convert_sections):
             continue
 
-        elif ignore_sections is not None and head in ignore_sections:
+        elif (ignore_sections is not None) and (head in ignore_sections):
             continue
 
         if head in converter:

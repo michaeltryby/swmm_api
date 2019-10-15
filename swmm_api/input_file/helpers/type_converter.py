@@ -68,6 +68,15 @@ def delta2str(d):
 
 
 def type2str(x):
+    """
+    convert any type to a string
+
+    Args:
+        x (any):
+
+    Returns:
+        str:
+    """
     if isinstance(x, str):
         return x
     elif isinstance(x, list):
