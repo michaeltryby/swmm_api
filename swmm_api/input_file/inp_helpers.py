@@ -181,7 +181,7 @@ class InpSection(UserDict_):
         Args:
             item (BaseSectionObject | list[BaseSectionObject]):
         """
-        if isinstance(item, list):
+        if isinstance(item, (list, tuple)):
             for i in item:
                 self.append(i)
         else:
