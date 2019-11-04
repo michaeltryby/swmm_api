@@ -725,7 +725,13 @@ class CurvesSection(UserDict_, InpSectionGeneric):
             cat = self._data
             for k in cat:
                 for n in cat[k]:
-                    f += '{} {} {}\n'.format(n, k, type2str(cat[k][n]))
+                    values = cat[k][n]  # [(x,y), (x,y), ...]
+                    k_len = len(k)
+                    for i, (x, y) in enumerate(values):
+                        if i == 0:
+                            f += '{} {} {}\n'.format(n, k, type2str([x, y]))
+                        else:
+                            f += '{} {} {}\n'.format(n, ' ' * k_len, type2str([x, y]))
 
         else:
             cat = self.to_pandas

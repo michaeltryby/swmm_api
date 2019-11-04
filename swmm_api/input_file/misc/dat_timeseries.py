@@ -23,8 +23,11 @@ def to_swmm_dat(series, fn, drop_zeros=True):
     else:
         ts = series.dropna().to_frame()
 
+    if not fn.endswith('.dat'):
+        fn += '.dat'
+
     ts[';date      time'] = ts.index.strftime('%m/%d/%Y %H:%M')
-    ts[[';date      time', series.name]].to_string(open(fn + '.dat', 'w'), index=False)
+    ts[[';date      time', series.name]].to_string(open(fn, 'w'), index=False)
 
 
 def read_swmm_data(file):
