@@ -121,7 +121,7 @@ def convert_options(lines):
     Returns:
         dict: options
     """
-    options = {}
+    options = dict()
     for line in lines:
         label = line.pop(0)
         assert len(line) == 1
