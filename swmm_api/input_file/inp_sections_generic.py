@@ -41,6 +41,16 @@ from .inp_helpers import InpSectionGeneric, UserDict_, dataframe_to_inp_string
 #     def to_inp(self, fast=False):
 #         return self.title
 
+def _str_to_lines(content):
+    lines = list()
+    for line in content.split('\n'):
+        line = line.strip()
+        if line == '' or line.startswith(';'):  # ignore empty and comment lines
+            continue
+        else:
+            lines.append(line.split())
+    return lines
+
 
 def convert_title(lines):
     """
@@ -197,6 +207,79 @@ def convert_report(lines):
         options[label] = value
 
     return options
+
+
+class ReportSection(UserDict_, InpSectionGeneric):
+    def __init__(self):
+        self.INPUT = False
+        self.CONTINUITY = True
+        self.FLOWSTATS = True
+        self.CONTROLS = False
+        self.SUBCATCHMENTS = None
+        self.NODES = None
+        self.LINKS = None
+        self.LID = None
+        UserDict_.__init__(self)
+        self._data = vars(self)
+
+    @classmethod
+    def from_lines(cls, lines):
+        rep = cls()
+
+        for line in lines:
+            label = line.pop(0)
+            if len(line) == 1:
+                value = infer_type(line[0])
+
+            elif (label == 'LID') and (len(line) == 3):
+                value = {'Name': line[0],
+                         'Subcatch': line[1],
+                         'Fname': line[2]}
+
+            else:
+                value = infer_type(line)
+
+            if label in ['SUBCATCHMENTS', 'NODES', 'LINKS', 'LID']:
+                if isinstance(value, str) and (value.upper() == 'ALL'):
+                    pass
+                elif value is None:
+                    pass
+                elif not isinstance(value, list):
+                    value = [value]
+
+            if isinstance(rep[label], list):
+                rep[label] += value
+            else:
+                rep[label] = value
+        return rep
+
+    def to_inp(self, fast=False):
+        f = ''
+        section = self._data.copy()
+        section.pop('_data')
+
+        max_len = len(max(section.keys(), key=len)) + 2
+
+        def _dict_format(key, value):
+            return '{key}{value}'.format(key=key.ljust(max_len),
+                                         value=type2str(value) + '\n')
+
+        for sub in section:
+            value = section[sub]
+            if value is None:
+                continue
+
+            if isinstance(value, list) and len(value) > 20:
+                size = len(value)
+                start = 0
+                for end in range(20, size, 20):
+                    f += _dict_format(key=sub, value=value[start:end])
+                    start = end
+
+            else:
+                f += _dict_format(key=sub, value=value)
+
+        return f
 
 
 def convert_evaporation(lines):
@@ -365,7 +448,7 @@ def convert_temperature(lines):
     sub-areas. The ADC parameters will default to 1.0 (meaning no depletion) if no data
     are supplied for a particular type of sub-area.
     """
-    new_lines = {}
+    new_lines = dict()
     for line in lines:
 
         sub_head = line.pop(0)

@@ -61,7 +61,6 @@ def section_to_string(section, fast=True):
 
     # ----------------------
     elif isinstance(section, dict):  # V0.2
-
         max_len = len(max(section.keys(), key=len)) + 2
         for sub in section:
             f += '{key}{value}'.format(key=sub.ljust(max_len),

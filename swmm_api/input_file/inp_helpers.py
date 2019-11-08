@@ -12,7 +12,10 @@ class UserDict_:
         if d is None:
             self._data = kwargs
         else:
-            self._data = dict(d)
+            if isinstance(d, dict):
+                self._data = d
+            else:
+                self._data = dict(d)
 
     def __len__(self):
         return self._data.__len__()

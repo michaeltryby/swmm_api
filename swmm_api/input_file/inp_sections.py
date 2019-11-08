@@ -209,10 +209,10 @@ class Outfall(BaseSectionObject):
                 self._data_init(*args)
             else:
                 self._no_data_init(*args)
-
-        self.Data = Data
-        self.FlapGate = FlapGate
-        self.RouteTo = RouteTo
+        else:
+            self.Data = Data
+            self.FlapGate = FlapGate
+            self.RouteTo = RouteTo
 
     def _no_data_init(self, Gated=False, RouteTo=NaN):
         """

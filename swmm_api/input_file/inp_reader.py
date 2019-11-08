@@ -1,5 +1,6 @@
 from .inp_sections_generic import (convert_title, convert_options, convert_report, convert_evaporation,
-                                   convert_temperature, convert_loadings, convert_coordinates, convert_map)
+                                   convert_temperature, convert_loadings, convert_coordinates, convert_map,
+                                   ReportSection)
 from .inp_sections_generic import TimeseriesSection, TagsSection, CurvesSection
 from .inp_sections import *
 from .inp_helpers import InpSection, InpData
@@ -11,12 +12,12 @@ from inspect import isclass, isfunction
 
 CONVERTER = {
     # options = dict
-    REPORT: convert_report,
     TITLE: convert_title,
     OPTIONS: convert_options,
     EVAPORATION: convert_evaporation,
     TEMPERATURE: convert_temperature,
 
+    REPORT: ReportSection,
     CURVES: CurvesSection,
     TIMESERIES: TimeseriesSection,
     LOADINGS: convert_loadings,
