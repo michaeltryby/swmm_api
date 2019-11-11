@@ -49,13 +49,14 @@ def _multiindex_to_index(multiindex):
     return multiindex
 
 
-def write(data, filename):
+def write(data, filename, compression='brotli'):
     """
     write data to parquet
 
     Args:
         data (pandas.DataFrame):
         filename (str): path to resulting file
+        compression (str):
     """
     filename = _check_name(filename)
     if isinstance(data, Series):
@@ -66,7 +67,7 @@ def write(data, filename):
     df.index = _multiindex_to_index(df.index)
     df.columns = _multiindex_to_index(df.columns)
 
-    df.to_parquet(filename, compression='brotli')
+    df.to_parquet(filename, compression=compression)
 
 
 def _index_to_multiindex(index):
