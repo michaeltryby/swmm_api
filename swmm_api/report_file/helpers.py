@@ -95,7 +95,7 @@ def _part_to_frame(part):
     header = []
 
     sep_count = 0
-
+    rows = list()
     for line in lines:
 
         if len(line.strip()) == line.count('-'):  # line is only separator  OLD: '-----' in line:
@@ -107,12 +107,18 @@ def _part_to_frame(part):
                 header.append(line)
             else:
                 data.append(line)
+                rows.append(line.split())
 
     # --------------------------------------------
-    f = StringIO('\n'.join(header + data))
-    df = pd.read_fwf(f, header=list(range(len(header))), index_col=0)
-    df.columns = ['_'.join(str(c) for c in col if 'Unnamed:' not in c).strip() for col in df.columns.values]
-    return df
+    head = pd.read_fwf(StringIO('\n'.join(header + data[:1])),
+                       header=list(range(len(header))), index_col=0)
+    columns = head.columns
+    index_name = head.index.name
+    columns = ['_'.join(str(c) for c in col if 'Unnamed:' not in c).strip() for col in columns.values]
+    df = pd.DataFrame.from_records(rows).set_index(0, append=False)
+    df.columns = columns
+    df.index.name = index_name
+    return df.astype(float)
 
 
 def _continuity_part_to_dict(raw):

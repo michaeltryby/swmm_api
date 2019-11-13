@@ -9,8 +9,8 @@ class Storage(BaseSectionObject):
         [STORAGE]
 
     Purpose:
-        Identifies each storage node of the drainage system. Storage nodes can have any
-        shape as specified by a surface area versus water depth relation.
+        Identifies each storage node of the drainage system.
+        Storage nodes can have any shape as specified by a surface area versus water depth relation.
 
     Format:
         Name Elev Ymax Y0 TABULAR    Acurve   (Apond Fevap Psi Ksat IMD)
@@ -49,7 +49,7 @@ class Storage(BaseSectionObject):
             Elevation (float): invert elevation (ft or m).
             MaxDepth (float): maximum water depth possible (ft or m).
             InitDepth (float): water depth at the start of the simulation (ft or m).
-            Type (str):
+            Type (str): TABULAR | FUNCTIONAL
             *args (): -Arguments below-
             Curve (str | list): name of curve in [CURVES] section with surface area (ft2 or m2)
                 as a function of depth (ft or m) for TABULAR geometry.
@@ -457,8 +457,8 @@ class Outlet(BaseSectionObject):
     def __init__(self, Name, FromNode, ToNode, Offset, Type, *args, Curve=None, Gated=False):
         self.Name = str(Name)
 
-        self.FromNode = FromNode
-        self.ToNode = ToNode
+        self.FromNode = str(FromNode)
+        self.ToNode = str(ToNode)
         self.Offset = Offset
         self.Type = Type
 
@@ -535,24 +535,51 @@ class Junction(BaseSectionObject):
 
     def __init__(self, Name, Elevation, MaxDepth=0, InitDepth=0, SurDepth=0, Aponded=0):
         """
-        * .. defaults
+        Section:
+            [JUNCTIONS]
 
-        Name Elev  (Ymax  Y0  Ysur  Apond)
+        Purpose:
+            Identifies each junction node of the drainage system.
+            Junctions are points in space where channels and pipes connect together.
+            For sewer systems they can be either connection fittings or manholes.
 
-        Ymax (0)
-        Y0 (0)
-        Ysur (0)
-        Apond (0)
+        Format:
+            Name Elev (Ymax Y0 Ysur Apond)
 
-        Name  Elevation MaxDepth InitDepth SurDepth Aponded
+        Format-PC-SWMM:
+            Name  Elevation MaxDepth InitDepth SurDepth Aponded
+
+        Remarks:
+            Name:
+                name assigned to junction node.
+            Elev:
+                elevation of junction invert (ft or m).
+            Ymax:
+                depth from ground to invert elevation (ft or m) (default is 0).
+            Y0:
+                water depth at start of simulation (ft or m) (default is 0).
+            Ysur:
+                maximum additional head above ground elevation that manhole junction
+                can sustain under surcharge conditions (ft or m) (default is 0).
+            Apond:
+                area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0).
+
+            If Ymax is 0 then SWMM sets the maximum depth equal to the distance
+            from the invert to the top of the highest connecting link.
+
+            If the junction is part of a force main section of the system then set Ysur
+            to the maximum pressure that the system can sustain.
+
+            Surface ponding can only occur when Apond is non-zero and the ALLOW_PONDING analysis option is turned on.
 
         Args:
-            Name ():
-            Elevation ():
-            MaxDepth ():
-            InitDepth ():
-            SurDepth ():
-            Aponded ():
+            Name (str): name assigned to junction node.
+            Elevation (float): elevation of junction invert (ft or m).
+            MaxDepth (float): depth from ground to invert elevation (ft or m) (default is 0).
+            InitDepth (float): water depth at start of simulation (ft or m) (default is 0).
+            SurDepth (float): maximum additional head above ground elevation that manhole junction
+                                can sustain under surcharge conditions (ft or m) (default is 0).
+            Aponded (float): area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0).
         """
         self.Name = str(Name)
         self.Elevation = Elevation
@@ -592,7 +619,7 @@ class CrossSection(BaseSectionObject):
         SEMICIRCULAR = 'SEMICIRCULAR'
 
     def __init__(self, Link):
-        self.Link = Link
+        self.Link = str(Link)
 
     @classmethod
     def from_line(cls, Link, Shape, *line):
@@ -896,7 +923,7 @@ class DryWeatherFlow(BaseSectionObject):
             node ():
             kind ():
         """
-        self.node = node
+        self.node = str(node)
         self.kind = kind
         self.Base = Base
         self.pattern1 = pattern1
@@ -955,7 +982,7 @@ class Loss(BaseSectionObject):
             FlapGate (bool): YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO).
             SeepageRate (float): Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.)
         """
-        self.Link = Link
+        self.Link = str(Link)
         self.Inlet = Inlet
         self.Outlet = Outlet
         self.Average = Average
@@ -966,7 +993,7 @@ class Loss(BaseSectionObject):
 class Inflow(BaseSectionObject):
     index = ['Node', 'Constituent']
 
-    def __init__(self, Node, Constituent, TimeSeries, Type, Mfactor=1.0, Sfactor=1.0, Baseline=0., Pattern=NaN):
+    def __init__(self, Node, Constituent, TimeSeries=None, Type='FLOW', Mfactor=1.0, Sfactor=1.0, Baseline=0., Pattern=NaN):
         """
         Node FLOW   Tseries (FLOW (1.0     Sfactor Base Pat))
         Node Pollut Tseries (Type (Mfactor Sfactor Base Pat))
@@ -983,7 +1010,7 @@ class Inflow(BaseSectionObject):
 
         Node Constituent TimeSeries Type Mfactor Sfactor Baseline Pattern
         """
-        self.Node = Node
+        self.Node = str(Node)
         self.Constituent = Constituent
         self.TimeSeries = TimeSeries
         self.Type = Type
@@ -991,6 +1018,9 @@ class Inflow(BaseSectionObject):
         self.Sfactor = Sfactor
         self.Baseline = Baseline
         self.Pattern = Pattern
+
+        if (TimeSeries is None) or (TimeSeries == ''):
+            self.TimeSeries = '""'
 
 
 class RainGauge(BaseSectionObject):

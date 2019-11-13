@@ -182,7 +182,7 @@ class Report:
     def outfall_loading_summary(self):
         if self._outfall_loading_summary is None:
             p = self.converted('Outfall Loading Summary')
-            self._outfall_loading_summary = _part_to_frame(p)
+            self._outfall_loading_summary = _part_to_frame(p.replace('Outfall Node', 'Outfall_Node '))
         return self._outfall_loading_summary
 
     @property
