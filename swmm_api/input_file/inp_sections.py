@@ -301,8 +301,8 @@ class Conduit(BaseSectionObject):
             MaxFlow (float): maximum flow allowed in the conduit (flow units) (default is no limit).
         """
         self.Name = str(Name)
-        self.FromNode = FromNode
-        self.ToNode = ToNode
+        self.FromNode = str(FromNode)
+        self.ToNode = str(ToNode)
         self.Length = Length
         self.Roughness = Roughness
         self.InOffset = InOffset
@@ -521,8 +521,8 @@ class Orifice(BaseSectionObject):
         The only allowable shapes are CIRCULAR and RECT_CLOSED (closed rectangular).
         """
         self.Name = str(Name)
-        self.FromNode = FromNode
-        self.ToNode = ToNode
+        self.FromNode = str(FromNode)
+        self.ToNode = str(ToNode)
         self.Type = Type
         self.Offset = Offset
         self.Qcoeff = Qcoeff
@@ -748,7 +748,7 @@ class SubCatchment(BaseSectionObject):
 
         self.Name = str(Name)
         self.RainGage = RainGage
-        self.Outlet = Outlet
+        self.Outlet = str(Outlet)
         self.Area = Area
         self.Imperv = Imperv
         self.Width = Width
@@ -910,9 +910,9 @@ class InfiltrationCurveNumber(Infiltration):
 
 
 class DryWeatherFlow(BaseSectionObject):
-    index = ['node', 'kind']
+    index = ['Node', 'kind']
 
-    def __init__(self, node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN, pattern5=NaN):
+    def __init__(self, Node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN, pattern5=NaN):
         """
         Type: FLOW, <pollutant>
         Base: baseline
@@ -920,10 +920,10 @@ class DryWeatherFlow(BaseSectionObject):
 
         Node  Type  Base  (Pat1  Pat2  Pat3  Pat4)
         Args:
-            node ():
+            Node ():
             kind ():
         """
-        self.node = str(node)
+        self.Node = str(Node)
         self.kind = kind
         self.Base = Base
         self.pattern1 = pattern1
@@ -1150,8 +1150,8 @@ class Pump(BaseSectionObject):
 
     def __init__(self, Name, FromNode, ToNode, Pcurve, Status='ON', Startup=0, Shutoff=0):
         self.Name = str(Name)
-        self.FromNode = FromNode
-        self.ToNode = ToNode
+        self.FromNode = str(FromNode)
+        self.ToNode = str(ToNode)
         self.Pcurve = Pcurve
         self.Status = Status
         self.Startup = Startup

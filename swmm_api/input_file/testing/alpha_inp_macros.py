@@ -1,4 +1,5 @@
 from ..inp_macros import InpMacros
+from ..helpers.sections import *
 import numpy as np
 
 
@@ -10,10 +11,10 @@ def append_na(x, every=3):
 class InpMacrosAlpha(InpMacros):
     ####################################################################################################################
     def print_map(self):  # TODO
-        if 'COORDINATES' in self:
+        if COORDINATES in self:
             import matplotlib.pyplot as plt
             fig, ax = plt.subplots()
-            coords = self['COORDINATES']
+            coords = self[COORDINATES]
             ax.scatter(x=coords.x, y=coords.y)
             for name, node in coords[::80].iterrows():
                 ax.text(node.x, node.y, name, horizontalalignment='center', verticalalignment='baseline')
@@ -43,11 +44,11 @@ class InpMacrosAlpha(InpMacros):
     def networkx(self, draw=True):  # TODO
         import networkx as nx
         g = nx.Graph()
-        for edge_kind in ['CONDUITS',
-                          'WEIRS',
-                          'PUMPS',
-                          'ORIFICES',
-                          'OUTLETS']:
+        for edge_kind in [CONDUITS,
+                          WEIRS,
+                          PUMPS,
+                          ORIFICES,
+                          OUTLETS]:
             if edge_kind not in self:
                 continue
             edges = self[edge_kind][['FromNode', 'ToNode']]
