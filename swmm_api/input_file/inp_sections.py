@@ -1124,6 +1124,9 @@ class Pump(BaseSectionObject):
     Format:
         Name Node1 Node2 Pcurve (Status Startup Shutoff)
 
+    PC-SWMM-Format:
+        Name  Inlet-Node  Outlet-Node  Pump-Curve  Init.-Status  Startup-Depth  Shutoff-Depth
+
     Remarks:
         - Name:
             name assigned to pump link.

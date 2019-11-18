@@ -974,6 +974,11 @@ class TagsSection(UserDict_, InpSectionGeneric):
     def __init__(self):
         UserDict_.__init__(self)
 
+    class Types:
+        Node = 'Node'
+        Subcatch = 'Subcatch'
+        Link = 'Link'
+
     @classmethod
     def from_lines(cls, lines):
         # TAGS AS DATAFRAME

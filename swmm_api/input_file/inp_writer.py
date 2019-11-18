@@ -13,9 +13,9 @@ sections_order = [TITLE,
                   TEMPERATURE,
 
                   JUNCTIONS,
-                  DWF,
                   OUTFALLS,
                   STORAGE,
+                  DWF,
 
                   CONDUITS,
                   WEIRS,

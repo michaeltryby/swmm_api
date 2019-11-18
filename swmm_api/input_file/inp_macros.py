@@ -10,7 +10,7 @@ from ..output_file import SwmmOutHandler, parquet
 from .inp_reader import read_inp_file
 from .inp_helpers import InpData
 from .inp_writer import write_inp_file, inp2string
-from .helpers.sections import REPORT, XSECTIONS, CURVES
+from .helpers.sections import REPORT, XSECTIONS, CURVES, STORAGE, PUMPS, SUBCATCHMENTS, RAINGAGES
 from .helpers.type_converter import offset2delta
 
 
@@ -269,16 +269,55 @@ def reduce_curves(inp):
 
     :type inp: InpData
     """
-    curves = set([xs.Curve for xs in inp[XSECTIONS].values() if isinstance(xs, CrossSectionCustom)])
-    # curves |= set(self[OUTFALLS]['Data'].dropna().unique().tolist())
-    # self[CURVES][CurvesSection.TYPES.SHAPE].update(self[CURVES][CurvesSection.TYPES.SHAPE])
 
-    old_shapes = inp[CURVES].pop(CurvesSection.TYPES.SHAPE)
+    # ---------------------
+    def _reduce(all_curves, kind, curves):
+        if kind not in all_curves:
+            return all_curves
+        old_curves = all_curves.pop(kind)
 
-    new_curves = {}
-    for c in curves:
-        if c in old_shapes:
-            new_curves.update({c: old_shapes[c]})
+        new_curves = {}
+        for c in curves:
+            if c in old_curves:
+                new_curves.update({c: old_curves[c]})
 
-    inp[CURVES].update({CurvesSection.TYPES.SHAPE: new_curves})
+        all_curves.update({kind: new_curves})
+        return all_curves
+
+    # ---------------------
+    inp[CURVES] = _reduce(inp[CURVES],
+                          kind=CurvesSection.TYPES.SHAPE,
+                          curves=set(
+                              [xs.Curve for xs in inp[XSECTIONS].values() if isinstance(xs, CrossSectionCustom)]))
+
+    inp[CURVES] = _reduce(inp[CURVES],
+                          kind=CurvesSection.TYPES.STORAGE,
+                          curves=set([st.Curve for st in inp[STORAGE].values() if st.Type == st.Types.TABULAR]))
+
+    # ---------------------
+    curves = set([pu.Pcurve for pu in inp[PUMPS].values() if pu.Pcurve != '*'])
+    for kind in [CurvesSection.TYPES.PUMP1, CurvesSection.TYPES.PUMP2, CurvesSection.TYPES.PUMP3,
+                 CurvesSection.TYPES.PUMP4]:
+        inp[CURVES] = _reduce(inp[CURVES],
+                              kind=kind,
+                              curves=curves)
+    return inp
+
+
+def reduce_raingages(inp):
+    """
+
+    :type inp: InpData
+    """
+    needed_raingages = list()
+    for s in inp[SUBCATCHMENTS].values():
+        needed_raingages.append(s.RainGage)
+
+    needed_raingages = set(needed_raingages)
+
+    current_rain_gages = list(inp[RAINGAGES].keys())
+    for rg in current_rain_gages:
+        if rg not in needed_raingages:
+            inp[RAINGAGES].pop(rg)
+
     return inp
