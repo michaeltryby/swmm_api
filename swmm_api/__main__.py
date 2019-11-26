@@ -11,7 +11,7 @@ from swmm_api import read_inp_file, write_inp_file
 """
 
 if __name__ == '__main__':
-    from mp.helpers import OUTPUT_PATH
+    # from mp.helpers import OUTPUT_PATH
 
     # out = SwmmOutHandler('test.out')
     # print(out.to_frame())
