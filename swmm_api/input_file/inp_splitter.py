@@ -8,17 +8,20 @@ from .inp_sections_generic import TagsSection
 from .testing.inp_graph_network import inp_to_graph
 
 
-def split_network(inp, split_at_node, keep_node):
+def split_network(inp, keep_node, split_at_node=None):
     if CONTROLS in inp:
         del inp[CONTROLS]
 
     g = inp_to_graph(inp)
 
-    last_node = split_at_node
-    g.remove_node(last_node)
+    if split_at_node is not None:
+        g.remove_node(split_at_node)
     sub = nx.subgraph(g, node_connected_component(g, keep_node))
 
-    final_nodes = set(list(sub.nodes) + [last_node])
+    final_nodes = list(sub.nodes)
+    if split_at_node is not None:
+        final_nodes.append(split_at_node)
+    final_nodes = set(final_nodes)
 
     # __________________________________________
     for section in [JUNCTIONS,
@@ -28,7 +31,9 @@ def split_network(inp, split_at_node, keep_node):
         new_section = InpSection(inp[section].index)
         for node in section_nodes:
             new_section.append(inp[section][node])
-        inp[section] = new_section
+
+        if not new_section.empty:
+            inp[section] = new_section
 
     # __________________________________________
     for section in [INFLOWS, DWF]:
@@ -36,7 +41,8 @@ def split_network(inp, split_at_node, keep_node):
         for name, thing in inp[section].items():
             if thing.Node in final_nodes:
                 new_section.append(thing)
-        inp[section] = new_section
+        if not new_section.empty:
+            inp[section] = new_section
 
     # __________________________________________
     final_links = list()
@@ -49,7 +55,8 @@ def split_network(inp, split_at_node, keep_node):
             if thing.ToNode in final_nodes:
                 new_section.append(thing)
                 final_links.append(name)
-        inp[section] = new_section
+        if not new_section.empty:
+            inp[section] = new_section
 
     # __________________________________________
     for section in [XSECTIONS, LOSSES]:
@@ -57,7 +64,8 @@ def split_network(inp, split_at_node, keep_node):
         for name, thing in inp[section].items():
             if thing.Link in final_links:
                 new_section.append(thing)
-        inp[section] = new_section
+        if not new_section.empty:
+            inp[section] = new_section
 
     # __________________________________________
     for section in [SUBCATCHMENTS]:
@@ -65,6 +73,8 @@ def split_network(inp, split_at_node, keep_node):
         for name, thing in inp[section].items():
             if thing.Outlet in final_nodes:
                 new_section.append(thing)
+        if not new_section.empty:
+            inp[section] = new_section
 
     # __________________________________________
     for section in [SUBAREAS, INFILTRATION]:
@@ -72,7 +82,8 @@ def split_network(inp, split_at_node, keep_node):
         for name, thing in inp[section].items():
             if thing.subcatchment in inp[SUBCATCHMENTS]:
                 new_section.append(thing)
-        inp[section] = new_section
+        if not new_section.empty:
+            inp[section] = new_section
 
     # __________________________________________
     # section_filter[TAGS],  # node und link

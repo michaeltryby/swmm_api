@@ -10,7 +10,8 @@ from ..output_file import SwmmOutHandler, parquet
 from .inp_reader import read_inp_file
 from .inp_helpers import InpData
 from .inp_writer import write_inp_file, inp2string
-from .helpers.sections import REPORT, XSECTIONS, CURVES, STORAGE, PUMPS, SUBCATCHMENTS, RAINGAGES
+from .helpers.sections import REPORT, XSECTIONS, CURVES, STORAGE, PUMPS, SUBCATCHMENTS, RAINGAGES, SUBAREAS, \
+    INFILTRATION
 from .helpers.type_converter import offset2delta
 
 
@@ -321,3 +322,7 @@ def reduce_raingages(inp):
             inp[RAINGAGES].pop(rg)
 
     return inp
+
+
+def combined_subcatchment_infos(inp):
+    return inp[SUBCATCHMENTS].frame.join(inp[SUBAREAS].frame).join(inp[INFILTRATION].frame)
