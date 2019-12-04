@@ -11,7 +11,7 @@ from .inp_reader import read_inp_file
 from .inp_helpers import InpData
 from .inp_writer import write_inp_file, inp2string
 from .helpers.sections import REPORT, XSECTIONS, CURVES, STORAGE, PUMPS, SUBCATCHMENTS, RAINGAGES, SUBAREAS, \
-    INFILTRATION
+    INFILTRATION, COORDINATES, VERTICES
 from .helpers.type_converter import offset2delta
 
 
@@ -326,3 +326,15 @@ def reduce_raingages(inp):
 
 def combined_subcatchment_infos(inp):
     return inp[SUBCATCHMENTS].frame.join(inp[SUBAREAS].frame).join(inp[INFILTRATION].frame)
+
+#
+# def coordinates_frame(inp):
+#     return DataFrame.from_records(inp[COORDINATES]).rename(columns={0: 'name',
+#                                                                     1: 'x',
+#                                                                     2: 'y'}).set_index('name', drop=True).astype(float)
+#
+#
+# def vertices_frame(inp):
+#     return DataFrame.from_records(inp[VERTICES]).rename(columns={0: 'name',
+#                                                                  1: 'x',
+#                                                                  2: 'y'}).set_index('name', drop=True).astype(float)

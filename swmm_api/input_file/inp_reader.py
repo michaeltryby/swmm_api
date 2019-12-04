@@ -1,6 +1,6 @@
 from .inp_sections_generic import (convert_title, convert_options, convert_report, convert_evaporation,
-                                   convert_temperature, convert_loadings, convert_coordinates, convert_map,
-                                   ReportSection)
+                                   convert_temperature, convert_loadings, convert_map,
+                                   ReportSection, CoordinatesSection, VerticesSection)
 from .inp_sections_generic import TimeseriesSection, TagsSection, CurvesSection
 from .inp_sections import *
 from .inp_helpers import InpSection, InpData
@@ -24,7 +24,8 @@ CONVERTER = {
     TAGS: TagsSection,
 
     # GUI data
-    COORDINATES: convert_coordinates,
+    COORDINATES: CoordinatesSection,
+    VERTICES: VerticesSection,
     MAP: convert_map,
 
     # custom section objects

@@ -891,7 +891,7 @@ def convert_loadings(lines):
     return frame
 
 
-def convert_coordinates(lines):
+class CoordinatesSection(UserDict_, InpSectionGeneric):
     """
     Section:
         [COORDINATES]
@@ -909,22 +909,120 @@ def convert_coordinates(lines):
             horizontal coordinate relative to origin in lower left of map.
         Ycoord
             vertical coordinate relative to origin in lower left of map.
-
-    Args:
-        lines (list):
-
-    Returns:
-        pandas.DataFrame:
     """
-    new_lines = {}
-    for line in lines:
-        name = line[0]
-        new_lines[name] = {'x': line[1],
-                           'y': line[2]}
 
-    frame = DataFrame.from_dict(new_lines, 'index').rename_axis('Name', axis='columns')
-    # print(general_category2string(frame))
-    return frame
+    @classmethod
+    def from_lines(cls, lines):
+        new = cls()
+        for line in lines:
+            node, x, y = line
+            new._data[node] = {'x': float(x), 'y': float(y)}
+        return new
+
+    def __repr__(self):
+        return self.to_pandas.__repr__()
+
+    def __str__(self):
+        return self.to_inp()
+
+    def to_inp(self, fast=False):
+        if self.empty:
+            return '; NO data'
+        if fast:
+            f = ''
+            max_len_name = len(max(self._data.keys(), key=len)) + 2
+            f += '{name} {x} {y}\n'.format(name='; Node'.ljust(max_len_name), x='x', y='y')
+            for node, coords in self._data.items():
+                f += '{name} {x} {y}\n'.format(name=node.ljust(max_len_name), **coords)
+        else:
+            f = dataframe_to_inp_string(self.to_pandas)
+        return f
+
+    @property
+    def to_pandas(self):
+        return DataFrame.from_dict(self._data, orient='index')
+
+    @classmethod
+    def from_pandas(cls, data, x_name='x', y_name='y'):
+        new = cls()
+        df = data[[x_name, y_name]].rename({x_name: 'x', y_name: 'y'})
+        new._data = df[['x', 'y']].to_dict(orient='index')
+        return new
+
+
+class VerticesSection(UserDict_, InpSectionGeneric):
+    """
+    Section:
+        [VERTICES]
+
+    Purpose:
+        Assigns X,Y coordinates to interior vertex points of curved drainage system links.
+
+    Format:
+        Link Xcoord Ycoord
+
+    Remarks:
+        Node
+            name of link.
+        Xcoord
+            horizontal coordinate of vertex relative to origin in lower left of map.
+        Ycoord
+            vertical coordinate of vertex relative to origin in lower left of map.
+
+        Include a separate line for each interior vertex of the link, ordered from the inlet node to the outlet node.
+
+        Straight-line links have no interior vertices and therefore are not listed in this section.
+    """
+
+    @classmethod
+    def from_lines(cls, lines):
+        new = cls()
+        for line in lines:
+            link, x, y = line
+            if link not in new._data:
+                new._data[link] = list()
+
+            new._data[link].append({'x': float(x), 'y': float(y)})
+        return new
+
+    def __repr__(self):
+        return self.to_pandas.__repr__()
+
+    def __str__(self):
+        return self.to_inp()
+
+    def to_inp(self, fast=False):
+        if self.empty:
+            return '; NO data'
+
+        if fast:
+            f = ''
+            max_len_name = len(max(self._data.keys(), key=len)) + 2
+            f += '{name} {x} {y}\n'.format(name='; Link'.ljust(max_len_name), x='x', y='y')
+            for link, vertices in self._data.items():
+                for v in vertices:
+                    f += '{name} {x} {y}\n'.format(name=link.ljust(max_len_name), **v)
+        else:
+            f = dataframe_to_inp_string(self.to_pandas)
+        return f
+
+    @property
+    def to_pandas(self):
+        rec = list()
+        for link, vertices in self._data.items():
+            for v in vertices:
+                rec.append([link, v['x'], v['y']])
+
+        return DataFrame.from_records(rec).rename(columns={0: 'Link',
+                                                           1: 'x',
+                                                           2: 'y'}).set_index('Link', drop=True)
+
+    @classmethod
+    def from_pandas(cls, data, x_name='x', y_name='y'):
+        new = cls()
+        df = data[[x_name, y_name]].rename({x_name: 'x', y_name: 'y'})
+        new._data = df[['x', 'y']].groupby(df.index).apply(lambda x: x.to_dict('records')).to_dict()
+        return new
 
 
 def convert_map(lines):
@@ -1004,6 +1102,8 @@ class TagsSection(UserDict_, InpSectionGeneric):
         return tags_df
 
     def to_inp(self, fast=False):
+        if self.empty:
+            return '; NO data'
         f = ''
         max_len_type = len(max(self._data.keys(), key=len)) + 2
         for type_, tags in self._data.items():

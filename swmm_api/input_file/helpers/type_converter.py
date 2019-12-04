@@ -92,7 +92,7 @@ def type2str(x):
             return ''
         if x == 0.0:
             return '0'
-        return '{:0.5G}'.format(x)  # .rstrip('0').rstrip('.')
+        return '{:0.7G}'.format(x)  # .rstrip('0').rstrip('.')
     elif isinstance(x, date):
         return x.strftime(format='%m/%d/%Y')
     elif isinstance(x, time):
