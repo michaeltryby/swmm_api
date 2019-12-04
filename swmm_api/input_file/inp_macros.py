@@ -4,7 +4,7 @@ from warnings import warn
 from pandas import Series, DataFrame
 
 from swmm_api.input_file.inp_sections_generic import CurvesSection
-from .inp_sections import CrossSectionCustom
+from .inp_sections import CrossSectionCustom, Conduit
 from ..run import swmm5_run
 from ..output_file import SwmmOutHandler, parquet
 from .inp_reader import read_inp_file
@@ -12,6 +12,7 @@ from .inp_helpers import InpData
 from .inp_writer import write_inp_file, inp2string
 from .helpers.sections import REPORT, XSECTIONS, CURVES, STORAGE, PUMPS, SUBCATCHMENTS, RAINGAGES, SUBAREAS, \
     INFILTRATION, COORDINATES, VERTICES
+from .helpers import sections as S
 from .helpers.type_converter import offset2delta
 
 
@@ -338,3 +339,72 @@ def combined_subcatchment_infos(inp):
 #     return DataFrame.from_records(inp[VERTICES]).rename(columns={0: 'name',
 #                                                                  1: 'x',
 #                                                                  2: 'y'}).set_index('name', drop=True).astype(float)
+
+
+def find_node(inp, label):
+    for kind in [S.JUNCTIONS, S.OUTFALLS, S.DIVIDERS, S.STORAGE]:
+        if (kind in inp) and (label in inp[kind]):
+            return inp[kind][label]
+
+
+def find_link(inp, label):
+    for kind in [S.CONDUITS, S.PUMPS, S.ORIFICES, S.WEIRS, S.OUTLETS]:
+        if (kind in inp) and (label in inp[kind]):
+            return inp[kind][label]
+
+
+def calc_slope(inp, link):
+    return (find_node(inp, link.FromNode).Elevation - find_node(inp, link.ToNode).Elevation) / link.Length
+
+
+def delete_node(inp, node):
+    print('DELETE (node): ', node)
+    if isinstance(node, str):
+        n = find_node(inp, node)
+    else:
+        n = node
+        node = n.Name
+
+    for kind in [S.JUNCTIONS, S.OUTFALLS, S.DIVIDERS, S.STORAGE]:
+        if (kind in inp) and (node in inp[kind]):
+            inp[kind].pop(node)
+    inp[S.COORDINATES].pop(node)
+
+    # delete connected links
+    for i_name, i in inp[S.CONDUITS].copy().items():
+        if (i.ToNode == node) or (i.FromNode == node):
+            print('DELETE (link): ', i_name)
+            inp[S.CONDUITS].pop(i_name)
+            inp[S.XSECTIONS].pop(i_name)
+            inp[S.VERTICES].pop(i_name)
+
+    return inp
+
+
+def combine_conduits(inp, c1, c2):
+    if isinstance(c1, str):
+        c1 = inp[S.CONDUITS][c1]
+    if isinstance(c2, str):
+        c2 = inp[S.CONDUITS][c2]
+
+    c_new = c2.copy()
+    c_new.Length += c1.Length
+
+    v_new = inp[S.VERTICES][c1.Name] + inp[S.VERTICES][c2.Name]
+
+    xs_new = inp[S.XSECTIONS][c2.Name]
+
+    if c1.FromNode == c2.ToNode:
+        c_new.ToNode = c1.ToNode
+        inp = delete_node(inp, c2.ToNode)
+
+    elif c1.ToNode == c2.FromNode:
+        c_new.FromNode = c1.FromNode
+        inp = delete_node(inp, c2.FromNode)
+    else:
+        raise EnvironmentError('Links not connected')
+
+    inp[S.VERTICES][c_new.Name] = v_new
+    inp[S.CONDUITS].append(c_new)
+    inp[S.XSECTIONS].append(xs_new)
+    return inp

@@ -6,6 +6,7 @@ RAINGAGES = 'RAINGAGES'  # rain gage information
 EVAPORATION = 'EVAPORATION'  # evaporation data
 TEMPERATURE = 'TEMPERATURE'  # air temperature and snow melt data
 ADJUSTMENTS = 'ADJUSTMENTS'  # monthly adjustments applied to climate variables
+
 SUBCATCHMENTS = 'SUBCATCHMENTS'  # basic subcatchment information
 SUBAREAS = 'SUBAREAS'  # subcatchment impervious/pervious sub-area data
 INFILTRATION = 'INFILTRATION'  # subcatchment infiltration parameters
@@ -15,10 +16,12 @@ AQUIFERS = 'AQUIFERS'  # groundwater aquifer parameters
 GROUNDWATER = 'GROUNDWATER'  # subcatchment groundwater parameters
 GWF = 'GWF'  # groundwater flow expressions
 SNOWPACKS = 'SNOWPACKS'  # subcatchment snow pack parameters
+
 JUNCTIONS = 'JUNCTIONS'  # junction node information
 OUTFALLS = 'OUTFALLS'  # outfall node information
 DIVIDERS = 'DIVIDERS'  # flow divider node information
 STORAGE = 'STORAGE'  # storage node information
+
 CONDUITS = 'CONDUITS'  # conduit link information
 PUMPS = 'PUMPS'  # pump link information
 ORIFICES = 'ORIFICES'  # orifice link information
@@ -27,6 +30,7 @@ OUTLETS = 'OUTLETS'  # outlet link information
 XSECTIONS = 'XSECTIONS'  # conduit, orifice, and weir cross-section geometry
 TRANSECTS = 'TRANSECTS'  # transect geometry for conduits with irregular cross-sections
 LOSSES = 'LOSSES'  # conduit entrance/exit losses and flap valves
+
 CONTROLS = 'CONTROLS'  # rules that control pump and regulator operation
 POLLUTANTS = 'POLLUTANTS'  # pollutant information
 LANDUSES = 'LANDUSES'  # land use categories

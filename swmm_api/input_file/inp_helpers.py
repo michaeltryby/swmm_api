@@ -146,6 +146,9 @@ class BaseSectionObject:
     def from_line(cls, *line):
         return cls(*line)
 
+    def copy(self):
+        return type(self)(**vars(self).copy())
+
 
 ########################################################################################################################
 class InpSectionGeneric:
