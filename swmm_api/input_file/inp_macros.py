@@ -358,7 +358,7 @@ def calc_slope(inp, link):
 
 
 def delete_node(inp, node):
-    print('DELETE (node): ', node)
+    # print('DELETE (node): ', node)
     if isinstance(node, str):
         n = find_node(inp, node)
     else:
@@ -373,7 +373,7 @@ def delete_node(inp, node):
     # delete connected links
     for i_name, i in inp[S.CONDUITS].copy().items():
         if (i.ToNode == node) or (i.FromNode == node):
-            print('DELETE (link): ', i_name)
+            # print('DELETE (link): ', i_name)
             inp[S.CONDUITS].pop(i_name)
             inp[S.XSECTIONS].pop(i_name)
             inp[S.VERTICES].pop(i_name)
