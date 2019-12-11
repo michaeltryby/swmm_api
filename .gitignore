@@ -1,2 +1,5 @@
 .idea
 .ipynb_checkpoints
+dist
+build
+*/__pycache__/*
