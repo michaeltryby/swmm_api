@@ -18,6 +18,8 @@ def split_network(inp, keep_node, split_at_node=None):
         g.remove_node(split_at_node)
     sub = nx.subgraph(g, node_connected_component(g, keep_node))
 
+    print(f'Reduced Network from {len(g.nodes)} nodes to {len(sub.nodes)} nodes.')
+
     final_nodes = list(sub.nodes)
     if split_at_node is not None:
         final_nodes.append(split_at_node)
