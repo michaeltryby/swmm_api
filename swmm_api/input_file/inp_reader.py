@@ -5,6 +5,7 @@ from .inp_sections_generic import TimeseriesSection, TagsSection, CurvesSection
 from .inp_sections import *
 from .inp_helpers import InpSection, InpData
 from .helpers.sections import *
+from .helpers.custom_iterator import custom_iter
 
 from inspect import isclass, isfunction
 
@@ -76,13 +77,15 @@ def _read_inp_file_raw(filename):
     else:
         inp_file = filename
 
+    inp_file = inp_file.readlines()
+
     head = None
-    for line in inp_file:
+    for line in custom_iter(inp_file, desc='read raw inp-file'):
         line = line.strip()
-        if line == '' or line.startswith(';'):  # ignore empty and comment lines
+        if (line == '') | line.startswith(';'):  # ignore empty and comment lines
             continue
 
-        elif line.startswith('[') and line.endswith(']'):  # section head
+        elif line.startswith('[') & line.endswith(']'):  # section head
             head = line.replace('[', '').replace(']', '').upper()
             inp[head] = list()
 
@@ -110,9 +113,7 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
     if custom_converter is not None:
         converter.update(custom_converter)
 
-    # from mp.helpers.check_time import Timer
-    for head, lines in inp.items():
-        # with Timer(head):
+    for head, lines in custom_iter(inp.items(), desc='convert sections'):
         if (convert_sections is not None) and (head not in convert_sections):
             continue
 
@@ -120,6 +121,8 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
             continue
 
         if head in converter:
+            lines = custom_iter(lines, desc=head).__iter__()
+
             section_ = converter[head]
 
             if isfunction(section_):  # section_ ... converter

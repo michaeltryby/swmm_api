@@ -1,6 +1,7 @@
 from pandas import DataFrame
 from numpy import isnan, NaN
 
+from .helpers.custom_iterator import custom_iter
 from .helpers.type_converter import type2str, infer_type
 
 
