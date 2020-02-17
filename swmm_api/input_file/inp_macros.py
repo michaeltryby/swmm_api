@@ -10,8 +10,8 @@ from ..output_file import SwmmOutHandler, parquet
 from .inp_reader import read_inp_file
 from .inp_helpers import InpData
 from .inp_writer import write_inp_file, inp2string
-from .helpers.sections import REPORT, XSECTIONS, CURVES, STORAGE, PUMPS, SUBCATCHMENTS, RAINGAGES, SUBAREAS, \
-    INFILTRATION, COORDINATES, VERTICES
+# from .helpers.sections import REPORT, XSECTIONS, CURVES, STORAGE, PUMPS, SUBCATCHMENTS, RAINGAGES, SUBAREAS, \
+#     INFILTRATION, COORDINATES, VERTICES
 from .helpers import sections as S
 from .helpers.type_converter import offset2delta
 
@@ -130,15 +130,15 @@ class InpMacros(InpData):
     ####################################################################################################################
     # @property
     # def report(self):
-    #     if 'REPORT' in self:
-    #         return self['REPORT']
+    #     if S.REPORT in self:
+    #         return self[S.REPORT]
     #     else:
     #         return None
     #
     # @property
     # def options(self):
-    #     if 'OPTIONS' in self:
-    #         return self['OPTIONS']
+    #     if S.OPTIONS in self:
+    #         return self[S.OPTIONS]
     #     else:
     #         return None
     #
@@ -151,8 +151,8 @@ class InpMacros(InpData):
     #
     # @property
     # def timeseries(self):
-    #     if 'TIMESERIES' in self:
-    #         return self['TIMESERIES']
+    #     if S.TIMESERIES in self:
+    #         return self[S.TIMESERIES]
     #     else:
     #         return None
     #
@@ -174,56 +174,56 @@ class InpMacros(InpData):
             self[cat] = cls
 
     def set_start(self, start, incl_report=True):
-        self.check_section('OPTIONS', Series())
-        self['OPTIONS'].loc['START_DATE'] = start.date()
-        self['OPTIONS'].loc['START_TIME'] = start.time()
+        self.check_section(S.OPTIONS, Series())
+        self[S.OPTIONS].loc['START_DATE'] = start.date()
+        self[S.OPTIONS].loc['START_TIME'] = start.time()
 
         if incl_report:
             self.set_start_report(start)
 
     def set_start_report(self, start):
-        self.check_section('OPTIONS', Series())
-        self['OPTIONS'].loc['REPORT_START_DATE'] = start.date()
-        self['OPTIONS'].loc['REPORT_START_TIME'] = start.time()
+        self.check_section(S.OPTIONS, Series())
+        self[S.OPTIONS].loc['REPORT_START_DATE'] = start.date()
+        self[S.OPTIONS].loc['REPORT_START_TIME'] = start.time()
 
     def set_end(self, end):
-        self.check_section('OPTIONS', Series())
-        self['OPTIONS'].loc['END_DATE'] = end.date()
-        self['OPTIONS'].loc['END_TIME'] = end.time()
+        self.check_section(S.OPTIONS, Series())
+        self[S.OPTIONS].loc['END_DATE'] = end.date()
+        self[S.OPTIONS].loc['END_TIME'] = end.time()
 
     def set_threads(self, num):
-        self.check_section('OPTIONS', Series())
-        self['OPTIONS'].loc['THREADS'] = num
+        self.check_section(S.OPTIONS, Series())
+        self[S.OPTIONS].loc['THREADS'] = num
 
     def ignore_rainfall(self, on=True):
-        self.check_section('OPTIONS', Series())
-        self['OPTIONS'].loc['IGNORE_RAINFALL'] = on
+        self.check_section(S.OPTIONS, Series())
+        self[S.OPTIONS].loc['IGNORE_RAINFALL'] = on
 
     def ignore_snowmelt(self, on=True):
-        self.check_section('OPTIONS', Series())
-        self['OPTIONS'].loc['IGNORE_SNOWMELT'] = on
+        self.check_section(S.OPTIONS, Series())
+        self[S.OPTIONS].loc['IGNORE_SNOWMELT'] = on
 
     def ignore_groundwater(self, on=True):
-        self.check_section('OPTIONS', Series())
-        self['OPTIONS'].loc['IGNORE_GROUNDWATER'] = on
+        self.check_section(S.OPTIONS, Series())
+        self[S.OPTIONS].loc['IGNORE_GROUNDWATER'] = on
 
     def ignore_quality(self, on=True):
-        self.check_section('OPTIONS', Series())
-        self['OPTIONS'].loc['IGNORE_QUALITY'] = on
+        self.check_section(S.OPTIONS, Series())
+        self[S.OPTIONS].loc['IGNORE_QUALITY'] = on
 
     def set_intervals(self, freq):
-        self.check_section('OPTIONS', Series())
+        self.check_section(S.OPTIONS, Series())
         new_step = offset2delta(freq)
-        self['OPTIONS']['REPORT_STEP'] = new_step
-        self['OPTIONS']['WET_STEP'] = new_step
-        self['OPTIONS']['DRY_STEP'] = new_step
+        self[S.OPTIONS]['REPORT_STEP'] = new_step
+        self[S.OPTIONS]['WET_STEP'] = new_step
+        self[S.OPTIONS]['DRY_STEP'] = new_step
 
     def activate_report(self, input=False, continuity=True, flowstats=True, controls=False):
-        self.check_section('REPORT', Series())
-        self['REPORT'].loc['INPUT'] = input
-        self['REPORT'].loc['CONTINUITY'] = continuity
-        self['REPORT'].loc['FLOWSTATS'] = flowstats
-        self['REPORT'].loc['CONTROLS'] = controls
+        self.check_section(S.REPORT, Series())
+        self[S.REPORT].loc['INPUT'] = input
+        self[S.REPORT].loc['CONTINUITY'] = continuity
+        self[S.REPORT].loc['FLOWSTATS'] = flowstats
+        self[S.REPORT].loc['CONTROLS'] = controls
 
     def reduce_curves(self):
         reduce_curves(self)
@@ -257,13 +257,13 @@ class InpMacros(InpData):
         self.add_obj_to_report(new_links, 'LINKS')
 
     def add_timeseries_file(self, fn):
-        self.check_section('TIMESERIES', dict())
-        if 'Files' not in self['TIMESERIES']:
-            self['TIMESERIES']['Files'] = DataFrame(columns=['Type', 'Fname'])
+        self.check_section(S.TIMESERIES, dict())
+        if 'Files' not in self[S.TIMESERIES]:
+            self[S.TIMESERIES]['Files'] = DataFrame(columns=['Type', 'Fname'])
 
-        self['TIMESERIES']['Files'] = self['TIMESERIES']['Files'].append(
+        self[S.TIMESERIES]['Files'] = self[S.TIMESERIES]['Files'].append(
             Series({'Fname': '"' + fn + '.dat"'}, name=path.basename(fn)))
-        self['TIMESERIES']['Files']['Type'] = 'FILE'
+        self[S.TIMESERIES]['Files']['Type'] = 'FILE'
 
 
 def reduce_curves(inp):
@@ -271,6 +271,8 @@ def reduce_curves(inp):
 
     :type inp: InpData
     """
+    if S.CURVES not in inp:
+        return inp
 
     # ---------------------
     def _reduce(all_curves, kind, curves):
@@ -287,22 +289,24 @@ def reduce_curves(inp):
         return all_curves
 
     # ---------------------
-    inp[CURVES] = _reduce(inp[CURVES],
-                          kind=CurvesSection.TYPES.SHAPE,
-                          curves=set(
-                              [xs.Curve for xs in inp[XSECTIONS].values() if isinstance(xs, CrossSectionCustom)]))
+    inp[S.CURVES] = _reduce(inp[S.CURVES],
+                            kind=CurvesSection.TYPES.SHAPE,
+                            curves=set(
+                                [xs.Curve for xs in inp[S.XSECTIONS].values() if isinstance(xs, CrossSectionCustom)]))
 
-    inp[CURVES] = _reduce(inp[CURVES],
-                          kind=CurvesSection.TYPES.STORAGE,
-                          curves=set([st.Curve for st in inp[STORAGE].values() if st.Type == st.Types.TABULAR]))
+    if S.STORAGE in inp:
+        inp[S.CURVES] = _reduce(inp[S.CURVES],
+                                kind=CurvesSection.TYPES.STORAGE,
+                                curves=set([st.Curve for st in inp[S.STORAGE].values() if st.Type == st.Types.TABULAR]))
 
     # ---------------------
-    curves = set([pu.Pcurve for pu in inp[PUMPS].values() if pu.Pcurve != '*'])
-    for kind in [CurvesSection.TYPES.PUMP1, CurvesSection.TYPES.PUMP2, CurvesSection.TYPES.PUMP3,
-                 CurvesSection.TYPES.PUMP4]:
-        inp[CURVES] = _reduce(inp[CURVES],
-                              kind=kind,
-                              curves=curves)
+    if S.PUMPS in inp:
+        curves = set([pu.Pcurve for pu in inp[S.PUMPS].values() if pu.Pcurve != '*'])
+        for kind in [CurvesSection.TYPES.PUMP1, CurvesSection.TYPES.PUMP2, CurvesSection.TYPES.PUMP3,
+                     CurvesSection.TYPES.PUMP4]:
+            inp[S.CURVES] = _reduce(inp[S.CURVES],
+                                    kind=kind,
+                                    curves=curves)
     return inp
 
 
@@ -408,3 +412,30 @@ def combine_conduits(inp, c1, c2):
     inp[S.CONDUITS].append(c_new)
     inp[S.XSECTIONS].append(xs_new)
     return inp
+
+
+def conduit_iter_over_inp(inp, start):
+    """
+    only correct when FromNode and ToNode are in the correct direction
+    doesn't look backwards if split node
+
+    Args:
+        inp:
+        start (str):
+
+    Returns:
+        Yields: input conduits
+    """
+    node = start
+    while True:
+        found = False
+        for i, c in inp[S.CONDUITS].items():
+            if c.FromNode == node:
+                conduit = c
+
+                node = conduit.ToNode
+                yield conduit
+                found = True
+                break
+        if not found:
+            break

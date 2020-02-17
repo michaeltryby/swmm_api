@@ -301,6 +301,8 @@ def dataframe_to_inp_string(df):
     if c.index._typ == 'multiindex':
         if c.index.names is not None:
             if not c.index.levels[0].name.startswith(';'):
-                c.index.levels[0].name = ';' + c.index.levels[0].name
+                c.index.set_names(';' + c.index.names[0], level=0, inplace=True)
+                # because pandas 1.0
+                # c.index.levels[0].name = ';' + c.index.levels[0].name
 
     return c.applymap(type2str).to_string(sparsify=False, line_width=9999)

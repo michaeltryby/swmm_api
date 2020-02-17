@@ -698,7 +698,7 @@ class CrossSectionCustom(CrossSection):
         self.Shape = CrossSection.Shapes.CUSTOM
         self.Geom1 = Geom1
         self.Geom2 = NaN
-        self.Curve = Curve
+        self.Curve = str(Curve)
         self.Geom3 = Geom3  # TODO not documentation conform
         self.Geom4 = Geom4  # TODO not documentation conform
         self.Barrels = Barrels
