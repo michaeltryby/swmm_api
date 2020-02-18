@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 from ..helpers.sections import *
+from ..inp_sections_generic import CoordinatesSection
 
 
 def inp_to_graph(inp):
@@ -17,11 +18,31 @@ def inp_to_graph(inp):
 
 
 def plot_network(inp, g, ax=None, **kwargs):
-    coords = dict()
-    for name, x, y in inp[COORDINATES]:
-        coords[name] = (float(x), float(y))
+    """
+
+    Args:
+        inp:
+        g:
+        ax:
+        **kwargs:
+
+    Returns:
+        (plt.Figure, plt.Axes):
+    """
+    coords = None
+
+    if COORDINATES in inp:
+        coords_sec = inp[COORDINATES]
+        if isinstance(coords_sec, list):
+            coords = dict()
+            for name, x, y in inp[COORDINATES]:
+                coords[name] = (float(x), float(y))
+        elif isinstance(coords_sec, CoordinatesSection):
+            coords = dict()
+            for name, c in inp[COORDINATES].items():
+                coords[name] = (float(c['x']), float(c['y']))
 
     if ax is None:
         fig, ax = plt.subplots()
     nx.draw(g, coords, ax=ax, **kwargs)
-    return ax.get_figure(), ax
+    return ax.get_figure(), ax  # type: plt.Figure, plt.Axes

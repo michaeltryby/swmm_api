@@ -29,21 +29,30 @@ def split_network(inp, keep_node, split_at_node=None):
     for section in [JUNCTIONS,
                     OUTFALLS,
                     STORAGE]:
+        if section not in inp:
+            continue
         section_nodes = set(inp[section].keys()).intersection(final_nodes)
         new_section = InpSection(inp[section].index)
         for node in section_nodes:
             new_section.append(inp[section][node])
 
-        if not new_section.empty:
+        if new_section.empty:
+            del inp[section]
+        else:
             inp[section] = new_section
 
     # __________________________________________
     for section in [INFLOWS, DWF]:
+        if section not in inp:
+            continue
         new_section = InpSection(inp[section].index)
         for name, thing in inp[section].items():
             if thing.Node in final_nodes:
                 new_section.append(thing)
-        if not new_section.empty:
+
+        if new_section.empty:
+            del inp[section]
+        else:
             inp[section] = new_section
 
     # __________________________________________
@@ -52,68 +61,91 @@ def split_network(inp, keep_node, split_at_node=None):
                     PUMPS,
                     ORIFICES,
                     WEIRS]:
+        if section not in inp:
+            continue
         new_section = InpSection(inp[section].index)
         for name, thing in inp[section].items():
             if thing.ToNode in final_nodes:
                 new_section.append(thing)
                 final_links.append(name)
-        if not new_section.empty:
+
+        if new_section.empty:
+            del inp[section]
+        else:
             inp[section] = new_section
 
     # __________________________________________
     for section in [XSECTIONS, LOSSES]:
+        if section not in inp:
+            continue
         new_section = InpSection(inp[section].index)
         for name, thing in inp[section].items():
             if thing.Link in final_links:
                 new_section.append(thing)
-        if not new_section.empty:
+
+        if new_section.empty:
+            del inp[section]
+        else:
             inp[section] = new_section
 
     # __________________________________________
     for section in [SUBCATCHMENTS]:
+        if section not in inp:
+            continue
         new_section = InpSection(inp[section].index)
         for name, thing in inp[section].items():
             if thing.Outlet in final_nodes:
                 new_section.append(thing)
-        if not new_section.empty:
+
+        if new_section.empty:
+            del inp[section]
+        else:
             inp[section] = new_section
 
     # __________________________________________
     for section in [SUBAREAS, INFILTRATION]:
+        if section not in inp:
+            continue
         new_section = InpSection(inp[section].index)
         for name, thing in inp[section].items():
             if thing.subcatchment in inp[SUBCATCHMENTS]:
                 new_section.append(thing)
-        if not new_section.empty:
+
+        if new_section.empty:
+            del inp[section]
+        else:
             inp[section] = new_section
 
     # __________________________________________
     # section_filter[TAGS],  # node und link
-    old_tags = inp[TAGS][TagsSection.Types.Node].copy()
-    for name in old_tags:
-        if name not in final_nodes:
-            inp[TAGS][TagsSection.Types.Node].pop(name)
+    if TAGS in inp:
+        old_tags = inp[TAGS][TagsSection.Types.Node].copy()
+        for name in old_tags:
+            if name not in final_nodes:
+                inp[TAGS][TagsSection.Types.Node].pop(name)
 
-    old_tags = inp[TAGS][TagsSection.Types.Link].copy()
-    for name in old_tags:
-        if name not in final_links:
-            inp[TAGS][TagsSection.Types.Link].pop(name)
-
-    # __________________________________________
-    new_coordinates = list()
-    for line in inp[COORDINATES]:
-        name = line[0]
-        if name in final_nodes:
-            new_coordinates.append(line)
-    inp[COORDINATES] = new_coordinates
+        old_tags = inp[TAGS][TagsSection.Types.Link].copy()
+        for name in old_tags:
+            if name not in final_links:
+                inp[TAGS][TagsSection.Types.Link].pop(name)
 
     # __________________________________________
-    new_verticies = list()
-    for line in inp[VERTICES]:
-        name = line[0]
-        if name in final_links:
-            new_verticies.append(line)
-    inp[VERTICES] = new_verticies
+    if COORDINATES in inp:
+        new_coordinates = list()
+        for line in inp[COORDINATES]:
+            name = line[0]
+            if name in final_nodes:
+                new_coordinates.append(line)
+        inp[COORDINATES] = new_coordinates
+
+    # __________________________________________
+    if VERTICES in inp:
+        new_verticies = list()
+        for line in inp[VERTICES]:
+            name = line[0]
+            if name in final_links:
+                new_verticies.append(line)
+        inp[VERTICES] = new_verticies
 
     # __________________________________________
     inp = reduce_curves(inp)

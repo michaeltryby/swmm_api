@@ -3,12 +3,12 @@ from os import path, remove
 from warnings import warn
 from pandas import Series, DataFrame
 
-from swmm_api.input_file.inp_sections_generic import CurvesSection
-from .inp_sections import CrossSectionCustom, Conduit
+from .inp_sections_generic import CurvesSection
+from .inp_sections import CrossSectionCustom, Conduit, Storage, Outfall
 from ..run import swmm5_run
 from ..output_file import SwmmOutHandler, parquet
 from .inp_reader import read_inp_file
-from .inp_helpers import InpData
+from .inp_helpers import InpData, InpSection
 from .inp_writer import write_inp_file, inp2string
 # from .helpers.sections import REPORT, XSECTIONS, CURVES, STORAGE, PUMPS, SUBCATCHMENTS, RAINGAGES, SUBAREAS, \
 #     INFILTRATION, COORDINATES, VERTICES
@@ -315,16 +315,18 @@ def reduce_raingages(inp):
 
     :type inp: InpData
     """
+    if S.SUBCATCHMENTS not in inp or S.RAINGAGES not in inp:
+        return inp
     needed_raingages = list()
-    for s in inp[SUBCATCHMENTS].values():
+    for s in inp[S.SUBCATCHMENTS].values():
         needed_raingages.append(s.RainGage)
 
     needed_raingages = set(needed_raingages)
 
-    current_rain_gages = list(inp[RAINGAGES].keys())
+    current_rain_gages = list(inp[S.RAINGAGES].keys())
     for rg in current_rain_gages:
         if rg not in needed_raingages:
-            inp[RAINGAGES].pop(rg)
+            inp[S.RAINGAGES].pop(rg)
 
     return inp
 
@@ -414,7 +416,7 @@ def combine_conduits(inp, c1, c2):
     return inp
 
 
-def conduit_iter_over_inp(inp, start):
+def conduit_iter_over_inp(inp, start, end=None):
     """
     only correct when FromNode and ToNode are in the correct direction
     doesn't look backwards if split node
@@ -437,5 +439,20 @@ def conduit_iter_over_inp(inp, start):
                 yield conduit
                 found = True
                 break
-        if not found:
+        if not found or (node is not None and (node == end)):
             break
+
+
+def junction_to_storage(inp, label, *args, **kwargs):
+    j = inp[S.JUNCTIONS].pop(label)  # type: S.Junction
+    if S.STORAGE not in inp:
+        inp[S.STORAGE] = InpSection(Storage)
+    inp[S.STORAGE].append(Storage(Name=label, Elevation=j.Elevation, MaxDepth=j.MaxDepth,
+                                  InitDepth=j.InitDepth, Apond=j.Aponded, *args, **kwargs))
+
+
+def junction_to_outfall(inp, label, *args, **kwargs):
+    j = inp[S.JUNCTIONS].pop(label)  # type: S.Junction
+    if S.OUTFALLS not in inp:
+        inp[S.OUTFALLS] = InpSection(Outfall)
+    inp[S.OUTFALLS].append(Outfall(Name=label, Elevation=j.Elevation, *args, **kwargs))
