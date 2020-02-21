@@ -1,5 +1,6 @@
 from pandas import DataFrame
 from numpy import isnan, NaN
+from copy import deepcopy
 
 from .helpers.custom_iterator import custom_iter
 from .helpers.type_converter import type2str, infer_type
@@ -48,7 +49,7 @@ class UserDict_:
         return self._data.get(key) if key in self else default
 
     def copy(self):
-        return UserDict_(self._data.copy())
+        return type(self)(deepcopy(self._data))
 
     def values(self):
         return self._data.values()
@@ -267,10 +268,15 @@ class InpSection(UserDict_):
         else:
             return dataframe_to_inp_string(self.frame)
 
+    def copy(self):
+        new = type(self)(self.index)
+        new._data = deepcopy(self._data)
+        return new
+
 
 class InpData(UserDict_):
     def copy(self):
-        return InpData(self._data.copy())
+        return InpData(deepcopy(self._data))
 
 
 def dataframe_to_inp_string(df):

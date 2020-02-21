@@ -236,7 +236,7 @@ class InpMacros(InpData):
         else:
             raise NotImplementedError('Type: {} not implemented!'.format(type(new_obj)))
 
-        old_obj = self[REPORT][obj_kind]
+        old_obj = self[S.REPORT][obj_kind]
         if isinstance(old_obj, str):
             old_obj = [old_obj]
         elif isinstance(old_obj, (int, float)):
@@ -248,7 +248,7 @@ class InpMacros(InpData):
         else:
             raise NotImplementedError('Type: {} not implemented!'.format(type(old_obj)))
 
-        self[REPORT][obj_kind] = old_obj + new_obj
+        self[S.REPORT][obj_kind] = old_obj + new_obj
 
     def add_nodes_to_report(self, new_nodes):
         self.add_obj_to_report(new_nodes, 'NODES')
@@ -332,7 +332,7 @@ def reduce_raingages(inp):
 
 
 def combined_subcatchment_infos(inp):
-    return inp[SUBCATCHMENTS].frame.join(inp[SUBAREAS].frame).join(inp[INFILTRATION].frame)
+    return inp[S.SUBCATCHMENTS].frame.join(inp[S.SUBAREAS].frame).join(inp[S.INFILTRATION].frame)
 
 #
 # def coordinates_frame(inp):
