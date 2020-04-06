@@ -1,4 +1,13 @@
-# swmm_api
+© [Institute of Urban Water Management and Landscape Water Engineering](https://www.sww.tugraz.at), [Graz University of Technology](https://www.tugraz.at/home/) and [Markus Pichler](mailto:markus.pichler@tugraz.at)
+
+# This is an API for reading, manipulating and running SWMM-Projects
+
+[![PyPI](https://img.shields.io/pypi/v/idf-analysis.svg)](https://pypi.python.org/pypi/idf-analysis)
+
+With this package you can read INP-files, manipulate them and write new ones.
+You can run swmm within the python api.
+And you can read the OUT-file as a pandas DataFrame for further analysis.
+
 
 ## Install the package:
 ```bash
