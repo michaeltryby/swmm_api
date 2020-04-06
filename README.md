@@ -2,7 +2,7 @@
 
 # This is an API for reading, manipulating and running SWMM-Projects
 
-[![PyPI](https://img.shields.io/pypi/v/idf-analysis.svg)](https://pypi.python.org/pypi/idf-analysis)
+[![PyPI](https://img.shields.io/pypi/v/swmm-api.svg)](https://pypi.python.org/pypi/swmm-api)
 
 With this package you can read INP-files, manipulate them and write new ones.
 You can run swmm within the python api.
