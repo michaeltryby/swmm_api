@@ -3,6 +3,7 @@
 # This is an API for reading, manipulating and running SWMM-Projects
 
 [![PyPI](https://img.shields.io/pypi/v/swmm-api.svg)](https://pypi.python.org/pypi/swmm-api)
+[![Build Status](https://gitlab.com/pages/swmm_api/badges/master/pipeline.svg)](https://pages.gitlab.io/swmm_api)
 
 With this package you can read INP-files, manipulate them and write new ones.
 You can run swmm within the python api.
@@ -17,7 +18,7 @@ pip install swmm-api
 ## Read the INP-File
 ```python
 from swmm_api.input_file.helpers.sections import TIMESERIES
-from swmm_api.input_file import read_inp_file, write_inp_file
+from swmm_api.input_file import read_inp_file
 from swmm_api.input_file.inp_sections_generic import TimeseriesSection
 inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])
 
@@ -33,6 +34,7 @@ ts = timeseries_dict['regenseries']
 
 ## Write the manipulated INP-File
 ```python
+from swmm_api.input_file import write_inp_file
 write_inp_file(inp, 'new_inputfile.inp')
 ```
 

@@ -18,7 +18,7 @@ pip install swmm-api
 ## Read the INP-File
 ```python
 from swmm_api.input_file.helpers.sections import TIMESERIES
-from swmm_api.input_file import read_inp_file, write_inp_file
+from swmm_api.input_file import read_inp_file
 from swmm_api.input_file.inp_sections_generic import TimeseriesSection
 inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])
 
@@ -34,6 +34,7 @@ ts = timeseries_dict['regenseries']
 
 ## Write the manipulated INP-File
 ```python
+from swmm_api.input_file import write_inp_file
 write_inp_file(inp, 'new_inputfile.inp')
 ```
 
