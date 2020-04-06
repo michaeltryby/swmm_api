@@ -35,7 +35,7 @@ ts = timeseries_dict['regenseries']
 ```python
 write_inp_file(inp, 'new_inputfile.inp')
 ```
-ein neues Inp-File erstellen.
+
 
 ## Run SWMM
 ```python
