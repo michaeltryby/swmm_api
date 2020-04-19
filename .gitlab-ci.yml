@@ -3,7 +3,9 @@ image: python:3.7-alpine
 pages:
   stage: deploy
   script:
+  - apt install pandoc
   - pip install -U sphinx nbsphinx sphinx-rtd-theme recommonmark
+  - pip install -U -r requirements.txt
   - sphinx-build -b html ./website public
   artifacts:
     paths:
