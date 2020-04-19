@@ -1,2 +1,6 @@
 numpy
 pandas
+networkx
+tqdm
+swmmtoolbox
+fastparquet
