@@ -3,7 +3,9 @@
 # This is an API for reading, manipulating and running SWMM-Projects
 
 [![PyPI](https://img.shields.io/pypi/v/swmm-api.svg)](https://pypi.python.org/pypi/swmm-api)
-[![pipeline status](https://gitlab.tugraz.at/pichler/swmm_api/badges/master/pipeline.svg)](https://gitlab.tugraz.at/pichler/swmm_api/-/commits/master)
+[![pipeline status](https://gitlab.com/markuspichler/swmm_api/badges/master/pipeline.svg)](https://gitlab.com/markuspichler/swmm_api/-/commits/master)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![docs](https://img.shields.io/static/v1.svg?label=sphinx&message=documentation&color=blue)](https://markuspichler.gitlab.io/swmm_api)
 
 With this package you can read INP-files, manipulate them and write new ones.
 You can run swmm within the python api.
