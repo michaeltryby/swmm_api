@@ -4,7 +4,7 @@ pages:
   stage: deploy
   script:
   - pip install -U sphinx
-  - sphinx-build -b html . public
+  - sphinx-build -b html ./website public
   artifacts:
     paths:
     - public

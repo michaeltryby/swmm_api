@@ -16,14 +16,14 @@ with open('requirements.txt') as f:
 
 setup(
     name='swmm-api',
-    version='0.1.alpha6',
+    version='0.1.alpha8',
     packages=['swmm_api',
               'swmm_api.report_file',
               'swmm_api.output_file',
               'swmm_api.input_file',
               'swmm_api.input_file.helpers',
               'swmm_api.input_file.misc'],
-    url='https://https://gitlab.com/markuspichler/swmm_api',
+    url='https://gitlab.com/markuspichler/swmm_api',
     license='MIT',
     author='Markus Pichler',
     author_email='markus.pichler@tugraz.at',
