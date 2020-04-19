@@ -1,7 +1,10 @@
+image: python:3.7-alpine
+
 pages:
   stage: deploy
   script:
-  - echo 'Nothing to do...'
+  - pip install -U sphinx
+  - sphinx-build -b html . public
   artifacts:
     paths:
     - public

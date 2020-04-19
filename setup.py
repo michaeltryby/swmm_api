@@ -23,7 +23,7 @@ setup(
               'swmm_api.input_file',
               'swmm_api.input_file.helpers',
               'swmm_api.input_file.misc'],
-    url='https://gitlab.tugraz.at/pichler/swmm_api',
+    url='https://https://gitlab.com/markuspichler/swmm_api',
     license='MIT',
     author='Markus Pichler',
     author_email='markus.pichler@tugraz.at',

@@ -43,3 +43,9 @@ def read_swmm_data(file):
     df = pd.read_fwf(file, skiprows=2, header=1, names=['Date', 'Time', 'Q'])  # , index_col=[0,1])
     ts = pd.Series(index=pd.to_datetime(df['Date'] + ' ' + df['Time']), data=df['Q'].values)
     return ts
+
+
+def read_swmm_data2(file):
+    df = pd.read_csv(file, comment=';', header=None, sep='\t', names=['date', 'time', 'ts'])
+    df.index = pd.to_datetime(df.pop('date') + ' ' + df.pop('time'))
+    return df['ts'].copy()
