@@ -612,12 +612,14 @@ class TimeseriesSection(UserDict_, InpSectionGeneric):
             if 'Type' in series:
                 timeseries[n] = self._data[n]
             elif 'Datetime' in series:
-                timeseries[n] = DataFrame.from_dict(self._data[n], 'columns')
-                timeseries[n]['Datetime'] = to_datetime(timeseries[n]['Datetime'])
-                timeseries[n] = timeseries[n].set_index('Datetime')
-                timeseries[n]['Value'] = timeseries[n]['Value'].astype(float)
+                timeseries[n] = DataFrame.from_dict(self._data[n], 'columns').set_index('Datetime')['Value'].astype(float).copy()
+                timeseries[n].index = to_datetime(timeseries[n].index)
 
         return timeseries
+
+    def from_pandas(self, label, series):
+        self._data[label] = {'Datetime': series.index.strftime('%m/%d/%Y %H:%M').to_list(),
+                             'Value': series.to_list()}
 
     def to_inp(self, fast=False):
         if fast:
@@ -638,7 +640,7 @@ class TimeseriesSection(UserDict_, InpSectionGeneric):
                     for datetime, value in zip(series['Datetime'], series['Value']):
                         f += '{} {} {}\n'.format(n, datetime, value)
                 else:
-                    df = cat[n].copy()
+                    df = cat[n].to_frame().copy()
                     df['Date  Time'] = df.index.strftime('%m/%d/%Y %H:%M')
                     df.columns.name = ';Name'
                     df['<'] = n
