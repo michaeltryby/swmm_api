@@ -53,7 +53,12 @@ def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False):
 
     # WINDOWS
     if _platform == "win32":
-        script_path = path.join('C:\\', 'Program Files (x86)', 'EPA SWMM 5.1.013', 'swmm5.exe')
+        for script_path in (path.join('C:\\', 'Program Files (x86)', 'EPA SWMM 5.1.013', 'swmm5.exe'),
+                            path.join('C:\\', 'Program Files', 'EPA SWMM 5.1.013', 'swmm5.exe'),
+                            path.join('C:\\', 'Program Files (x86)', 'EPA SWMM 5.1.014', 'swmm5.exe'),
+                            path.join('C:\\', 'Program Files', 'EPA SWMM 5.1.014', 'swmm5.exe')):
+            if path.isfile(script_path):
+                break
         cl_script = f'"{script_path}"'
 
     cmd = '{} "{}" "{}" "{}"'.format(cl_script, inp, rpt, out)

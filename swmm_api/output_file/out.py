@@ -5,32 +5,31 @@ __email__ = "markus.pichler@tugraz.at"
 __version__ = "0.1"
 __license__ = "MIT"
 
-import pandas as pd
 from swmmtoolbox.swmmtoolbox import SwmmExtract
-import numpy as np
-
-#from mp.helpers.check_time import class_timeit, Timer
+from pandas import date_range, DataFrame, MultiIndex
+from numpy import dtype, fromfile
 
 from . import parquet
 
 
 class SwmmOutHandler(SwmmExtract):
     """
-    read the binary .out file from EPA-SWMM and return a pandas Dataframe
+    read the binary .out-file of EPA-SWMM
     """
+
     def __init__(self, filename):
         self.filename = filename
         SwmmExtract.__init__(self, filename)
         self.names_by_type = self._get_names_by_type()
         self.variables_by_type = self._get_variables_by_type()
-        self.frame = None
-        self.data = None
+        self._frame = None
+        self._data = None
+        self._index = date_range(self.startdate, periods=self.swmm_nperiods, freq=self.reportinterval)
 
     def _get_names_by_type(self):
         new_catalog = dict()
         for i, name in enumerate(self.itemlist):
-            l = self.names[i]
-            if l:
+            if self.names[i]:
                 new_catalog[name] = self.names[i]
         return new_catalog
 
@@ -45,63 +44,117 @@ class SwmmOutHandler(SwmmExtract):
             new_catalog[item_type] = self.varcode[self.type_check(item_type)]
         return new_catalog
 
-    #@class_timeit
+    def _get_columns(self):
+        """
+        get the dtypes and column names of the data
+
+        Returns:
+            numpy.dtype: structed numpy types (with names)
+        """
+
+        def col_name(kind, name, var_name):
+            return '{kind}/{name}/{var_name}'.format(kind=kind, name=name, var_name=var_name)
+
+        types = [('date', 'f8')]
+        kind = 'subcatchment'
+        for i in range(self.swmm_nsubcatch):
+            name = self.names_by_type[kind][i]
+            for v in range(self.swmm_nsubcatchvars):
+                var_name = self.variables_by_type[kind][v]
+                types.append((col_name(kind, name, var_name), 'f4'))
+
+        kind = 'node'
+        for i in range(self.swmm_nnodes):
+            name = self.names_by_type[kind][i]
+            for v in range(self.nnodevars):
+                var_name = self.variables_by_type[kind][v]
+                types.append((col_name(kind, name, var_name), 'f4'))
+
+        kind = 'link'
+        for i in range(self.swmm_nlinks):
+            name = self.names_by_type[kind][i]
+            for v in range(self.nlinkvars):
+                var_name = self.variables_by_type[kind][v]
+                types.append((col_name(kind, name, var_name), 'f4'))
+
+        kind = 'system'
+        for i in range(self.nsystemvars):
+            var_name = self.variables_by_type[kind][i]
+            types.append((col_name(kind, kind, var_name), 'f4'))
+
+        return dtype(types)
+
     def to_numpy(self):
         """
-        read the binary .out file from EPA-SWMM and return a pandas Dataframe
+        read the binary .out-file of EPA-SWMM and return a numpy array
+
+        Returns:
+            numpy.ndarray: all data
+        """
+        if self._data is None:
+            self.fp.seek(self.startpos, 0)
+            self._data = fromfile(self.fp, dtype=self._get_columns())
+        return self._data
+
+    def to_frame(self):
+        """
+        convert the data to a pandas Dataframe
 
         Returns:
             pandas.DataFrame: data
         """
-        if self.data is None:
-            self.fp.seek(self.startpos, 0)
+        if self._frame is None:
+            data = self.to_numpy()
+            d = dict()
+            for col in data.dtype.names:
+                if col == 'date':
+                    continue
+                d[col] = data[col]
+            self._frame = DataFrame(d)
+            self._frame.index = self._index
+            self._frame.columns = MultiIndex.from_tuples([col.split('/') for col in self._frame.columns])
+        return self._frame
 
-            def col_name(kind, name, var_name):
-                return '{kind}/{name}/{var_name}'.format(kind=kind, name=name, var_name=var_name)
+    def get_part(self, kind=None, name=None, var_name=None):
+        """
+        convert specific columns of the data to a pandas-DataFame
 
-            types = [('date', 'f8')]
-            kind = 'subcatchment'
-            for i in range(self.swmm_nsubcatch):
-                name = self.names_by_type[kind][i]
-                for v in range(self.swmm_nsubcatchvars):
-                    var_name = self.variables_by_type[kind][v]
-                    types.append((col_name(kind, name, var_name), 'f4'))
+        Args:
+            kind (str | list): ["subcatchment", "node", "link", "system"]
+            name (str | list): name of the objekts
+            var_name (str | list): variable names
 
-            kind = 'node'
-            for i in range(self.swmm_nnodes):
-                name = self.names_by_type[kind][i]
-                for v in range(self.nnodevars):
-                    var_name = self.variables_by_type[kind][v]
-                    types.append((col_name(kind, name, var_name), 'f4'))
+        Returns:
+            pandas.DataFrame: filtered data
+        """
+        data = self.to_numpy()
 
-            kind = 'link'
-            for i in range(self.swmm_nlinks):
-                name = self.names_by_type[kind][i]
-                for v in range(self.nlinkvars):
-                    var_name = self.variables_by_type[kind][v]
-                    types.append((col_name(kind, name, var_name), 'f4'))
+        def filter_name(n):
+            if (isinstance(kind, str) and n.startswith(kind) or
+                    isinstance(kind, list) and any(n.startswith(i) for i in kind) or
+                    isinstance(name, str) and n.contains('/{}/'.format(name)) or
+                    isinstance(name, list) and any(n.contains('/{}/'.format(i)) for i in name) or
+                    isinstance(var_name, str) and n.endswith(var_name) or
+                    isinstance(var_name, list) and any(n.endswith(i) for i in var_name)):
+                return True
+            else:
+                return False
 
-            kind = 'system'
-            for i in range(self.nsystemvars):
-                var_name = self.variables_by_type[kind][i]
-                types.append((col_name(kind, var_name, var_name), 'f4'))
+        columns = list(filter(filter_name, data.dtype.names))
 
-            dt = np.dtype(types)
-            self.data = np.fromfile(self.fp, dtype=dt)
-        return self.data
+        df = DataFrame(data[columns])
 
-    #@class_timeit
-    def to_frame(self):
-        if self.frame is None:
-            with Timer('DataFrame'):
-                data = self.to_numpy()
-                self.frame = pd.DataFrame(data=data, columns=data.dtype.names, dtype=data.dtype)
-            del self.frame['date']
-            with Timer('_index_to_multiindex'):
-                self.frame.columns = parquet._index_to_multiindex(self.frame.columns.astype(str))
-            with Timer('date_range'):
-                self.frame.index = pd.date_range(self.startdate, periods=self.swmm_nperiods, freq=self.reportinterval)
-        return self.frame
+        df.index = self._index
+        df.columns = self._columns(columns, drop_useless=True)
+        return df
+
+    @staticmethod
+    def _columns(columns, drop_useless=False):
+        """"""
+        c = MultiIndex.from_tuples([col.split('/') for col in columns])
+        if drop_useless:
+            c = c.droplevel([i for i, l in enumerate(c.levshape) if l == 1])
+        return c
 
     def to_parquet(self):
         """
@@ -124,7 +177,3 @@ def out2frame(out_file):
     """
     out = SwmmOutHandler(out_file)
     return out.to_frame()
-
-# def out2parquet(out_file):
-#     out = SwmmOutHandler(out_file)
-#     out.to_parquet()
