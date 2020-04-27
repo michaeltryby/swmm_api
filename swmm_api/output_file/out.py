@@ -9,6 +9,8 @@ import pandas as pd
 from swmmtoolbox.swmmtoolbox import SwmmExtract
 import numpy as np
 
+#from mp.helpers.check_time import class_timeit, Timer
+
 from . import parquet
 
 
@@ -22,6 +24,7 @@ class SwmmOutHandler(SwmmExtract):
         self.names_by_type = self._get_names_by_type()
         self.variables_by_type = self._get_variables_by_type()
         self.frame = None
+        self.data = None
 
     def _get_names_by_type(self):
         new_catalog = dict()
@@ -42,14 +45,15 @@ class SwmmOutHandler(SwmmExtract):
             new_catalog[item_type] = self.varcode[self.type_check(item_type)]
         return new_catalog
 
-    def to_frame(self):
+    #@class_timeit
+    def to_numpy(self):
         """
         read the binary .out file from EPA-SWMM and return a pandas Dataframe
 
         Returns:
             pandas.DataFrame: data
         """
-        if self.frame is None:
+        if self.data is None:
             self.fp.seek(self.startpos, 0)
 
             def col_name(kind, name, var_name):
@@ -83,12 +87,20 @@ class SwmmOutHandler(SwmmExtract):
                 types.append((col_name(kind, var_name, var_name), 'f4'))
 
             dt = np.dtype(types)
-            data = np.fromfile(self.fp, dtype=dt)
-            df = pd.DataFrame(data, columns=data.dtype.names)
-            del df['date']
-            df.columns = parquet._index_to_multiindex(df.columns.astype(str))
-            df.index = pd.date_range(self.startdate, periods=self.swmm_nperiods, freq=self.reportinterval)
-            self.frame = df.copy()
+            self.data = np.fromfile(self.fp, dtype=dt)
+        return self.data
+
+    #@class_timeit
+    def to_frame(self):
+        if self.frame is None:
+            with Timer('DataFrame'):
+                data = self.to_numpy()
+                self.frame = pd.DataFrame(data=data, columns=data.dtype.names, dtype=data.dtype)
+            del self.frame['date']
+            with Timer('_index_to_multiindex'):
+                self.frame.columns = parquet._index_to_multiindex(self.frame.columns.astype(str))
+            with Timer('date_range'):
+                self.frame.index = pd.date_range(self.startdate, periods=self.swmm_nperiods, freq=self.reportinterval)
         return self.frame
 
     def to_parquet(self):

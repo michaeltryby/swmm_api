@@ -8,7 +8,7 @@ from .inp_sections_generic import TagsSection
 from .testing.inp_graph_network import inp_to_graph
 
 
-def split_network(inp, keep_node, split_at_node=None):
+def split_network(inp, keep_node, split_at_node=None, keep_split_node=True):
     if CONTROLS in inp:
         del inp[CONTROLS]
 
@@ -21,7 +21,7 @@ def split_network(inp, keep_node, split_at_node=None):
     print(f'Reduced Network from {len(g.nodes)} nodes to {len(sub.nodes)} nodes.')
 
     final_nodes = list(sub.nodes)
-    if split_at_node is not None:
+    if split_at_node is not None and keep_split_node:
         final_nodes.append(split_at_node)
     final_nodes = set(final_nodes)
 
@@ -60,7 +60,7 @@ def split_network(inp, keep_node, split_at_node=None):
     for section in [CONDUITS,
                     PUMPS,
                     ORIFICES,
-                    WEIRS]:
+                    WEIRS, OUTLETS]:
         if section not in inp:
             continue
         new_section = InpSection(inp[section].index)

@@ -19,18 +19,17 @@ def write_swmm_timeseries_data(series, fn, drop_zeros=True):
         drop_zeros (bool): remove all 0 (zero, null) entries in timeseries (SWMM will understand for precipitation)
     """
     if drop_zeros:
-        ts = remove_following_zeros(series).dropna().to_frame()
+        ts = remove_following_zeros(series).dropna()
     else:
-        ts = series.dropna().to_frame()
+        ts = series.dropna()
 
     if not fn.endswith('.dat'):
         fn += '.dat'
 
-    ts.index.name = ';date     time'
-    ts.set_index(ts.index.strftime('%m/%d/%Y %H:%M')).to_csv(fn, sep='\t', index=True, header=True)
-
-    # ts[';date     time'] = ts.index.strftime('%m/%d/%Y %H:%M')
-    # ts[[';date     time', series.name]].to_string(open(fn, 'w'), index=False)
+    with open(fn, 'w') as file:
+        file.write(';;EPA SWMM Time Series Data\n')
+        ts.index.name = ';date      time'
+        ts.to_csv(file, sep='\t', index=True, header=True, date_format='%m/%d/%Y %-H:%M')
 
 
 def read_swmm_timeseries_data(file):
@@ -43,11 +42,7 @@ def read_swmm_timeseries_data(file):
     Returns:
         pandas.Series: timeseries
     """
-    # df = pd.read_fwf(file, skiprows=2, header=1, names=['Date', 'Time', 'Q'])  # , index_col=[0,1])
-    # ts = pd.Series(index=pd.to_datetime(df['Date'] + ' ' + df['Time']), data=df['Q'].values)
-    # return ts
-    # sep = r'\s+'
-    sep = '\t'
+    sep = r'\s+'  # space or tab
     df = pd.read_csv(file, comment=';', header=None, sep=sep, names=['date', 'time', 'values'])
     df.index = pd.to_datetime(df.pop('date') + ' ' + df.pop('time'))
     return df['values'].copy()
