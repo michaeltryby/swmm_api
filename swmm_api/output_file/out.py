@@ -12,37 +12,32 @@ from numpy import dtype, fromfile
 from . import parquet
 
 
-class SwmmOutHandler(SwmmExtract):
+class SwmmOutHandler:
     """
     read the binary .out-file of EPA-SWMM
     """
 
     def __init__(self, filename):
         self.filename = filename
-        SwmmExtract.__init__(self, filename)
-        self.names_by_type = self._get_names_by_type()
-        self.variables_by_type = self._get_variables_by_type()
+        self._extract = SwmmExtract(filename)
+
+        self.labels = {self._extract.itemlist[k]: v for k, v in self._extract.names.items()}
+        self._variables = None
         self._frame = None
         self._data = None
-        self._index = date_range(self.startdate, periods=self.swmm_nperiods, freq=self.reportinterval)
+        self.index = date_range(self._extract.startdate, periods=self._extract.swmm_nperiods,
+                                freq=self._extract.reportinterval)
 
-    def _get_names_by_type(self):
-        new_catalog = dict()
-        for i, name in enumerate(self.itemlist):
-            if self.names[i]:
-                new_catalog[name] = self.names[i]
-        return new_catalog
-
-    def _get_variables_by_type(self):
-        new_catalog = dict()
-        for item_type in self.itemlist:
-            if item_type == 'pollutant':
-                continue
-                # 'pollutant' really isn't it's own itemtype
-                # but part of subcatchment, node, and link...
-
-            new_catalog[item_type] = self.varcode[self.type_check(item_type)]
-        return new_catalog
+    @property
+    def variables(self):
+        if self._variables is None:
+            self._variables = dict()
+            for i, kind in enumerate(self._extract.itemlist):
+                if i in self._extract.varcode:
+                    self._variables[kind] = [self._extract.varcode[i][j] for j in range(len(self._extract.varcode[i]))]
+                else:
+                    self._variables[kind] = list()
+        return self._variables
 
     def _get_columns(self):
         """
@@ -51,36 +46,16 @@ class SwmmOutHandler(SwmmExtract):
         Returns:
             numpy.dtype: structed numpy types (with names)
         """
-
-        def col_name(kind, name, var_name):
-            return '{kind}/{name}/{var_name}'.format(kind=kind, name=name, var_name=var_name)
-
         types = [('date', 'f8')]
-        kind = 'subcatchment'
-        for i in range(self.swmm_nsubcatch):
-            name = self.names_by_type[kind][i]
-            for v in range(self.swmm_nsubcatchvars):
-                var_name = self.variables_by_type[kind][v]
-                types.append((col_name(kind, name, var_name), 'f4'))
 
-        kind = 'node'
-        for i in range(self.swmm_nnodes):
-            name = self.names_by_type[kind][i]
-            for v in range(self.nnodevars):
-                var_name = self.variables_by_type[kind][v]
-                types.append((col_name(kind, name, var_name), 'f4'))
-
-        kind = 'link'
-        for i in range(self.swmm_nlinks):
-            name = self.names_by_type[kind][i]
-            for v in range(self.nlinkvars):
-                var_name = self.variables_by_type[kind][v]
-                types.append((col_name(kind, name, var_name), 'f4'))
-
-        kind = 'system'
-        for i in range(self.nsystemvars):
-            var_name = self.variables_by_type[kind][i]
-            types.append((col_name(kind, kind, var_name), 'f4'))
+        for kind in self._extract.itemlist:
+            if kind == 'system':
+                labels = [None]
+            else:
+                labels = self.labels[kind]
+            for label in labels:
+                for variable in self.variables[kind]:
+                    types.append(('{}/{}/{}'.format(kind, label, variable), 'f4'))
 
         return dtype(types)
 
@@ -92,8 +67,8 @@ class SwmmOutHandler(SwmmExtract):
             numpy.ndarray: all data
         """
         if self._data is None:
-            self.fp.seek(self.startpos, 0)
-            self._data = fromfile(self.fp, dtype=self._get_columns())
+            self._extract.fp.seek(self._extract.startpos, 0)
+            self._data = fromfile(self._extract.fp, dtype=self._get_columns())
         return self._data
 
     def to_frame(self):
@@ -111,7 +86,7 @@ class SwmmOutHandler(SwmmExtract):
                     continue
                 d[col] = data[col]
             self._frame = DataFrame(d)
-            self._frame.index = self._index
+            self._frame.index = self.index
             self._frame.columns = MultiIndex.from_tuples([col.split('/') for col in self._frame.columns])
         return self._frame
 
@@ -128,23 +103,32 @@ class SwmmOutHandler(SwmmExtract):
             pandas.DataFrame: filtered data
         """
         data = self.to_numpy()
+        if isinstance(kind, str):
+            kind = [kind]
+
+        if isinstance(name, str):
+            name = [name]
+
+        if isinstance(var_name, str):
+            var_name = [var_name]
 
         def filter_name(n):
-            if (isinstance(kind, str) and n.startswith(kind) or
-                    isinstance(kind, list) and any(n.startswith(i) for i in kind) or
-                    isinstance(name, str) and n.contains('/{}/'.format(name)) or
-                    isinstance(name, list) and any(n.contains('/{}/'.format(i)) for i in name) or
-                    isinstance(var_name, str) and n.endswith(var_name) or
-                    isinstance(var_name, list) and any(n.endswith(i) for i in var_name)):
-                return True
-            else:
-                return False
+            b = True
+            if isinstance(kind, list):
+                b &= any(n.startswith(i) for i in kind)
+            if isinstance(name, list):
+                b &= any(['/{}/'.format(i) in n for i in name])
+            if isinstance(var_name, list):
+                b &= any(n.endswith(i) for i in var_name)
+            return b
 
         columns = list(filter(filter_name, data.dtype.names))
 
         df = DataFrame(data[columns])
 
-        df.index = self._index
+        df.index = self.index
+        if df.columns.size == 1:
+            return df.iloc[:,0]
         df.columns = self._columns(columns, drop_useless=True)
         return df
 
