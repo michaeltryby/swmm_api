@@ -29,7 +29,7 @@ def write_swmm_timeseries_data(series, fn, drop_zeros=True):
     with open(fn, 'w') as file:
         file.write(';;EPA SWMM Time Series Data\n')
         ts.index.name = ';date      time'
-        ts.to_csv(file, sep='\t', index=True, header=True, date_format='%m/%d/%Y %H:%M')
+        ts.to_csv(file, sep='\t', index=True, header=True, date_format='%m/%d/%Y %H:%M', line_terminator='\n')
 
 
 def read_swmm_timeseries_data(file):
