@@ -20,9 +20,9 @@ class SWMMRunError(UserWarning):
     pass
 
 
-def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False):
+def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False, create_out=True):
     """
-    run a EPA-SWMM input file
+    run a simulation with an EPA-SWMM input-file
     default working directory is input-file directory
 
     Args:
@@ -30,6 +30,10 @@ def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False):
         rpt_dir (str): directory in which the report-file is written.
         out_dir (str): directory in which the output-file is written.
         init_print (bool): if the default commandline output should be printed
+        create_out (bool): if the out-file should be created
+
+    Returns:
+        tuple[str, str, str]: INP-, RPT- and OUT-filename
     """
     # -----------------------
     base_filename = path.basename(inp).replace('.inp', '')
@@ -45,7 +49,10 @@ def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False):
     if out_dir is None:
         out_dir = inp_dir
 
-    out = path.join(out_dir, base_filename + '.out')
+    if create_out:
+        out = path.join(out_dir, base_filename + '.out')
+    else:
+        out = ''
 
     # -----------------------
     # UNIX
@@ -65,7 +72,10 @@ def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False):
 
     # -----------------------
     if init_print:
+        print('_' * 60)
+        # print(cmd)
         subprocess.run(cmd, shell=True)
+        print('_' * 60)
     else:
         shell_output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -90,3 +100,5 @@ def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False):
     # check if report file is created
     if not path.isfile(rpt):
         raise NoReportFileError('"{}"" was not created'.format(rpt))
+
+    return inp, rpt, out

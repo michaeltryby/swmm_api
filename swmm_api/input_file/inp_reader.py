@@ -1,8 +1,6 @@
-from .inp_sections_generic import (convert_title, convert_options, convert_report, convert_evaporation,
-                                   convert_temperature, convert_loadings, convert_map,
-                                   ReportSection, CoordinatesSection, VerticesSection)
-from .inp_sections_generic import TimeseriesSection, TagsSection, CurvesSection
-from .inp_sections import *
+from .inp_section_types import SECTION_TYPES
+from .inp_sections_generic import (convert_title, convert_options, convert_evaporation, convert_temperature,
+                                   convert_loadings, convert_map)
 from .inp_helpers import InpSection, InpData
 from .helpers.sections import *
 from .helpers.custom_iterator import custom_iter
@@ -11,44 +9,16 @@ from inspect import isclass, isfunction
 
 """read SWMM .inp file and convert the data to a more usable format"""
 
-CONVERTER = {
+CONVERTER = SECTION_TYPES.copy()
+CONVERTER.update({
     # options = dict
     TITLE: convert_title,
     OPTIONS: convert_options,
     EVAPORATION: convert_evaporation,
     TEMPERATURE: convert_temperature,
-
-    REPORT: ReportSection,
-    CURVES: CurvesSection,
-    TIMESERIES: TimeseriesSection,
     LOADINGS: convert_loadings,
-    TAGS: TagsSection,
-
-    # GUI data
-    COORDINATES: CoordinatesSection,
-    VERTICES: VerticesSection,
     MAP: convert_map,
-
-    # custom section objects
-    CONDUITS: Conduit,
-    ORIFICES: Orifice,
-    JUNCTIONS: Junction,
-    SUBCATCHMENTS: SubCatchment,
-    SUBAREAS: SubArea,
-    DWF: DryWeatherFlow,
-    XSECTIONS: CrossSection,
-    INFILTRATION: Infiltration,
-    OUTFALLS: Outfall,
-    WEIRS: Weir,
-    STORAGE: Storage,
-    OUTLETS: Outlet,
-    LOSSES: Loss,
-    INFLOWS: Inflow,
-    RAINGAGES: RainGauge,
-    PUMPS: Pump,
-    PATTERNS: Pattern,
-    POLLUTANTS: Pollutant,
-}
+})
 
 GUI_SECTIONS = [
     MAP,

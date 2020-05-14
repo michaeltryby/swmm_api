@@ -28,6 +28,9 @@ class SwmmOutHandler:
         self.index = date_range(self._extract.startdate, periods=self._extract.swmm_nperiods,
                                 freq=self._extract.reportinterval)
 
+    def close(self):
+        self._extract.fp.close()
+
     @property
     def variables(self):
         if self._variables is None:
@@ -100,7 +103,7 @@ class SwmmOutHandler:
             var_name (str | list): variable names
 
         Returns:
-            pandas.DataFrame: filtered data
+            pandas.DataFrame | pandas.Series: filtered data
         """
         data = self.to_numpy()
         if isinstance(kind, str):

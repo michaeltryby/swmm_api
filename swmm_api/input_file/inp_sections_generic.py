@@ -213,7 +213,7 @@ class ReportSection(UserDict_, InpSectionGeneric):
     def __init__(self):
         self.INPUT = False
         self.CONTINUITY = True
-        self.FLOWSTATS = True
+        self.FLOWSTATS = True  # False: no max values in summary tables
         self.CONTROLS = False
         self.SUBCATCHMENTS = None
         self.NODES = None

@@ -46,3 +46,23 @@ def read_swmm_timeseries_data(file):
     df = pd.read_csv(file, comment=';', header=None, sep=sep, names=['date', 'time', 'values'])
     df.index = pd.to_datetime(df.pop('date') + ' ' + df.pop('time'))
     return df['values'].copy()
+
+
+def peak_swmm_timeseries_data(file, indices):
+    """
+    take a peak in a text-file of exported timeseries from the EPA-SWMM-GUI
+
+    Args:
+        file (str): path to file
+        indices (list[int]): list of indices to return
+
+    Returns:
+        pandas.Series: timeseries
+    """
+    df = pd.read_csv(file, comment=';', header=None, sep=r'\s+', names=['date', 'time', 'values'])
+    try:
+        df = df.iloc[indices]
+    except:
+        pass
+    df.index = pd.to_datetime(df.pop('date') + ' ' + df.pop('time'))
+    return df['values'].copy()
