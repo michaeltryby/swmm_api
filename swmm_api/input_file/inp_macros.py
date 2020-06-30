@@ -4,7 +4,7 @@ from warnings import warn
 from pandas import Series, DataFrame, to_datetime
 
 from .inp_section_types import SECTION_TYPES
-from .inp_sections_generic import CurvesSection
+from .inp_sections_generic import CurvesSection, ReportSection
 from .inp_sections import CrossSectionCustom, Conduit, Storage, Outfall
 from ..run import swmm5_run
 from ..output_file import SwmmOutHandler, parquet
@@ -23,6 +23,7 @@ class InpMacros(InpData):
         self.filename = None
         self.basename = None
         self.dirname = None
+        self._out = None
 
     def set_name(self, name):
         self.filename = name
@@ -95,7 +96,9 @@ class InpMacros(InpData):
     # ------------------------------------------------------------------------------------------------------------------
     @property
     def output_data(self):
-        return SwmmOutHandler(self.out_filename)
+        if self._out is None:
+            self._out = SwmmOutHandler(self.out_filename)
+        return self._out
 
     def get_out_frame(self):
         return self.output_data.to_frame()
@@ -106,7 +109,7 @@ class InpMacros(InpData):
 
     def delete_out_file(self):
         # TODO check if file can be deleted
-        self.output_data.close()
+        self._out.close()
         try:
             remove(self.out_filename)
         except PermissionError as e:
@@ -114,8 +117,11 @@ class InpMacros(InpData):
 
     def get_result_frame(self):
         if not path.isfile(self.parquet_filename):
+            data = self.output_data.to_frame()
             self.convert_out()
-        return parquet.read(self.parquet_filename)
+            return data
+        else:
+            return parquet.read(self.parquet_filename)
 
     ####################################################################################################################
     def reset_section(self, section):
@@ -167,6 +173,11 @@ class InpMacros(InpData):
         self[S.OPTIONS]['DRY_STEP'] = new_step
 
     def activate_report(self, input=False, continuity=True, flowstats=True, controls=False):
+        # r = self[S.REPORT]  # type: ReportSection
+        # r.INPUT = input
+        # r.CONTINUITY = continuity
+        # r.FLOWSTATS = flowstats
+        # r.CONTROLS = controls
         self[S.REPORT]['INPUT'] = input
         self[S.REPORT]['CONTINUITY'] = continuity
         self[S.REPORT]['FLOWSTATS'] = flowstats
