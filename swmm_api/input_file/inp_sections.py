@@ -659,8 +659,9 @@ class CrossSectionShape(CrossSection):
         """
         self.Shape = Shape
         self.Geom1 = Geom1
-        self.Geom2 = Geom2
         self.Curve = NaN
+        self.Tsect = NaN
+        self.Geom2 = Geom2
         self.Geom3 = Geom3
         self.Geom4 = Geom4
         self.Culvert = Culvert
@@ -669,7 +670,7 @@ class CrossSectionShape(CrossSection):
 
 
 class CrossSectionIrregular(CrossSection):
-    def __init__(self, Link, Tsect):
+    def __init__(self, Link, Tsect, Geom2=0, Geom3=0, Geom4=0, Barrels=1):
         """
         Link IRREGULAR Tsect
 
@@ -678,7 +679,13 @@ class CrossSectionIrregular(CrossSection):
             Tsect ():
         """
         self.Shape = CrossSection.Shapes.IRREGULAR
-        self.Tsect = Tsect
+        self.Geom1 = NaN
+        self.Curve = NaN
+        self.Tsect = str(Tsect)
+        self.Geom2 = Geom2  # TODO not documentation conform
+        self.Geom3 = Geom3  # TODO not documentation conform
+        self.Geom4 = Geom4  # TODO not documentation conform
+        self.Barrels = Barrels
         CrossSection.__init__(self, Link)
 
 
@@ -697,8 +704,9 @@ class CrossSectionCustom(CrossSection):
         """
         self.Shape = CrossSection.Shapes.CUSTOM
         self.Geom1 = Geom1
-        self.Geom2 = NaN
         self.Curve = str(Curve)
+        self.Tsect = NaN
+        self.Geom2 = NaN
         self.Geom3 = Geom3  # TODO not documentation conform
         self.Geom4 = Geom4  # TODO not documentation conform
         self.Barrels = Barrels
@@ -935,7 +943,7 @@ class DryWeatherFlow(BaseSectionObject):
 class Loss(BaseSectionObject):
     index = 'Link'
 
-    def __init__(self, Link, Inlet, Outlet, Average, FlapGate=False, SeepageRate=0):
+    def __init__(self, Link, Inlet=0, Outlet=0, Average=0, FlapGate=False, SeepageRate=0):
         """
 
     Section:
@@ -993,7 +1001,11 @@ class Loss(BaseSectionObject):
 class Inflow(BaseSectionObject):
     index = ['Node', 'Constituent']
 
-    def __init__(self, Node, Constituent, TimeSeries=None, Type='FLOW', Mfactor=1.0, Sfactor=1.0, Baseline=0., Pattern=NaN):
+    class TypeOption:
+        __class__ = 'Type Option'
+        FLOW = 'FLOW'
+
+    def __init__(self, Node, Constituent, TimeSeries=None, Type=TypeOption.FLOW, Mfactor=1.0, Sfactor=1.0, Baseline=0., Pattern=NaN):
         """
         Node FLOW   Tseries (FLOW (1.0     Sfactor Base Pat))
         Node Pollut Tseries (Type (Mfactor Sfactor Base Pat))

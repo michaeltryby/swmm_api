@@ -8,6 +8,7 @@ __license__ = "MIT"
 from swmmtoolbox.swmmtoolbox import SwmmExtract
 from pandas import date_range, DataFrame, MultiIndex
 from numpy import dtype, fromfile
+from os import remove
 
 from . import parquet
 
@@ -36,6 +37,10 @@ class SwmmOutHandler:
 
     def close(self):
         self._extract.fp.close()
+
+    def delete(self):
+        self.close()
+        remove(self.filename)
 
     @property
     def variables(self):
