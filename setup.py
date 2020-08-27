@@ -16,7 +16,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='swmm-api',
-    version='0.1.alpha8',
+    version='0.1.alpha9',
     packages=['swmm_api',
               'swmm_api.report_file',
               'swmm_api.output_file',
