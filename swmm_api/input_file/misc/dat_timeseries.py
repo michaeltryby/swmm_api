@@ -66,3 +66,23 @@ def peak_swmm_timeseries_data(file, indices):
         pass
     df.index = pd.to_datetime(df.pop('date') + ' ' + df.pop('time'))
     return df['values'].copy()
+
+
+def read_swmm_rainfall_file(file):
+    """
+    read text-file of exported timeseries from the EPA-SWMM-GUI
+
+    SWMM 5.1 User Manual | 11.3 Rainfall Files | S. 165
+
+    Args:
+        file (str): path to file
+
+    Returns:
+        pandas.Series: timeseries with a mulitindex (Datetime, Station)
+    """
+    sep = r'\s+'  # space or tab
+    df = pd.read_csv(file, comment=';', header=None, sep=sep,
+                     names=['station', 'year', 'month', 'day', 'hour', 'minute', 'values'],
+                     )
+    df.index = pd.to_datetime(df[['year', 'month', 'day', 'hour', 'minute']])
+    return df.set_index('station', append=True)['values'].copy()
