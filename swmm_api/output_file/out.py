@@ -112,6 +112,35 @@ class SwmmOutHandler:
             kind (str | list): ["subcatchment", "node", "link", "system"]
             name (str | list): name of the objekts
             var_name (str | list): variable names
+                node:
+                    ['Depth_above_invert',
+                     'Hydraulic_head',
+                     'Volume_stored_ponded',
+                     'Lateral_inflow',
+                     'Total_inflow',
+                     'Flow_lost_flooding']
+                link:
+                    ['Flow_rate',
+                     'Flow_depth',
+                     'Flow_velocity',
+                     'Froude_number',
+                     'Capacity']
+                system:
+                    ['Air_temperature',
+                     'Rainfall',
+                     'Snow_depth',
+                     'Evaporation_infiltration',
+                     'Runoff',
+                     'Dry_weather_inflow',
+                     'Groundwater_inflow',
+                     'RDII_inflow',
+                     'User_direct_inflow',
+                     'Total_lateral_inflow',
+                     'Flow_lost_to_flooding',
+                     'Flow_leaving_outfalls',
+                     'Volume_stored_water',
+                     'Evaporation_rate',
+                     'Potential_PET']
 
         Returns:
             pandas.DataFrame | pandas.Series: filtered data

@@ -255,7 +255,7 @@ class ReportSection(UserDict_, InpSectionGeneric):
 
     def to_inp(self, fast=False):
         f = ''
-        section = self._data.copy()
+        section = vars(self).copy()
         section.pop('_data')
 
         max_len = len(max(section.keys(), key=len)) + 2
