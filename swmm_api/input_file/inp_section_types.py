@@ -39,4 +39,5 @@ SECTION_TYPES = {
     PUMPS: Pump,
     PATTERNS: Pattern,
     POLLUTANTS: Pollutant,
+    TRANSECTS: Transect,
 }

@@ -1309,6 +1309,140 @@ class Pollutant(BaseSectionObject):
         self.Cdwf = Cdwf
         self.Cinit = Cinit
 
+
+class Transect(BaseSectionObject):
+    """
+    Section:
+        [TRANSECTS]
+
+    Purpose:
+        Describes the cross-section geometry of natural channels or conduits with irregular shapes
+        following the HEC-2 data format.
+
+    Formats:
+        NC Nleft Nright Nchanl
+        X1 Name Nsta Xleft Xright 0 0 0 Lfactor Wfactor Eoffset
+        GR Elev Station ... Elev Station
+
+    Remarks:
+        Nleft:
+            Manning’s n of right overbank portion of channel (use 0 if no change from previous NC line).
+        Nright:
+            Manning’s n of right overbank portion of channel (use 0 if no change from previous NC line.
+        Nchanl:
+            Manning’s n of main channel portion of channel (use 0 if no change from previous NC line.
+        Name:
+            name assigned to transect.
+        Nsta:
+            number of stations across cross-section at which elevation data is supplied.
+        Xleft:
+            station position which ends the left overbank portion of the channel (ft or m).
+        Xright :
+            station position which begins the right overbank portion of the channel (ft or m).
+        Lfactor:
+            meander modifier that represents the ratio of the length of a meandering main channel to the length of the
+            overbank area that surrounds it (use 0 if not applicable).
+        Wfactor:
+            factor by which distances between stations should be multiplied to increase (or decrease)
+            the width of the channel (enter 0 if not applicable).
+        Eoffset:
+            amount added (or subtracted) from the elevation of each station (ft or m).
+        Elev:
+            elevation of the channel bottom at a cross-section station relative to some fixed reference (ft or m).
+        Station:
+            distance of a cross-section station from some fixed reference (ft or m).
+
+    Transect geometry is described as shown below, assuming that one is looking in a downstream direction:
+
+    The first line in this section must always be a NC line. After that, the NC line is only needed when a transect has
+    different Manning’s n values than the previous one.
+
+    The Manning’s n values on the NC line will supersede any roughness value entered for the conduit which uses the
+    irregular cross-section.
+
+    There should be one X1 line for each transect.
+    Any number of GR lines may follow, and each GR line can have any number of Elevation-Station data pairs.
+    (In HEC-2 the GR line is limited to 5 stations.)
+
+    The station that defines the left overbank boundary on the X1 line must correspond to one of the station entries
+    on the GR lines that follow. The same holds true for the right overbank boundary. If there is no match, a warning
+    will be issued and the program will assume that no overbank area exists.
+
+    The meander modifier is applied to all conduits that use this particular transect for their cross section.
+    It assumes that the length supplied for these conduits is that of the longer main channel.
+    SWMM will use the shorter overbank length in its calculations while increasing the main channel roughness to account
+    for its longer length.
+    """
+    index = 'Name'
+
+    def __init__(self, Name, station_elevations=None, bank_station_left=None, bank_station_right=None,
+                 roughness_left=0, roughness_right=0, roughness_channel=0,
+                 modifier_stations=0, modifier_elevations=0, modifier_meander=0,):
+        self.Name = str(Name)
+
+        self.modifier_stations = modifier_stations
+        self.modifier_elevations = modifier_elevations
+        self.modifier_meander = modifier_meander
+
+        self.station_elevations = list()
+        self.roughness_left = None
+        self.roughness_right = None
+        self.roughness_channel = None
+        self.bank_station_left = None
+        self.bank_station_right = None
+
+        if station_elevations is not None:
+            pass
+
+        self.set_roughness(roughness_left, roughness_right, roughness_channel)
+        self.set_bank_stations(bank_station_left, bank_station_right)
+
+    def add_station_elevation(self, station, elevation):
+        self.station_elevations.append([station, elevation])
+
+    def set_roughness(self, left=0, right=0, channel=0):
+        self.roughness_left = left
+        self.roughness_right = right
+        self.roughness_channel = channel
+
+    def set_bank_stations(self, left, right):
+        self.bank_station_left = left
+        self.bank_station_right = right
+
+    def set_modifiers(self, meander=0, stations=0, elevations=0):
+        self.modifier_stations = stations
+        self.modifier_elevations = elevations
+        self.modifier_meander = meander
+
+    def get_number_stations(self):
+        """get number of stations"""
+        return len(self.station_elevations)
+
+    @classmethod
+    def convert_lines(cls, lines):
+        """multiple lines for one entry"""
+        last_roughness = [0, 0, 0]
+        last = None
+
+        for line in lines:
+            if line[0] == 'NC':
+                last_roughness = line[1:]
+
+            elif line[0] == 'X1':
+                if last is not None:
+                    yield last
+                last = cls(Name=line[1])
+                last.set_bank_stations(*line[3:5])
+                last.set_modifiers(*line[8:])
+                last.set_roughness(*last_roughness)
+
+            elif line[0] == 'GR':
+                it = iter(line[1:])
+                for station in it:
+                    elevation = next(it)
+                    last.add_station_elevation(station, elevation)
+
+
 # class Loading(BaseSection):
 #     """
 #     Section:
