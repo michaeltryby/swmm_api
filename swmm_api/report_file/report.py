@@ -196,6 +196,8 @@ class Report:
     def flow_classification_summary(self):
         if self._flow_classification_summary is None:
             p = self.converted('Flow Classification Summary')
+            t = '---------- Fraction of Time in Flow Class ----------'
+            p = p.replace(t, ' ' * len(t))
             self._flow_classification_summary = _part_to_frame(p)
         return self._flow_classification_summary
 
@@ -203,7 +205,8 @@ class Report:
     def conduit_surcharge_summary(self):
         if self._conduit_surcharge_summary is None:
             p = self.converted('Conduit Surcharge Summary')
-            self._conduit_surcharge_summary = _part_to_frame(p)
+            p = p.replace('--------- Hours Full -------- ', 'HoursFull Hours Full HoursFull')
+            self._conduit_surcharge_summary = _part_to_frame(p.replace('Both Ends', 'Both_Ends'))
         return self._conduit_surcharge_summary
 
 

@@ -143,6 +143,7 @@ def plot_longitudinal(inp, start_node, end_node, out=None, ax=None):
         ax.fill_between(res[COLS.STATION], res[COLS.WATER], res[COLS.INVERT_ELEV], color='#00D7FF', alpha=0.7)
         # Conduit Fill
         ax.fill_between(res[COLS.STATION], res[COLS.CROWN_ELEV], res[COLS.WATER], color='#B0B0B0', alpha=0.5)
+        ax.set_ylim(top=max([max(res[COLS.WATER]), ax.get_ylim()[1]]))
     else:
         # Conduit Fill
         ax.fill_between(res[COLS.STATION], res[COLS.CROWN_ELEV], res[COLS.INVERT_ELEV], color='#B0B0B0', alpha=0.5)
