@@ -61,7 +61,7 @@ class COLS:
     WATER = 'water'
 
 
-def get_plot_longitudinal_data(inp, start_node, end_node, out=None):
+def get_plot_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
     g = inp_to_graph(inp)
     sub_list = get_path(g, start=start_node, end=end_node)
 
@@ -84,11 +84,15 @@ def get_plot_longitudinal_data(inp, start_node, end_node, out=None):
     for s in [JUNCTIONS, OUTFALLS, STORAGE]:
         nodes_dict.update(inp[s])
 
+    dx = 0
     x = 0
     profile_height = 0
     for node in sub_list:
         n = nodes_dict[node]
         sok = n.Elevation
+
+        if zero_node is not None and (zero_node == node):
+            dx = x
 
         gok = sok
         if isinstance(n, Outfall):
@@ -116,11 +120,12 @@ def get_plot_longitudinal_data(inp, start_node, end_node, out=None):
             x += following_conduit[node].Length
 
     # ------------------------------------
+    res[COLS.STATION] = [i - dx for i in res[COLS.STATION]]
     return res
 
 
-def plot_longitudinal(inp, start_node, end_node, out=None, ax=None):
-    res = get_plot_longitudinal_data(inp, start_node, end_node, out)
+def plot_longitudinal(inp, start_node, end_node, out=None, ax=None, zero_node=None):
+    res = get_plot_longitudinal_data(inp, start_node, end_node, out, zero_node=zero_node)
 
     if ax is None:
         fig, ax = plt.subplots()
@@ -148,6 +153,6 @@ def plot_longitudinal(inp, start_node, end_node, out=None, ax=None):
         # Conduit Fill
         ax.fill_between(res[COLS.STATION], res[COLS.CROWN_ELEV], res[COLS.INVERT_ELEV], color='#B0B0B0', alpha=0.5)
 
-    ax.set_xlim(0, res[COLS.STATION][-1])
+    ax.set_xlim(res[COLS.STATION][0], res[COLS.STATION][-1])
     ax.set_ylim(bottom=bottom)
     return fig, ax
