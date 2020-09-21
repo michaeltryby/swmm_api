@@ -108,14 +108,16 @@ def get_plot_longitudinal_data(inp, start_node, end_node, out=None, zero_node=No
         # ------------------
         if node in prior_conduit:
             profile_height = inp[XSECTIONS][prior_conduit[node].Name].Geom1
-            buk = profile_height + sok
-            _update_res(x, sok, buk, gok, water)
+            sok0 = sok + inp[CONDUITS][prior_conduit[node].Name].OutOffset
+            buk = profile_height + sok0
+            _update_res(x, sok0, buk, gok, water)
 
         # ------------------
         if node in following_conduit:
             profile_height = inp[XSECTIONS][following_conduit[node].Name].Geom1
-            buk = profile_height + sok
-            _update_res(x, sok, buk, gok, water)
+            sok1 = sok + inp[CONDUITS][following_conduit[node].Name].InOffset
+            buk = profile_height + sok1
+            _update_res(x, sok1, buk, gok, water)
 
             x += following_conduit[node].Length
 
