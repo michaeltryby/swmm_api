@@ -7,7 +7,7 @@ pd.set_option('display.max_rows', 50)
 pd.set_option('display.max_colwidth', 150)
 
 if __name__ == '__main__':
-    r = Report('report_file_1.rpt')
+    r = Report('epaswmm5_apps_manual/Example7-Final.rpt')
     r.flow_classification_summary
 
     # r.flow_routing_continuity

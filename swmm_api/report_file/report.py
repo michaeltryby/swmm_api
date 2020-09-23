@@ -205,8 +205,15 @@ class Report:
     def conduit_surcharge_summary(self):
         if self._conduit_surcharge_summary is None:
             p = self.converted('Conduit Surcharge Summary')
-            p = p.replace('--------- Hours Full -------- ', 'HoursFull Hours Full HoursFull')
-            self._conduit_surcharge_summary = _part_to_frame(p.replace('Both Ends', 'Both_Ends'))
+
+            # --------------------------------------------
+            if 'No conduits were surcharged.' in p:
+                self._conduit_surcharge_summary = pd.DataFrame()
+
+            else:
+                p = p.replace('--------- Hours Full -------- ', 'HoursFull Hours Full HoursFull')
+                p = p.replace('Both Ends', 'Both_Ends')
+                self._conduit_surcharge_summary = _part_to_frame(p)
         return self._conduit_surcharge_summary
 
 

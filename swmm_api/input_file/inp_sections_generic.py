@@ -563,9 +563,16 @@ class TimeseriesSection(UserDict_, InpSectionGeneric):
     class TYPES:
         FILE = 'FILE'
 
+    class INDEX:
+        DATETIME = 'Datetime'
+        TIME = 'relTime'
+        HOURS = 'Hours'
+        VALUE = 'Value'
+
     @classmethod
     def from_lines(cls, lines):
         new = cls()
+        old_date = None
         new_lines = new._data
         for name, *line in lines:
             # ---------------------------------
@@ -576,33 +583,52 @@ class TimeseriesSection(UserDict_, InpSectionGeneric):
 
             # ---------------------------------
             else:
-                it = iter(line)
-                for date in it:
-                    if '/' not in date:
-                        time = date
-                        date = old_date
+                date = None
+                time = None
+                hours = None
+
+                if name not in new_lines:
+                    new_lines[name] = {cls.INDEX.VALUE: list()}
+
+                iterator = iter(line)
+                for part in iterator:
+                    if '/' in part:
+                        date = part
+
+                    elif ':' in part:
+                        time = part
+
+                    elif date is None and time is None and hours is None and '.' in part:
+                        hours = part
+
                     else:
-                        time = next(it)
-                    old_date = date
+                        value = part
+                        new_lines[name][cls.INDEX.VALUE].append(value)
 
-                    # if time.count(':') > 1:
-                    #     # 00:00:00 -> 00:00
-                    #     time = time[:5]
+                        if date is not None:
+                            if cls.INDEX.DATETIME not in new_lines[name]:
+                                new_lines[name][cls.INDEX.DATETIME] = list()
+                            new_lines[name][cls.INDEX.DATETIME].append('{} {}'.format(date, time))
 
-                    dt = '{} {}'.format(date, time)
-                    # dt = datetime.datetime.combine(date, to_datetime(time, format='%H:%M').time())
+                        elif time is not None:
+                            if cls.INDEX.TIME not in new_lines[name]:
+                                new_lines[name][cls.INDEX.TIME] = list()
+                            new_lines[name][cls.INDEX.TIME].append(time)
 
-                    # value = infer_type(next(it))
-                    value = next(it)
-
-                    if name not in new_lines:
-                        new_lines[name] = {'Datetime': list(),
-                                           'Value': list()}
-
-                    new_lines[name]['Datetime'].append(dt)
-                    new_lines[name]['Value'].append(value)
-
+                        else:
+                            if cls.INDEX.HOURS not in new_lines[name]:
+                                new_lines[name][cls.INDEX.HOURS] = list()
+                            new_lines[name][cls.INDEX.HOURS].append(hours)
+        new.to_inp(False)
         return new
+
+    def _get_index(self, d):
+        if self.INDEX.DATETIME in d:
+            return self.INDEX.DATETIME
+        elif self.INDEX.HOURS in d:
+            return self.INDEX.HOURS
+        elif self.INDEX.TIME in d:
+            return self.INDEX.TIME
 
     @property
     def to_pandas(self):
@@ -611,15 +637,25 @@ class TimeseriesSection(UserDict_, InpSectionGeneric):
         for n, series in self._data.items():
             if 'Type' in series:
                 timeseries[n] = self._data[n]
-            elif 'Datetime' in series:
-                timeseries[n] = DataFrame.from_dict(self._data[n], 'columns').set_index('Datetime')['Value'].astype(float).copy()
-                timeseries[n].index = to_datetime(timeseries[n].index)
+
+            else:
+                timeseries[n] = DataFrame.from_dict(self._data[n], 'columns').set_index(self._get_index(series))[
+                    self.INDEX.VALUE].astype(float).copy()
+
+                if self.INDEX.HOURS in series:
+                    timeseries[n].index = timeseries[n].index.astype(float)
+
+                elif self.INDEX.TIME in series:
+                    pass
+
+                elif self.INDEX.DATETIME in series:
+                    timeseries[n].index = to_datetime(timeseries[n].index)
 
         return timeseries
 
     def from_pandas(self, label, series):
-        self._data[label] = {'Datetime': series.index.strftime('%m/%d/%Y %H:%M').to_list(),
-                             'Value': series.to_list()}
+        self._data[label] = {self.INDEX.DATETIME: series.index.strftime('%m/%d/%Y %H:%M').to_list(),
+                             self.INDEX.VALUE: series.to_list()}
 
     def to_inp(self, fast=False):
         if fast:
@@ -635,21 +671,34 @@ class TimeseriesSection(UserDict_, InpSectionGeneric):
             if 'Type' in series:
                 f += '{} {} {}\n'.format(n.ljust(max_len), series['Type'], series['Fname'])
 
-            elif 'Datetime' in series:
-                if fast:
-                    for datetime, value in zip(series['Datetime'], series['Value']):
-                        f += '{} {} {}\n'.format(n, datetime, value)
-                else:
-                    df = cat[n].to_frame().copy()
-                    df['Date  Time'] = df.index.strftime('%m/%d/%Y %H:%M')
-                    df.columns.name = ';Name'
-                    df['<'] = n
-                    df.index = df['<'].rename(None)
-                    del df['<']
-                    df = df[['Date  Time', 'Value']].copy()
-                    f += df.to_string()
-                    f += '\n'
+            else:
+                index_label = self._get_index(series)
 
+                if fast:
+                    for datetime, value in zip(series[index_label], series[self.INDEX.VALUE]):
+                        f += '{} {} {}\n'.format(n, datetime, value)
+
+                else:
+                    if self.INDEX.DATETIME in series:
+                        df = cat[n].to_frame().copy()
+                        df['Date  Time'] = df.index.strftime('%m/%d/%Y %H:%M')
+                        df.columns.name = ';Name'
+                        df['<'] = n
+                        df = df.set_index('<')[['Date  Time', self.INDEX.VALUE]].copy()
+                        df.index.name = None
+                        f += df.to_string()
+                        f += '\n'
+                    else:
+                        df = cat[n].to_frame().copy()
+                        df.columns.name = ';Name'
+                        df[index_label] = df.index
+                        df['<'] = n
+                        df = df.set_index('<')[[index_label, self.INDEX.VALUE]].copy()
+                        df.index.name = None
+                        # if df.index.name:
+                        #     df.index.name = ';' + df.index.name
+                        f += df.to_string()
+                        f += '\n'
         return f
 
 

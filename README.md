@@ -33,6 +33,7 @@ sec_timeseries = inp[TIMESERIES]  # type: TimeseriesSection
 timeseries_dict = sec_timeseries.to_pandas  # type: Dict[str, pandas.Series]
 ts = timeseries_dict['regenseries']
 ```
+see [examples/inp_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/inp_file_reader.ipynb)
 
 ## Write the manipulated INP-File
 ```python
@@ -52,6 +53,10 @@ swmm5_run('new_inputfile.inp')
 from swmm_api.output_file import out2frame
 df = out2frame('new_inputfile.out')  # type: pandas.DataFrame
 ```
+see [examples/out_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/out_file_reader.ipynb)
 
+
+## Read the RPT-File
+see [examples/rpt_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/rpt_file_reader.ipynb)
 
 MORE INFORMATIONS COMMING SOON
