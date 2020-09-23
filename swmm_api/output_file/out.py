@@ -22,12 +22,11 @@ class SwmmOutHandler:
         self.filename = filename
         self._extract = SwmmExtract(filename)
 
-        self.labels = {self._extract.itemlist[k]: v for k, v in self._extract.names.items()}
+        self._labels = None
         self._variables = None
         self._frame = None
         self._data = None
-        self.index = date_range(self._extract.startdate, periods=self._extract.swmm_nperiods,
-                                freq=self._extract.reportinterval)
+        self._index = None
         self._number_columns = None
 
     def __enter__(self):
@@ -42,6 +41,19 @@ class SwmmOutHandler:
     def delete(self):
         self.close()
         remove(self.filename)
+
+    @property
+    def labels(self):
+        if self._labels is None:
+            self._labels = {self._extract.itemlist[k]: v for k, v in self._extract.names.items()}
+        return self._labels
+
+    @property
+    def index(self):
+        if self._index is None:
+            self._index = date_range(self._extract.startdate, periods=self._extract.swmm_nperiods,
+                                     freq=self._extract.reportinterval)
+        return self._index
 
     @property
     def variables(self):
@@ -74,7 +86,8 @@ class SwmmOutHandler:
 
         return dtype(types)
 
-    def _get_number_columns(self):
+    @property
+    def number_columns(self):
         if self._number_columns is None:
             n = 0
             for kind in self._extract.itemlist:
@@ -159,7 +172,7 @@ class SwmmOutHandler:
         Returns:
             pandas.DataFrame | pandas.Series: filtered data
         """
-        if self._get_number_columns() > 1000:
+        if self.number_columns > 1000:
             return self.get_part_slim(kind, name, var_name)
 
         data = self.to_numpy()
