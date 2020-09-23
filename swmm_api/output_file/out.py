@@ -28,6 +28,7 @@ class SwmmOutHandler:
         self._data = None
         self.index = date_range(self._extract.startdate, periods=self._extract.swmm_nperiods,
                                 freq=self._extract.reportinterval)
+        self._number_columns = None
 
     def __enter__(self):
         return self
@@ -73,16 +74,18 @@ class SwmmOutHandler:
 
         return dtype(types)
 
-    def _number_columns(self):
-        n = 0
-        for kind in self._extract.itemlist:
-            if kind == 'system':
-                labels = [None]
-            else:
-                labels = self.labels[kind]
-            for _ in labels:
-                n += len(self.variables[kind])
-        return n
+    def _get_number_columns(self):
+        if self._number_columns is None:
+            n = 0
+            for kind in self._extract.itemlist:
+                if kind == 'system':
+                    labels = [None]
+                else:
+                    labels = self.labels[kind]
+
+                n += len(self.variables[kind]) * len(labels)
+            self._number_columns = n
+        return self._number_columns
 
     def to_numpy(self):
         """
@@ -156,6 +159,9 @@ class SwmmOutHandler:
         Returns:
             pandas.DataFrame | pandas.Series: filtered data
         """
+        if self._get_number_columns() > 1000:
+            return self.get_part_slim(kind, name, var_name)
+
         data = self.to_numpy()
         if isinstance(kind, str):
             kind = [kind]
@@ -188,7 +194,9 @@ class SwmmOutHandler:
 
     def get_part_slim(self, kind=None, name=None, var_name=None):
         """
-        convert specific columns of the data to a pandas-DataFame (or pandas-Series for a single column)
+        use this function instead of "get_part" if there are a lot of objects in the out-file.
+
+        get specific columns of the data to a pandas-DataFame (or pandas-Series for a single column)
 
         Args:
             kind (str | list): ["subcatchment", "node", "link", "system"]
