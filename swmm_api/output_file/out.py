@@ -6,7 +6,7 @@ __version__ = "0.1"
 __license__ = "MIT"
 
 from swmmtoolbox.swmmtoolbox import SwmmExtract
-from pandas import date_range, DataFrame, MultiIndex
+from pandas import date_range, DataFrame, MultiIndex, Series
 from numpy import dtype, fromfile
 from os import remove
 
@@ -72,6 +72,17 @@ class SwmmOutHandler:
                     types.append(('{}/{}/{}'.format(kind, label, variable), 'f4'))
 
         return dtype(types)
+
+    def _number_columns(self):
+        n = 0
+        for kind in self._extract.itemlist:
+            if kind == 'system':
+                labels = [None]
+            else:
+                labels = self.labels[kind]
+            for _ in labels:
+                n += len(self.variables[kind])
+        return n
 
     def to_numpy(self):
         """
@@ -174,6 +185,100 @@ class SwmmOutHandler:
             return df.iloc[:,0]
         df.columns = self._columns(columns, drop_useless=True)
         return df
+
+    def get_part_slim(self, kind=None, name=None, var_name=None):
+        """
+        convert specific columns of the data to a pandas-DataFame (or pandas-Series for a single column)
+
+        Args:
+            kind (str | list): ["subcatchment", "node", "link", "system"]
+            name (str | list): name of the objekts
+            var_name (str | list): variable names
+                node:
+                    ['Depth_above_invert',
+                     'Hydraulic_head',
+                     'Volume_stored_ponded',
+                     'Lateral_inflow',
+                     'Total_inflow',
+                     'Flow_lost_flooding']
+                link:
+                    ['Flow_rate',
+                     'Flow_depth',
+                     'Flow_velocity',
+                     'Froude_number',
+                     'Capacity']
+                system:
+                    ['Air_temperature',
+                     'Rainfall',
+                     'Snow_depth',
+                     'Evaporation_infiltration',
+                     'Runoff',
+                     'Dry_weather_inflow',
+                     'Groundwater_inflow',
+                     'RDII_inflow',
+                     'User_direct_inflow',
+                     'Total_lateral_inflow',
+                     'Flow_lost_to_flooding',
+                     'Flow_leaving_outfalls',
+                     'Volume_stored_water',
+                     'Evaporation_rate',
+                     'Potential_PET']
+
+        Returns:
+            pandas.DataFrame | pandas.Series: filtered data
+        """
+        if not all([kind, name, var_name]):
+            parts = self._get_part_args(kind, name, var_name)
+            values = dict()
+            for i in range(self._extract.swmm_nperiods):
+                for label, args in parts.items():
+                    if i == 0:
+                        values[label] = list()
+                    _, value = self._extract.get_swmm_results(*args, i)
+                    values[label].append(value)
+            return DataFrame.from_dict(values).set_index(self.index)
+
+        # -------------------------------------------------------------
+        else:
+            index_kind = self._extract.itemlist.index(kind)
+            index_variable = self.variables[kind].index(var_name)
+
+            values = []
+            for i in range(self._extract.swmm_nperiods):
+                _, value = self._extract.get_swmm_results(index_kind, name, index_variable, i)
+                values.append(value)
+
+            return Series(values, index=self.index, name='{}/{}/{}'.format(kind, name, var_name)),
+
+    def _get_part_args(self, kind=None, name=None, var_name=None):
+        parts = dict()
+        for k in self._extract.itemlist:
+            if k == 'system':
+                labels = [None]
+            else:
+                labels = self.labels[k]
+
+            if kind is None:
+                pass
+            elif k != kind:
+                continue
+
+            for l in labels:
+                if name is None:
+                    pass
+                elif l != name:
+                    continue
+
+                for v in self.variables[k]:
+                    if var_name is None:
+                        pass
+                    elif v != var_name:
+                        continue
+
+                    parts['{}/{}/{}'.format(k, l, v)] = (self._extract.itemlist.index(k),
+                                                         l,
+                                                         self.variables[k].index(v))
+        return parts
 
     @staticmethod
     def _columns(columns, drop_useless=False):
