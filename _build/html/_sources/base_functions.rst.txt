@@ -1,0 +1,10 @@
+--------------------
+Base Functions
+--------------------
+
+Run SWMM
+--------------------
+
+.. automodule:: swmm_api.run
+    :members:
+    :no-undoc-members:

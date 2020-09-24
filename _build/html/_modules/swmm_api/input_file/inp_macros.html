@@ -1,0 +1,648 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>swmm_api.input_file.inp_macros &mdash; EPA-SWMM API 0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> EPA-SWMM API
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">This is an API for reading, manipulating and running SWMM-Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/inp_file_reader.html">Example for INP File Reader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/rpt_file_reader.html">Example for RPT File Reader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/out_file_reader.html">Example for OUT File Reader</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">EPA-SWMM API</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>swmm_api.input_file.inp_macros</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for swmm_api.input_file.inp_macros</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span><span class="p">,</span> <span class="n">remove</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">Series</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">to_datetime</span>
+
+<span class="kn">from</span> <span class="nn">.inp_section_types</span> <span class="kn">import</span> <span class="n">SECTION_TYPES</span>
+<span class="kn">from</span> <span class="nn">.inp_sections_generic</span> <span class="kn">import</span> <span class="n">CurvesSection</span><span class="p">,</span> <span class="n">ReportSection</span>
+<span class="kn">from</span> <span class="nn">.inp_sections</span> <span class="kn">import</span> <span class="n">CrossSectionCustom</span><span class="p">,</span> <span class="n">Conduit</span><span class="p">,</span> <span class="n">Storage</span><span class="p">,</span> <span class="n">Outfall</span>
+<span class="kn">from</span> <span class="nn">..run</span> <span class="kn">import</span> <span class="n">swmm5_run</span>
+<span class="kn">from</span> <span class="nn">..output_file</span> <span class="kn">import</span> <span class="n">SwmmOutHandler</span><span class="p">,</span> <span class="n">parquet</span>
+<span class="kn">from</span> <span class="nn">.inp_reader</span> <span class="kn">import</span> <span class="n">read_inp_file</span>
+<span class="kn">from</span> <span class="nn">.inp_helpers</span> <span class="kn">import</span> <span class="n">InpData</span><span class="p">,</span> <span class="n">InpSection</span>
+<span class="kn">from</span> <span class="nn">.inp_writer</span> <span class="kn">import</span> <span class="n">write_inp_file</span><span class="p">,</span> <span class="n">inp2string</span>
+<span class="c1"># from .helpers.sections import REPORT, XSECTIONS, CURVES, STORAGE, PUMPS, SUBCATCHMENTS, RAINGAGES, SUBAREAS, \</span>
+<span class="c1">#     INFILTRATION, COORDINATES, VERTICES</span>
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="kn">import</span> <span class="n">sections</span> <span class="k">as</span> <span class="n">S</span>
+<span class="kn">from</span> <span class="nn">.helpers.type_converter</span> <span class="kn">import</span> <span class="n">offset2delta</span>
+
+
+<div class="viewcode-block" id="InpMacros"><a class="viewcode-back" href="../../../api.html#swmm_api.input_file.inp_macros.InpMacros">[docs]</a><span class="k">class</span> <span class="nc">InpMacros</span><span class="p">(</span><span class="n">InpData</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">InpData</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basename</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dirname</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_out</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basename</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dirname</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">report_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dirname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basename</span> <span class="o">+</span> <span class="s1">&#39;.rpt&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">out_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dirname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basename</span> <span class="o">+</span> <span class="s1">&#39;.out&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">parquet_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dirname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basename</span> <span class="o">+</span> <span class="s1">&#39;.parquet&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">inp2string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">read_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">read_inp_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">InpData</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">inp</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+        <span class="n">inp</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">inp</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">inp</span>
+
+    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">write_inp_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_pickle</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+        <span class="n">pkl_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+        <span class="n">new</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">pkl_file</span><span class="p">)</span>
+        <span class="n">pkl_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">to_pickle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># ------------------------------------------------------------------------------------------------------------------</span>
+    <span class="k">def</span> <span class="nf">execute_swmm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rpt_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init_print</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">swmm5_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">rpt_dir</span><span class="o">=</span><span class="n">rpt_dir</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">init_print</span><span class="o">=</span><span class="n">init_print</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">delete_report_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">report_filename</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">delete_inp_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rpt_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init_print</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute_swmm</span><span class="p">(</span><span class="n">rpt_dir</span><span class="o">=</span><span class="n">rpt_dir</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">init_print</span><span class="o">=</span><span class="n">init_print</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convert_out</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_section</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">InpData</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">)</span>
+
+    <span class="c1"># ------------------------------------------------------------------------------------------------------------------</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_out</span> <span class="o">=</span> <span class="n">SwmmOutHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_out</span>
+
+    <span class="k">def</span> <span class="nf">get_out_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_data</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">convert_out</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_data</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_out_file</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">delete_out_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># TODO check if file can be deleted</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_out</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_filename</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">PermissionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">get_result_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parquet_filename</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_data</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">convert_out</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">parquet</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parquet_filename</span><span class="p">)</span>
+
+    <span class="c1">####################################################################################################################</span>
+    <span class="k">def</span> <span class="nf">reset_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">section</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="p">[</span><span class="n">section</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">section</span><span class="p">]</span> <span class="o">=</span> <span class="n">SECTION_TYPES</span><span class="p">[</span><span class="n">section</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">check_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">section</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">section</span><span class="p">]</span> <span class="o">=</span> <span class="n">SECTION_TYPES</span><span class="p">[</span><span class="n">section</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">set_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">to_datetime</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;START_DATE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;START_TIME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">set_start_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">to_datetime</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;REPORT_START_DATE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;REPORT_START_TIME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">set_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">to_datetime</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;END_DATE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">end</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;END_TIME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">end</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">set_threads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;THREADS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span>
+
+    <span class="k">def</span> <span class="nf">ignore_rainfall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;IGNORE_RAINFALL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">on</span>
+
+    <span class="k">def</span> <span class="nf">ignore_snowmelt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;IGNORE_SNOWMELT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">on</span>
+
+    <span class="k">def</span> <span class="nf">ignore_groundwater</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;IGNORE_GROUNDWATER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">on</span>
+
+    <span class="k">def</span> <span class="nf">ignore_quality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;IGNORE_QUALITY&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">on</span>
+
+    <span class="k">def</span> <span class="nf">set_intervals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
+        <span class="n">new_step</span> <span class="o">=</span> <span class="n">offset2delta</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;REPORT_STEP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_step</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;WET_STEP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_step</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">][</span><span class="s1">&#39;DRY_STEP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_step</span>
+
+    <span class="k">def</span> <span class="nf">activate_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">continuity</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">flowstats</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">controls</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="c1"># r = self[S.REPORT]  # type: ReportSection</span>
+        <span class="c1"># r.INPUT = input</span>
+        <span class="c1"># r.CONTINUITY = continuity</span>
+        <span class="c1"># r.FLOWSTATS = flowstats</span>
+        <span class="c1"># r.CONTROLS = controls</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">REPORT</span><span class="p">][</span><span class="s1">&#39;INPUT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">input</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">REPORT</span><span class="p">][</span><span class="s1">&#39;CONTINUITY&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">continuity</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">REPORT</span><span class="p">][</span><span class="s1">&#39;FLOWSTATS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">flowstats</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">REPORT</span><span class="p">][</span><span class="s1">&#39;CONTROLS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">controls</span>
+
+    <span class="k">def</span> <span class="nf">add_obj_to_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_kind</span><span class="p">,</span> <span class="n">new_obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_obj</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">new_obj</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_obj</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_obj</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Type: </span><span class="si">{}</span><span class="s1"> not implemented!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">new_obj</span><span class="p">)))</span>
+
+        <span class="n">old_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">REPORT</span><span class="p">][</span><span class="n">obj_kind</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_obj</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">old_obj</span> <span class="o">=</span> <span class="p">[</span><span class="n">old_obj</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_obj</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">old_obj</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">old_obj</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_obj</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">old_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">old_obj</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Type: </span><span class="si">{}</span><span class="s1"> not implemented!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">old_obj</span><span class="p">)))</span>
+
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">REPORT</span><span class="p">][</span><span class="n">obj_kind</span><span class="p">]</span> <span class="o">=</span> <span class="n">old_obj</span> <span class="o">+</span> <span class="n">new_obj</span>
+
+    <span class="k">def</span> <span class="nf">add_nodes_to_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_nodes</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_obj_to_report</span><span class="p">(</span><span class="s1">&#39;NODES&#39;</span><span class="p">,</span> <span class="n">new_nodes</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add_links_to_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_links</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_obj_to_report</span><span class="p">(</span><span class="s1">&#39;LINKS&#39;</span><span class="p">,</span> <span class="n">new_links</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add_timeseries_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>  <span class="c1"># TODO</span>
+        <span class="k">if</span> <span class="s1">&#39;Files&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">TIMESERIES</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">TIMESERIES</span><span class="p">][</span><span class="s1">&#39;Files&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">,</span> <span class="s1">&#39;Fname&#39;</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">TIMESERIES</span><span class="p">][</span><span class="s1">&#39;Files&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">TIMESERIES</span><span class="p">][</span><span class="s1">&#39;Files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">Series</span><span class="p">({</span><span class="s1">&#39;Fname&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;&#39;</span> <span class="o">+</span> <span class="n">fn</span> <span class="o">+</span> <span class="s1">&#39;.dat&quot;&#39;</span><span class="p">},</span> <span class="n">name</span><span class="o">=</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fn</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">TIMESERIES</span><span class="p">][</span><span class="s1">&#39;Files&#39;</span><span class="p">][</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;FILE&#39;</span>
+
+    <span class="k">def</span> <span class="nf">reduce_curves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">reduce_curves</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">reduce_raingages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">reduce_raingages</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">combined_subcatchment_infos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">combined_subcatchment_infos</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">find_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">find_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">find_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">find_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">calc_slope</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_label</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">calc_slope</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_label</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">delete_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_label</span><span class="p">):</span>
+        <span class="n">delete_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_label</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">combine_conduits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">):</span>
+        <span class="n">combine_conduits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">conduit_iter_over_inp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">conduit_iter_over_inp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">junction_to_outfall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">junction_to_outfall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">junction_to_storage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">junction_to_storage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">reduce_curves</span><span class="p">(</span><span class="n">inp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :type inp: InpData</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">S</span><span class="o">.</span><span class="n">CURVES</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">inp</span>
+
+    <span class="c1"># ---------------------</span>
+    <span class="k">def</span> <span class="nf">_reduce</span><span class="p">(</span><span class="n">all_curves</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">curves</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">all_curves</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">all_curves</span>
+        <span class="n">old_curves</span> <span class="o">=</span> <span class="n">all_curves</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span>
+
+        <span class="n">new_curves</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">curves</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">old_curves</span><span class="p">:</span>
+                <span class="n">new_curves</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">c</span><span class="p">:</span> <span class="n">old_curves</span><span class="p">[</span><span class="n">c</span><span class="p">]})</span>
+
+        <span class="n">all_curves</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">kind</span><span class="p">:</span> <span class="n">new_curves</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">all_curves</span>
+
+    <span class="c1"># ---------------------</span>
+    <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CURVES</span><span class="p">]</span> <span class="o">=</span> <span class="n">_reduce</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CURVES</span><span class="p">],</span>
+                            <span class="n">kind</span><span class="o">=</span><span class="n">CurvesSection</span><span class="o">.</span><span class="n">TYPES</span><span class="o">.</span><span class="n">SHAPE</span><span class="p">,</span>
+                            <span class="n">curves</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span>
+                                <span class="p">[</span><span class="n">xs</span><span class="o">.</span><span class="n">Curve</span> <span class="k">for</span> <span class="n">xs</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">XSECTIONS</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">CrossSectionCustom</span><span class="p">)]))</span>
+
+    <span class="k">if</span> <span class="n">S</span><span class="o">.</span><span class="n">STORAGE</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">:</span>
+        <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CURVES</span><span class="p">]</span> <span class="o">=</span> <span class="n">_reduce</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CURVES</span><span class="p">],</span>
+                                <span class="n">kind</span><span class="o">=</span><span class="n">CurvesSection</span><span class="o">.</span><span class="n">TYPES</span><span class="o">.</span><span class="n">STORAGE</span><span class="p">,</span>
+                                <span class="n">curves</span><span class="o">=</span><span class="nb">set</span><span class="p">([</span><span class="n">st</span><span class="o">.</span><span class="n">Curve</span> <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">STORAGE</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">Type</span> <span class="o">==</span> <span class="n">st</span><span class="o">.</span><span class="n">Types</span><span class="o">.</span><span class="n">TABULAR</span><span class="p">]))</span>
+
+    <span class="c1"># ---------------------</span>
+    <span class="k">if</span> <span class="n">S</span><span class="o">.</span><span class="n">PUMPS</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">:</span>
+        <span class="n">curves</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">pu</span><span class="o">.</span><span class="n">Pcurve</span> <span class="k">for</span> <span class="n">pu</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">PUMPS</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">pu</span><span class="o">.</span><span class="n">Pcurve</span> <span class="o">!=</span> <span class="s1">&#39;*&#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="n">CurvesSection</span><span class="o">.</span><span class="n">TYPES</span><span class="o">.</span><span class="n">PUMP1</span><span class="p">,</span> <span class="n">CurvesSection</span><span class="o">.</span><span class="n">TYPES</span><span class="o">.</span><span class="n">PUMP2</span><span class="p">,</span> <span class="n">CurvesSection</span><span class="o">.</span><span class="n">TYPES</span><span class="o">.</span><span class="n">PUMP3</span><span class="p">,</span>
+                     <span class="n">CurvesSection</span><span class="o">.</span><span class="n">TYPES</span><span class="o">.</span><span class="n">PUMP4</span><span class="p">]:</span>
+            <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CURVES</span><span class="p">]</span> <span class="o">=</span> <span class="n">_reduce</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CURVES</span><span class="p">],</span>
+                                    <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span>
+                                    <span class="n">curves</span><span class="o">=</span><span class="n">curves</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">inp</span>
+
+
+<span class="k">def</span> <span class="nf">reduce_raingages</span><span class="p">(</span><span class="n">inp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :type inp: InpData</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">S</span><span class="o">.</span><span class="n">SUBCATCHMENTS</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">inp</span> <span class="ow">or</span> <span class="n">S</span><span class="o">.</span><span class="n">RAINGAGES</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">inp</span>
+    <span class="n">needed_raingages</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">SUBCATCHMENTS</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">needed_raingages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">RainGage</span><span class="p">)</span>
+
+    <span class="n">needed_raingages</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">needed_raingages</span><span class="p">)</span>
+
+    <span class="n">current_rain_gages</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">RAINGAGES</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">rg</span> <span class="ow">in</span> <span class="n">current_rain_gages</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">rg</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">needed_raingages</span><span class="p">:</span>
+            <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">RAINGAGES</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">rg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inp</span>
+
+
+<span class="k">def</span> <span class="nf">combined_subcatchment_infos</span><span class="p">(</span><span class="n">inp</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">SUBCATCHMENTS</span><span class="p">]</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">SUBAREAS</span><span class="p">]</span><span class="o">.</span><span class="n">frame</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">INFILTRATION</span><span class="p">]</span><span class="o">.</span><span class="n">frame</span><span class="p">)</span>
+
+<span class="c1">#</span>
+<span class="c1"># def coordinates_frame(inp):</span>
+<span class="c1">#     return DataFrame.from_records(inp[COORDINATES]).rename(columns={0: &#39;name&#39;,</span>
+<span class="c1">#                                                                     1: &#39;x&#39;,</span>
+<span class="c1">#                                                                     2: &#39;y&#39;}).set_index(&#39;name&#39;, drop=True).astype(float)</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># def vertices_frame(inp):</span>
+<span class="c1">#     return DataFrame.from_records(inp[VERTICES]).rename(columns={0: &#39;name&#39;,</span>
+<span class="c1">#                                                                  1: &#39;x&#39;,</span>
+<span class="c1">#                                                                  2: &#39;y&#39;}).set_index(&#39;name&#39;, drop=True).astype(float)</span>
+
+
+<span class="k">def</span> <span class="nf">find_node</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">JUNCTIONS</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">OUTFALLS</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">DIVIDERS</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">STORAGE</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">kind</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">label</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">[</span><span class="n">kind</span><span class="p">]):</span>
+            <span class="k">return</span> <span class="n">inp</span><span class="p">[</span><span class="n">kind</span><span class="p">][</span><span class="n">label</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">find_link</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CONDUITS</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">PUMPS</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">ORIFICES</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">WEIRS</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">OUTLETS</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">kind</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">label</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">[</span><span class="n">kind</span><span class="p">]):</span>
+            <span class="k">return</span> <span class="n">inp</span><span class="p">[</span><span class="n">kind</span><span class="p">][</span><span class="n">label</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">calc_slope</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">find_node</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">FromNode</span><span class="p">)</span><span class="o">.</span><span class="n">Elevation</span> <span class="o">-</span> <span class="n">find_node</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">ToNode</span><span class="p">)</span><span class="o">.</span><span class="n">Elevation</span><span class="p">)</span> <span class="o">/</span> <span class="n">link</span><span class="o">.</span><span class="n">Length</span>
+
+
+<span class="k">def</span> <span class="nf">delete_node</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="c1"># print(&#39;DELETE (node): &#39;, node)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">find_node</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">Name</span>
+
+    <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">JUNCTIONS</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">OUTFALLS</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">DIVIDERS</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">STORAGE</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">kind</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">node</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">[</span><span class="n">kind</span><span class="p">]):</span>
+            <span class="n">inp</span><span class="p">[</span><span class="n">kind</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">COORDINATES</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="c1"># delete connected links</span>
+    <span class="k">for</span> <span class="n">i_name</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CONDUITS</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">ToNode</span> <span class="o">==</span> <span class="n">node</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">FromNode</span> <span class="o">==</span> <span class="n">node</span><span class="p">):</span>
+            <span class="c1"># print(&#39;DELETE (link): &#39;, i_name)</span>
+            <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CONDUITS</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i_name</span><span class="p">)</span>
+            <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">XSECTIONS</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i_name</span><span class="p">)</span>
+            <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">VERTICES</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i_name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inp</span>
+
+
+<span class="k">def</span> <span class="nf">combine_conduits</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">c1</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CONDUITS</span><span class="p">][</span><span class="n">c1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c2</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">c2</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CONDUITS</span><span class="p">][</span><span class="n">c2</span><span class="p">]</span>
+
+    <span class="n">c_new</span> <span class="o">=</span> <span class="n">c2</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">c_new</span><span class="o">.</span><span class="n">Length</span> <span class="o">+=</span> <span class="n">c1</span><span class="o">.</span><span class="n">Length</span>
+
+    <span class="n">v_new</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">VERTICES</span><span class="p">][</span><span class="n">c1</span><span class="o">.</span><span class="n">Name</span><span class="p">]</span> <span class="o">+</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">VERTICES</span><span class="p">][</span><span class="n">c2</span><span class="o">.</span><span class="n">Name</span><span class="p">]</span>
+
+    <span class="n">xs_new</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">XSECTIONS</span><span class="p">][</span><span class="n">c2</span><span class="o">.</span><span class="n">Name</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">c1</span><span class="o">.</span><span class="n">FromNode</span> <span class="o">==</span> <span class="n">c2</span><span class="o">.</span><span class="n">ToNode</span><span class="p">:</span>
+        <span class="n">c_new</span><span class="o">.</span><span class="n">ToNode</span> <span class="o">=</span> <span class="n">c1</span><span class="o">.</span><span class="n">ToNode</span>
+        <span class="n">inp</span> <span class="o">=</span> <span class="n">delete_node</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">c2</span><span class="o">.</span><span class="n">ToNode</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">c1</span><span class="o">.</span><span class="n">ToNode</span> <span class="o">==</span> <span class="n">c2</span><span class="o">.</span><span class="n">FromNode</span><span class="p">:</span>
+        <span class="n">c_new</span><span class="o">.</span><span class="n">FromNode</span> <span class="o">=</span> <span class="n">c1</span><span class="o">.</span><span class="n">FromNode</span>
+        <span class="n">inp</span> <span class="o">=</span> <span class="n">delete_node</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">c2</span><span class="o">.</span><span class="n">FromNode</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">EnvironmentError</span><span class="p">(</span><span class="s1">&#39;Links not connected&#39;</span><span class="p">)</span>
+
+    <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">VERTICES</span><span class="p">][</span><span class="n">c_new</span><span class="o">.</span><span class="n">Name</span><span class="p">]</span> <span class="o">=</span> <span class="n">v_new</span>
+    <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CONDUITS</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c_new</span><span class="p">)</span>
+    <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">XSECTIONS</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xs_new</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">inp</span>
+
+
+<span class="k">def</span> <span class="nf">conduit_iter_over_inp</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    only correct when FromNode and ToNode are in the correct direction</span>
+<span class="sd">    doesn&#39;t look backwards if split node</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        inp:</span>
+<span class="sd">        start (str):</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Yields: input conduits</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">CONDUITS</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">FromNode</span> <span class="o">==</span> <span class="n">node</span><span class="p">:</span>
+                <span class="n">conduit</span> <span class="o">=</span> <span class="n">c</span>
+
+                <span class="n">node</span> <span class="o">=</span> <span class="n">conduit</span><span class="o">.</span><span class="n">ToNode</span>
+                <span class="k">yield</span> <span class="n">conduit</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span> <span class="ow">or</span> <span class="p">(</span><span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">node</span> <span class="o">==</span> <span class="n">end</span><span class="p">)):</span>
+            <span class="k">break</span>
+
+
+<span class="k">def</span> <span class="nf">junction_to_storage</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">JUNCTIONS</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>  <span class="c1"># type: S.Junction</span>
+    <span class="k">if</span> <span class="n">S</span><span class="o">.</span><span class="n">STORAGE</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">:</span>
+        <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">STORAGE</span><span class="p">]</span> <span class="o">=</span> <span class="n">InpSection</span><span class="p">(</span><span class="n">Storage</span><span class="p">)</span>
+    <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">STORAGE</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Storage</span><span class="p">(</span><span class="n">Name</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">Elevation</span><span class="o">=</span><span class="n">j</span><span class="o">.</span><span class="n">Elevation</span><span class="p">,</span> <span class="n">MaxDepth</span><span class="o">=</span><span class="n">j</span><span class="o">.</span><span class="n">MaxDepth</span><span class="p">,</span>
+                                  <span class="n">InitDepth</span><span class="o">=</span><span class="n">j</span><span class="o">.</span><span class="n">InitDepth</span><span class="p">,</span> <span class="n">Apond</span><span class="o">=</span><span class="n">j</span><span class="o">.</span><span class="n">Aponded</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">junction_to_outfall</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">JUNCTIONS</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>  <span class="c1"># type: S.Junction</span>
+    <span class="k">if</span> <span class="n">S</span><span class="o">.</span><span class="n">OUTFALLS</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">:</span>
+        <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OUTFALLS</span><span class="p">]</span> <span class="o">=</span> <span class="n">InpSection</span><span class="p">(</span><span class="n">Outfall</span><span class="p">)</span>
+    <span class="n">inp</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">OUTFALLS</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Outfall</span><span class="p">(</span><span class="n">Name</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">Elevation</span><span class="o">=</span><span class="n">j</span><span class="o">.</span><span class="n">Elevation</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Pichler
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

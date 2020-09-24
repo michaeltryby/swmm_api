@@ -5,10 +5,11 @@ __email__ = "markus.pichler@tugraz.at"
 __version__ = "0.1"
 __license__ = "MIT"
 
-from swmmtoolbox.swmmtoolbox import SwmmExtract
-from pandas import date_range, DataFrame, MultiIndex, Series
-from numpy import dtype, fromfile
 from os import remove
+
+from numpy import dtype, fromfile
+from pandas import date_range, DataFrame, MultiIndex, Series
+from swmmtoolbox.swmmtoolbox import SwmmExtract
 
 from . import parquet
 
@@ -44,19 +45,24 @@ class SwmmOutHandler:
 
     @property
     def labels(self):
+        """
+        get the dictionary of the object labels for each object type (link, node, subcatchment)
+
+        Returns:
+            dict: object-type: object-labels
+        """
         if self._labels is None:
             self._labels = {self._extract.itemlist[k]: v for k, v in self._extract.names.items()}
         return self._labels
 
     @property
-    def index(self):
-        if self._index is None:
-            self._index = date_range(self._extract.startdate, periods=self._extract.swmm_nperiods,
-                                     freq=self._extract.reportinterval)
-        return self._index
-
-    @property
     def variables(self):
+        """
+        get the dictionary of the object variables for each object type (link, node, subcatchment)
+
+        Returns:
+            dict: object-type: object-variables
+        """
         if self._variables is None:
             self._variables = dict()
             for i, kind in enumerate(self._extract.itemlist):
@@ -65,6 +71,19 @@ class SwmmOutHandler:
                 else:
                     self._variables[kind] = list()
         return self._variables
+
+    @property
+    def index(self):
+        """
+        get the main datetime index for the results
+
+        Returns:
+            pandas.DatetimeIndex: main datetime index of the results
+        """
+        if self._index is None:
+            self._index = date_range(self._extract.startdate, periods=self._extract.swmm_nperiods,
+                                     freq=self._extract.reportinterval)
+        return self._index
 
     def _get_columns(self):
         """
@@ -88,6 +107,12 @@ class SwmmOutHandler:
 
     @property
     def number_columns(self):
+        """
+        get number of columns of the full results table
+
+        Returns:
+            int: number of columns of the full results table
+        """
         if self._number_columns is None:
             n = 0
             for kind in self._extract.itemlist:
@@ -139,6 +164,7 @@ class SwmmOutHandler:
             kind (str | list): ["subcatchment", "node", "link", "system"]
             name (str | list): name of the objekts
             var_name (str | list): variable names
+
                 node:
                     ['Depth_above_invert',
                      'Hydraulic_head',
@@ -146,12 +172,14 @@ class SwmmOutHandler:
                      'Lateral_inflow',
                      'Total_inflow',
                      'Flow_lost_flooding']
+
                 link:
                     ['Flow_rate',
                      'Flow_depth',
                      'Flow_velocity',
                      'Froude_number',
                      'Capacity']
+
                 system:
                     ['Air_temperature',
                      'Rainfall',
@@ -201,7 +229,7 @@ class SwmmOutHandler:
 
         df.index = self.index
         if df.columns.size == 1:
-            return df.iloc[:,0]
+            return df.iloc[:, 0]
         df.columns = self._columns(columns, drop_useless=True)
         return df
 
@@ -214,22 +242,19 @@ class SwmmOutHandler:
         Args:
             kind (str | list): ["subcatchment", "node", "link", "system"]
             name (str | list): name of the objekts
-            var_name (str | list): variable names
-                node:
-                    ['Depth_above_invert',
+            var_name (str | list): variable names:
+                node: ['Depth_above_invert',
                      'Hydraulic_head',
                      'Volume_stored_ponded',
                      'Lateral_inflow',
                      'Total_inflow',
                      'Flow_lost_flooding']
-                link:
-                    ['Flow_rate',
+                link: ['Flow_rate',
                      'Flow_depth',
                      'Flow_velocity',
                      'Froude_number',
                      'Capacity']
-                system:
-                    ['Air_temperature',
+                system: ['Air_temperature',
                      'Rainfall',
                      'Snow_depth',
                      'Evaporation_infiltration',
@@ -272,6 +297,16 @@ class SwmmOutHandler:
             return Series(values, index=self.index, name='{}/{}/{}'.format(kind, name, var_name)),
 
     def _get_part_args(self, kind=None, name=None, var_name=None):
+        """
+
+        Args:
+            kind (str | list): ["subcatchment", "node", "link", "system"]
+            name (str | list): name of the objekts
+            var_name (str | list): variable names
+
+        Returns:
+
+        """
         parts = dict()
         for k in self._extract.itemlist:
             if k == 'system':

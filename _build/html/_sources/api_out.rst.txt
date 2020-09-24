@@ -1,0 +1,14 @@
+--------------------
+API
+--------------------
+
+Output File Reader
+--------------------
+
+.. autoclass:: swmm_api.output_file.out.SwmmOutHandler
+    :members:
+    :no-undoc-members:
+
+.. automodule:: swmm_api.output_file.out
+    :members:
+    :no-undoc-members:

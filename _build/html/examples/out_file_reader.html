@@ -1,0 +1,1223 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Example for OUT File Reader &mdash; EPA-SWMM API 0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Example for RPT File Reader" href="rpt_file_reader.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> EPA-SWMM API
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../README.html">This is an API for reading, manipulating and running SWMM-Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inp_file_reader.html">Example for INP File Reader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rpt_file_reader.html">Example for RPT File Reader</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example for OUT File Reader</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">EPA-SWMM API</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Example for OUT File Reader</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/examples/out_file_reader.ipynb.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container,
+div.nbinput.container div.prompt,
+div.nbinput.container div.input_area,
+div.nbinput.container div[class*=highlight],
+div.nbinput.container div[class*=highlight] pre,
+div.nboutput.container,
+div.nboutput.container div.prompt,
+div.nboutput.container div.output_area,
+div.nboutput.container div[class*=highlight],
+div.nboutput.container div[class*=highlight] pre {
+    background: none;
+    border: none;
+    padding: 0 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    background: #f5f5f5;
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt a.copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="Example-for-OUT-File-Reader">
+<h1>Example for OUT File Reader<a class="headerlink" href="#Example-for-OUT-File-Reader" title="Permalink to this headline">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>from swmm_api.output_file import SwmmOutHandler
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>out = SwmmOutHandler(&#39;epaswmm5_apps_manual/Example7-Final.out&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>out.variables
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;subcatchment&#39;: [&#39;Rainfall&#39;,
+  &#39;Snow_depth&#39;,
+  &#39;Evaporation_loss&#39;,
+  &#39;Infiltration_loss&#39;,
+  &#39;Runoff_rate&#39;,
+  &#39;Groundwater_outflow&#39;,
+  &#39;Groundwater_elevation&#39;,
+  &#39;Soil_moisture&#39;],
+ &#39;node&#39;: [&#39;Depth_above_invert&#39;,
+  &#39;Hydraulic_head&#39;,
+  &#39;Volume_stored_ponded&#39;,
+  &#39;Lateral_inflow&#39;,
+  &#39;Total_inflow&#39;,
+  &#39;Flow_lost_flooding&#39;],
+ &#39;link&#39;: [&#39;Flow_rate&#39;,
+  &#39;Flow_depth&#39;,
+  &#39;Flow_velocity&#39;,
+  &#39;Froude_number&#39;,
+  &#39;Capacity&#39;],
+ &#39;pollutant&#39;: [],
+ &#39;system&#39;: [&#39;Air_temperature&#39;,
+  &#39;Rainfall&#39;,
+  &#39;Snow_depth&#39;,
+  &#39;Evaporation_infiltration&#39;,
+  &#39;Runoff&#39;,
+  &#39;Dry_weather_inflow&#39;,
+  &#39;Groundwater_inflow&#39;,
+  &#39;RDII_inflow&#39;,
+  &#39;User_direct_inflow&#39;,
+  &#39;Total_lateral_inflow&#39;,
+  &#39;Flow_lost_to_flooding&#39;,
+  &#39;Flow_leaving_outfalls&#39;,
+  &#39;Volume_stored_water&#39;,
+  &#39;Evaporation_rate&#39;,
+  &#39;Potential_PET&#39;]}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>out.labels
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;subcatchment&#39;: [&#39;S1&#39;, &#39;S2&#39;, &#39;S3&#39;, &#39;S4&#39;, &#39;S5&#39;, &#39;S6&#39;, &#39;S7&#39;],
+ &#39;node&#39;: [&#39;J1&#39;,
+  &#39;J2a&#39;,
+  &#39;J2&#39;,
+  &#39;J3&#39;,
+  &#39;J4&#39;,
+  &#39;J5&#39;,
+  &#39;J6&#39;,
+  &#39;J7&#39;,
+  &#39;J8&#39;,
+  &#39;J9&#39;,
+  &#39;J10&#39;,
+  &#39;J11&#39;,
+  &#39;Aux1&#39;,
+  &#39;Aux2&#39;,
+  &#39;Aux3&#39;,
+  &#39;O1&#39;],
+ &#39;link&#39;: [&#39;C2a&#39;,
+  &#39;C2&#39;,
+  &#39;C3&#39;,
+  &#39;C4&#39;,
+  &#39;C5&#39;,
+  &#39;C6&#39;,
+  &#39;C7&#39;,
+  &#39;C8&#39;,
+  &#39;C9&#39;,
+  &#39;C10&#39;,
+  &#39;C11&#39;,
+  &#39;C_Aux1&#39;,
+  &#39;C_Aux2&#39;,
+  &#39;C_Aux1to2&#39;,
+  &#39;C_Aux3&#39;,
+  &#39;P1&#39;,
+  &#39;P2&#39;,
+  &#39;P3&#39;,
+  &#39;P4&#39;,
+  &#39;P5&#39;,
+  &#39;P6&#39;,
+  &#39;P7&#39;,
+  &#39;P8&#39;],
+ &#39;pollutant&#39;: [],
+ &#39;system&#39;: [&#39;Air_temperature&#39;,
+  &#39;Rainfall&#39;,
+  &#39;Snow_depth&#39;,
+  &#39;Evaporation_infiltration&#39;,
+  &#39;Runoff&#39;,
+  &#39;Dry_weather_inflow&#39;,
+  &#39;Groundwater_inflow&#39;,
+  &#39;RDII_inflow&#39;,
+  &#39;User_direct_inflow&#39;,
+  &#39;Total_lateral_inflow&#39;,
+  &#39;Flow_lost_to_flooding&#39;,
+  &#39;Flow_leaving_outfalls&#39;,
+  &#39;Volume_stored_water&#39;,
+  &#39;Evaporation_rate&#39;,
+  &#39;Potential_PET&#39;]}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>out.number_columns
+
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+282
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>type(out.to_numpy())
+
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+numpy.ndarray
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span># get all data as pandas.DataFrame
+out.to_frame()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead tr th {
+        text-align: left;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="10" halign="left">subcatchment</th>
+      <th>...</th>
+      <th colspan="10" halign="left">system</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th colspan="8" halign="left">S1</th>
+      <th colspan="2" halign="left">S2</th>
+      <th>...</th>
+      <th colspan="10" halign="left">None</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>Rainfall</th>
+      <th>Snow_depth</th>
+      <th>Evaporation_loss</th>
+      <th>Infiltration_loss</th>
+      <th>Runoff_rate</th>
+      <th>Groundwater_outflow</th>
+      <th>Groundwater_elevation</th>
+      <th>Soil_moisture</th>
+      <th>Rainfall</th>
+      <th>Snow_depth</th>
+      <th>...</th>
+      <th>Dry_weather_inflow</th>
+      <th>Groundwater_inflow</th>
+      <th>RDII_inflow</th>
+      <th>User_direct_inflow</th>
+      <th>Total_lateral_inflow</th>
+      <th>Flow_lost_to_flooding</th>
+      <th>Flow_leaving_outfalls</th>
+      <th>Volume_stored_water</th>
+      <th>Evaporation_rate</th>
+      <th>Potential_PET</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2007-01-01 00:00:00</th>
+      <td>1.00</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.43200</td>
+      <td>0.088076</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.00</td>
+      <td>0.0</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.563977</td>
+      <td>0.0</td>
+      <td>0.003971</td>
+      <td>14.105279</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 00:01:00</th>
+      <td>1.00</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.43200</td>
+      <td>0.233792</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.00</td>
+      <td>0.0</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.466747</td>
+      <td>0.0</td>
+      <td>0.022646</td>
+      <td>57.129456</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 00:02:00</th>
+      <td>1.00</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.43200</td>
+      <td>0.368483</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.00</td>
+      <td>0.0</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>2.281808</td>
+      <td>0.0</td>
+      <td>0.085892</td>
+      <td>158.937866</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 00:03:00</th>
+      <td>1.00</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.43200</td>
+      <td>0.531651</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.00</td>
+      <td>0.0</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>3.297160</td>
+      <td>0.0</td>
+      <td>0.287618</td>
+      <td>309.448669</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 00:04:00</th>
+      <td>1.14</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.49248</td>
+      <td>0.973276</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.14</td>
+      <td>0.0</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>6.085905</td>
+      <td>0.0</td>
+      <td>0.730127</td>
+      <td>536.387329</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:55:00</th>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00000</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.000612</td>
+      <td>8.957918</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:56:00</th>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00000</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.000610</td>
+      <td>8.935231</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:57:00</th>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00000</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.000608</td>
+      <td>8.912636</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:58:00</th>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00000</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.000605</td>
+      <td>8.890132</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:59:00</th>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00000</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.000603</td>
+      <td>8.867590</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>720 rows × 282 columns</p>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span># get a specific part of the out data as pandas.Series
+out.get_part(&#39;node&#39;, &#39;J1&#39;, &#39;Hydraulic_head&#39;).to_frame()
+
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>node/J1/Hydraulic_head</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2007-01-01 00:00:00</th>
+      <td>4969.000000</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 00:01:00</th>
+      <td>4969.001953</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 00:02:00</th>
+      <td>4969.026855</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 00:03:00</th>
+      <td>4969.064941</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 00:04:00</th>
+      <td>4969.108887</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:55:00</th>
+      <td>4969.001465</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:56:00</th>
+      <td>4969.001465</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:57:00</th>
+      <td>4969.001465</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:58:00</th>
+      <td>4969.001465</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:59:00</th>
+      <td>4969.001465</td>
+    </tr>
+  </tbody>
+</table>
+<p>720 rows × 1 columns</p>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span># to get all data of a node, just remove the variable part
+out.get_part(&#39;node&#39;, &#39;J1&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Depth_above_invert</th>
+      <th>Hydraulic_head</th>
+      <th>Volume_stored_ponded</th>
+      <th>Lateral_inflow</th>
+      <th>Total_inflow</th>
+      <th>Flow_lost_flooding</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2007-01-01 00:00:00</th>
+      <td>0.000000</td>
+      <td>4969.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 00:01:00</th>
+      <td>0.002062</td>
+      <td>4969.001953</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.001879</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 00:02:00</th>
+      <td>0.026991</td>
+      <td>4969.026855</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.019385</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 00:03:00</th>
+      <td>0.064753</td>
+      <td>4969.064941</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.063515</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 00:04:00</th>
+      <td>0.109040</td>
+      <td>4969.108887</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.138886</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:55:00</th>
+      <td>0.001290</td>
+      <td>4969.001465</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.000057</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:56:00</th>
+      <td>0.001286</td>
+      <td>4969.001465</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.000057</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:57:00</th>
+      <td>0.001282</td>
+      <td>4969.001465</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.000057</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:58:00</th>
+      <td>0.001278</td>
+      <td>4969.001465</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.000056</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2007-01-01 11:59:00</th>
+      <td>0.001275</td>
+      <td>4969.001465</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.000056</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>720 rows × 6 columns</p>
+</div></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="rpt_file_reader.html" class="btn btn-neutral float-left" title="Example for RPT File Reader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Pichler
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

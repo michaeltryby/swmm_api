@@ -14,8 +14,9 @@ Welcome to Intensity Duration Frequency Analyse's documentation!
 
    README
    api
-   base_functions
-   ../examples/report_file
+   examples/inp_file_reader
+   examples/rpt_file_reader
+   examples/out_file_reader
 
 
 Indices and tables

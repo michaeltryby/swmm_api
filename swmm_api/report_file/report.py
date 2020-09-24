@@ -19,6 +19,13 @@ reading generated report (*.rpt) files
 
 class Report:
     def __init__(self, filename):
+        """
+        create Report instance to read an .rpt-file
+
+
+        Args:
+            filename (str): path to .rpt file
+        """
         self.raw_parts = dict()
         self.converted_parts = dict()
         self._report_to_dict(filename)
@@ -78,6 +85,12 @@ class Report:
 
     @property
     def analysis_options(self):
+        """
+        get the Analysis Options
+
+        Returns:
+            dict: Analysis Options
+        """
         if self._analysis_options is None:
             p = self.converted('Analysis Options')
 
@@ -111,6 +124,12 @@ class Report:
 
     @property
     def flow_routing_continuity(self):
+        """
+        get the Flow Routing Continuity
+
+        Returns:
+            dict: Flow Routing Continuity
+        """
         if self._flow_routing_continuity is None:
             raw = self.raw_parts['Flow Routing Continuity']
             self._flow_routing_continuity = _continuity_part_to_dict(raw)
@@ -118,6 +137,12 @@ class Report:
 
     @property
     def runoff_quantity_continuity(self):
+        """
+        get the Runoff Quantity Continuity
+
+        Returns:
+            dict: Runoff Quantity Continuity
+        """
         if self._runoff_quantity_continuity is None:
             raw = self.raw_parts['Runoff Quantity Continuity']
             self._runoff_quantity_continuity = _continuity_part_to_dict(raw)
@@ -125,6 +150,12 @@ class Report:
 
     @property
     def subcatchment_runoff_summary(self):
+        """
+        get the Subcatchment Runoff Summary
+
+        Returns:
+            pandas.DataFrame: Subcatchment Runoff Summary
+        """
         if self._subcatchment_runoff_summary is None:
             p = self.converted('Subcatchment Runoff Summary')
             self._subcatchment_runoff_summary = _part_to_frame(p)
@@ -132,6 +163,12 @@ class Report:
 
     @property
     def node_depth_summary(self):
+        """
+        get the Node Depth Summary
+
+        Returns:
+            pandas.DataFrame: Node Depth Summary
+        """
         if self._node_depth_summary is None:
             p = self.converted('Node Depth Summary')
             self._node_depth_summary = _part_to_frame(p)
@@ -139,6 +176,12 @@ class Report:
 
     @property
     def node_inflow_summary(self):
+        """
+        get the Node Inflow Summary
+
+        Returns:
+            pandas.DataFrame: Node Inflow Summary
+        """
         if self._node_inflow_summary is None:
             p = self.converted('Node Inflow Summary')
             self._node_inflow_summary = _part_to_frame(p)
@@ -146,6 +189,12 @@ class Report:
 
     @property
     def node_surcharge_summary(self):
+        """
+        get the Node Surcharge Summary
+
+        Returns:
+            pandas.DataFrame: Node Surcharge Summary
+        """
         if self._node_surcharge_summary is None:
             p = self.converted('Node Surcharge Summary')
             self._node_surcharge_summary = _part_to_frame(p)
@@ -153,6 +202,12 @@ class Report:
 
     @property
     def node_flooding_summary(self):
+        """
+        get the Node Flooding Summary
+
+        Returns:
+            pandas.DataFrame: Node Flooding Summary
+        """
         # parts = report_to_dict(fn)
         if self._node_flooding_summary is None:
             # --------------------------------------------
@@ -169,6 +224,12 @@ class Report:
 
     @property
     def storage_volume_summary(self):
+        """
+        get the Storage Volume Summary
+
+        Returns:
+            pandas.DataFrame: Storage Volume Summary
+        """
         if self._storage_volume_summary is None:
             p = self.converted('Storage Volume Summary')
 
@@ -180,6 +241,12 @@ class Report:
 
     @property
     def outfall_loading_summary(self):
+        """
+        get the Outfall Loading Summary
+
+        Returns:
+            pandas.DataFrame: Outfall Loading Summary
+        """
         if self._outfall_loading_summary is None:
             p = self.converted('Outfall Loading Summary')
             self._outfall_loading_summary = _part_to_frame(p.replace('Outfall Node', 'Outfall_Node '))
@@ -187,6 +254,12 @@ class Report:
 
     @property
     def link_flow_summary(self):
+        """
+        get the Link Flow Summary
+
+        Returns:
+            pandas.DataFrame: Link Flow Summary
+        """
         if self._link_flow_summary is None:
             p = self.converted('Link Flow Summary')
             self._link_flow_summary = _part_to_frame(p)
@@ -194,6 +267,12 @@ class Report:
 
     @property
     def flow_classification_summary(self):
+        """
+        get the Flow Classification Summary
+
+        Returns:
+            pandas.DataFrame: Flow Classification Summary
+        """
         if self._flow_classification_summary is None:
             p = self.converted('Flow Classification Summary')
             t = '---------- Fraction of Time in Flow Class ----------'
@@ -203,6 +282,12 @@ class Report:
 
     @property
     def conduit_surcharge_summary(self):
+        """
+        get the Conduit Surcharge Summary
+
+        Returns:
+            pandas.DataFrame: Conduit Surcharge Summary
+        """
         if self._conduit_surcharge_summary is None:
             p = self.converted('Conduit Surcharge Summary')
 

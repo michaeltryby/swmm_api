@@ -1,0 +1,1123 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Example for INP File Reader &mdash; EPA-SWMM API 0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Example for RPT File Reader" href="rpt_file_reader.html" />
+    <link rel="prev" title="API" href="../api.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> EPA-SWMM API
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../README.html">This is an API for reading, manipulating and running SWMM-Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example for INP File Reader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rpt_file_reader.html">Example for RPT File Reader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="out_file_reader.html">Example for OUT File Reader</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">EPA-SWMM API</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Example for INP File Reader</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/examples/inp_file_reader.ipynb.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container,
+div.nbinput.container div.prompt,
+div.nbinput.container div.input_area,
+div.nbinput.container div[class*=highlight],
+div.nbinput.container div[class*=highlight] pre,
+div.nboutput.container,
+div.nboutput.container div.prompt,
+div.nboutput.container div.output_area,
+div.nboutput.container div[class*=highlight],
+div.nboutput.container div[class*=highlight] pre {
+    background: none;
+    border: none;
+    padding: 0 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    background: #f5f5f5;
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt a.copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="Example-for-INP-File-Reader">
+<h1>Example for INP File Reader<a class="headerlink" href="#Example-for-INP-File-Reader" title="Permalink to this headline">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>from swmm_api.input_file import read_inp_file
+from swmm_api.input_file.helpers import sections
+from swmm_api.input_file.inp_sections import Outfall
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>inp = read_inp_file(&#39;epaswmm5_apps_manual/Example7-Final.inp&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>inp[sections.OPTIONS]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;FLOW_UNITS&#39;: &#39;CMS&#39;,
+ &#39;INFILTRATION&#39;: &#39;HORTON&#39;,
+ &#39;FLOW_ROUTING&#39;: &#39;DYNWAVE&#39;,
+ &#39;LINK_OFFSETS&#39;: &#39;DEPTH&#39;,
+ &#39;MIN_SLOPE&#39;: 0,
+ &#39;ALLOW_PONDING&#39;: False,
+ &#39;SKIP_STEADY_STATE&#39;: False,
+ &#39;START_DATE&#39;: datetime.date(2007, 1, 1),
+ &#39;START_TIME&#39;: datetime.time(0, 0),
+ &#39;REPORT_START_DATE&#39;: datetime.date(2007, 1, 1),
+ &#39;REPORT_START_TIME&#39;: datetime.time(0, 0),
+ &#39;END_DATE&#39;: datetime.date(2007, 1, 1),
+ &#39;END_TIME&#39;: datetime.time(12, 0),
+ &#39;SWEEP_START&#39;: &#39;01/01&#39;,
+ &#39;SWEEP_END&#39;: &#39;12/31&#39;,
+ &#39;DRY_DAYS&#39;: 0,
+ &#39;REPORT_STEP&#39;: datetime.time(0, 1),
+ &#39;WET_STEP&#39;: datetime.time(0, 1),
+ &#39;DRY_STEP&#39;: datetime.time(1, 0),
+ &#39;ROUTING_STEP&#39;: &#39;0:00:15&#39;,
+ &#39;RULE_STEP&#39;: datetime.time(0, 0),
+ &#39;INERTIAL_DAMPING&#39;: &#39;PARTIAL&#39;,
+ &#39;NORMAL_FLOW_LIMITED&#39;: &#39;SLOPE&#39;,
+ &#39;FORCE_MAIN_EQUATION&#39;: &#39;H-W&#39;,
+ &#39;VARIABLE_STEP&#39;: 0.75,
+ &#39;LENGTHENING_STEP&#39;: 0,
+ &#39;MIN_SURFAREA&#39;: 0,
+ &#39;MAX_TRIALS&#39;: 0,
+ &#39;HEAD_TOLERANCE&#39;: 0,
+ &#39;SYS_FLOW_TOL&#39;: 5,
+ &#39;LAT_FLOW_TOL&#39;: 5,
+ &#39;MINIMUM_STEP&#39;: 0.5,
+ &#39;THREADS&#39;: 1}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>print(inp[sections.REPORT].to_inp())
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+INPUT          YES
+CONTINUITY     YES
+FLOWSTATS      YES
+CONTROLS       NO
+SUBCATCHMENTS  ALL
+NODES          ALL
+LINKS          ALL
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>inp[sections.SUBCATCHMENTS].frame
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>RainGage</th>
+      <th>Outlet</th>
+      <th>Area</th>
+      <th>Imperv</th>
+      <th>Width</th>
+      <th>Slope</th>
+      <th>CurbLen</th>
+      <th>SnowPack</th>
+    </tr>
+    <tr>
+      <th>Name</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>S1</th>
+      <td>RainGage</td>
+      <td>Aux1</td>
+      <td>4.55</td>
+      <td>56.8</td>
+      <td>1587</td>
+      <td>2.0</td>
+      <td>0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>S2</th>
+      <td>RainGage</td>
+      <td>Aux2</td>
+      <td>4.74</td>
+      <td>63.0</td>
+      <td>1653</td>
+      <td>2.0</td>
+      <td>0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>S3</th>
+      <td>RainGage</td>
+      <td>Aux3</td>
+      <td>3.74</td>
+      <td>39.5</td>
+      <td>1456</td>
+      <td>3.1</td>
+      <td>0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>S4</th>
+      <td>RainGage</td>
+      <td>J7</td>
+      <td>6.79</td>
+      <td>49.9</td>
+      <td>2331</td>
+      <td>3.1</td>
+      <td>0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>S5</th>
+      <td>RainGage</td>
+      <td>J10</td>
+      <td>4.79</td>
+      <td>87.7</td>
+      <td>1670</td>
+      <td>2.0</td>
+      <td>0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>S6</th>
+      <td>RainGage</td>
+      <td>J11</td>
+      <td>1.98</td>
+      <td>95.0</td>
+      <td>690</td>
+      <td>2.0</td>
+      <td>0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>S7</th>
+      <td>RainGage</td>
+      <td>J10</td>
+      <td>2.33</td>
+      <td>0.0</td>
+      <td>907</td>
+      <td>3.1</td>
+      <td>0</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>inp[sections.SUBCATCHMENTS].frame.join(inp[sections.SUBAREAS].frame).join(inp[sections.INFILTRATION].frame)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>RainGage</th>
+      <th>Outlet</th>
+      <th>Area</th>
+      <th>Imperv</th>
+      <th>Width</th>
+      <th>Slope</th>
+      <th>CurbLen</th>
+      <th>SnowPack</th>
+      <th>N_Imperv</th>
+      <th>N_Perv</th>
+      <th>S_Imperv</th>
+      <th>S_Perv</th>
+      <th>PctZero</th>
+      <th>RouteTo</th>
+      <th>PctRouted</th>
+      <th>MaxRate</th>
+      <th>MinRate</th>
+      <th>Decay</th>
+      <th>DryTime</th>
+      <th>MaxInf</th>
+    </tr>
+    <tr>
+      <th>Name</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>S1</th>
+      <td>RainGage</td>
+      <td>Aux1</td>
+      <td>4.55</td>
+      <td>56.8</td>
+      <td>1587</td>
+      <td>2.0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>0.015</td>
+      <td>0.24</td>
+      <td>0.06</td>
+      <td>0.3</td>
+      <td>25</td>
+      <td>OUTLET</td>
+      <td>100</td>
+      <td>4.5</td>
+      <td>0.2</td>
+      <td>6.5</td>
+      <td>7</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>S2</th>
+      <td>RainGage</td>
+      <td>Aux2</td>
+      <td>4.74</td>
+      <td>63.0</td>
+      <td>1653</td>
+      <td>2.0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>0.015</td>
+      <td>0.24</td>
+      <td>0.06</td>
+      <td>0.3</td>
+      <td>25</td>
+      <td>OUTLET</td>
+      <td>100</td>
+      <td>4.5</td>
+      <td>0.2</td>
+      <td>6.5</td>
+      <td>7</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>S3</th>
+      <td>RainGage</td>
+      <td>Aux3</td>
+      <td>3.74</td>
+      <td>39.5</td>
+      <td>1456</td>
+      <td>3.1</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>0.015</td>
+      <td>0.24</td>
+      <td>0.06</td>
+      <td>0.3</td>
+      <td>25</td>
+      <td>OUTLET</td>
+      <td>100</td>
+      <td>4.5</td>
+      <td>0.2</td>
+      <td>6.5</td>
+      <td>7</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>S4</th>
+      <td>RainGage</td>
+      <td>J7</td>
+      <td>6.79</td>
+      <td>49.9</td>
+      <td>2331</td>
+      <td>3.1</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>0.015</td>
+      <td>0.24</td>
+      <td>0.06</td>
+      <td>0.3</td>
+      <td>25</td>
+      <td>OUTLET</td>
+      <td>100</td>
+      <td>4.5</td>
+      <td>0.2</td>
+      <td>6.5</td>
+      <td>7</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>S5</th>
+      <td>RainGage</td>
+      <td>J10</td>
+      <td>4.79</td>
+      <td>87.7</td>
+      <td>1670</td>
+      <td>2.0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>0.015</td>
+      <td>0.24</td>
+      <td>0.06</td>
+      <td>0.3</td>
+      <td>25</td>
+      <td>OUTLET</td>
+      <td>100</td>
+      <td>4.5</td>
+      <td>0.2</td>
+      <td>6.5</td>
+      <td>7</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>S6</th>
+      <td>RainGage</td>
+      <td>J11</td>
+      <td>1.98</td>
+      <td>95.0</td>
+      <td>690</td>
+      <td>2.0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>0.015</td>
+      <td>0.24</td>
+      <td>0.06</td>
+      <td>0.3</td>
+      <td>25</td>
+      <td>OUTLET</td>
+      <td>100</td>
+      <td>4.5</td>
+      <td>0.2</td>
+      <td>6.5</td>
+      <td>7</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>S7</th>
+      <td>RainGage</td>
+      <td>J10</td>
+      <td>2.33</td>
+      <td>0.0</td>
+      <td>907</td>
+      <td>3.1</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>0.015</td>
+      <td>0.24</td>
+      <td>0.06</td>
+      <td>0.3</td>
+      <td>25</td>
+      <td>OUTLET</td>
+      <td>100</td>
+      <td>4.5</td>
+      <td>0.2</td>
+      <td>6.5</td>
+      <td>7</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>inp[sections.OUTFALLS]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;O1&#39;: Outfall(Name = &#34;O1&#34;, Elevation = 4956, Type = &#34;FREE&#34;, Data = NaN, FlapGate = False, RouteTo = NaN)}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>inp[sections.OUTFALLS][&#39;O1&#39;]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Outfall(Name = &#34;O1&#34;, Elevation = 4956, Type = &#34;FREE&#34;, Data = NaN, FlapGate = False, RouteTo = NaN)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>inp[sections.OUTFALLS][&#39;O1&#39;].Elevation
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+4956
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>inp[sections.OUTFALLS].append(Outfall(&#39;O2&#39;, Elevation=4999, Type=Outfall.Types.FREE))
+
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>inp[sections.OUTFALLS].frame
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Elevation</th>
+      <th>Type</th>
+      <th>Data</th>
+      <th>FlapGate</th>
+      <th>RouteTo</th>
+    </tr>
+    <tr>
+      <th>Name</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>O1</th>
+      <td>4956</td>
+      <td>FREE</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>O2</th>
+      <td>4999</td>
+      <td>FREE</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span>timeseries = inp[sections.TIMESERIES].to_pandas
+
+timeseries[&#39;100-yr&#39;]
+
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+relTime
+0:00    1.00
+0:05    1.14
+0:10    1.33
+0:15    2.23
+0:20    2.84
+0:25    5.49
+0:30    9.95
+0:35    4.12
+0:40    2.48
+0:45    1.46
+0:50    1.22
+0:55    1.06
+1:00    1.00
+1:05    0.95
+1:10    0.91
+1:15    0.87
+1:20    0.84
+1:25    0.81
+1:30    0.78
+1:35    0.75
+1:40    0.73
+1:45    0.71
+1:50    0.69
+1:55    0.67
+Name: Value, dtype: float64
+</pre></div></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rpt_file_reader.html" class="btn btn-neutral float-right" title="Example for RPT File Reader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../api.html" class="btn btn-neutral float-left" title="API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Pichler
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

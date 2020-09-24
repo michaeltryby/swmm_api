@@ -1,0 +1,310 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>This is an API for reading, manipulating and running SWMM-Projects &mdash; EPA-SWMM API 0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="api.html" />
+    <link rel="prev" title="Welcome to Intensity Duration Frequency Analyse’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> EPA-SWMM API
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">This is an API for reading, manipulating and running SWMM-Projects</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#install-the-package">Install the package:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#read-the-inp-file">Read the INP-File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#write-the-manipulated-inp-file">Write the manipulated INP-File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-swmm">Run SWMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#read-the-out-file">Read the OUT-File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#read-the-rpt-file">Read the RPT-File</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/inp_file_reader.html">Example for INP File Reader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/rpt_file_reader.html">Example for RPT File Reader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/out_file_reader.html">Example for OUT File Reader</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EPA-SWMM API</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>This is an API for reading, manipulating and running SWMM-Projects</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/README.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<p>© <a class="reference external" href="https://www.sww.tugraz.at">Institute of Urban Water Management and Landscape Water Engineering</a>, <a class="reference external" href="https://www.tugraz.at/home/">Graz University of Technology</a> and <a class="reference external" href="mailto:markus&#46;pichler&#37;&#52;&#48;tugraz&#46;at">Markus Pichler</a></p>
+<div class="section" id="this-is-an-api-for-reading-manipulating-and-running-swmm-projects">
+<h1>This is an API for reading, manipulating and running SWMM-Projects<a class="headerlink" href="#this-is-an-api-for-reading-manipulating-and-running-swmm-projects" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="https://pypi.python.org/pypi/swmm-api"><img alt="PyPI" src="https://img.shields.io/pypi/v/swmm-api.svg" /></a>
+<a class="reference external" href="https://gitlab.com/markuspichler/swmm_api/-/commits/master"><img alt="pipeline status" src="https://gitlab.com/markuspichler/swmm_api/badges/master/pipeline.svg" /></a>
+<a class="reference external" href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
+<a class="reference external" href="https://markuspichler.gitlab.io/swmm_api"><img alt="docs" src="https://img.shields.io/static/v1.svg?label=sphinx&amp;message=documentation&amp;color=blue" /></a></p>
+<p>With this package you can read INP-files, manipulate them and write new ones.
+You can run swmm within the python api.
+And you can read the OUT-file as a pandas DataFrame for further analysis.</p>
+<div class="section" id="install-the-package">
+<h2>Install the package:<a class="headerlink" href="#install-the-package" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install swmm-api
+</pre></div>
+</div>
+</div>
+<div class="section" id="read-the-inp-file">
+<h2>Read the INP-File<a class="headerlink" href="#read-the-inp-file" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">swmm_api.input_file.helpers.sections</span> <span class="kn">import</span> <span class="n">TIMESERIES</span>
+<span class="kn">from</span> <span class="nn">swmm_api.input_file</span> <span class="kn">import</span> <span class="n">read_inp_file</span>
+<span class="kn">from</span> <span class="nn">swmm_api.input_file.inp_sections_generic</span> <span class="kn">import</span> <span class="n">TimeseriesSection</span>
+<span class="n">inp</span> <span class="o">=</span> <span class="n">read_inp_file</span><span class="p">(</span><span class="s1">&#39;inputfile.inp&#39;</span><span class="p">,</span> <span class="n">convert_sections</span><span class="o">=</span><span class="p">[</span><span class="n">TIMESERIES</span><span class="p">])</span>
+
+<span class="c1"># convert_sections limits the convertions during the reading of the file to the following section</span>
+<span class="c1"># remove &quot;convert_sections&quot; to convert all sections </span>
+<span class="c1"># converting sections helps manipulating the inp file</span>
+<span class="c1"># unconverted sections will be loaded as the raw string</span>
+
+<span class="n">sec_timeseries</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">TIMESERIES</span><span class="p">]</span>  <span class="c1"># type: TimeseriesSection</span>
+<span class="n">timeseries_dict</span> <span class="o">=</span> <span class="n">sec_timeseries</span><span class="o">.</span><span class="n">to_pandas</span>  <span class="c1"># type: Dict[str, pandas.Series]</span>
+<span class="n">ts</span> <span class="o">=</span> <span class="n">timeseries_dict</span><span class="p">[</span><span class="s1">&#39;regenseries&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>see <a class="reference external" href="https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/inp_file_reader.ipynb">examples/inp_file_reader.ipynb</a></p>
+</div>
+<div class="section" id="write-the-manipulated-inp-file">
+<h2>Write the manipulated INP-File<a class="headerlink" href="#write-the-manipulated-inp-file" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">swmm_api.input_file</span> <span class="kn">import</span> <span class="n">write_inp_file</span>
+<span class="n">write_inp_file</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="s1">&#39;new_inputfile.inp&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="run-swmm">
+<h2>Run SWMM<a class="headerlink" href="#run-swmm" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">swmm_api.run</span> <span class="kn">import</span> <span class="n">swmm5_run</span>
+<span class="n">swmm5_run</span><span class="p">(</span><span class="s1">&#39;new_inputfile.inp&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="read-the-out-file">
+<h2>Read the OUT-File<a class="headerlink" href="#read-the-out-file" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">swmm_api.output_file</span> <span class="kn">import</span> <span class="n">out2frame</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">out2frame</span><span class="p">(</span><span class="s1">&#39;new_inputfile.out&#39;</span><span class="p">)</span>  <span class="c1"># type: pandas.DataFrame</span>
+</pre></div>
+</div>
+<p>see <a class="reference external" href="https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/out_file_reader.ipynb">examples/out_file_reader.ipynb</a></p>
+</div>
+<div class="section" id="read-the-rpt-file">
+<h2>Read the RPT-File<a class="headerlink" href="#read-the-rpt-file" title="Permalink to this headline">¶</a></h2>
+<p>see <a class="reference external" href="https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/rpt_file_reader.ipynb">examples/rpt_file_reader.ipynb</a></p>
+<p>MORE INFORMATIONS COMMING SOON</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Intensity Duration Frequency Analyse’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Pichler
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,927 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API &mdash; EPA-SWMM API 0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Example for INP File Reader" href="examples/inp_file_reader.html" />
+    <link rel="prev" title="This is an API for reading, manipulating and running SWMM-Projects" href="README.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> EPA-SWMM API
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">This is an API for reading, manipulating and running SWMM-Projects</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-swmm_api.run">Run SWMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overall-macro-class-for-swmm">Overall Macro Class for SWMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-swmm_api.input_file.inp_writer">Input File Manipulations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#report-file-reader">Report File Reader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-swmm_api.output_file.out">Output File Reader</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples/inp_file_reader.html">Example for INP File Reader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/rpt_file_reader.html">Example for RPT File Reader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/out_file_reader.html">Example for OUT File Reader</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EPA-SWMM API</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>API</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="api">
+<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-swmm_api.run">
+<span id="run-swmm"></span><h2>Run SWMM<a class="headerlink" href="#module-swmm_api.run" title="Permalink to this headline">¶</a></h2>
+<dl class="py exception">
+<dt id="swmm_api.run.NoReportFileError">
+<em class="property">exception </em><code class="sig-prename descclassname">swmm_api.run.</code><code class="sig-name descname">NoReportFileError</code><a class="reference internal" href="_modules/swmm_api/run.html#NoReportFileError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.run.NoReportFileError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt id="swmm_api.run.SWMMRunError">
+<em class="property">exception </em><code class="sig-prename descclassname">swmm_api.run.</code><code class="sig-name descname">SWMMRunError</code><a class="reference internal" href="_modules/swmm_api/run.html#SWMMRunError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.run.SWMMRunError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="swmm_api.run.swmm5_run">
+<code class="sig-prename descclassname">swmm_api.run.</code><code class="sig-name descname">swmm5_run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inp</span></em>, <em class="sig-param"><span class="n">rpt_dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">init_print</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">create_out</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/run.html#swmm5_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.run.swmm5_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>run a simulation with an EPA-SWMM input-file
+default working directory is input-file directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inp</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – path to input file</p></li>
+<li><p><strong>rpt_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – directory in which the report-file is written.</p></li>
+<li><p><strong>out_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – directory in which the output-file is written.</p></li>
+<li><p><strong>init_print</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – if the default commandline output should be printed</p></li>
+<li><p><strong>create_out</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – if the out-file should be created</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>INP-, RPT- and OUT-filename</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="overall-macro-class-for-swmm">
+<h2>Overall Macro Class for SWMM<a class="headerlink" href="#overall-macro-class-for-swmm" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="swmm_api.input_file.inp_macros.InpMacros">
+<em class="property">class </em><code class="sig-prename descclassname">swmm_api.input_file.inp_macros.</code><code class="sig-name descname">InpMacros</code><a class="reference internal" href="_modules/swmm_api/input_file/inp_macros.html#InpMacros"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_macros.InpMacros" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-swmm_api.input_file.inp_writer">
+<span id="input-file-manipulations"></span><h2>Input File Manipulations<a class="headerlink" href="#module-swmm_api.input_file.inp_writer" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="swmm_api.input_file.inp_writer.inp2string">
+<code class="sig-prename descclassname">swmm_api.input_file.inp_writer.</code><code class="sig-name descname">inp2string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inp</span></em>, <em class="sig-param"><span class="n">fast</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_writer.html#inp2string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_writer.inp2string" title="Permalink to this definition">¶</a></dt>
+<dd><p>create string of inp file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inp</strong> (<a class="reference internal" href="#swmm_api.input_file.inp_helpers.InpData" title="swmm_api.input_file.inp_helpers.InpData"><em>swmm_api.input_file.inp_helpers.InpData</em></a>) – </p></li>
+<li><p><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – dont use any formatting else format as table</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>string of input file</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="swmm_api.input_file.inp_writer.write_inp_file">
+<code class="sig-prename descclassname">swmm_api.input_file.inp_writer.</code><code class="sig-name descname">write_inp_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inp</span></em>, <em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">fast</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_writer.html#write_inp_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_writer.write_inp_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>write new .inp file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inp</strong> (<a class="reference internal" href="#swmm_api.input_file.inp_helpers.InpData" title="swmm_api.input_file.inp_helpers.InpData"><em>swmm_api.input_file.inp_helpers.InpData</em></a>) – </p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – path/filename of resulting .inp-file</p></li>
+<li><p><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – dont use any formatting else format as table</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-swmm_api.input_file.inp_reader"></span><dl class="py function">
+<dt id="swmm_api.input_file.inp_reader.read_inp_file">
+<code class="sig-prename descclassname">swmm_api.input_file.inp_reader.</code><code class="sig-name descname">read_inp_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">ignore_sections</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">convert_sections</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">custom_converter</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ignore_gui_sections</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_reader.html#read_inp_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_reader.read_inp_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>read .inp file and convert given/all sections</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – path/filename to .inp file</p></li>
+<li><p><strong>ignore_sections</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>]</em>) – don’t convert ignored sections</p></li>
+<li><p><strong>convert_sections</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>]</em>) – only convert these sections</p></li>
+<li><p><strong>custom_converter</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a>) – dictionary of {section: converter/section_type}</p></li>
+<li><p><strong>ignore_gui_sections</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – don’t convert gui sections (ie. for commandline use)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>of sections of the .inp file</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#swmm_api.input_file.inp_helpers.InpData" title="swmm_api.input_file.inp_helpers.InpData">InpData</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-swmm_api.input_file.inp_helpers"></span><dl class="py class">
+<dt id="swmm_api.input_file.inp_helpers.BaseSectionObject">
+<em class="property">class </em><code class="sig-prename descclassname">swmm_api.input_file.inp_helpers.</code><code class="sig-name descname">BaseSectionObject</code><a class="reference internal" href="_modules/swmm_api/input_file/inp_helpers.html#BaseSectionObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_helpers.BaseSectionObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>base class for all section objects to unify operations
+sections objects only have __init__ with object parameters</p>
+<dl class="py method">
+<dt id="swmm_api.input_file.inp_helpers.BaseSectionObject.inp_line">
+<code class="sig-name descname">inp_line</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_helpers.html#BaseSectionObject.inp_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_helpers.BaseSectionObject.inp_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert object to one line of the .inp file
+for .inp file writing</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>SWMM .inp file compatible string</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.input_file.inp_helpers.BaseSectionObject.to_debug_string">
+<code class="sig-name descname">to_debug_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_helpers.html#BaseSectionObject.to_debug_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_helpers.BaseSectionObject.to_debug_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>for debugging purposes
+string is almost equal to python syntax
+so you could copy it and past it into your code</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>debug string of the object</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.input_file.inp_helpers.BaseSectionObject.to_dict_">
+<code class="sig-name descname">to_dict_</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_helpers.html#BaseSectionObject.to_dict_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_helpers.BaseSectionObject.to_dict_" title="Permalink to this definition">¶</a></dt>
+<dd><p>get all object parameters as dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="swmm_api.input_file.inp_helpers.InpData">
+<em class="property">class </em><code class="sig-prename descclassname">swmm_api.input_file.inp_helpers.</code><code class="sig-name descname">InpData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">d</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_helpers.html#InpData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_helpers.InpData" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="swmm_api.input_file.inp_helpers.InpSection">
+<em class="property">class </em><code class="sig-prename descclassname">swmm_api.input_file.inp_helpers.</code><code class="sig-name descname">InpSection</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_helpers.html#InpSection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_helpers.InpSection" title="Permalink to this definition">¶</a></dt>
+<dd><p>each section of the .inp file is converted to such a section</p>
+<dl class="py method">
+<dt id="swmm_api.input_file.inp_helpers.InpSection.append">
+<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">item</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_helpers.html#InpSection.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_helpers.InpSection.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>add object(s)/item(s) to section</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>item</strong> (<em>BaseSectionObject | list</em><em>[</em><a class="reference internal" href="#swmm_api.input_file.inp_helpers.BaseSectionObject" title="swmm_api.input_file.inp_helpers.BaseSectionObject"><em>BaseSectionObject</em></a><em>]</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.input_file.inp_helpers.InpSection.frame">
+<em class="property">property </em><code class="sig-name descname">frame</code><a class="headerlink" href="#swmm_api.input_file.inp_helpers.InpSection.frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert section to a data-frame
+for debugging purpose</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.input_file.inp_helpers.InpSection.from_lines">
+<em class="property">classmethod </em><code class="sig-name descname">from_lines</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lines</span></em>, <em class="sig-param"><span class="n">section_class</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_helpers.html#InpSection.from_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_helpers.InpSection.from_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>for .inp file reading
+convert all lines of a section to this class and each line to a object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lines</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>]</em>) – lines of a section in a .inp file</p></li>
+<li><p><strong>section_class</strong> (<a class="reference internal" href="#swmm_api.input_file.inp_helpers.BaseSectionObject" title="swmm_api.input_file.inp_helpers.BaseSectionObject"><em>BaseSectionObject</em></a>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>of one section</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#swmm_api.input_file.inp_helpers.InpSection" title="swmm_api.input_file.inp_helpers.InpSection">InpSection</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.input_file.inp_helpers.InpSection.to_inp">
+<code class="sig-name descname">to_inp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fast</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_helpers.html#InpSection.to_inp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_helpers.InpSection.to_inp" title="Permalink to this definition">¶</a></dt>
+<dd><p>section to a multi-line string
+for .inp file writing</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fast</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – dont use any formatting else format as table</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>.inp file string</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="swmm_api.input_file.inp_helpers.UserDict_">
+<em class="property">class </em><code class="sig-prename descclassname">swmm_api.input_file.inp_helpers.</code><code class="sig-name descname">UserDict_</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">d</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_helpers.html#UserDict_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_helpers.UserDict_" title="Permalink to this definition">¶</a></dt>
+<dd><p>imitate UserDict / user class like dict but operations only effect self._data</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="swmm_api.input_file.inp_helpers.dataframe_to_inp_string">
+<code class="sig-prename descclassname">swmm_api.input_file.inp_helpers.</code><code class="sig-name descname">dataframe_to_inp_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/input_file/inp_helpers.html#dataframe_to_inp_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.input_file.inp_helpers.dataframe_to_inp_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert a data-frame into a multi-line string
+used to make a better readable .inp file and for debugging</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>df</strong> (<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)"><em>pandas.DataFrame</em></a>) – section table</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>.inp file conform string for one section</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="report-file-reader">
+<h2>Report File Reader<a class="headerlink" href="#report-file-reader" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="swmm_api.report_file.report.Report">
+<em class="property">class </em><code class="sig-prename descclassname">swmm_api.report_file.report.</code><code class="sig-name descname">Report</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/report_file/report.html#Report"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.report_file.report.Report" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="swmm_api.report_file.report.Report.analysis_options">
+<em class="property">property </em><code class="sig-name descname">analysis_options</code><a class="headerlink" href="#swmm_api.report_file.report.Report.analysis_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Analysis Options</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Analysis Options</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.report_file.report.Report.conduit_surcharge_summary">
+<em class="property">property </em><code class="sig-name descname">conduit_surcharge_summary</code><a class="headerlink" href="#swmm_api.report_file.report.Report.conduit_surcharge_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Conduit Surcharge Summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Conduit Surcharge Summary</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.report_file.report.Report.flow_classification_summary">
+<em class="property">property </em><code class="sig-name descname">flow_classification_summary</code><a class="headerlink" href="#swmm_api.report_file.report.Report.flow_classification_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Flow Classification Summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Flow Classification Summary</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.report_file.report.Report.flow_routing_continuity">
+<em class="property">property </em><code class="sig-name descname">flow_routing_continuity</code><a class="headerlink" href="#swmm_api.report_file.report.Report.flow_routing_continuity" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Flow Routing Continuity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Flow Routing Continuity</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.report_file.report.Report.link_flow_summary">
+<em class="property">property </em><code class="sig-name descname">link_flow_summary</code><a class="headerlink" href="#swmm_api.report_file.report.Report.link_flow_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Link Flow Summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Link Flow Summary</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.report_file.report.Report.node_depth_summary">
+<em class="property">property </em><code class="sig-name descname">node_depth_summary</code><a class="headerlink" href="#swmm_api.report_file.report.Report.node_depth_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Node Depth Summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Node Depth Summary</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.report_file.report.Report.node_flooding_summary">
+<em class="property">property </em><code class="sig-name descname">node_flooding_summary</code><a class="headerlink" href="#swmm_api.report_file.report.Report.node_flooding_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Node Flooding Summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Node Flooding Summary</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.report_file.report.Report.node_inflow_summary">
+<em class="property">property </em><code class="sig-name descname">node_inflow_summary</code><a class="headerlink" href="#swmm_api.report_file.report.Report.node_inflow_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Node Inflow Summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Node Inflow Summary</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.report_file.report.Report.node_surcharge_summary">
+<em class="property">property </em><code class="sig-name descname">node_surcharge_summary</code><a class="headerlink" href="#swmm_api.report_file.report.Report.node_surcharge_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Node Surcharge Summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Node Surcharge Summary</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.report_file.report.Report.outfall_loading_summary">
+<em class="property">property </em><code class="sig-name descname">outfall_loading_summary</code><a class="headerlink" href="#swmm_api.report_file.report.Report.outfall_loading_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Outfall Loading Summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Outfall Loading Summary</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.report_file.report.Report.runoff_quantity_continuity">
+<em class="property">property </em><code class="sig-name descname">runoff_quantity_continuity</code><a class="headerlink" href="#swmm_api.report_file.report.Report.runoff_quantity_continuity" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Runoff Quantity Continuity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Runoff Quantity Continuity</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.report_file.report.Report.storage_volume_summary">
+<em class="property">property </em><code class="sig-name descname">storage_volume_summary</code><a class="headerlink" href="#swmm_api.report_file.report.Report.storage_volume_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Storage Volume Summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Storage Volume Summary</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.report_file.report.Report.subcatchment_runoff_summary">
+<em class="property">property </em><code class="sig-name descname">subcatchment_runoff_summary</code><a class="headerlink" href="#swmm_api.report_file.report.Report.subcatchment_runoff_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the Subcatchment Runoff Summary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Subcatchment Runoff Summary</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-swmm_api.output_file.out">
+<span id="output-file-reader"></span><h2>Output File Reader<a class="headerlink" href="#module-swmm_api.output_file.out" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="swmm_api.output_file.out.SwmmOutHandler">
+<em class="property">class </em><code class="sig-prename descclassname">swmm_api.output_file.out.</code><code class="sig-name descname">SwmmOutHandler</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/output_file/out.html#SwmmOutHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.output_file.out.SwmmOutHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>read the binary .out-file of EPA-SWMM</p>
+<dl class="py method">
+<dt id="swmm_api.output_file.out.SwmmOutHandler.get_part">
+<code class="sig-name descname">get_part</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">kind</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">var_name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/output_file/out.html#SwmmOutHandler.get_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.output_file.out.SwmmOutHandler.get_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert specific columns of the data to a pandas-DataFame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kind</strong> (<em>str | list</em>) – [“subcatchment”, “node”, “link”, “system”]</p></li>
+<li><p><strong>name</strong> (<em>str | list</em>) – name of the objekts</p></li>
+<li><p><strong>var_name</strong> (<em>str | list</em>) – <p>variable names</p>
+<dl class="simple">
+<dt>node:</dt><dd><dl class="simple">
+<dt>[‘Depth_above_invert’,</dt><dd><p>’Hydraulic_head’,
+‘Volume_stored_ponded’,
+‘Lateral_inflow’,
+‘Total_inflow’,
+‘Flow_lost_flooding’]</p>
+</dd>
+</dl>
+</dd>
+<dt>link:</dt><dd><dl class="simple">
+<dt>[‘Flow_rate’,</dt><dd><p>’Flow_depth’,
+‘Flow_velocity’,
+‘Froude_number’,
+‘Capacity’]</p>
+</dd>
+</dl>
+</dd>
+<dt>system:</dt><dd><dl class="simple">
+<dt>[‘Air_temperature’,</dt><dd><p>’Rainfall’,
+‘Snow_depth’,
+‘Evaporation_infiltration’,
+‘Runoff’,
+‘Dry_weather_inflow’,
+‘Groundwater_inflow’,
+‘RDII_inflow’,
+‘User_direct_inflow’,
+‘Total_lateral_inflow’,
+‘Flow_lost_to_flooding’,
+‘Flow_leaving_outfalls’,
+‘Volume_stored_water’,
+‘Evaporation_rate’,
+‘Potential_PET’]</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>filtered data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame | pandas.Series</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.output_file.out.SwmmOutHandler.get_part_slim">
+<code class="sig-name descname">get_part_slim</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">kind</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">var_name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/output_file/out.html#SwmmOutHandler.get_part_slim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.output_file.out.SwmmOutHandler.get_part_slim" title="Permalink to this definition">¶</a></dt>
+<dd><p>use this function instead of “get_part” if there are a lot of objects in the out-file.</p>
+<p>get specific columns of the data to a pandas-DataFame (or pandas-Series for a single column)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kind</strong> (<em>str | list</em>) – [“subcatchment”, “node”, “link”, “system”]</p></li>
+<li><p><strong>name</strong> (<em>str | list</em>) – name of the objekts</p></li>
+<li><p><strong>var_name</strong> (<em>str | list</em>) – <p>variable names:
+node: [‘Depth_above_invert’,</p>
+<blockquote>
+<div><p>’Hydraulic_head’,
+‘Volume_stored_ponded’,
+‘Lateral_inflow’,
+‘Total_inflow’,
+‘Flow_lost_flooding’]</p>
+</div></blockquote>
+<dl class="simple">
+<dt>link: [‘Flow_rate’,</dt><dd><p>’Flow_depth’,
+‘Flow_velocity’,
+‘Froude_number’,
+‘Capacity’]</p>
+</dd>
+<dt>system: [‘Air_temperature’,</dt><dd><p>’Rainfall’,
+‘Snow_depth’,
+‘Evaporation_infiltration’,
+‘Runoff’,
+‘Dry_weather_inflow’,
+‘Groundwater_inflow’,
+‘RDII_inflow’,
+‘User_direct_inflow’,
+‘Total_lateral_inflow’,
+‘Flow_lost_to_flooding’,
+‘Flow_leaving_outfalls’,
+‘Volume_stored_water’,
+‘Evaporation_rate’,
+‘Potential_PET’]</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>filtered data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame | pandas.Series</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.output_file.out.SwmmOutHandler.index">
+<em class="property">property </em><code class="sig-name descname">index</code><a class="headerlink" href="#swmm_api.output_file.out.SwmmOutHandler.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the main datetime index for the results</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>main datetime index of the results</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DatetimeIndex.html#pandas.DatetimeIndex" title="(in pandas v1.1.2)">pandas.DatetimeIndex</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.output_file.out.SwmmOutHandler.labels">
+<em class="property">property </em><code class="sig-name descname">labels</code><a class="headerlink" href="#swmm_api.output_file.out.SwmmOutHandler.labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the dictionary of the object labels for each object type (link, node, subcatchment)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>object-type: object-labels</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.output_file.out.SwmmOutHandler.number_columns">
+<em class="property">property </em><code class="sig-name descname">number_columns</code><a class="headerlink" href="#swmm_api.output_file.out.SwmmOutHandler.number_columns" title="Permalink to this definition">¶</a></dt>
+<dd><p>get number of columns of the full results table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>number of columns of the full results table</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.output_file.out.SwmmOutHandler.to_frame">
+<code class="sig-name descname">to_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/output_file/out.html#SwmmOutHandler.to_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.output_file.out.SwmmOutHandler.to_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert the data to a pandas Dataframe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>data</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.output_file.out.SwmmOutHandler.to_numpy">
+<code class="sig-name descname">to_numpy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/output_file/out.html#SwmmOutHandler.to_numpy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.output_file.out.SwmmOutHandler.to_numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>read the binary .out-file of EPA-SWMM and return a numpy array</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>all data</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.output_file.out.SwmmOutHandler.to_parquet">
+<code class="sig-name descname">to_parquet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/output_file/out.html#SwmmOutHandler.to_parquet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.output_file.out.SwmmOutHandler.to_parquet" title="Permalink to this definition">¶</a></dt>
+<dd><p>read the binary .out file from EPA-SWMM and write the data to a parquet file
+multi-column-names are separated by a slash (“/”)
+read parquet files with parquet.read to get the original column-name-structure</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="swmm_api.output_file.out.SwmmOutHandler.variables">
+<em class="property">property </em><code class="sig-name descname">variables</code><a class="headerlink" href="#swmm_api.output_file.out.SwmmOutHandler.variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the dictionary of the object variables for each object type (link, node, subcatchment)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>object-type: object-variables</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="swmm_api.output_file.out.out2frame">
+<code class="sig-prename descclassname">swmm_api.output_file.out.</code><code class="sig-name descname">out2frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out_file</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/swmm_api/output_file/out.html#out2frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#swmm_api.output_file.out.out2frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>read the binary .out file from EPA-SWMM and return a pandas Dataframe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>out_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – path to out file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.1.2)">pandas.DataFrame</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="examples/inp_file_reader.html" class="btn btn-neutral float-right" title="Example for INP File Reader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="README.html" class="btn btn-neutral float-left" title="This is an API for reading, manipulating and running SWMM-Projects" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Pichler
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
