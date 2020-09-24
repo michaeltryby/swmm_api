@@ -3,7 +3,7 @@ import re
 from pandas import DataFrame, to_datetime
 
 from .helpers.type_converter import infer_type, type2str
-from .inp_helpers import InpSectionGeneric, UserDict_, dataframe_to_inp_string
+from .inp_helpers import InpSectionGeneric, UserDict_, dataframe_to_inp_string, InpSection
 
 
 # class Title(InpSectionGeneric):
@@ -40,6 +40,8 @@ from .inp_helpers import InpSectionGeneric, UserDict_, dataframe_to_inp_string
 #
 #     def to_inp(self, fast=False):
 #         return self.title
+from .inp_sections import Transect
+
 
 def _str_to_lines(content):
     lines = list()
@@ -1163,3 +1165,18 @@ class TagsSection(UserDict_, InpSectionGeneric):
                 f += '{{:<{len1}}} {{:<{len2}}} {{}}\n'.format(len1=max_len_type, len2=max_len_name).format(type_, name,
                                                                                                             tag)
         return f
+
+
+class TransectSection(InpSection):
+    def __init__(self):
+        InpSection.__init__(self, Transect)
+
+    @classmethod
+    def from_lines(cls, lines, section_class=None):
+        inp_section = cls()
+        for section_class_line in Transect.convert_lines(lines):
+            inp_section.append(section_class_line)
+        return inp_section
+
+    def to_inp(self, fast=None):
+        return InpSection.to_inp(self, fast=True)

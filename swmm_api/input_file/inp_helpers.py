@@ -251,7 +251,7 @@ class InpSection(UserDict_):
         for .inp file writing
 
         Args:
-            fast (bool): dont use any formatting else format as table
+            fast (bool): don't use any formatting else format as table
 
         Returns:
             str: .inp file string

@@ -1375,44 +1375,47 @@ class Transect(BaseSectionObject):
     """
     index = 'Name'
 
-    def __init__(self, Name, station_elevations=None, bank_station_left=None, bank_station_right=None,
+    def __init__(self, Name, station_elevations=None, bank_station_left=0, bank_station_right=0,
                  roughness_left=0, roughness_right=0, roughness_channel=0,
-                 modifier_stations=0, modifier_elevations=0, modifier_meander=0,):
+                 modifier_stations=0, modifier_elevations=0, modifier_meander=0):
         self.Name = str(Name)
 
-        self.modifier_stations = modifier_stations
-        self.modifier_elevations = modifier_elevations
-        self.modifier_meander = modifier_meander
-
-        self.station_elevations = list()
         self.roughness_left = None
         self.roughness_right = None
         self.roughness_channel = None
+        self.set_roughness(roughness_left, roughness_right, roughness_channel)
+
         self.bank_station_left = None
         self.bank_station_right = None
-
-        if station_elevations is not None:
-            pass
-
-        self.set_roughness(roughness_left, roughness_right, roughness_channel)
         self.set_bank_stations(bank_station_left, bank_station_right)
 
+        self.modifier_stations = None
+        self.modifier_elevations = None
+        self.modifier_meander = None
+        self.set_modifiers(modifier_meander, modifier_stations, modifier_elevations)
+
+        self.station_elevations = list()
+
+        if station_elevations is not None:
+            for s in station_elevations:
+                self.add_station_elevation(*s)
+
     def add_station_elevation(self, station, elevation):
-        self.station_elevations.append([station, elevation])
+        self.station_elevations.append([float(station), float(elevation)])
 
     def set_roughness(self, left=0, right=0, channel=0):
-        self.roughness_left = left
-        self.roughness_right = right
-        self.roughness_channel = channel
+        self.roughness_left = float(left)
+        self.roughness_right = float(right)
+        self.roughness_channel = float(channel)
 
-    def set_bank_stations(self, left, right):
-        self.bank_station_left = left
-        self.bank_station_right = right
+    def set_bank_stations(self, left=0, right=0):
+        self.bank_station_left = float(left)
+        self.bank_station_right = float(right)
 
     def set_modifiers(self, meander=0, stations=0, elevations=0):
-        self.modifier_stations = stations
-        self.modifier_elevations = elevations
-        self.modifier_meander = meander
+        self.modifier_stations = float(stations)
+        self.modifier_elevations = float(elevations)
+        self.modifier_meander = float(meander)
 
     def get_number_stations(self):
         """get number of stations"""
@@ -1441,7 +1444,27 @@ class Transect(BaseSectionObject):
                 for station in it:
                     elevation = next(it)
                     last.add_station_elevation(station, elevation)
+        yield last
 
+    def inp_line(self):
+        s = 'NC {} {} {}\n'.format(self.roughness_left, self.roughness_right, self.roughness_channel)
+        s += 'X1 {} {} {} {} 0 0 0 {} {} {}\n'.format(self.Name, self.get_number_stations(),
+                                                      self.bank_station_left, self.bank_station_right,
+                                                      self.modifier_stations, self.modifier_elevations,
+                                                      self.modifier_meander)
+        s += 'GR'
+        i = 0
+        for x, y in self.station_elevations:
+            s += ' {} {}'.format(x, y)
+            i += 1
+            if i == 5:
+                i = 0
+                s += '\nGR'
+
+        if s.endswith('GR'):
+            s = s[:-3]
+        s += '\n'
+        return s
 
 # class Loading(BaseSection):
 #     """

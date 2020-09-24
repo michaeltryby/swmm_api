@@ -8,8 +8,9 @@
 [![docs](https://img.shields.io/static/v1.svg?label=sphinx&message=documentation&color=blue)](https://markuspichler.gitlab.io/swmm_api)
 
 With this package you can read INP-files, manipulate them and write new ones.
-You can run swmm within the python api.
-And you can read the OUT-file as a pandas DataFrame for further analysis.
+You can run SWMM within the python API and you can read the OUT-file as a pandas DataFrame for further analysis.
+
+This makes the package the perfect way
 
 
 ## Install the package:

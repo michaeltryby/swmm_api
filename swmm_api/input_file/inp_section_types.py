@@ -1,7 +1,8 @@
 import pandas
 from .helpers.sections import *
 from .inp_sections import *
-from .inp_sections_generic import TimeseriesSection, TagsSection, CurvesSection, ReportSection, CoordinatesSection, VerticesSection
+from .inp_sections_generic import (TimeseriesSection, TagsSection, CurvesSection, ReportSection, CoordinatesSection,
+                                   VerticesSection, TransectSection, )
 
 SECTION_TYPES = {
     TITLE: str,
@@ -14,6 +15,7 @@ SECTION_TYPES = {
     TIMESERIES: TimeseriesSection,
     LOADINGS: pandas.DataFrame,
     TAGS: TagsSection,
+    TRANSECTS: TransectSection,
 
     # GUI data
     COORDINATES: CoordinatesSection,
@@ -39,5 +41,4 @@ SECTION_TYPES = {
     PUMPS: Pump,
     PATTERNS: Pattern,
     POLLUTANTS: Pollutant,
-    TRANSECTS: Transect,
 }
