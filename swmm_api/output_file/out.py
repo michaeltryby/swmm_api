@@ -127,7 +127,7 @@ class SwmmOutHandler:
 
     def to_numpy(self):
         """
-        read the binary .out-file of EPA-SWMM and return a numpy array
+        read the full binary .out-file of EPA-SWMM and return a numpy array
 
         Returns:
             numpy.ndarray: all data
@@ -139,7 +139,10 @@ class SwmmOutHandler:
 
     def to_frame(self):
         """
-        convert the data to a pandas Dataframe
+        convert all the data to a pandas-DataFrame
+
+        Warnings:
+            for a big out-file with many objects, this function may take a long time
 
         Returns:
             pandas.DataFrame: data
@@ -165,37 +168,36 @@ class SwmmOutHandler:
             name (str | list): name of the objekts
             var_name (str | list): variable names
 
-                node:
-                    ['Depth_above_invert',
-                     'Hydraulic_head',
-                     'Volume_stored_ponded',
-                     'Lateral_inflow',
-                     'Total_inflow',
-                     'Flow_lost_flooding']
+                * node:
+                    - ``Depth_above_invert``
+                    - ``Hydraulic_head``
+                    - ``Volume_stored_ponded``
+                    - ``Lateral_inflow``
+                    - ``Total_inflow``
+                    - ``Flow_lost_flooding``
+                * link:
+                    - ``Flow_rate``
+                    - ``Flow_depth``
+                    - ``Flow_velocity``
+                    - ``Froude_number``
+                    - ``Capacity``
+                * system:
+                    - ``Air_temperature``
+                    - ``Rainfall``
+                    - ``Snow_depth``
+                    - ``Evaporation_infiltration``
+                    - ``Runoff``
+                    - ``Dry_weather_inflow``
+                    - ``Groundwater_inflow``
+                    - ``RDII_inflow``
+                    - ``User_direct_inflow``
+                    - ``Total_lateral_inflow``
+                    - ``Flow_lost_to_flooding``
+                    - ``Flow_leaving_outfalls``
+                    - ``Volume_stored_water``
+                    - ``Evaporation_rate``
+                    - ``Potential_PET``
 
-                link:
-                    ['Flow_rate',
-                     'Flow_depth',
-                     'Flow_velocity',
-                     'Froude_number',
-                     'Capacity']
-
-                system:
-                    ['Air_temperature',
-                     'Rainfall',
-                     'Snow_depth',
-                     'Evaporation_infiltration',
-                     'Runoff',
-                     'Dry_weather_inflow',
-                     'Groundwater_inflow',
-                     'RDII_inflow',
-                     'User_direct_inflow',
-                     'Total_lateral_inflow',
-                     'Flow_lost_to_flooding',
-                     'Flow_leaving_outfalls',
-                     'Volume_stored_water',
-                     'Evaporation_rate',
-                     'Potential_PET']
 
         Returns:
             pandas.DataFrame | pandas.Series: filtered data
@@ -242,33 +244,37 @@ class SwmmOutHandler:
         Args:
             kind (str | list): ["subcatchment", "node", "link", "system"]
             name (str | list): name of the objekts
-            var_name (str | list): variable names:
-                node: ['Depth_above_invert',
-                     'Hydraulic_head',
-                     'Volume_stored_ponded',
-                     'Lateral_inflow',
-                     'Total_inflow',
-                     'Flow_lost_flooding']
-                link: ['Flow_rate',
-                     'Flow_depth',
-                     'Flow_velocity',
-                     'Froude_number',
-                     'Capacity']
-                system: ['Air_temperature',
-                     'Rainfall',
-                     'Snow_depth',
-                     'Evaporation_infiltration',
-                     'Runoff',
-                     'Dry_weather_inflow',
-                     'Groundwater_inflow',
-                     'RDII_inflow',
-                     'User_direct_inflow',
-                     'Total_lateral_inflow',
-                     'Flow_lost_to_flooding',
-                     'Flow_leaving_outfalls',
-                     'Volume_stored_water',
-                     'Evaporation_rate',
-                     'Potential_PET']
+            var_name (str | list): variable names
+
+                * node:
+                    - ``Depth_above_invert``
+                    - ``Hydraulic_head``
+                    - ``Volume_stored_ponded``
+                    - ``Lateral_inflow``
+                    - ``Total_inflow``
+                    - ``Flow_lost_flooding``
+                * link:
+                    - ``Flow_rate``
+                    - ``Flow_depth``
+                    - ``Flow_velocity``
+                    - ``Froude_number``
+                    - ``Capacity``
+                * system:
+                    - ``Air_temperature``
+                    - ``Rainfall``
+                    - ``Snow_depth``
+                    - ``Evaporation_infiltration``
+                    - ``Runoff``
+                    - ``Dry_weather_inflow``
+                    - ``Groundwater_inflow``
+                    - ``RDII_inflow``
+                    - ``User_direct_inflow``
+                    - ``Total_lateral_inflow``
+                    - ``Flow_lost_to_flooding``
+                    - ``Flow_leaving_outfalls``
+                    - ``Volume_stored_water``
+                    - ``Evaporation_rate``
+                    - ``Potential_PET``
 
         Returns:
             pandas.DataFrame | pandas.Series: filtered data
@@ -305,8 +311,18 @@ class SwmmOutHandler:
             var_name (str | list): variable names
 
         Returns:
-
+            dict: str(final column name) -> tuple(type-index, object-label, variable-index)
         """
+        def _checker(i, user):
+            if user is None:
+                return False
+            elif isinstance(user, list) and (i in user):
+                return False
+            elif isinstance(user, str) and (i == user):
+                return False
+            else:
+                return True
+
         parts = dict()
         for k in self._extract.itemlist:
             if k == 'system':
@@ -314,26 +330,20 @@ class SwmmOutHandler:
             else:
                 labels = self.labels[k]
 
-            if kind is None:
-                pass
-            elif k != kind:
+            if _checker(k, kind):
                 continue
 
+            kind_index = self._extract.itemlist.index(k)
+
             for l in labels:
-                if name is None:
-                    pass
-                elif l != name:
+                if _checker(l, name):
                     continue
 
                 for v in self.variables[k]:
-                    if var_name is None:
-                        pass
-                    elif v != var_name:
+                    if _checker(v, var_name):
                         continue
 
-                    parts['{}/{}/{}'.format(k, l, v)] = (self._extract.itemlist.index(k),
-                                                         l,
-                                                         self.variables[k].index(v))
+                    parts['{}/{}/{}'.format(k, l, v)] = (kind_index, l, self.variables[k].index(v))
         return parts
 
     @staticmethod

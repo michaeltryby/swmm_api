@@ -619,7 +619,7 @@ class TimeseriesSection(UserDict_, InpSectionGeneric):
                             if cls.INDEX.HOURS not in new_lines[name]:
                                 new_lines[name][cls.INDEX.HOURS] = list()
                             new_lines[name][cls.INDEX.HOURS].append(hours)
-        new.to_inp(False)
+
         return new
 
     def _get_index(self, d):

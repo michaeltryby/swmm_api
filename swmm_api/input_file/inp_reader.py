@@ -109,8 +109,7 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
 
     return inp
 
-# from mp.helpers.check_time import timeit
-# @timeit
+
 def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_converter=None,
                   ignore_gui_sections=True):
     """

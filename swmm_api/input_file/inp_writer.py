@@ -24,6 +24,7 @@ sections_order = [TITLE,
 
                   LOSSES,
                   XSECTIONS,
+                  TRANSECTS,
 
                   INFLOWS,
                   CURVES,
@@ -48,6 +49,16 @@ def _sort_by(key):
 
 
 def section_to_string(section, fast=True):
+    """
+    create string of a section in an inp file
+
+    Args:
+        section (swmm_api.input_file.inp_helpers.BaseSectionObject | swmm_api.input_file.inp_helpers.InpSectionGeneric):
+        fast (bool): don't use any formatting else format as table
+
+    Returns:
+        str: string of input section
+    """
     f = ''
 
     # ----------------------
@@ -92,7 +103,7 @@ def inp2string(inp, fast=True):
 
     Args:
         inp (swmm_api.input_file.inp_helpers.InpData):
-        fast (bool): dont use any formatting else format as table
+        fast (bool): don't use any formatting else format as table
 
     Returns:
         str: string of input file
@@ -112,7 +123,7 @@ def write_inp_file(inp, filename, fast=True):
     Args:
         inp (swmm_api.input_file.inp_helpers.InpData):
         filename (str): path/filename of resulting .inp-file
-        fast (bool): dont use any formatting else format as table
+        fast (bool): don't use any formatting else format as table
     """
     with open(filename, 'w') as f:
         f.write(inp2string(inp, fast=fast))
