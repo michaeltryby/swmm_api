@@ -300,7 +300,7 @@ class SwmmOutHandler:
                 _, value = self._extract.get_swmm_results(index_kind, name, index_variable, i)
                 values.append(value)
 
-            return Series(values, index=self.index, name='{}/{}/{}'.format(kind, name, var_name)),
+            return Series(values, index=self.index, name='{}/{}/{}'.format(kind, name, var_name))
 
     def _get_part_args(self, kind=None, name=None, var_name=None):
         """
