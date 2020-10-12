@@ -59,6 +59,7 @@ class COLS:
     GROUND_ELEV = 'GOK'  # rim elevation
     STATION = 'x'
     WATER = 'water'
+    NODE_STATION = 'node'
 
 
 def get_plot_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
@@ -84,10 +85,19 @@ def get_plot_longitudinal_data(inp, start_node, end_node, out=None, zero_node=No
     for s in [JUNCTIONS, OUTFALLS, STORAGE]:
         nodes_dict.update(inp[s])
 
+    # ---------------
+    node_station = dict()
+
+    # ---------------
     dx = 0
     x = 0
     profile_height = 0
     for node in sub_list:
+
+        # ---------------
+        node_station[node] = x
+
+        # ---------------
         n = nodes_dict[node]
         sok = n.Elevation
 
@@ -123,6 +133,9 @@ def get_plot_longitudinal_data(inp, start_node, end_node, out=None, zero_node=No
 
     # ------------------------------------
     res[COLS.STATION] = [i - dx for i in res[COLS.STATION]]
+
+    # ---------------
+    res[COLS.NODE_STATION] = {node: i - dx for node, i in node_station.items()}
     return res
 
 
