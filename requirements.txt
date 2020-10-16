@@ -3,4 +3,4 @@ pandas
 networkx
 tqdm
 swmmtoolbox
-fastparquet
+#fastparquet
