@@ -1,6 +1,7 @@
 from datetime import date, time, timedelta
 from pandas import isna, to_datetime, Timedelta, Timestamp, to_timedelta
 from pandas.tseries.frequencies import to_offset
+from numpy import ndarray
 
 
 def infer_type(x):
@@ -13,8 +14,10 @@ def infer_type(x):
     Returns:
         object: object depending on string
     """
-    if isinstance(x, list):
+    if isinstance(x, (list, ndarray)):
         return [infer_type(i) for i in x]
+    elif not isinstance(x, str):
+        return x
     elif x == 'YES':
         return True
     elif x == 'NO':

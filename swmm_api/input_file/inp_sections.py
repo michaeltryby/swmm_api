@@ -182,7 +182,8 @@ class Outfall(BaseSectionObject):
         TIMESERIES = 'TIMESERIES'
 
     def __init__(self, Name, Elevation, Type, *args, Data=NaN, FlapGate=False, RouteTo=NaN):
-        """
+        """Identifies each outfall node (i.e., final downstream boundary) of the drainage system and the corresponding
+        water stage elevation. Only one link can be incident on an outfall node.
 
         Args:
             Name (str): name assigned to outfall node.
@@ -216,7 +217,7 @@ class Outfall(BaseSectionObject):
 
     def _no_data_init(self, Gated=False, RouteTo=NaN):
         """
-        if not keyword arguments were used
+        if no keyword arguments used
 
         Args:
             Gated (bool): YES or NO depending on whether a flap gate is present that prevents reverse flow. The default is NO.
@@ -841,12 +842,32 @@ class Infiltration(BaseSectionObject):
     def from_line(cls, subcatchment, *args, **kwargs):
         n_args = len(args) + len(kwargs.keys()) + 1
         if n_args == 6:  # hortn
-            return InfiltrationHorton(subcatchment, *args, **kwargs)
+            subcls = InfiltrationHorton
         elif n_args == 4:
-            return InfiltrationGreenAmpt(subcatchment, *args, **kwargs)
+            subcls = InfiltrationGreenAmpt
         else:
             # TODO
-            return InfiltrationCurveNumber(subcatchment, *args, **kwargs)
+            subcls = InfiltrationCurveNumber
+
+        # _____________________________________
+        # NEU in swmm 5.1.015
+        last_arg = args[-1]
+        cls_args = {
+            'HORTON': InfiltrationHorton,
+            'MODIFIED_HORTON': InfiltrationHorton,
+            'GREEN_AMPT': InfiltrationGreenAmpt,
+            'MODIFIED_GREEN_AMPT': InfiltrationGreenAmpt,
+            'CURVE_NUMBER': InfiltrationCurveNumber
+        }
+        if last_arg in cls_args:
+            subcls = cls_args[last_arg]
+            args = args[:-1]
+
+        if subcls != InfiltrationHorton:
+            args = args[:3]
+
+        # _____________________________________
+        return subcls(subcatchment, *args, **kwargs)
 
 
 class InfiltrationHorton(Infiltration):
@@ -918,18 +939,50 @@ class InfiltrationCurveNumber(Infiltration):
 
 
 class DryWeatherFlow(BaseSectionObject):
+    """
+    Section:
+        [DWF]
+
+    Purpose:
+        Specifies dry weather flow and its quality entering the drainage system at specific nodes.
+
+    Format:
+        Node Type Base (Pat1 Pat2 Pat3 Pat4)
+
+    Remarks:
+        - Node:
+            name of node where dry weather flow enters.
+        - Type:
+            keyword FLOW for flow or pollutant name for quality constituent.
+        - Base:
+            average baseline value for corresponding constituent (flow or concentration units).
+        - Pat1, Pat2, etc.:
+            names of up to four time patterns appearing in the [PATTERNS] section.
+
+    The actual dry weather input will equal the product of the baseline value and any adjustment factors
+    supplied by the specified patterns. (If not supplied, an adjustment factor defaults to 1.0.)
+    The patterns can be any combination of monthly, daily, hourly and weekend hourly
+    patterns, listed in any order. See the [PATTERNS] section for more details.
+    """
     index = ['Node', 'kind']
 
     def __init__(self, Node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN, pattern5=NaN):
-        """
-        Type: FLOW, <pollutant>
-        Base: baseline
-        Pat:  'monthly', 'daily', 'hourly' and 'weekend hourly' pattern
+        """Specifies dry weather flow and its quality entering the drainage system at specific nodes.
 
-        Node  Type  Base  (Pat1  Pat2  Pat3  Pat4)
+        The actual dry weather input will equal the product of the baseline value and any adjustment factors
+        supplied by the specified patterns. (If not supplied, an adjustment factor defaults to 1.0.)
+        The patterns can be any combination of monthly, daily, hourly and weekend hourly
+        patterns, listed in any order. See the [PATTERNS] section for more details.
+
         Args:
-            Node ():
-            kind ():
+            Node (str): name of node where dry weather flow enters.
+            kind (str): keyword FLOW for flow or pollutant name for quality constituent.
+            Base (float): average baseline value for corresponding constituent (flow or concentration units).
+            pattern1 (str, Optional): monthly-pattern
+            pattern2 (str, Optional): daily-pattern
+            pattern3 (str, Optional): hourly-pattern
+            pattern4 (str, Optional): weekend-hourly-pattern
+            pattern5 (str, Optional): ???
         """
         self.Node = str(Node)
         self.kind = kind
@@ -945,42 +998,40 @@ class Loss(BaseSectionObject):
 
     def __init__(self, Link, Inlet=0, Outlet=0, Average=0, FlapGate=False, SeepageRate=0):
         """
+        Section:
+            [LOSSES]
 
-    Section:
-        [LOSSES]
+        Purpose:
+            Specifies minor head loss coefficients, flap gates, and seepage rates for conduits.
 
-    Purpose:
-        Specifies minor head loss coefficients, flap gates, and seepage rates for conduits.
+        Formats:
+            Conduit Kentry Kexit Kavg (Flap Seepage)
 
-    Formats:
-        Conduit Kentry Kexit Kavg (Flap Seepage)
+        PC-SWMM-Format:
+            Link Inlet Outlet Average FlapGate SeepageRate
 
-    PC-SWMM-Format:
-        Link Inlet Outlet Average FlapGate SeepageRate
+        Remarks:
+            - Conduit:
+                name of conduit.
+            - Kentry:
+                entrance minor head loss coefficient.
+            - Kexit:
+                exit minor head loss coefficient.
+            - Kavg:
+                average minor head loss coefficient across length of conduit.
+            - Flap:
+                YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO).
+            - Seepage:
+                Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.)
 
-    Remarks:
-        - Conduit:
-            name of conduit.
-        - Kentry:
-            entrance minor head loss coefficient.
-        - Kexit:
-            exit minor head loss coefficient.
-        - Kavg:
-            average minor head loss coefficient across length of conduit.
-        - Flap:
-            YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO).
-        - Seepage:
-            Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.)
+            Minor losses are only computed for the Dynamic Wave flow routing option (see
+            [OPTIONS] section). They are computed as Kv 2 /2g where K = minor loss coefficient, v
+            = velocity, and g = acceleration of gravity. Entrance losses are based on the velocity
+            at the entrance of the conduit, exit losses on the exit velocity, and average losses on
+            the average velocity.
 
-        Minor losses are only computed for the Dynamic Wave flow routing option (see
-        [OPTIONS] section). They are computed as Kv 2 /2g where K = minor loss coefficient, v
-        = velocity, and g = acceleration of gravity. Entrance losses are based on the velocity
-        at the entrance of the conduit, exit losses on the exit velocity, and average losses on
-        the average velocity.
-
-        Only enter data for conduits that actually have minor losses, flap valves, or seepage
-        losses.
-
+            Only enter data for conduits that actually have minor losses, flap valves, or seepage
+            losses.
 
         Args:
             Link (str): name of conduit

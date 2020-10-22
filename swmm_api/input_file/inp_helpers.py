@@ -202,7 +202,7 @@ class InpSection(UserDict_):
         convert all lines of a section to this class and each line to a object
 
         Args:
-            lines (list[str]): lines of a section in a .inp file
+            lines (list[list[str]]): lines of a section in a .inp file
             section_class (BaseSectionObject):
 
         Returns:
@@ -273,6 +273,14 @@ class InpSection(UserDict_):
         new._data = deepcopy(self._data)
         return new
 
+    @classmethod
+    def from_frame(cls, df, section_class):
+        # TODO: testing
+        import numpy as np
+        a = np.vstack((df.index.values, df.values.T)).T
+        return cls.from_lines(a, section_class)
+        # return cls.from_lines([line.split() for line in dataframe_to_inp_string(df).split('\n')], section_class)
+
 
 class InpData(UserDict_):
     def copy(self):
@@ -311,4 +319,4 @@ def dataframe_to_inp_string(df):
                 # because pandas 1.0
                 # c.index.levels[0].name = ';' + c.index.levels[0].name
 
-    return c.applymap(type2str).to_string(sparsify=False, line_width=9999)
+    return c.applymap(type2str).to_string(sparsify=False, line_width=999999)

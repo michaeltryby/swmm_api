@@ -12,12 +12,12 @@ from inspect import isclass, isfunction
 CONVERTER = SECTION_TYPES.copy()
 CONVERTER.update({
     # options = dict
-    TITLE: convert_title,
-    OPTIONS: convert_options,
-    EVAPORATION: convert_evaporation,
-    TEMPERATURE: convert_temperature,
-    LOADINGS: convert_loadings,
-    MAP: convert_map,
+    TITLE: convert_title,  # str
+    OPTIONS: convert_options,  # dict
+    EVAPORATION: convert_evaporation,  # dict
+    TEMPERATURE: convert_temperature,  # dict
+    LOADINGS: convert_loadings,  # pandas.DataFrame
+    MAP: convert_map,  # dict
 })
 
 GUI_SECTIONS = [

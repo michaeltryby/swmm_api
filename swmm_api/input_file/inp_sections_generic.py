@@ -945,6 +945,7 @@ def convert_loadings(lines):
 
 
 class CoordinatesSection(UserDict_, InpSectionGeneric):
+    INDEX = 'node'
     """
     Section:
         [COORDINATES]
@@ -973,7 +974,7 @@ class CoordinatesSection(UserDict_, InpSectionGeneric):
         return new
 
     def __repr__(self):
-        return self.to_pandas.__repr__()
+        return self.data_frame.__repr__()
 
     def __str__(self):
         return self.to_inp()
@@ -984,15 +985,15 @@ class CoordinatesSection(UserDict_, InpSectionGeneric):
         if fast:
             f = ''
             max_len_name = len(max(self._data.keys(), key=len)) + 2
-            f += '{name} {x} {y}\n'.format(name='; Node'.ljust(max_len_name), x='x', y='y')
+            f += '{name} {x} {y}\n'.format(name='; {}'.format(self.INDEX.capitalize()).ljust(max_len_name), x='x', y='y')
             for node, coords in self._data.items():
                 f += '{name} {x} {y}\n'.format(name=node.ljust(max_len_name), **coords)
         else:
-            f = dataframe_to_inp_string(self.to_pandas)
+            f = dataframe_to_inp_string(self.data_frame)
         return f
 
     @property
-    def to_pandas(self):
+    def data_frame(self):
         return DataFrame.from_dict(self._data, orient='index')
 
     @classmethod
@@ -1001,6 +1002,28 @@ class CoordinatesSection(UserDict_, InpSectionGeneric):
         df = data[[x_name, y_name]].rename({x_name: 'x', y_name: 'y'})
         new._data = df[['x', 'y']].to_dict(orient='index')
         return new
+
+
+class SymbolSection(CoordinatesSection):
+    INDEX = 'gage'
+    """
+    Section:
+        [SYMBOLS]
+
+    Purpose:
+        Assigns X,Y coordinates to rain gage symbols.
+
+    Format:
+        Gage Xcoord Ycoord
+
+    Remarks:
+        Gage
+            name of rain gage.
+        Xcoord
+            horizontal coordinate relative to origin in lower left of map.
+        Ycoord
+            vertical coordinate relative to origin in lower left of map.
+    """
 
 
 class VerticesSection(UserDict_, InpSectionGeneric):
@@ -1039,7 +1062,7 @@ class VerticesSection(UserDict_, InpSectionGeneric):
         return new
 
     def __repr__(self):
-        return self.to_pandas.__repr__()
+        return self.data_frame.__repr__()
 
     def __str__(self):
         return self.to_inp()
@@ -1056,11 +1079,11 @@ class VerticesSection(UserDict_, InpSectionGeneric):
                 for v in vertices:
                     f += '{name} {x} {y}\n'.format(name=link.ljust(max_len_name), **v)
         else:
-            f = dataframe_to_inp_string(self.to_pandas)
+            f = dataframe_to_inp_string(self.data_frame)
         return f
 
     @property
-    def to_pandas(self):
+    def data_frame(self):
         rec = list()
         for link, vertices in self._data.items():
             for v in vertices:
@@ -1076,6 +1099,30 @@ class VerticesSection(UserDict_, InpSectionGeneric):
         df = data[[x_name, y_name]].rename({x_name: 'x', y_name: 'y'})
         new._data = df[['x', 'y']].groupby(df.index).apply(lambda x: x.to_dict('records')).to_dict()
         return new
+
+
+class PolygonSection(VerticesSection):
+    """
+    Section:
+        [POLYGONS]
+
+    Purpose:
+        Assigns X,Y coordinates to vertex points of polygons that define a subcatchment boundary.
+
+    Format:
+        Link Xcoord Ycoord
+
+    Remarks:
+        Subcat
+            name of subcatchment.
+        Xcoord
+            horizontal coordinate of vertex relative to origin in lower left of map.
+        Ycoord
+            vertical coordinate of vertex relative to origin in lower left of map.
+
+        Include a separate line for each vertex of the subcatchment polygon, ordered in a
+        consistent clockwise or counter-clockwise sequence.
+    """
 
 
 def convert_map(lines):

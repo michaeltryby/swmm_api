@@ -1,5 +1,5 @@
 import pickle
-from os import path, remove
+from os import path, remove, mkdir
 from warnings import warn
 from pandas import Series, DataFrame, to_datetime
 
@@ -10,11 +10,18 @@ from ..run import swmm5_run
 from ..output_file import SwmmOutHandler, parquet
 from .inp_reader import read_inp_file
 from .inp_helpers import InpData, InpSection
-from .inp_writer import write_inp_file, inp2string
-# from .helpers.sections import REPORT, XSECTIONS, CURVES, STORAGE, PUMPS, SUBCATCHMENTS, RAINGAGES, SUBAREAS, \
-#     INFILTRATION, COORDINATES, VERTICES
-from .helpers import sections as S
+from .inp_writer import write_inp_file, inp2string, section_to_string
+from .helpers import sections as sec
 from .helpers.type_converter import offset2delta
+
+
+def split_inp_to_files(inp_fn, **kwargs):
+    parent = inp_fn.replace('.inp', '')
+    mkdir(parent)
+    inp = read_inp_file(inp_fn, **kwargs)
+    for s in inp.keys():
+        with open(path.join(parent, s + '.txt'), 'w') as f:
+            f.write(section_to_string(inp[s], fast=False))
 
 
 class InpMacros(InpData):
@@ -136,41 +143,41 @@ class InpMacros(InpData):
     def set_start(self, start):
         if isinstance(start, str):
             start = to_datetime(start)
-        self[S.OPTIONS]['START_DATE'] = start.date()
-        self[S.OPTIONS]['START_TIME'] = start.time()
+        self[sec.OPTIONS]['START_DATE'] = start.date()
+        self[sec.OPTIONS]['START_TIME'] = start.time()
 
     def set_start_report(self, start):
         if isinstance(start, str):
             start = to_datetime(start)
-        self[S.OPTIONS]['REPORT_START_DATE'] = start.date()
-        self[S.OPTIONS]['REPORT_START_TIME'] = start.time()
+        self[sec.OPTIONS]['REPORT_START_DATE'] = start.date()
+        self[sec.OPTIONS]['REPORT_START_TIME'] = start.time()
 
     def set_end(self, end):
         if isinstance(end, str):
             end = to_datetime(end)
-        self[S.OPTIONS]['END_DATE'] = end.date()
-        self[S.OPTIONS]['END_TIME'] = end.time()
+        self[sec.OPTIONS]['END_DATE'] = end.date()
+        self[sec.OPTIONS]['END_TIME'] = end.time()
 
     def set_threads(self, num):
-        self[S.OPTIONS]['THREADS'] = num
+        self[sec.OPTIONS]['THREADS'] = num
 
     def ignore_rainfall(self, on=True):
-        self[S.OPTIONS]['IGNORE_RAINFALL'] = on
+        self[sec.OPTIONS]['IGNORE_RAINFALL'] = on
 
     def ignore_snowmelt(self, on=True):
-        self[S.OPTIONS]['IGNORE_SNOWMELT'] = on
+        self[sec.OPTIONS]['IGNORE_SNOWMELT'] = on
 
     def ignore_groundwater(self, on=True):
-        self[S.OPTIONS]['IGNORE_GROUNDWATER'] = on
+        self[sec.OPTIONS]['IGNORE_GROUNDWATER'] = on
 
     def ignore_quality(self, on=True):
-        self[S.OPTIONS]['IGNORE_QUALITY'] = on
+        self[sec.OPTIONS]['IGNORE_QUALITY'] = on
 
     def set_intervals(self, freq):
         new_step = offset2delta(freq)
-        self[S.OPTIONS]['REPORT_STEP'] = new_step
-        self[S.OPTIONS]['WET_STEP'] = new_step
-        self[S.OPTIONS]['DRY_STEP'] = new_step
+        self[sec.OPTIONS]['REPORT_STEP'] = new_step
+        self[sec.OPTIONS]['WET_STEP'] = new_step
+        self[sec.OPTIONS]['DRY_STEP'] = new_step
 
     def activate_report(self, input=False, continuity=True, flowstats=True, controls=False):
         # r = self[S.REPORT]  # type: ReportSection
@@ -178,10 +185,10 @@ class InpMacros(InpData):
         # r.CONTINUITY = continuity
         # r.FLOWSTATS = flowstats
         # r.CONTROLS = controls
-        self[S.REPORT]['INPUT'] = input
-        self[S.REPORT]['CONTINUITY'] = continuity
-        self[S.REPORT]['FLOWSTATS'] = flowstats
-        self[S.REPORT]['CONTROLS'] = controls
+        self[sec.REPORT]['INPUT'] = input
+        self[sec.REPORT]['CONTINUITY'] = continuity
+        self[sec.REPORT]['FLOWSTATS'] = flowstats
+        self[sec.REPORT]['CONTROLS'] = controls
 
     def add_obj_to_report(self, obj_kind, new_obj):
         if isinstance(new_obj, str):
@@ -191,7 +198,7 @@ class InpMacros(InpData):
         else:
             raise NotImplementedError('Type: {} not implemented!'.format(type(new_obj)))
 
-        old_obj = self[S.REPORT][obj_kind]
+        old_obj = self[sec.REPORT][obj_kind]
         if isinstance(old_obj, str):
             old_obj = [old_obj]
         elif isinstance(old_obj, (int, float)):
@@ -203,7 +210,7 @@ class InpMacros(InpData):
         else:
             raise NotImplementedError('Type: {} not implemented!'.format(type(old_obj)))
 
-        self[S.REPORT][obj_kind] = old_obj + new_obj
+        self[sec.REPORT][obj_kind] = old_obj + new_obj
 
     def add_nodes_to_report(self, new_nodes):
         self.add_obj_to_report('NODES', new_nodes)
@@ -212,12 +219,12 @@ class InpMacros(InpData):
         self.add_obj_to_report('LINKS', new_links)
 
     def add_timeseries_file(self, fn):  # TODO
-        if 'Files' not in self[S.TIMESERIES]:
-            self[S.TIMESERIES]['Files'] = DataFrame(columns=['Type', 'Fname'])
+        if 'Files' not in self[sec.TIMESERIES]:
+            self[sec.TIMESERIES]['Files'] = DataFrame(columns=['Type', 'Fname'])
 
-        self[S.TIMESERIES]['Files'] = self[S.TIMESERIES]['Files'].append(
+        self[sec.TIMESERIES]['Files'] = self[sec.TIMESERIES]['Files'].append(
             Series({'Fname': '"' + fn + '.dat"'}, name=path.basename(fn)))
-        self[S.TIMESERIES]['Files']['Type'] = 'FILE'
+        self[sec.TIMESERIES]['Files']['Type'] = 'FILE'
 
     def reduce_curves(self):
         reduce_curves(self)
@@ -258,7 +265,7 @@ def reduce_curves(inp):
 
     :type inp: InpData
     """
-    if S.CURVES not in inp:
+    if sec.CURVES not in inp:
         return inp
 
     # ---------------------
@@ -276,24 +283,24 @@ def reduce_curves(inp):
         return all_curves
 
     # ---------------------
-    inp[S.CURVES] = _reduce(inp[S.CURVES],
-                            kind=CurvesSection.TYPES.SHAPE,
-                            curves=set(
-                                [xs.Curve for xs in inp[S.XSECTIONS].values() if isinstance(xs, CrossSectionCustom)]))
+    inp[sec.CURVES] = _reduce(inp[sec.CURVES],
+                              kind=CurvesSection.TYPES.SHAPE,
+                              curves=set(
+                                [xs.Curve for xs in inp[sec.XSECTIONS].values() if isinstance(xs, CrossSectionCustom)]))
 
-    if S.STORAGE in inp:
-        inp[S.CURVES] = _reduce(inp[S.CURVES],
-                                kind=CurvesSection.TYPES.STORAGE,
-                                curves=set([st.Curve for st in inp[S.STORAGE].values() if st.Type == st.Types.TABULAR]))
+    if sec.STORAGE in inp:
+        inp[sec.CURVES] = _reduce(inp[sec.CURVES],
+                                  kind=CurvesSection.TYPES.STORAGE,
+                                  curves=set([st.Curve for st in inp[sec.STORAGE].values() if st.Type == st.Types.TABULAR]))
 
     # ---------------------
-    if S.PUMPS in inp:
-        curves = set([pu.Pcurve for pu in inp[S.PUMPS].values() if pu.Pcurve != '*'])
+    if sec.PUMPS in inp:
+        curves = set([pu.Pcurve for pu in inp[sec.PUMPS].values() if pu.Pcurve != '*'])
         for kind in [CurvesSection.TYPES.PUMP1, CurvesSection.TYPES.PUMP2, CurvesSection.TYPES.PUMP3,
                      CurvesSection.TYPES.PUMP4]:
-            inp[S.CURVES] = _reduce(inp[S.CURVES],
-                                    kind=kind,
-                                    curves=curves)
+            inp[sec.CURVES] = _reduce(inp[sec.CURVES],
+                                      kind=kind,
+                                      curves=curves)
     return inp
 
 
@@ -302,24 +309,24 @@ def reduce_raingages(inp):
 
     :type inp: InpData
     """
-    if S.SUBCATCHMENTS not in inp or S.RAINGAGES not in inp:
+    if sec.SUBCATCHMENTS not in inp or sec.RAINGAGES not in inp:
         return inp
     needed_raingages = list()
-    for s in inp[S.SUBCATCHMENTS].values():
+    for s in inp[sec.SUBCATCHMENTS].values():
         needed_raingages.append(s.RainGage)
 
     needed_raingages = set(needed_raingages)
 
-    current_rain_gages = list(inp[S.RAINGAGES].keys())
+    current_rain_gages = list(inp[sec.RAINGAGES].keys())
     for rg in current_rain_gages:
         if rg not in needed_raingages:
-            inp[S.RAINGAGES].pop(rg)
+            inp[sec.RAINGAGES].pop(rg)
 
     return inp
 
 
 def combined_subcatchment_infos(inp):
-    return inp[S.SUBCATCHMENTS].frame.join(inp[S.SUBAREAS].frame).join(inp[S.INFILTRATION].frame)
+    return inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
 
 #
 # def coordinates_frame(inp):
@@ -335,13 +342,13 @@ def combined_subcatchment_infos(inp):
 
 
 def find_node(inp, label):
-    for kind in [S.JUNCTIONS, S.OUTFALLS, S.DIVIDERS, S.STORAGE]:
+    for kind in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
         if (kind in inp) and (label in inp[kind]):
             return inp[kind][label]
 
 
 def find_link(inp, label):
-    for kind in [S.CONDUITS, S.PUMPS, S.ORIFICES, S.WEIRS, S.OUTLETS]:
+    for kind in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
         if (kind in inp) and (label in inp[kind]):
             return inp[kind][label]
 
@@ -358,34 +365,34 @@ def delete_node(inp, node):
         n = node
         node = n.Name
 
-    for kind in [S.JUNCTIONS, S.OUTFALLS, S.DIVIDERS, S.STORAGE]:
+    for kind in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
         if (kind in inp) and (node in inp[kind]):
             inp[kind].pop(node)
-    inp[S.COORDINATES].pop(node)
+    inp[sec.COORDINATES].pop(node)
 
     # delete connected links
-    for i_name, i in inp[S.CONDUITS].copy().items():
+    for i_name, i in inp[sec.CONDUITS].copy().items():
         if (i.ToNode == node) or (i.FromNode == node):
             # print('DELETE (link): ', i_name)
-            inp[S.CONDUITS].pop(i_name)
-            inp[S.XSECTIONS].pop(i_name)
-            inp[S.VERTICES].pop(i_name)
+            inp[sec.CONDUITS].pop(i_name)
+            inp[sec.XSECTIONS].pop(i_name)
+            inp[sec.VERTICES].pop(i_name)
 
     return inp
 
 
 def combine_conduits(inp, c1, c2):
     if isinstance(c1, str):
-        c1 = inp[S.CONDUITS][c1]
+        c1 = inp[sec.CONDUITS][c1]
     if isinstance(c2, str):
-        c2 = inp[S.CONDUITS][c2]
+        c2 = inp[sec.CONDUITS][c2]
 
     c_new = c2.copy()
     c_new.Length += c1.Length
 
-    v_new = inp[S.VERTICES][c1.Name] + inp[S.VERTICES][c2.Name]
+    v_new = inp[sec.VERTICES][c1.Name] + inp[sec.VERTICES][c2.Name]
 
-    xs_new = inp[S.XSECTIONS][c2.Name]
+    xs_new = inp[sec.XSECTIONS][c2.Name]
 
     if c1.FromNode == c2.ToNode:
         c_new.ToNode = c1.ToNode
@@ -397,9 +404,9 @@ def combine_conduits(inp, c1, c2):
     else:
         raise EnvironmentError('Links not connected')
 
-    inp[S.VERTICES][c_new.Name] = v_new
-    inp[S.CONDUITS].append(c_new)
-    inp[S.XSECTIONS].append(xs_new)
+    inp[sec.VERTICES][c_new.Name] = v_new
+    inp[sec.CONDUITS].append(c_new)
+    inp[sec.XSECTIONS].append(xs_new)
     return inp
 
 
@@ -418,7 +425,7 @@ def conduit_iter_over_inp(inp, start, end=None):
     node = start
     while True:
         found = False
-        for i, c in inp[S.CONDUITS].items():
+        for i, c in inp[sec.CONDUITS].items():
             if c.FromNode == node:
                 conduit = c
 
@@ -431,15 +438,15 @@ def conduit_iter_over_inp(inp, start, end=None):
 
 
 def junction_to_storage(inp, label, *args, **kwargs):
-    j = inp[S.JUNCTIONS].pop(label)  # type: S.Junction
-    if S.STORAGE not in inp:
-        inp[S.STORAGE] = InpSection(Storage)
-    inp[S.STORAGE].append(Storage(Name=label, Elevation=j.Elevation, MaxDepth=j.MaxDepth,
-                                  InitDepth=j.InitDepth, Apond=j.Aponded, *args, **kwargs))
+    j = inp[sec.JUNCTIONS].pop(label)  # type: S.Junction
+    if sec.STORAGE not in inp:
+        inp[sec.STORAGE] = InpSection(Storage)
+    inp[sec.STORAGE].append(Storage(Name=label, Elevation=j.Elevation, MaxDepth=j.MaxDepth,
+                                    InitDepth=j.InitDepth, Apond=j.Aponded, *args, **kwargs))
 
 
 def junction_to_outfall(inp, label, *args, **kwargs):
-    j = inp[S.JUNCTIONS].pop(label)  # type: S.Junction
-    if S.OUTFALLS not in inp:
-        inp[S.OUTFALLS] = InpSection(Outfall)
-    inp[S.OUTFALLS].append(Outfall(Name=label, Elevation=j.Elevation, *args, **kwargs))
+    j = inp[sec.JUNCTIONS].pop(label)  # type: S.Junction
+    if sec.OUTFALLS not in inp:
+        inp[sec.OUTFALLS] = InpSection(Outfall)
+    inp[sec.OUTFALLS].append(Outfall(Name=label, Elevation=j.Elevation, *args, **kwargs))
