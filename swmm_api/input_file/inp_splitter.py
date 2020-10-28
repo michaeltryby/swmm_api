@@ -9,6 +9,17 @@ from .testing.inp_graph_network import inp_to_graph
 
 
 def split_network(inp, keep_node, split_at_node=None, keep_split_node=True):
+    """
+
+    Args:
+        inp ():
+        keep_node ():
+        split_at_node ():
+        keep_split_node ():
+
+    Returns:
+
+    """
     if CONTROLS in inp:
         del inp[CONTROLS]
 

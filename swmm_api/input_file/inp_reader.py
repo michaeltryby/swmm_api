@@ -1,10 +1,11 @@
-from .inp_section_types import SECTION_TYPES
+from .inp_section_types import SECTION_TYPES, GUI_SECTIONS
 from .inp_sections_generic import (convert_title, convert_options, convert_evaporation, convert_temperature,
                                    convert_loadings, convert_map)
 from .inp_helpers import InpSection, InpData
 from .helpers.sections import *
 from .helpers.custom_iterator import custom_iter
 
+import re
 from inspect import isclass, isfunction
 
 """read SWMM .inp file and convert the data to a more usable format"""
@@ -20,18 +21,8 @@ CONVERTER.update({
     MAP: convert_map,  # dict
 })
 
-GUI_SECTIONS = [
-    MAP,
-    COORDINATES,
-    VERTICES,
-    POLYGONS,
-    SYMBOLS,
-    LABELS,
-    BACKDROP,
-]
 
-
-def _read_inp_file_raw(filename):
+def _read_inp_file_raw_OLD(filename):
     """
     reads full .inp file and splits the lines into a list and each line into a list of strings
 
@@ -39,18 +30,18 @@ def _read_inp_file_raw(filename):
         filename (str): path to .inp file
 
     Returns:
-        InpData: raw inp-file data
+        InpData: dict-like raw inp-file data (values=list[list[str]])
     """
-    inp = InpData()
     if isinstance(filename, str):
         inp_file = open(filename, 'r', encoding='iso-8859-1')
     else:
         inp_file = filename
 
-    inp_file = inp_file.readlines()
-
+    inp = InpData()
+    lines = inp_file.readlines()
+    inp_file.close()
     head = None
-    for line in custom_iter(inp_file, desc='read raw inp-file'):
+    for line in custom_iter(lines, desc='read raw inp-file'):
         line = line.strip()
         if (line == '') | line.startswith(';'):  # ignore empty and comment lines
             continue
@@ -61,7 +52,32 @@ def _read_inp_file_raw(filename):
 
         else:
             inp[head].append(line.split())
+    return inp
 
+
+def _read_inp_file_raw(filename):
+    """
+    reads full .inp file and splits the text into a dict of sections and each sections into a string
+
+    Args:
+        filename (str): path to .inp file
+
+    Returns:
+        InpData: dict-like raw inp-file data (values=string)
+    """
+
+    if isinstance(filename, str):
+        inp_file = open(filename, 'r', encoding='iso-8859-1')
+    else:
+        inp_file = filename
+
+    txt = inp_file.read()
+    inp_file.close()
+    headers = re.findall(r"\[(\w+)\]", txt)
+    headers = [h.upper() for h in headers]
+    section_text = re.split(r"\[\w+\]", txt)[1:]
+    section_text = [h.strip() for h in section_text]
+    inp = InpData(dict(zip(headers, section_text)))
     return inp
 
 
@@ -91,18 +107,21 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
             continue
 
         if head in converter:
-            lines = custom_iter(lines, desc=head).__iter__()
+            lines = custom_iter(lines, desc=head)
 
             section_ = converter[head]
 
-            if isfunction(section_):  # section_ ... converter
+            if isfunction(section_):  # section_ ... converter function
                 inp[head] = section_(lines)
 
-            elif isclass(section_):  # section_ ... type
+            elif isclass(section_):  # section_ ... type/class
                 if hasattr(section_, 'from_lines'):
-                    inp[head] = section_.from_lines(lines)
+                    inp[head] = section_.from_lines(lines)  # each object has multiple lines
+                    # REPORT, TIMESERIES, CURVES, Transect
+                    # COORDS, VERTICES, TAGS,
                 else:
-                    inp[head] = InpSection.from_lines(lines, section_)
+                    inp[head] = InpSection.from_lines(lines, section_)  # each line is a object
+                    # Transect
 
             else:
                 raise NotImplemented()
@@ -125,12 +144,17 @@ def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_
     Returns:
         InpData: of sections of the .inp file
     """
-    inp = _read_inp_file_raw(filename)
     if ignore_gui_sections:
         if ignore_sections is None:
             ignore_sections = list()
         ignore_sections += GUI_SECTIONS
 
+    # from mp.helpers.check_time import Timer
+    # with Timer():
+    inp = _read_inp_file_raw(filename)
+    # with Timer():
+    # inp = _read_inp_file_raw_OLD(filename)
+    # exit()
     inp = _convert_sections(inp, ignore_sections=ignore_sections, convert_sections=convert_sections,
                             custom_converter=custom_converter)
     return inp

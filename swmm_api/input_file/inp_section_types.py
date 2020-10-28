@@ -47,4 +47,15 @@ SECTION_TYPES = {
     PUMPS: Pump,
     PATTERNS: Pattern,
     POLLUTANTS: Pollutant,
+    CONTROLS: Control,
 }
+
+GUI_SECTIONS = [
+    MAP,
+    COORDINATES,
+    VERTICES,
+    POLYGONS,
+    SYMBOLS,
+    LABELS,
+    BACKDROP,
+]

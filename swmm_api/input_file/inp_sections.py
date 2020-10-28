@@ -966,7 +966,8 @@ class DryWeatherFlow(BaseSectionObject):
     """
     index = ['Node', 'kind']
 
-    def __init__(self, Node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN, pattern5=NaN):
+    def __init__(self, Node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN,
+                 pattern5=NaN, pattern6=NaN, pattern7=NaN):
         """Specifies dry weather flow and its quality entering the drainage system at specific nodes.
 
         The actual dry weather input will equal the product of the baseline value and any adjustment factors
@@ -1580,3 +1581,116 @@ class Transect(BaseSectionObject):
 #                 else:
 #                     new_lines[subcat]['Pollutant'].append(a)
 #                     new_lines[subcat]['InitBuildup'].append(b)
+
+
+class Control(BaseSectionObject):
+    """
+    Section:
+        [CONTROLS]
+
+    Purpose:
+        Determines how pumps and regulators will be adjusted based on simulation time or
+        conditions at specific nodes and links.
+
+    Formats:
+        Each control rule is a series of statements of the form:
+        RULE ruleID
+        IF condition_1
+        AND condition_2
+        OR condition_3
+        AND condition_4
+        Etc.
+        THEN action_1
+        AND action_2
+        Etc.
+        ELSE action_3
+        AND action_4
+        Etc.
+        PRIORITY value
+
+    Remarks:
+        RuleID an ID label assigned to the rule.
+        condition_n a condition clause.
+        action_n an action clause.
+        value a priority value (e.g., a number from 1 to 5).
+
+        A condition clause of a Control Rule has the following format:
+            Object Name Attribute Relation Value
+
+        where Object is a category of object, Name is the object’s assigned ID name,
+        Attribute is the name of an attribute or property of the object, Relation is a
+        relational operator (=, <>, <, <=, >, >=), and Value is an attribute value.
+
+        Some examples of condition clauses are:
+            NODE N23 DEPTH > 10
+            PUMP P45 STATUS = OFF
+            SIMULATION TIME = 12:45:00
+
+        The objects and attributes that can appear in a condition clause are as follows:
+    """
+    index = 'label'
+
+    class Clauses:
+        __class__ = 'Clauses'
+        RULE = 'RULE'
+        IF = 'IF'
+        THEN = 'THEN'
+        PRIORITY = 'PRIORITY'
+        AND = 'AND'
+        OR = 'OR'
+
+    def __init__(self, label, conditions, actions, priority=0):
+        self.label = str(label)
+        self.conditions = conditions
+        self.actions = actions
+        self.priority = int(priority)
+
+    @classmethod
+    def convert_lines(cls, lines):
+        """multiple lines for one entry"""
+        new_lines = list()
+        new_obj = list()
+        is_condition = False
+        is_action = False
+        for line in lines:
+            if line[0] == cls.Clauses.RULE:
+                if new_obj:
+                    new_lines.append(new_obj)
+                    new_obj = list()
+                new_obj.append(line[1])
+                is_action = False
+
+            elif line[0] == cls.Clauses.IF:
+                new_obj.append([line[1:]])
+                is_condition = True
+
+            elif line[0] == cls.Clauses.THEN:
+                new_obj.append([line[1:]])
+                is_condition = False
+                is_action = True
+
+            elif line[0] == cls.Clauses.PRIORITY:
+                new_obj.append(line[1])
+                is_action = False
+
+            elif is_condition:
+                new_obj[-1].append(line)
+
+            elif is_action:
+                new_obj[-1].append(line)
+
+        new_lines.append(new_obj)
+
+        # sec_lines = list()
+        for line in new_lines:
+            # sec_lines.append()
+            yield cls(*line)
+
+        # return sec_lines
+
+    def inp_line(self):
+        s = '{} {}\n'.format(self.Clauses.RULE, self.label)
+        s += '{} {}\n'.format(self.Clauses.IF, '\n'.join([' '.join(c) for c in self.conditions]))
+        s += '{} {}\n'.format(self.Clauses.THEN, '\n'.join([' '.join(a) for a in self.actions]))
+        s += '{} {}\n'.format(self.Clauses.PRIORITY, self.priority)
+        return s

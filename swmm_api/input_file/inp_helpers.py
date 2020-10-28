@@ -180,6 +180,7 @@ class InpSection(UserDict_):
         elif isinstance(index, type):
             if issubclass(index, BaseSectionObject):
                 self.index = index.index
+
         UserDict_.__init__(self)
 
     def append(self, item):
@@ -209,6 +210,9 @@ class InpSection(UserDict_):
             InpSection: of one section
         """
         inp_section = cls(section_class)
+
+        if isinstance(lines, str):
+            lines = txt_to_lines(lines)
 
         if hasattr(section_class, 'convert_lines'):
             for section_class_line in section_class.convert_lines(lines):
@@ -320,3 +324,17 @@ def dataframe_to_inp_string(df):
                 # c.index.levels[0].name = ';' + c.index.levels[0].name
 
     return c.applymap(type2str).to_string(sparsify=False, line_width=999999)
+
+
+def txt_to_lines(content):
+    for line in content.split('\n'):
+        # ;; section comment
+        # ; object comment / either inline(at the end of the line) or before the line
+        # if ';' in line:
+        #     line
+        line = line.split(';')[0]
+        line = line.strip()
+        if line == '':  # ignore empty and comment lines
+            continue
+        else:
+            yield line.split()

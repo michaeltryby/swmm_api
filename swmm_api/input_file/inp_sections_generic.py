@@ -3,55 +3,8 @@ import re
 from pandas import DataFrame, to_datetime
 
 from .helpers.type_converter import infer_type, type2str
-from .inp_helpers import InpSectionGeneric, UserDict_, dataframe_to_inp_string, InpSection
-
-
-# class Title(InpSectionGeneric):
-#     """
-#     Section:
-#         [TITLE]
-#
-#     Purpose:
-#         Attaches a descriptive title to the problem being analyzed.
-#
-#     Format:
-#         Any number of lines may be entered. The first line will be used as a page header in the output report.
-#
-#     Args:
-#         lines (list):
-#
-#     Returns:
-#         str: the title
-#     """
-#
-#     def __init__(self, title=''):
-#         self.title = title
-#
-#     @classmethod
-#     def from_lines(cls, lines):
-#         title = '\n'.join([' '.join([str(word) for word in line]) for line in lines])
-#         return cls(title)
-#
-#     def __repr__(self):
-#         return self.title
-#
-#     def __str__(self):
-#         return self.title
-#
-#     def to_inp(self, fast=False):
-#         return self.title
+from .inp_helpers import InpSectionGeneric, UserDict_, dataframe_to_inp_string, InpSection, txt_to_lines
 from .inp_sections import Transect
-
-
-def _str_to_lines(content):
-    lines = list()
-    for line in content.split('\n'):
-        line = line.strip()
-        if line == '' or line.startswith(';'):  # ignore empty and comment lines
-            continue
-        else:
-            lines.append(line.split())
-    return lines
 
 
 def convert_title(lines):
@@ -71,8 +24,11 @@ def convert_title(lines):
     Returns:
         str: the title
     """
-    title = '\n'.join([' '.join([str(word) for word in line]) for line in lines])
-    return title
+    if isinstance(lines, str):
+        return lines
+    else:
+        title = '\n'.join([' '.join([str(word) for word in line]) for line in lines])
+        return title
 
 
 def convert_options(lines):
@@ -133,6 +89,9 @@ def convert_options(lines):
     Returns:
         dict: options
     """
+    if isinstance(lines, str):
+        lines = txt_to_lines(lines)
+
     options = dict()
     for line in lines:
         label = line.pop(0)
@@ -141,7 +100,7 @@ def convert_options(lines):
     return options
 
 
-def convert_report(lines):
+class ReportSection(UserDict_, InpSectionGeneric):
     """
     Section:
         [REPORT]
@@ -192,26 +151,6 @@ def convert_report(lines):
     Returns:
         dict: report
     """
-    options = {}
-    for line in lines:
-        label = line.pop(0)
-        if len(line) == 1:
-            value = infer_type(line[0])
-
-        elif (label == 'LID') and (len(line) == 3):
-            value = {'Name': line[0],
-                     'Subcatch': line[1],
-                     'Fname': line[2]}
-
-        else:
-            value = infer_type(line)
-
-        options[label] = value
-
-    return options
-
-
-class ReportSection(UserDict_, InpSectionGeneric):
     def __init__(self):
         self.INPUT = False
         self.CONTINUITY = True
@@ -226,6 +165,9 @@ class ReportSection(UserDict_, InpSectionGeneric):
 
     @classmethod
     def from_lines(cls, lines):
+        if isinstance(lines, str):
+            lines = txt_to_lines(lines)
+
         rep = cls()
 
         for line in lines:
@@ -347,6 +289,10 @@ def convert_evaporation(lines):
     Returns:
         dict: evaporation_options
     """
+
+    if isinstance(lines, str):
+        lines = txt_to_lines(lines)
+
     options = {}
     for line in lines:
 
@@ -450,6 +396,10 @@ def convert_temperature(lines):
     sub-areas. The ADC parameters will default to 1.0 (meaning no depletion) if no data
     are supplied for a particular type of sub-area.
     """
+
+    if isinstance(lines, str):
+        lines = txt_to_lines(lines)
+
     new_lines = dict()
     for line in lines:
 
@@ -573,6 +523,9 @@ class TimeseriesSection(UserDict_, InpSectionGeneric):
 
     @classmethod
     def from_lines(cls, lines):
+        if isinstance(lines, str):
+            lines = txt_to_lines(lines)
+
         new = cls()
         old_date = None
         new_lines = new._data
@@ -924,6 +877,9 @@ def convert_loadings(lines):
     Returns:
         pandas.DataFrame:
     """
+    if isinstance(lines, str):
+        lines = txt_to_lines(lines)
+
     new_lines = {}
     for line in lines:
 
@@ -967,6 +923,9 @@ class CoordinatesSection(UserDict_, InpSectionGeneric):
 
     @classmethod
     def from_lines(cls, lines):
+        if isinstance(lines, str):
+            lines = txt_to_lines(lines)
+
         new = cls()
         for line in lines:
             node, x, y = line
@@ -1052,6 +1011,9 @@ class VerticesSection(UserDict_, InpSectionGeneric):
 
     @classmethod
     def from_lines(cls, lines):
+        if isinstance(lines, str):
+            lines = txt_to_lines(lines)
+
         new = cls()
         for line in lines:
             link, x, y = line
@@ -1153,6 +1115,9 @@ def convert_map(lines):
     Returns:
         dict:
     """
+    if isinstance(lines, str):
+        lines = txt_to_lines(lines)
+
     new_lines = {}
     for line in lines:
         name = line[0]
@@ -1179,6 +1144,9 @@ class TagsSection(UserDict_, InpSectionGeneric):
 
     @classmethod
     def from_lines(cls, lines):
+        if isinstance(lines, str):
+            lines = txt_to_lines(lines)
+
         # TAGS AS DATAFRAME
         # tags = DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
         new = cls()
@@ -1215,11 +1183,15 @@ class TagsSection(UserDict_, InpSectionGeneric):
 
 
 class TransectSection(InpSection):
+    """only fast=Ture is possible; the rest is the same as in InpSection"""
     def __init__(self):
         InpSection.__init__(self, Transect)
 
     @classmethod
     def from_lines(cls, lines, section_class=None):
+        if isinstance(lines, str):
+            lines = txt_to_lines(lines)
+
         inp_section = cls()
         for section_class_line in Transect.convert_lines(lines):
             inp_section.append(section_class_line)
