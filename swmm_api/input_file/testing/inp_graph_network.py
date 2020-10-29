@@ -1,7 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from ..helpers.sections import *
+from swmm_api.input_file.inp_sections.labels import *
 from ..inp_sections_generic import CoordinatesSection
 from ..inp_sections import Outfall
 

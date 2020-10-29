@@ -2,9 +2,9 @@ import re
 
 from pandas import DataFrame, to_datetime
 
-from .helpers.type_converter import infer_type, type2str
-from .inp_helpers import InpSectionGeneric, UserDict_, dataframe_to_inp_string, InpSection, txt_to_lines
-from .inp_sections import Transect
+from .indices import Indices
+from ..helpers.type_converter import infer_type, type2str
+from ..inp_helpers import InpSectionGeneric, UserDict_, txt_to_lines
 
 
 def convert_title(lines):
@@ -151,18 +151,100 @@ class ReportSection(UserDict_, InpSectionGeneric):
     Returns:
         dict: report
     """
-    def __init__(self):
-        self.INPUT = False
-        self.CONTINUITY = True
-        self.FLOWSTATS = True  # False: no max values in summary tables
-        self.CONTROLS = False
-        self.SUBCATCHMENTS = None
-        self.NODES = None
-        self.LINKS = None
-        self.LID = None
-        UserDict_.__init__(self)
-        self._data = vars(self)
+    class Options:
+        INPUT = 'INPUT'
+        CONTINUITY = 'CONTINUITY'
+        FLOWSTATS = 'FLOWSTATS'
+        CONTROLS = 'CONTROLS'
+        SUBCATCHMENTS = 'SUBCATCHMENTS'
+        NODES = 'NODES'
+        LINKS = 'LINKS'
+        LID = 'LID'
 
+    @property
+    def INPUT(self):
+        if self.Options.INPUT in self:
+            return self[self.Options.INPUT]
+        else:
+            return True
+        
+    @INPUT.setter
+    def INPUT(self, value):
+        if self.Options.INPUT in self:
+            self[self.Options.INPUT] = value
+
+    @property
+    def FLOWSTATS(self):
+        if self.Options.FLOWSTATS in self:
+            return self[self.Options.FLOWSTATS]
+        else:
+            return True
+
+    @FLOWSTATS.setter
+    def FLOWSTATS(self, value):
+        if self.Options.FLOWSTATS in self:
+            self[self.Options.FLOWSTATS] = value
+
+    @property
+    def CONTROLS(self):
+        if self.Options.CONTROLS in self:
+            return self[self.Options.CONTROLS]
+        else:
+            return False
+
+    @CONTROLS.setter
+    def CONTROLS(self, value):
+        if self.Options.CONTROLS in self:
+            self[self.Options.CONTROLS] = value
+
+    @property
+    def SUBCATCHMENTS(self):
+        if self.Options.SUBCATCHMENTS in self:
+            return self[self.Options.SUBCATCHMENTS]
+        else:
+            return None
+
+    @SUBCATCHMENTS.setter
+    def SUBCATCHMENTS(self, value):
+        if self.Options.SUBCATCHMENTS in self:
+            self[self.Options.SUBCATCHMENTS] = value
+
+    @property
+    def NODES(self):
+        if self.Options.NODES in self:
+            return self[self.Options.NODES]
+        else:
+            return None
+
+    @NODES.setter
+    def NODES(self, value):
+        if self.Options.NODES in self:
+            self[self.Options.NODES] = value
+
+    @property
+    def LINKS(self):
+        if self.Options.LINKS in self:
+            return self[self.Options.LINKS]
+        else:
+            return None
+
+    @LINKS.setter
+    def LINKS(self, value):
+        if self.Options.LINKS in self:
+            self[self.Options.LINKS] = value
+    
+    @property
+    def LID(self):
+        if self.Options.LID in self:
+            return self[self.Options.LID]
+        else:
+            return None
+
+    @LID.setter
+    def LID(self, value):
+        if self.Options.LID in self:
+            self[self.Options.LID] = value
+    
     @classmethod
     def from_lines(cls, lines):
         if isinstance(lines, str):
@@ -175,7 +257,7 @@ class ReportSection(UserDict_, InpSectionGeneric):
             if len(line) == 1:
                 value = infer_type(line[0])
 
-            elif (label == 'LID') and (len(line) == 3):
+            elif (label == cls.Options.LID) and (len(line) == 3):
                 value = {'Name': line[0],
                          'Subcatch': line[1],
                          'Fname': line[2]}
@@ -183,15 +265,19 @@ class ReportSection(UserDict_, InpSectionGeneric):
             else:
                 value = infer_type(line)
 
-            if label in ['SUBCATCHMENTS', 'NODES', 'LINKS', 'LID']:
+            if label in [cls.Options.SUBCATCHMENTS,
+                         cls.Options.NODES,
+                         cls.Options.LINKS,
+                         cls.Options.LID]:
                 if isinstance(value, str) and (value.upper() == 'ALL'):
                     pass
                 elif value is None:
                     pass
                 elif not isinstance(value, list):
                     value = [value]
-
-            if isinstance(rep[label], list):
+            if label not in rep:
+                rep[label] = value
+            elif isinstance(rep[label], list):
                 rep[label] += value
             else:
                 rep[label] = value
@@ -199,17 +285,14 @@ class ReportSection(UserDict_, InpSectionGeneric):
 
     def to_inp(self, fast=False):
         f = ''
-        section = vars(self).copy()
-        section.pop('_data')
-
-        max_len = len(max(section.keys(), key=len)) + 2
+        max_len = len(max(self.keys(), key=len)) + 2
 
         def _dict_format(key, value):
             return '{key}{value}'.format(key=key.ljust(max_len),
                                          value=type2str(value) + '\n')
 
-        for sub in section:
-            value = section[sub]
+        for sub in self:
+            value = self[sub]
             if value is None:
                 continue
 
@@ -503,8 +586,8 @@ class TimeseriesSection(UserDict_, InpSectionGeneric):
         HY1 32:10 0 34.0 57 35.33 85 48.67 24 50 0
     """
 
-    def __init__(self):
-        UserDict_.__init__(self)
+    # def __init__(self, d=None, **kwargs):
+    #     UserDict_.__init__(self, d=d, **kwargs)
 
     @staticmethod
     def _line_split(line):
@@ -721,8 +804,8 @@ class CurvesSection(UserDict_, InpSectionGeneric):
 
     """
 
-    def __init__(self):
-        UserDict_.__init__(self)
+    # def __init__(self):
+    #     UserDict_.__init__(self)
 
     def copy(self):
         new = CurvesSection()
@@ -767,6 +850,9 @@ class CurvesSection(UserDict_, InpSectionGeneric):
 
     @classmethod
     def from_lines(cls, lines):
+        if isinstance(lines, str):
+            lines = txt_to_lines(lines)
+
         new_curves = cls()
         new_curves.append_lines(lines)
         return new_curves
@@ -900,247 +986,14 @@ def convert_loadings(lines):
     return frame
 
 
-class CoordinatesSection(UserDict_, InpSectionGeneric):
-    INDEX = 'node'
-    """
-    Section:
-        [COORDINATES]
-
-    Purpose:
-        Assigns X,Y coordinates to drainage system nodes.
-
-    Format:
-        Node Xcoord Ycoord
-
-    Remarks:
-        Node
-            name of node.
-        Xcoord
-            horizontal coordinate relative to origin in lower left of map.
-        Ycoord
-            vertical coordinate relative to origin in lower left of map.
-    """
-
-    @classmethod
-    def from_lines(cls, lines):
-        if isinstance(lines, str):
-            lines = txt_to_lines(lines)
-
-        new = cls()
-        for line in lines:
-            node, x, y = line
-            new._data[node] = {'x': float(x), 'y': float(y)}
-        return new
-
-    def __repr__(self):
-        return self.data_frame.__repr__()
-
-    def __str__(self):
-        return self.to_inp()
-
-    def to_inp(self, fast=False):
-        if self.empty:
-            return '; NO data'
-        if fast:
-            f = ''
-            max_len_name = len(max(self._data.keys(), key=len)) + 2
-            f += '{name} {x} {y}\n'.format(name='; {}'.format(self.INDEX.capitalize()).ljust(max_len_name), x='x', y='y')
-            for node, coords in self._data.items():
-                f += '{name} {x} {y}\n'.format(name=node.ljust(max_len_name), **coords)
-        else:
-            f = dataframe_to_inp_string(self.data_frame)
-        return f
-
-    @property
-    def data_frame(self):
-        return DataFrame.from_dict(self._data, orient='index')
-
-    @classmethod
-    def from_pandas(cls, data, x_name='x', y_name='y'):
-        new = cls()
-        df = data[[x_name, y_name]].rename({x_name: 'x', y_name: 'y'})
-        new._data = df[['x', 'y']].to_dict(orient='index')
-        return new
-
-
-class SymbolSection(CoordinatesSection):
-    INDEX = 'gage'
-    """
-    Section:
-        [SYMBOLS]
-
-    Purpose:
-        Assigns X,Y coordinates to rain gage symbols.
-
-    Format:
-        Gage Xcoord Ycoord
-
-    Remarks:
-        Gage
-            name of rain gage.
-        Xcoord
-            horizontal coordinate relative to origin in lower left of map.
-        Ycoord
-            vertical coordinate relative to origin in lower left of map.
-    """
-
-
-class VerticesSection(UserDict_, InpSectionGeneric):
-    """
-    Section:
-        [VERTICES]
-
-    Purpose:
-        Assigns X,Y coordinates to interior vertex points of curved drainage system links.
-
-    Format:
-        Link Xcoord Ycoord
-
-    Remarks:
-        Node
-            name of link.
-        Xcoord
-            horizontal coordinate of vertex relative to origin in lower left of map.
-        Ycoord
-            vertical coordinate of vertex relative to origin in lower left of map.
-
-        Include a separate line for each interior vertex of the link, ordered from the inlet node to the outlet node.
-
-        Straight-line links have no interior vertices and therefore are not listed in this section.
-    """
-
-    @classmethod
-    def from_lines(cls, lines):
-        if isinstance(lines, str):
-            lines = txt_to_lines(lines)
-
-        new = cls()
-        for line in lines:
-            link, x, y = line
-            if link not in new._data:
-                new._data[link] = list()
-
-            new._data[link].append({'x': float(x), 'y': float(y)})
-        return new
-
-    def __repr__(self):
-        return self.data_frame.__repr__()
-
-    def __str__(self):
-        return self.to_inp()
-
-    def to_inp(self, fast=False):
-        if self.empty:
-            return '; NO data'
-
-        if fast:
-            f = ''
-            max_len_name = len(max(self._data.keys(), key=len)) + 2
-            f += '{name} {x} {y}\n'.format(name='; Link'.ljust(max_len_name), x='x', y='y')
-            for link, vertices in self._data.items():
-                for v in vertices:
-                    f += '{name} {x} {y}\n'.format(name=link.ljust(max_len_name), **v)
-        else:
-            f = dataframe_to_inp_string(self.data_frame)
-        return f
-
-    @property
-    def data_frame(self):
-        rec = list()
-        for link, vertices in self._data.items():
-            for v in vertices:
-                rec.append([link, v['x'], v['y']])
-
-        return DataFrame.from_records(rec).rename(columns={0: 'Link',
-                                                           1: 'x',
-                                                           2: 'y'}).set_index('Link', drop=True)
-
-    @classmethod
-    def from_pandas(cls, data, x_name='x', y_name='y'):
-        new = cls()
-        df = data[[x_name, y_name]].rename({x_name: 'x', y_name: 'y'})
-        new._data = df[['x', 'y']].groupby(df.index).apply(lambda x: x.to_dict('records')).to_dict()
-        return new
-
-
-class PolygonSection(VerticesSection):
-    """
-    Section:
-        [POLYGONS]
-
-    Purpose:
-        Assigns X,Y coordinates to vertex points of polygons that define a subcatchment boundary.
-
-    Format:
-        Link Xcoord Ycoord
-
-    Remarks:
-        Subcat
-            name of subcatchment.
-        Xcoord
-            horizontal coordinate of vertex relative to origin in lower left of map.
-        Ycoord
-            vertical coordinate of vertex relative to origin in lower left of map.
-
-        Include a separate line for each vertex of the subcatchment polygon, ordered in a
-        consistent clockwise or counter-clockwise sequence.
-    """
-
-
-def convert_map(lines):
-    """
-    Section:
-        [MAP]
-
-    Purpose:
-        Provides dimensions and distance units for the map.
-
-    Formats:
-        DIMENSIONS X1 Y1 X2 Y2
-        UNITS FEET / METERS / DEGREES / NONE
-
-    Remarks:
-    X1
-        lower-left X coordinate of full map extent
-    Y1
-        lower-left Y coordinate of full map extent
-    X2
-        upper-right X coordinate of full map extent
-    Y2
-         upper-right Y coordinate of full map extent
-
-    Args:
-        lines (list):
-
-    Returns:
-        dict:
-    """
-    if isinstance(lines, str):
-        lines = txt_to_lines(lines)
-
-    new_lines = {}
-    for line in lines:
-        name = line[0]
-        if name == 'DIMENSIONS':
-            new_lines[name] = {'lower-left X': line[1],
-                               'lower-left Y': line[2],
-                               'upper-right X': line[3],
-                               'upper-right Y': line[4]}
-        else:
-            new_lines[name] = line[1]
-    return new_lines
-
-
 class TagsSection(UserDict_, InpSectionGeneric):
-    """PC-SWMM ?"""
-
-    def __init__(self):
-        UserDict_.__init__(self)
+    # def __init__(self):
+    #     UserDict_.__init__(self)
 
     class Types:
-        Node = 'Node'
-        Subcatch = 'Subcatch'
-        Link = 'Link'
+        Node = Indices.Node
+        Subcatch = Indices.Subcatch
+        Link = Indices.Link
 
     @classmethod
     def from_lines(cls, lines):
@@ -1164,9 +1017,6 @@ class TagsSection(UserDict_, InpSectionGeneric):
         tags_df = dict()
         for type_ in self._data:
             tags_df[type_] = DataFrame.from_dict(self._data[type_], orient='index')
-
-        # df[0].unique()
-        # ['Subcatch', 'Node', 'Link']
         return tags_df
 
     def to_inp(self, fast=False):
@@ -1181,21 +1031,9 @@ class TagsSection(UserDict_, InpSectionGeneric):
                                                                                                             tag)
         return f
 
-
-class TransectSection(InpSection):
-    """only fast=Ture is possible; the rest is the same as in InpSection"""
-    def __init__(self):
-        InpSection.__init__(self, Transect)
-
-    @classmethod
-    def from_lines(cls, lines, section_class=None):
-        if isinstance(lines, str):
-            lines = txt_to_lines(lines)
-
-        inp_section = cls()
-        for section_class_line in Transect.convert_lines(lines):
-            inp_section.append(section_class_line)
-        return inp_section
-
-    def to_inp(self, fast=None):
-        return InpSection.to_inp(self, fast=True)
+    def filter_keys(self, keys, which):
+        """which=one of TagsSection.Types"""
+        new = type(self)()
+        new._data = {k: v for k, v in self.items() if k != which}
+        new._data[which] = {k: self[k] for k in set(self[which].keys()).intersection(keys)}
+        return new

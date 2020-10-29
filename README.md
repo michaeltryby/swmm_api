@@ -20,9 +20,9 @@ pip install swmm-api
 
 ## Read the INP-File
 ```python
-from swmm_api.input_file.helpers.sections import TIMESERIES
+from swmm_api.input_file.inp_sections.labels import TIMESERIES
 from swmm_api.input_file import read_inp_file
-from swmm_api.input_file.inp_sections_generic import TimeseriesSection
+from swmm_api.input_file.inp_sections import TimeseriesSection
 inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])
 
 # convert_sections limits the convertions during the reading of the file to the following section

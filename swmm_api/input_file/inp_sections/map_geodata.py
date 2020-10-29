@@ -1,5 +1,8 @@
-from swmm_api.input_file.inp_sections_generic import CoordinatesSection, VerticesSection, PolygonSection
+from .map_data import CoordinatesSection, VerticesSection, PolygonSection
+from .node_component import Coordinate
+from ..inp_helpers import InpSection
 import geopandas as gpd
+from pandas import DataFrame
 from shapely.geometry import Point, LineString, Polygon
 
 """
@@ -8,16 +11,30 @@ not ready
 """
 
 
-class CoordinatesSectionGeo(CoordinatesSection):
+def coordinates_to_geopandas(section):
+    df = section.data_frame
+    return gpd.GeoSeries(index=df.index,
+                         crs="EPSG:32633",
+                         data=[Point(xy) for xy in zip(df['x'], df['y'])])
+
+
+class CoordinatesSectionGeo(InpSection):
     @property
     def geo_series(self):
-        df = self.data_frame
+        df = self.frame
         return gpd.GeoSeries(index=df.index,
                              crs="EPSG:32633",
                              data=[Point(xy) for xy in zip(df['x'], df['y'])])
 
+    @classmethod
+    def from_geopandas(cls, data):
+        x_name = 'x'
+        y_name = 'y'
+        df = DataFrame.from_dict({x_name: data.geometry.x, y_name: data.geometry.y})
+        return cls.from_frame(df, section_class=Coordinate)
 
-class VerticesSectionGeo(VerticesSection):
+
+class VerticesSectionGeo(InpSection):
     @property
     def geo_series(self):
         geometry = [list(Point(p.values()) for p in points) for points in self.values()]
@@ -28,7 +45,7 @@ class VerticesSectionGeo(VerticesSection):
                              data=geometry)
 
 
-class PolygonSectionGeo(PolygonSection):
+class PolygonSectionGeo(InpSection):
     @property
     def geo_series(self):
         # geometry = [list(Point(p.values()) for p in points) for points in self.values()]

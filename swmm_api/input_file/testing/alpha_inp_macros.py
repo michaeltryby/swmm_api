@@ -1,5 +1,5 @@
 from ..inp_macros import InpMacros
-from ..helpers.sections import *
+from swmm_api.input_file.inp_sections.labels import *
 import numpy as np
 
 

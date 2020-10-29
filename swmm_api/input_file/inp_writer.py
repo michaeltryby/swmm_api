@@ -2,7 +2,7 @@ from pandas import DataFrame, Series, set_option as set_pandas_options
 
 from .inp_helpers import InpSection, dataframe_to_inp_string, InpSectionGeneric
 from .helpers.type_converter import type2str
-from .helpers.sections import *
+from .inp_sections.labels import *
 
 set_pandas_options("display.max_colwidth", 10000)
 
@@ -16,6 +16,7 @@ sections_order = [TITLE,
                   OUTFALLS,
                   STORAGE,
                   DWF,
+                  INFLOWS,
 
                   CONDUITS,
                   WEIRS,
@@ -26,10 +27,10 @@ sections_order = [TITLE,
                   XSECTIONS,
                   TRANSECTS,
 
-                  INFLOWS,
                   CURVES,
                   TIMESERIES,
                   RAINGAGES,
+                  PATTERNS,
 
                   SUBCATCHMENTS,
                   SUBAREAS,
@@ -37,8 +38,7 @@ sections_order = [TITLE,
 
                   POLLUTANTS,
                   LOADINGS,
-
-                  PATTERNS]
+                  ]
 
 
 def _sort_by(key):
@@ -80,7 +80,7 @@ def section_to_string(section, fast=True):
     # ----------------------
     elif isinstance(section, (DataFrame, Series)):  # V0.3
         if section.empty:
-            f += '; NO data'
+            f += ';; NO data'
 
         if isinstance(section, DataFrame):
             f += dataframe_to_inp_string(section)
@@ -110,7 +110,7 @@ def inp2string(inp, fast=True):
     """
     f = ''
     for head in sorted(inp.keys(), key=_sort_by):
-        f += '\n' + ';' + '_' * 100 + '\n' + '[{}]\n'.format(head)
+        f += '\n' + ';;' + '_' * 100 + '\n' + '[{}]\n'.format(head)
         section_data = inp[head]
         f += section_to_string(section_data, fast=fast)
     return f

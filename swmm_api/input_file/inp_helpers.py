@@ -70,12 +70,16 @@ class UserDict_:
     def pop(self, key):
         return self._data.pop(key)
 
+    def __bool__(self):
+        return bool(self._data)
+
 
 ########################################################################################################################
 class BaseSectionObject:
     """base class for all section objects to unify operations
     sections objects only have __init__ with object parameters"""
     index = ''
+    table_inp_export = True
 
     def get(self, key):
         if isinstance(key, list):
@@ -173,14 +177,18 @@ class InpSection(UserDict_):
     """each section of the .inp file is converted to such a section"""
 
     def __init__(self, index):
+        self.table_inp_export = True
         if isinstance(index, str):
+            print('Warning, InpSection.__init__(mit string)')
             self.index = index
         if isinstance(index, list):
             self.index = index
+            print('Warning, InpSection.__init__(mit list)')
         elif isinstance(index, type):
             if issubclass(index, BaseSectionObject):
                 self.index = index.index
 
+                self.table_inp_export = index.table_inp_export
         UserDict_.__init__(self)
 
     def append(self, item):
@@ -215,11 +223,13 @@ class InpSection(UserDict_):
             lines = txt_to_lines(lines)
 
         if hasattr(section_class, 'convert_lines'):
+            # each object has multiple lines
             for section_class_line in section_class.convert_lines(lines):
                 inp_section.append(section_class_line)
             return inp_section
 
         # -----------------------
+        # each line is a object
         for line in lines:
             line = infer_type(line)
             inp_section.append(section_class.from_line(*line))
@@ -260,14 +270,17 @@ class InpSection(UserDict_):
         Returns:
             str: .inp file string
         """
+        if self.empty:
+            return ';; No Data'
+
+        if not self.table_inp_export:
+            fast = True
+
         if fast:
-            if not self.empty:
-                s = ''
-                for i in self.values():
-                    s += i.inp_line() + '\n'
-                return s
-            else:
-                return ''
+            s = ''
+            for i in self.values():
+                s += i.inp_line() + '\n'
+            return s
 
         else:
             return dataframe_to_inp_string(self.frame)
@@ -284,6 +297,14 @@ class InpSection(UserDict_):
         a = np.vstack((df.index.values, df.values.T)).T
         return cls.from_lines(a, section_class)
         # return cls.from_lines([line.split() for line in dataframe_to_inp_string(df).split('\n')], section_class)
+
+    def filter_keys(self, keys, by=None):
+        new = type(self)(self.index)
+        if by is not None:
+            new._data = {k: self[k] for k in self.keys() if self[k][by] in keys}
+        else:
+            new._data = {k: self[k] for k in set(self.keys()).intersection(keys)}
+        return new
 
 
 class InpData(UserDict_):
@@ -302,23 +323,24 @@ def dataframe_to_inp_string(df):
     Returns:
         str: .inp file conform string for one section
     """
+    comment_sign = ';;'
     if df.empty:
-        return '; NO data'
+        return ';; NO data'
 
     c = df.copy()
     if c.columns.name is None:
-        c.columns.name = ';'
+        c.columns.name = comment_sign
     else:
-        if not c.columns.name.startswith(';'):
-            c.columns.name = ';' + c.columns.name
+        if not c.columns.name.startswith(comment_sign):
+            c.columns.name = comment_sign + c.columns.name
 
     if c.index.name is not None:
-        if not c.index.name.startswith(';'):
-            c.index.name = ';' + c.index.name
+        if not c.index.name.startswith(comment_sign):
+            c.index.name = comment_sign + c.index.name
 
     if c.index._typ == 'multiindex':
         if c.index.names is not None:
-            if not c.index.levels[0].name.startswith(';'):
+            if not c.index.levels[0].name.startswith(comment_sign):
                 c.index.set_names(';' + c.index.names[0], level=0, inplace=True)
                 # because pandas 1.0
                 # c.index.levels[0].name = ';' + c.index.levels[0].name

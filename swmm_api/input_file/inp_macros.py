@@ -3,15 +3,13 @@ from os import path, remove, mkdir
 from warnings import warn
 from pandas import Series, DataFrame, to_datetime
 
-from .inp_section_types import SECTION_TYPES
-from .inp_sections_generic import CurvesSection, ReportSection
-from .inp_sections import CrossSectionCustom, Conduit, Storage, Outfall
+from .inp_sections.types import SECTION_TYPES
+from .inp_sections import CrossSectionCustom, Storage, CurvesSection, Outfall, labels as sec, TagsSection
 from ..run import swmm5_run
 from ..output_file import SwmmOutHandler, parquet
 from .inp_reader import read_inp_file
 from .inp_helpers import InpData, InpSection
 from .inp_writer import write_inp_file, inp2string, section_to_string
-from .helpers import sections as sec
 from .helpers.type_converter import offset2delta
 
 
@@ -328,18 +326,6 @@ def reduce_raingages(inp):
 def combined_subcatchment_infos(inp):
     return inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
 
-#
-# def coordinates_frame(inp):
-#     return DataFrame.from_records(inp[COORDINATES]).rename(columns={0: 'name',
-#                                                                     1: 'x',
-#                                                                     2: 'y'}).set_index('name', drop=True).astype(float)
-#
-#
-# def vertices_frame(inp):
-#     return DataFrame.from_records(inp[VERTICES]).rename(columns={0: 'name',
-#                                                                  1: 'x',
-#                                                                  2: 'y'}).set_index('name', drop=True).astype(float)
-
 
 def find_node(inp, label):
     for kind in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
@@ -450,3 +436,152 @@ def junction_to_outfall(inp, label, *args, **kwargs):
     if sec.OUTFALLS not in inp:
         inp[sec.OUTFALLS] = InpSection(Outfall)
     inp[sec.OUTFALLS].append(Outfall(Name=label, Elevation=j.Elevation, *args, **kwargs))
+
+
+def remove_empty_sections(inp):
+    new_inp = inp.copy()
+    for section in new_inp:
+        if not new_inp[section]:
+            del new_inp[section]
+    return new_inp
+
+
+from mp.helpers.check_time import Timer
+
+
+def filter_nodes(inp_original, final_nodes):
+    inp = inp_original.copy()
+    for section in [sec.JUNCTIONS,
+                    sec.OUTFALLS,
+                    sec.STORAGE]:  # ignoring dividers
+        if section in inp:
+            inp[section] = inp[section].filter_keys(final_nodes)
+
+    # __________________________________________
+    for section in [sec.INFLOWS, sec.DWF]:
+        if section in inp:
+            inp[section] = inp[section].filter_keys(final_nodes, by='Node')
+
+    # __________________________________________
+    if sec.TAGS in inp:
+        inp[sec.TAGS] = inp[sec.TAGS].filter_keys(final_nodes, which=TagsSection.Types.Node)
+
+    # __________________________________________
+    if sec.COORDINATES in inp:
+        new_coordinates = list()
+        for line in inp[sec.COORDINATES]:
+            name = line[0]
+            if name in final_nodes:
+                new_coordinates.append(line)
+        inp[sec.COORDINATES] = new_coordinates
+
+    # __________________________________________
+    inp = remove_empty_sections(inp)
+    return inp
+
+
+def filter_links(inp_original, final_nodes):
+    inp = inp_original.copy()
+    # __________________________________________
+    final_links = list()
+    for section in [sec.CONDUITS,
+                    sec.PUMPS,
+                    sec.ORIFICES,
+                    sec.WEIRS,
+                    sec.OUTLETS]:
+        if section not in inp:
+            continue
+        new_section = InpSection(inp[section].index)
+        for name, thing in inp[section].items():
+            if thing.ToNode in final_nodes:
+                new_section.append(thing)
+                final_links.append(name)
+
+        if new_section.empty:
+            del inp[section]
+        else:
+            inp[section] = new_section
+
+    # __________________________________________
+    for section in [sec.XSECTIONS, sec.LOSSES]:
+        if section not in inp:
+            continue
+        new_section = InpSection(inp[section].index)
+        for name, thing in inp[section].items():
+            if thing.Link in final_links:
+                new_section.append(thing)
+
+        if new_section.empty:
+            del inp[section]
+        else:
+            inp[section] = new_section
+
+    # __________________________________________
+    # section_filter[TAGS],  # node und link
+    if sec.TAGS in inp:
+        old_tags = inp[sec.TAGS][TagsSection.Types.Link].copy()
+        for name in old_tags:
+            if name not in final_links:
+                inp[sec.TAGS][TagsSection.Types.Link].pop(name)
+
+    # __________________________________________
+    if sec.VERTICES in inp:
+        new_verticies = list()
+        for line in inp[sec.VERTICES]:
+            name = line[0]
+            if name in final_links:
+                new_verticies.append(line)
+        inp[sec.VERTICES] = new_verticies
+
+    return inp
+
+
+def filter_subcatchments(inp_original, final_nodes):
+    inp = inp_original.copy()
+
+    # __________________________________________
+    for section in [sec.SUBCATCHMENTS]:
+        if section not in inp:
+            continue
+        new_section = InpSection(inp[section].index)
+        for name, thing in inp[section].items():
+            if thing.Outlet in final_nodes:
+                new_section.append(thing)
+
+        if new_section.empty:
+            del inp[section]
+        else:
+            inp[section] = new_section
+
+    # __________________________________________
+    for section in [sec.SUBAREAS, sec.INFILTRATION]:
+        if section not in inp:
+            continue
+        new_section = InpSection(inp[section].index)
+        for name, thing in inp[section].items():
+            if thing.subcatchment in inp[sec.SUBCATCHMENTS]:
+                new_section.append(thing)
+
+        if new_section.empty:
+            del inp[section]
+        else:
+            inp[section] = new_section
+
+    # __________________________________________
+    # section_filter[TAGS],  # node und link
+    if sec.TAGS in inp:
+        old_tags = inp[sec.TAGS][TagsSection.Types.Subcatch].copy()
+        for name in old_tags:
+            if name not in inp[sec.SUBCATCHMENTS]:
+                inp[sec.TAGS][TagsSection.Types.Link].pop(name)
+
+    # __________________________________________
+    if sec.POLYGONS in inp:
+        new_poly = list()
+        for line in inp[sec.POLYGONS]:
+            name = line[0]
+            if name in inp[sec.SUBCATCHMENTS]:
+                new_poly.append(line)
+        inp[sec.POLYGONS] = new_poly
+
+    return inp

@@ -1,12 +1,11 @@
-from .inp_section_types import SECTION_TYPES, GUI_SECTIONS
-from .inp_sections_generic import (convert_title, convert_options, convert_evaporation, convert_temperature,
-                                   convert_loadings, convert_map)
-from .inp_helpers import InpSection, InpData
-from .helpers.sections import *
-from .helpers.custom_iterator import custom_iter
-
 import re
 from inspect import isclass, isfunction
+
+from .inp_sections.labels import *
+from .helpers.custom_iterator import custom_iter
+from .inp_helpers import InpSection, InpData, txt_to_lines
+from .inp_sections.types import SECTION_TYPES, GUI_SECTIONS
+from .inp_sections import (convert_title, convert_options, convert_evaporation, convert_temperature, convert_loadings,)
 
 """read SWMM .inp file and convert the data to a more usable format"""
 
@@ -18,7 +17,6 @@ CONVERTER.update({
     EVAPORATION: convert_evaporation,  # dict
     TEMPERATURE: convert_temperature,  # dict
     LOADINGS: convert_loadings,  # pandas.DataFrame
-    MAP: convert_map,  # dict
 })
 
 
@@ -99,7 +97,9 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
     if custom_converter is not None:
         converter.update(custom_converter)
 
-    for head, lines in custom_iter(inp.items(), desc='convert sections'):
+    # iter_ = custom_iter(inp.items(), desc='convert sections')
+    iter_ = inp.items()
+    for head, lines in iter_:
         if (convert_sections is not None) and (head not in convert_sections):
             continue
 
@@ -107,7 +107,8 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
             continue
 
         if head in converter:
-            lines = custom_iter(lines, desc=head)
+            # lines = list(txt_to_lines(lines))
+            # lines = custom_iter(lines, desc=head)
 
             section_ = converter[head]
 
@@ -116,12 +117,11 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
 
             elif isclass(section_):  # section_ ... type/class
                 if hasattr(section_, 'from_lines'):
-                    inp[head] = section_.from_lines(lines)  # each object has multiple lines
-                    # REPORT, TIMESERIES, CURVES, Transect
-                    # COORDS, VERTICES, TAGS,
+                    inp[head] = section_.from_lines(lines)  # section has multiple options over multiple lines
+                    # REPORT, TIMESERIES, CURVES, TAGS
                 else:
-                    inp[head] = InpSection.from_lines(lines, section_)  # each line is a object
-                    # Transect
+                    # each line is a object OR each object has multiple lines
+                    inp[head] = InpSection.from_lines(lines, section_)
 
             else:
                 raise NotImplemented()
