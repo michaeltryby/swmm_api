@@ -378,14 +378,14 @@ class Pump(BaseSectionObject):
         ON = 'ON'
         OFF = 'OFF'
 
-    def __init__(self, Name, FromNode, ToNode, Pcurve, Status='ON', Startup=0, Shutoff=0):
+    def __init__(self, Name, FromNode, ToNode, Curve, Status='ON', Startup=0, Shutoff=0):
         """Identifies each pump link of the drainage system.
 
         Args:
             Name (str): name assigned to pump link.
             FromNode (str): name of node on inlet side of pump.
             ToNode (str): name of node on outlet side of pump.
-            Pcurve (str): name of pump curve listed in the [CURVES] section of the input.
+            Curve (str): name of pump curve listed in the [CURVES] section of the input.
             Status (str): status at start of simulation (either ON or OFF; default is ON).
             Startup (float): depth at inlet node when pump turns on (ft or m) (default is 0).
             Shutoff (float): depth at inlet node when pump shuts off (ft or m) (default is 0).
@@ -393,7 +393,7 @@ class Pump(BaseSectionObject):
         self.Name = str(Name)
         self.FromNode = str(FromNode)
         self.ToNode = str(ToNode)
-        self.Pcurve = str(Pcurve)
+        self.Curve = str(Curve)
         self.Status = str(Status)
         self.Startup = float(Startup)
         self.Shutoff = float(Shutoff)

@@ -4,6 +4,7 @@ from warnings import warn
 from pandas import Series, DataFrame, to_datetime
 import numpy as np
 
+from .inp_sections.identifiers import IDENTIFIERS
 from .inp_sections.types import SECTION_TYPES
 from .inp_sections import *
 from .inp_sections import labels as sec
@@ -267,70 +268,6 @@ class InpMacros(InpData):
         junction_to_storage(self, label, *args, **kwargs)
 
 
-def reduce_curves(inp):
-    """
-
-    :type inp: InpData
-    """
-    if sec.CURVES not in inp:
-        return inp
-
-    # ---------------------
-    def _reduce(all_curves, kind, curves):
-        if kind not in all_curves:
-            return all_curves
-        old_curves = all_curves.pop(kind)
-
-        new_curves = {}
-        for c in curves:
-            if c in old_curves:
-                new_curves.update({c: old_curves[c]})
-
-        all_curves.update({kind: new_curves})
-        return all_curves
-
-    # ---------------------
-    inp[sec.CURVES] = _reduce(inp[sec.CURVES],
-                              kind=CurvesSection.TYPES.SHAPE,
-                              curves=set(
-                                [xs.Curve for xs in inp[sec.XSECTIONS].values() if isinstance(xs, CrossSectionCustom)]))
-
-    if sec.STORAGE in inp:
-        inp[sec.CURVES] = _reduce(inp[sec.CURVES],
-                                  kind=CurvesSection.TYPES.STORAGE,
-                                  curves=set([st.Curve for st in inp[sec.STORAGE].values() if st.Type == st.Types.TABULAR]))
-
-    # ---------------------
-    if sec.PUMPS in inp:
-        curves = set([pu.Pcurve for pu in inp[sec.PUMPS].values() if pu.Pcurve != '*'])
-        for kind in [CurvesSection.TYPES.PUMP1, CurvesSection.TYPES.PUMP2, CurvesSection.TYPES.PUMP3,
-                     CurvesSection.TYPES.PUMP4]:
-            inp[sec.CURVES] = _reduce(inp[sec.CURVES],
-                                      kind=kind,
-                                      curves=curves)
-    return inp
-
-
-def reduce_raingages(inp):
-    """
-
-    :type inp: InpData
-    """
-    if sec.SUBCATCHMENTS not in inp or sec.RAINGAGES not in inp:
-        return inp
-    needed_raingages = list()
-    for s in inp[sec.SUBCATCHMENTS].values():
-        needed_raingages.append(s.RainGage)
-
-    needed_raingages = set(needed_raingages)
-
-    current_rain_gages = list(inp[sec.RAINGAGES].keys())
-    for rg in current_rain_gages:
-        if rg not in needed_raingages:
-            inp[sec.RAINGAGES].pop(rg)
-
-    return inp
-
 
 def combined_subcatchment_infos(inp):
     return inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
@@ -458,35 +395,63 @@ def remove_empty_sections(inp):
 from mp.helpers.check_time import Timer
 
 
-def filter_nodes(inp_original, final_nodes):
-    inp = inp_original.copy()
+def reduce_curves(inp):
+    """
+    get used CURVES from [STORAGE, OUTLETS, PUMPS and XSECTIONS] and keep only used curves in the section
+
+    Args:
+        inp (InpData): input file data
+
+    Returns:
+        InpData: input file data with filtered CURVES section
+    """
+    if sec.CURVES not in inp:
+        return inp
+    used_curves = set()
+    for section in [sec.STORAGE, sec.OUTLETS, sec.PUMPS, sec.XSECTIONS]:
+        used_curves |= {inp[section][name].Curve for name in inp[section]}
+    inp[sec.CURVES] = inp[sec.CURVES].filter_keys(used_curves)
+    return inp
+
+
+def reduce_raingages(inp):
+    """
+    get used RAINGAGES from SUBCATCHMENTS and keep only used raingages in the section
+
+    Args:
+        inp (InpData): input file data
+
+    Returns:
+        InpData: input file data with filtered RAINGAGES section
+    """
+    if sec.SUBCATCHMENTS not in inp or sec.RAINGAGES not in inp:
+        return inp
+    needed_raingages = {inp[sec.SUBCATCHMENTS][s].RainGage for s in inp[sec.SUBCATCHMENTS]}
+    inp[sec.RAINGAGES] = inp[sec.RAINGAGES].filter_keys(needed_raingages)
+    return inp
+
+
+def filter_nodes(inp, final_nodes):
+    inp_new = inp.copy()
     for section in [sec.JUNCTIONS,
                     sec.OUTFALLS,
-                    sec.STORAGE]:  # ignoring dividers
-        if section in inp:
-            inp[section] = inp[section].filter_keys(final_nodes)
+                    sec.STORAGE,
+                    sec.COORDINATES]:  # ignoring dividers
+        if section in inp_new:
+            inp_new[section] = inp_new[section].filter_keys(final_nodes)
 
     # __________________________________________
     for section in [sec.INFLOWS, sec.DWF]:
-        if section in inp:
-            inp[section] = inp[section].filter_keys(final_nodes, by='Node')
+        if section in inp_new:
+            inp_new[section] = inp_new[section].filter_keys(final_nodes, by=IDENTIFIERS.Node)
 
     # __________________________________________
-    if sec.TAGS in inp:
-        inp[sec.TAGS] = inp[sec.TAGS].filter_keys(final_nodes, which=TagsSection.Types.Node)
+    if sec.TAGS in inp_new:
+        inp_new[sec.TAGS] = inp_new[sec.TAGS].filter_keys(final_nodes, which=TagsSection.Types.Node)
 
     # __________________________________________
-    if sec.COORDINATES in inp:
-        new_coordinates = list()
-        for line in inp[sec.COORDINATES]:
-            name = line[0]
-            if name in final_nodes:
-                new_coordinates.append(line)
-        inp[sec.COORDINATES] = new_coordinates
-
-    # __________________________________________
-    inp = remove_empty_sections(inp)
-    return inp
+    inp_new = remove_empty_sections(inp_new)
+    return inp_new
 
 
 def filter_links(inp_original, final_nodes):
