@@ -1,3 +1,5 @@
+"""predefined input file section header to prevent typos"""
+
 TITLE = 'TITLE'  # project title
 OPTIONS = 'OPTIONS'  # analysis options
 REPORT = 'REPORT'  # output reporting instructions

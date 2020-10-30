@@ -5,10 +5,9 @@ __email__ = "markus.pichler@tugraz.at"
 __version__ = "0.1"
 __license__ = "MIT"
 
-from os import path
-import os
-from sys import platform as _platform
 import subprocess
+from os import path
+from sys import platform as _platform
 from warnings import warn
 
 
@@ -59,42 +58,47 @@ def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False, create_out=True
     cl_script = 'swmm5'
 
     # WINDOWS
-    if _platform == "win32":
-        for script_path in (path.join('C:\\', 'Program Files (x86)', 'EPA SWMM 5.1.013', 'swmm5.exe'),
-                            path.join('C:\\', 'Program Files', 'EPA SWMM 5.1.013', 'swmm5.exe'),
-                            path.join('C:\\', 'Program Files (x86)', 'EPA SWMM 5.1.014', 'swmm5.exe'),
-                            path.join('C:\\', 'Program Files', 'EPA SWMM 5.1.014', 'swmm5.exe')):
-            if path.isfile(script_path):
+    if _platform.startswith("win"):
+        cl_script = None
+        # script_path = '???/swmm5.exe'
+        for program_files in ['Program Files (x86)', 'Program Files']:
+            for version in ['5.1.015', '5.1.014', '5.1.013']:
+                script_path = path.join('C:\\', program_files, 'EPA SWMM {}'.format(version), 'swmm5.exe')
+                if path.isfile(script_path):
+                    cl_script = '"{}"'.format(script_path)
+                    break
+            if cl_script is not None:
                 break
-        cl_script = f'"{script_path}"'
 
     cmd = '{} "{}" "{}" "{}"'.format(cl_script, inp, rpt, out)
 
     # -----------------------
     if init_print:
-        print('_' * 60)
-        # print(cmd)
+        sep = '_' * 100
+        print(sep)
+        print(cmd)
         subprocess.run(cmd, shell=True)
-        print('_' * 60)
+        print(sep)
     else:
         shell_output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         error_log = shell_output.stdout.decode("utf-8")
         if 'error' in error_log:
-            warn('\n'.join(['#' * 100,
-                            'CALL:\n{}\n'.format(shell_output.args),
-                            'RETURN = {}\n'.format(shell_output.returncode),
-                            'OUT:\n',
-                            '-' * 50,
-                            '\n{}'.format(error_log),
-                            '-' * 50,
-                            '#' * 100]))
+            msgs = {
+                'CALL': shell_output.args,
+                'RETURN': shell_output.returncode,
+                'OUT': error_log
+            }
+            if path.isfile(rpt):
+                with open(rpt, 'r') as f:
+                    rpt_content = f.read()
+                msgs['REPORT'] = rpt_content
+            else:
+                msgs['REPORT'] = 'NO Report file created!!!'
 
-            # -------------------------
-            # print report file content
-            with open(rpt, 'r') as f:
-                rpt_content = f.read()
-            raise SWMMRunError(rpt_content)
+            sep = '\n' + '_' * 100 + '\n'
+            error_msg = sep + sep.join('{}:\n  {}'.format(k, v) for k, v in msgs.items())
+            raise SWMMRunError(error_msg)
 
     # -------------------------
     # check if report file is created

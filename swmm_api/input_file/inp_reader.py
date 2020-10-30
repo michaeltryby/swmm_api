@@ -3,9 +3,9 @@ from inspect import isclass, isfunction
 
 from .inp_sections.labels import *
 from .helpers.custom_iterator import custom_iter
-from .inp_helpers import InpSection, InpData, txt_to_lines
+from .inp_helpers import InpSection, InpData
 from .inp_sections.types import SECTION_TYPES, GUI_SECTIONS
-from .inp_sections import (convert_title, convert_options, convert_evaporation, convert_temperature, convert_loadings,)
+from .inp_sections.generic_section import convert_title, convert_options, convert_evaporation, convert_temperature
 
 """read SWMM .inp file and convert the data to a more usable format"""
 
@@ -16,41 +16,7 @@ CONVERTER.update({
     OPTIONS: convert_options,  # dict
     EVAPORATION: convert_evaporation,  # dict
     TEMPERATURE: convert_temperature,  # dict
-    LOADINGS: convert_loadings,  # pandas.DataFrame
 })
-
-
-def _read_inp_file_raw_OLD(filename):
-    """
-    reads full .inp file and splits the lines into a list and each line into a list of strings
-
-    Args:
-        filename (str): path to .inp file
-
-    Returns:
-        InpData: dict-like raw inp-file data (values=list[list[str]])
-    """
-    if isinstance(filename, str):
-        inp_file = open(filename, 'r', encoding='iso-8859-1')
-    else:
-        inp_file = filename
-
-    inp = InpData()
-    lines = inp_file.readlines()
-    inp_file.close()
-    head = None
-    for line in custom_iter(lines, desc='read raw inp-file'):
-        line = line.strip()
-        if (line == '') | line.startswith(';'):  # ignore empty and comment lines
-            continue
-
-        elif line.startswith('[') & line.endswith(']'):  # section head
-            head = line.replace('[', '').replace(']', '').upper()
-            inp[head] = list()
-
-        else:
-            inp[head].append(line.split())
-    return inp
 
 
 def _read_inp_file_raw(filename):
@@ -149,12 +115,7 @@ def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_
             ignore_sections = list()
         ignore_sections += GUI_SECTIONS
 
-    # from mp.helpers.check_time import Timer
-    # with Timer():
     inp = _read_inp_file_raw(filename)
-    # with Timer():
-    # inp = _read_inp_file_raw_OLD(filename)
-    # exit()
     inp = _convert_sections(inp, ignore_sections=ignore_sections, convert_sections=convert_sections,
                             custom_converter=custom_converter)
     return inp

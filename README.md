@@ -8,9 +8,8 @@
 [![docs](https://img.shields.io/static/v1.svg?label=sphinx&message=documentation&color=blue)](https://markuspichler.gitlab.io/swmm_api)
 
 With this package you can read INP-files, manipulate them and write new ones.
-You can run SWMM within the python API and you can read the OUT-file as a pandas DataFrame for further analysis.
-
-This makes the package the perfect way
+You can run swmm within the python api.
+And you can read the OUT-file as a pandas DataFrame for further analysis.
 
 
 ## Install the package:
@@ -22,7 +21,7 @@ pip install swmm-api
 ```python
 from swmm_api.input_file.inp_sections.labels import TIMESERIES
 from swmm_api.input_file import read_inp_file
-from swmm_api.input_file.inp_sections import TimeseriesSection
+from swmm_api.input_file.inp_helpers import InpSection
 inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])
 
 # convert_sections limits the convertions during the reading of the file to the following section
@@ -30,9 +29,8 @@ inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])
 # converting sections helps manipulating the inp file
 # unconverted sections will be loaded as the raw string
 
-sec_timeseries = inp[TIMESERIES]  # type: TimeseriesSection
-timeseries_dict = sec_timeseries.to_pandas  # type: Dict[str, pandas.Series]
-ts = timeseries_dict['regenseries']
+sec_timeseries = inp[TIMESERIES]  # type: InpSection
+ts = inp[TIMESERIES]['regenseries'].frame  # type: pandas.Series
 ```
 see [examples/inp_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/inp_file_reader.ipynb)
 

@@ -1,6 +1,6 @@
-from pandas import DataFrame, Series, set_option as set_pandas_options
+from pandas import set_option as set_pandas_options
 
-from .inp_helpers import InpSection, dataframe_to_inp_string, InpSectionGeneric
+from .inp_helpers import InpSection, InpSectionGeneric
 from .helpers.type_converter import type2str
 from .inp_sections.labels import *
 
@@ -78,15 +78,15 @@ def section_to_string(section, fast=True):
                                        value=type2str(section[sub]) + '\n')
 
     # ----------------------
-    elif isinstance(section, (DataFrame, Series)):  # V0.3
-        if section.empty:
-            f += ';; NO data'
-
-        if isinstance(section, DataFrame):
-            f += dataframe_to_inp_string(section)
-
-        elif isinstance(section, Series):
-            f += section.apply(type2str).to_string()
+    # elif isinstance(section, (DataFrame, Series)):  # V0.3
+    #     if section.empty:
+    #         f += ';; NO data'
+    #
+    #     if isinstance(section, DataFrame):
+    #         f += dataframe_to_inp_string(section)
+    #
+    #     elif isinstance(section, Series):
+    #         f += section.apply(type2str).to_string()
 
     # ----------------------
     elif isinstance(section, (InpSection, InpSectionGeneric)):  # V0.4

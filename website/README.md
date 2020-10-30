@@ -21,7 +21,7 @@ pip install swmm-api
 ```python
 from swmm_api.input_file.inp_sections.labels import TIMESERIES
 from swmm_api.input_file import read_inp_file
-from swmm_api.input_file.inp_sections import TimeseriesSection
+from swmm_api.input_file.inp_helpers import InpSection
 inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])
 
 # convert_sections limits the convertions during the reading of the file to the following section
@@ -29,9 +29,8 @@ inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])
 # converting sections helps manipulating the inp file
 # unconverted sections will be loaded as the raw string
 
-sec_timeseries = inp[TIMESERIES]  # type: TimeseriesSection
-timeseries_dict = sec_timeseries.to_pandas  # type: Dict[str, pandas.Series]
-ts = timeseries_dict['regenseries']
+sec_timeseries = inp[TIMESERIES]  # type: InpSection
+ts = inp[TIMESERIES]['regenseries'].frame  # type: pandas.Series
 ```
 see [examples/inp_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/inp_file_reader.ipynb)
 

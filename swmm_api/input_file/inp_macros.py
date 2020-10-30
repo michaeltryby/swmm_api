@@ -2,15 +2,24 @@ import pickle
 from os import path, remove, mkdir
 from warnings import warn
 from pandas import Series, DataFrame, to_datetime
+import numpy as np
 
 from .inp_sections.types import SECTION_TYPES
-from .inp_sections import CrossSectionCustom, Storage, CurvesSection, Outfall, labels as sec, TagsSection
+from .inp_sections import *
+from .inp_sections import labels as sec
 from ..run import swmm5_run
 from ..output_file import SwmmOutHandler, parquet
 from .inp_reader import read_inp_file
 from .inp_helpers import InpData, InpSection
 from .inp_writer import write_inp_file, inp2string, section_to_string
 from .helpers.type_converter import offset2delta
+
+
+def section_from_frame(df, section_class):
+    # TODO: testing
+    a = np.vstack((df.index.values, df.values.T)).T
+    return InpSection.from_lines(a, section_class)
+    # return cls.from_lines([line.split() for line in dataframe_to_inp_string(df).split('\n')], section_class)
 
 
 def split_inp_to_files(inp_fn, **kwargs):

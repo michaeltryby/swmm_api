@@ -1,11 +1,12 @@
 from numpy import NaN
+from pandas import DataFrame
 
-from .indices import Indices
+from .identifiers import IDENTIFIERS
 from ..inp_helpers import BaseSectionObject
 
 
 class CrossSection(BaseSectionObject):
-    index = Indices.Link
+    identifier =IDENTIFIERS.Link
 
     class Shapes:
         IRREGULAR = 'IRREGULAR'
@@ -129,7 +130,7 @@ class CrossSectionCustom(CrossSection):
 
 
 class Loss(BaseSectionObject):
-    index = Indices.Link
+    identifier =IDENTIFIERS.Link
 
     def __init__(self, Link, Inlet=0, Outlet=0, Average=0, FlapGate=False, SeepageRate=0):
         """
@@ -208,7 +209,7 @@ class Vertices(BaseSectionObject):
 
         Straight-line links have no interior vertices and therefore are not listed in this section.
     """
-    index = Indices.Link
+    identifier =IDENTIFIERS.Link
     table_inp_export = False
 
     def __init__(self, Link,  vertices):
@@ -231,6 +232,14 @@ class Vertices(BaseSectionObject):
                 if last is not None:
                     yield cls(last, vertices)
                 last = Link
-                vertices = list([x, y])
+                vertices = [[x, y]]
         # last
-        yield cls(last, vertices)
+        if last is not None:
+            yield cls(last, vertices)
+
+    def inp_line(self):
+        return '\n'.join(['{}  {} {}'.format(self.Link, x, y) for x, y in self.vertices])
+
+    @property
+    def frame(self):
+        return DataFrame.from_records(self.vertices, columns=['x', 'y'])

@@ -1,8 +1,6 @@
-import re
+from pandas import DataFrame
 
-from pandas import DataFrame, to_datetime
-
-from .indices import Indices
+from .identifiers import IDENTIFIERS
 from ..helpers.type_converter import infer_type, type2str
 from ..inp_helpers import InpSectionGeneric, UserDict_, txt_to_lines
 
@@ -151,6 +149,7 @@ class ReportSection(UserDict_, InpSectionGeneric):
     Returns:
         dict: report
     """
+
     class Options:
         INPUT = 'INPUT'
         CONTINUITY = 'CONTINUITY'
@@ -167,7 +166,7 @@ class ReportSection(UserDict_, InpSectionGeneric):
             return self[self.Options.INPUT]
         else:
             return True
-        
+
     @INPUT.setter
     def INPUT(self, value):
         if self.Options.INPUT in self:
@@ -232,7 +231,7 @@ class ReportSection(UserDict_, InpSectionGeneric):
     def LINKS(self, value):
         if self.Options.LINKS in self:
             self[self.Options.LINKS] = value
-    
+
     @property
     def LID(self):
         if self.Options.LID in self:
@@ -244,7 +243,7 @@ class ReportSection(UserDict_, InpSectionGeneric):
     def LID(self, value):
         if self.Options.LID in self:
             self[self.Options.LID] = value
-    
+
     @classmethod
     def from_lines(cls, lines):
         if isinstance(lines, str):
@@ -377,9 +376,7 @@ def convert_evaporation(lines):
         lines = txt_to_lines(lines)
 
     options = {}
-    for line in lines:
-
-        label = line.pop(0)
+    for label, *line in lines:
         if len(line) == 1:
             value = line[0]
 
@@ -389,11 +386,11 @@ def convert_evaporation(lines):
 
         elif label == 'MONTHLY':
             assert len(line) == 12
-            value = line[1:]
+            value = line
 
         elif label == 'FILE':
             if len(line) == 12:
-                value = line[1:]
+                value = line
             elif len(line) == 0:
                 value = ''
             else:
@@ -534,466 +531,14 @@ def convert_temperature(lines):
     return new_lines
 
 
-class TimeseriesSection(UserDict_, InpSectionGeneric):
-    """
-    Section:
-        [TIMESERIES]
-
-    Purpose:
-        Describes how a quantity varies over time.
-
-    Formats:
-        - Name ( Date ) Hour Value ...
-        - Name Time Value ...
-        - Name FILE Fname
-
-    Remarks:
-        - Name: name assigned to time series.
-        - Date: date in Month/Day/Year format (e.g., June 15, 2001 would be 6/15/2001).
-        - Hour: 24-hour military time (e.g., 8:40 pm would be 20:40) relative to the last date specified
-               (or to midnight of the starting date of the simulation if no previous date was specified).
-        - Time: hours since the start of the simulation, expressed as a decimal number or as hours:minutes.
-        - Value: value corresponding to given date and time.
-        - Fname: name of a file in which the time series data are stored
-
-        There are two options for supplying the data for a time series:
-        i.: directly within this input file section as described by the first two formats
-        ii.: through an external data file named with the third format.
-
-        When direct data entry is used, multiple date-time-value or time-value entries can
-        appear on a line. If more than one line is needed, the table's name must be repeated
-        as the first entry on subsequent lines.
-
-        When an external file is used, each line in the file must use the same formats listed
-        above, except that only one date-time-value (or time-value) entry is allowed per line.
-        Any line that begins with a semicolon is considered a comment line and is ignored.
-        Blank lines are not allowed.
-
-        Note that there are two methods for describing the occurrence time of time series data:
-
-        - as calendar date/time of day (which requires that at least one date, at the start of the series, be entered)
-        - as elapsed hours since the start of the simulation.
-
-        For the first method, dates need only be entered at points in time when a new day occurs.
-
-    Examples:
-        ;Rainfall time series with dates specified
-        TS1 6-15-2001 7:00 0.1 8:00 0.2 9:00 0.05 10:00 0
-        TS1 6-21-2001 4:00 0.2 5:00 0 14:00 0.1 15:00 0 335
-
-        ;Inflow hydrograph - time relative to start of simulation
-        HY1 0 0 1.25 100 2:30 150 3.0 120 4.5 0
-        HY1 32:10 0 34.0 57 35.33 85 48.67 24 50 0
-    """
-
-    # def __init__(self, d=None, **kwargs):
-    #     UserDict_.__init__(self, d=d, **kwargs)
-
-    @staticmethod
-    def _line_split(line):
-        # but don't split quoted text
-        # for convert_timeseries
-        return re.findall(r'[^"\s]\S*|".+?"', line)
-
-    class TYPES:
-        FILE = 'FILE'
-
-    class INDEX:
-        DATETIME = 'Datetime'
-        TIME = 'relTime'
-        HOURS = 'Hours'
-        VALUE = 'Value'
-
-    @classmethod
-    def from_lines(cls, lines):
-        if isinstance(lines, str):
-            lines = txt_to_lines(lines)
-
-        new = cls()
-        old_date = None
-        new_lines = new._data
-        for name, *line in lines:
-            # ---------------------------------
-            if line[0].upper() == cls.TYPES.FILE:
-                kind, *fn = line
-                new_lines[name] = {'Type': kind,
-                                   'Fname': ' '.join(fn)}
-
-            # ---------------------------------
-            else:
-                date = None
-                time = None
-                hours = None
-
-                if name not in new_lines:
-                    new_lines[name] = {cls.INDEX.VALUE: list()}
-
-                iterator = iter(line)
-                for part in iterator:
-                    if '/' in part:
-                        date = part
-
-                    elif ':' in part:
-                        time = part
-
-                    elif date is None and time is None and hours is None and '.' in part:
-                        hours = part
-
-                    else:
-                        value = part
-                        new_lines[name][cls.INDEX.VALUE].append(value)
-
-                        if date is not None:
-                            if cls.INDEX.DATETIME not in new_lines[name]:
-                                new_lines[name][cls.INDEX.DATETIME] = list()
-                            new_lines[name][cls.INDEX.DATETIME].append('{} {}'.format(date, time))
-
-                        elif time is not None:
-                            if cls.INDEX.TIME not in new_lines[name]:
-                                new_lines[name][cls.INDEX.TIME] = list()
-                            new_lines[name][cls.INDEX.TIME].append(time)
-
-                        else:
-                            if cls.INDEX.HOURS not in new_lines[name]:
-                                new_lines[name][cls.INDEX.HOURS] = list()
-                            new_lines[name][cls.INDEX.HOURS].append(hours)
-
-        return new
-
-    def _get_index(self, d):
-        if self.INDEX.DATETIME in d:
-            return self.INDEX.DATETIME
-        elif self.INDEX.HOURS in d:
-            return self.INDEX.HOURS
-        elif self.INDEX.TIME in d:
-            return self.INDEX.TIME
-
-    @property
-    def to_pandas(self):
-        timeseries = dict()
-
-        for n, series in self._data.items():
-            if 'Type' in series:
-                timeseries[n] = self._data[n]
-
-            else:
-                timeseries[n] = DataFrame.from_dict(self._data[n], 'columns').set_index(self._get_index(series))[
-                    self.INDEX.VALUE].astype(float).copy()
-
-                if self.INDEX.HOURS in series:
-                    timeseries[n].index = timeseries[n].index.astype(float)
-
-                elif self.INDEX.TIME in series:
-                    pass
-
-                elif self.INDEX.DATETIME in series:
-                    timeseries[n].index = to_datetime(timeseries[n].index)
-
-        return timeseries
-
-    def from_pandas(self, label, series):
-        self._data[label] = {self.INDEX.DATETIME: series.index.strftime('%m/%d/%Y %H:%M').to_list(),
-                             self.INDEX.VALUE: series.to_list()}
-
-    def to_inp(self, fast=False):
-        if fast:
-            cat = self._data
-        else:
-            cat = self.to_pandas
-
-        f = ''
-
-        max_len = len(max(cat.keys(), key=len)) + 2
-
-        for n, series in self._data.items():
-            if 'Type' in series:
-                f += '{} {} {}\n'.format(n.ljust(max_len), series['Type'], series['Fname'])
-
-            else:
-                index_label = self._get_index(series)
-
-                if fast:
-                    for datetime, value in zip(series[index_label], series[self.INDEX.VALUE]):
-                        f += '{} {} {}\n'.format(n, datetime, value)
-
-                else:
-                    if self.INDEX.DATETIME in series:
-                        df = cat[n].to_frame().copy()
-                        df['Date  Time'] = df.index.strftime('%m/%d/%Y %H:%M')
-                        df.columns.name = ';Name'
-                        df['<'] = n
-                        df = df.set_index('<')[['Date  Time', self.INDEX.VALUE]].copy()
-                        df.index.name = None
-                        f += df.to_string()
-                        f += '\n'
-                    else:
-                        df = cat[n].to_frame().copy()
-                        df.columns.name = ';Name'
-                        df[index_label] = df.index
-                        df['<'] = n
-                        df = df.set_index('<')[[index_label, self.INDEX.VALUE]].copy()
-                        df.index.name = None
-                        # if df.index.name:
-                        #     df.index.name = ';' + df.index.name
-                        f += df.to_string()
-                        f += '\n'
-        return f
-
-
-class CurvesSection(UserDict_, InpSectionGeneric):
-    """
-    Section:
-        [CURVES]
-
-    Purpose:
-        Describes a relationship between two variables in tabular format.
-
-    Format:
-        Name Type X-value Y-value ...
-
-    Format-PCSWMM:
-            Name Type X-Value Y-Value
-
-    Remarks:
-        Name
-            name assigned to table
-        Type
-            STORAGE / SHAPE / DIVERSION / TIDAL / PUMP1 / PUMP2 / PUMP3 / PUMP4 / RATING / CONTROL
-        X-value
-            an x (independent variable) value
-
-        Y-value
-            the y (dependent variable) value corresponding to x
-
-        Multiple pairs of x-y values can appear on a line. If more than one line is needed,
-        repeat the curve's name (but not the type) on subsequent lines. The x-values must
-        be entered in increasing order.
-
-        Choices for curve type have the following meanings (flows are expressed in the
-        user’s choice of flow units set in the [OPTIONS] section):
-
-        STORAGE
-            surface area in ft2 (m2) v. depth in ft (m) for a storage unit node
-        SHAPE
-            width v. depth for a custom closed cross-section, both normalized with respect to full depth
-        DIVERSION
-            diverted outflow v. total inflow for a flow divider node
-        TIDAL
-            water surface elevation in ft (m) v. hour of the day for an outfall node
-        PUMP1
-            pump outflow v. increment of inlet node volume in ft3 (m3)
-        PUMP2
-            pump outflow v. increment of inlet node depth in ft (m)
-        PUMP3
-            pump outflow v. head difference between outlet and inlet nodes in ft (m)
-        PUMP4
-            pump outflow v. continuous depth in ft (m)
-        RATING
-            outlet flow v. head in ft (m)
-        CONTROL
-            control setting v. controller variable
-
-    Examples:
-        ;Storage curve (x = depth, y = surface area)
-        AC1 STORAGE 0 1000 2 2000 4 3500 6 4200
-         8
-         5000
-        ;Type1 pump curve (x = inlet wet well volume, y = flow )
-        PC1 PUMP1
-        PC1 100 5 300 10 500 20
-
-    """
-
-    # def __init__(self):
-    #     UserDict_.__init__(self)
-
-    def copy(self):
-        new = CurvesSection()
-        new._data = self._data.copy()
-        return new
-
-    class TYPES:
-        STORAGE = 'STORAGE'
-        SHAPE = 'SHAPE'
-        DIVERSION = 'DIVERSION'
-        TIDAL = 'TIDAL'
-        PUMP1 = 'PUMP1'
-        PUMP2 = 'PUMP2'
-        PUMP3 = 'PUMP3'
-        PUMP4 = 'PUMP4'
-        RATING = 'RATING'
-        CONTROL = 'CONTROL'
-
-    def append_lines(self, lines):
-        kind = ''
-        for line in lines:
-            name = line[0]
-            l = len(line)
-
-            if (l % 2) == 0:
-                kind = line[1].upper()
-
-                if kind not in self._data:
-                    self._data[kind] = dict()
-
-                remains = line[2:]
-            else:
-                remains = line[1:]
-
-            it = iter(remains)
-            for a in it:
-                b = next(it)
-                if name not in self._data[kind]:
-                    self._data[kind][name] = list()
-
-                self._data[kind][name].append(infer_type([a, b]))
-
-    @classmethod
-    def from_lines(cls, lines):
-        if isinstance(lines, str):
-            lines = txt_to_lines(lines)
-
-        new_curves = cls()
-        new_curves.append_lines(lines)
-        return new_curves
-
-    @classmethod
-    def _get_names(cls, kind):
-        TYPES = cls.TYPES
-        if kind == TYPES.STORAGE:
-            return ['depth', 'area']
-        elif kind == TYPES.SHAPE:
-            return ['depth', 'width']
-        elif kind == TYPES.DIVERSION:
-            return ['inflow', 'outflow']
-        elif kind == TYPES.TIDAL:
-            return ['hour', 'elevation']
-        elif kind == TYPES.PUMP1:
-            return ['volume', 'outflow']
-        elif kind == TYPES.PUMP2:
-            return ['depth', 'outflow']
-        elif kind == TYPES.PUMP3:
-            return ['head diff', 'outflow']
-        elif kind == TYPES.PUMP4:
-            return ['depth', 'outflow']
-        elif kind == TYPES.RATING:
-            return ['head', 'flow']
-        elif kind == TYPES.CONTROL:
-            return ['variable', 'setting']
-
-    @property
-    def to_pandas(self):
-        # from dict to pandas dataframe
-        frame_di = dict()
-        for kind in self._data:
-            frame_di[kind] = dict()
-            columns = self._get_names(kind)
-            for name in self._data[kind]:
-                frame_di[kind][name] = DataFrame.from_records(self._data[kind][name], columns=columns)
-
-        return frame_di
-
-    def to_inp(self, fast=False):
-        f = ''
-
-        if fast:
-            cat = self._data
-            for k in cat:
-                for n in cat[k]:
-                    values = cat[k][n]  # [(x,y), (x,y), ...]
-                    k_len = len(k)
-                    for i, (x, y) in enumerate(values):
-                        if i == 0:
-                            f += '{} {} {}\n'.format(n, k, type2str([x, y]))
-                        else:
-                            f += '{} {} {}\n'.format(n, ' ' * k_len, type2str([x, y]))
-
-        else:
-            cat = self.to_pandas
-            for k in cat:
-                for n in cat[k]:
-                    a, b = self._get_names(k)
-                    df = cat[k][n].copy()
-                    if k == self.TYPES.SHAPE:
-                        df = df[(df[a] != 0.) & (df[a] != 1.)].copy()
-                        df = df.reset_index(drop=True)
-                    df['Name'] = n
-                    df['Type'] = ''
-                    df.loc[0, 'Type'] = k
-                    df = df[['Name', 'Type', a, b]].copy().rename(columns={'Name': ';Name'})
-                    # print(df.applymap(type2str).to_string(index=None, justify='center'))
-                    f += (df.applymap(type2str).to_string(index=None, justify='center'))
-                    f += '\n'
-        return f
-
-
-def convert_loadings(lines):
-    """
-    Section:
-        [LOADINGS]
-
-    Purpose:
-        Specifies the pollutant buildup that exists on each subcatchment at the start of a simulation.
-
-    Format:
-        Subcat Pollut InitBuildup Pollut InitBuildup ...
-
-    Format-PCSWMM:
-        Subcatchment Pollutant Buildup
-
-    Remarks:
-        Subcat
-            name of a subcatchment.
-        Pollut
-            name of a pollutant.
-        InitBuildup
-            initial buildup of pollutant (lbs/acre or kg/hectare).
-
-        More than one pair of pollutant - buildup values can be entered per line. If more than
-        one line is needed, then the subcatchment name must still be entered first on the
-        succeeding lines.
-
-        If an initial buildup is not specified for a pollutant, then its initial buildup is computed
-        by applying the DRY_DAYS option (specified in the [OPTIONS] section) to the
-        pollutant’s buildup function for each land use in the subcatchment.
-
-    Args:
-        lines (list):
-
-    Returns:
-        pandas.DataFrame:
-    """
-    if isinstance(lines, str):
-        lines = txt_to_lines(lines)
-
-    new_lines = {}
-    for line in lines:
-
-        subcat = line[0]
-
-        it = iter(line[1:])
-        for a in it:
-            b = next(it)
-            if subcat not in new_lines:
-                new_lines[subcat] = {'Pollutant': [a],
-                                     'InitBuildup': [b]}
-            else:
-                new_lines[subcat]['Pollutant'].append(a)
-                new_lines[subcat]['InitBuildup'].append(b)
-
-    frame = DataFrame.from_dict(new_lines, 'index').rename_axis('Name', axis='columns')
-    # print(general_category2string(frame))
-    return frame
-
-
 class TagsSection(UserDict_, InpSectionGeneric):
     # def __init__(self):
     #     UserDict_.__init__(self)
 
     class Types:
-        Node = Indices.Node
-        Subcatch = Indices.Subcatch
-        Link = Indices.Link
+        Node = IDENTIFIERS.Node
+        Subcatch = IDENTIFIERS.Subcatch
+        Link = IDENTIFIERS.Link
 
     @classmethod
     def from_lines(cls, lines):
@@ -1020,7 +565,7 @@ class TagsSection(UserDict_, InpSectionGeneric):
         return tags_df
 
     def to_inp(self, fast=False):
-        if self.empty:
+        if not self:  # if empty
             return '; NO data'
         f = ''
         max_len_type = len(max(self._data.keys(), key=len)) + 2
@@ -1037,3 +582,74 @@ class TagsSection(UserDict_, InpSectionGeneric):
         new._data = {k: v for k, v in self.items() if k != which}
         new._data[which] = {k: self[k] for k in set(self[which].keys()).intersection(keys)}
         return new
+
+
+class MapSection(InpSectionGeneric):
+    """
+    Section:
+        [MAP]
+
+    Purpose:
+        Provides dimensions and distance units for the map.
+
+    Formats:
+        DIMENSIONS X1 Y1 X2 Y2
+        UNITS FEET / METERS / DEGREES / NONE
+
+    Remarks:
+    X1
+        lower-left X coordinate of full map extent
+    Y1
+        lower-left Y coordinate of full map extent
+    X2
+        upper-right X coordinate of full map extent
+    Y2
+         upper-right Y coordinate of full map extent
+    """
+    class Parts:
+        DIMENSIONS = 'DIMENSIONS'
+        UNITS = 'UNITS'
+
+    def __init__(self, dimensions, units='Meters'):
+        self.lower_left_x = dimensions[0]
+        self.lower_left_y = dimensions[1]
+        self.upper_right_x = dimensions[2]
+        self.upper_right_y = dimensions[3]
+        self.units = units
+
+    def copy(self):
+        return type(self)([self.lower_left_x,
+                           self.lower_left_y,
+                           self.upper_right_x,
+                           self.upper_right_y], self.units)
+
+    @classmethod
+    def from_lines(cls, lines):
+        if isinstance(lines, str):
+            lines = txt_to_lines(lines)
+
+        args = list()
+        for line in lines:
+            name = line[0]
+            if name == cls.Parts.DIMENSIONS:
+                args.append(line[1:])
+
+            elif name == cls.Parts.UNITS:
+                args.append(line[1])
+            else:
+                pass
+        new_map = cls(*args)
+        return new_map
+
+    # def __repr__(self):
+    #     pass
+    #
+    # def __str__(self):
+    #     return self.to_inp()
+    #     pass
+
+    def to_inp(self, fast=False):
+        s = '{} {}\n'.format(self.Parts.DIMENSIONS, ' '.join([str(i) for i in [self.lower_left_x, self.lower_left_y,
+                                                                             self.upper_right_x, self.upper_right_y]]))
+        s += '{} {}'.format(self.Parts.UNITS, self.units)
+        return s

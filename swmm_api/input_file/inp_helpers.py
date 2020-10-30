@@ -1,9 +1,10 @@
 from pandas import DataFrame
-from numpy import isnan, NaN
+from numpy import isnan
 from copy import deepcopy
 
-from .helpers.custom_iterator import custom_iter
 from .helpers.type_converter import type2str, infer_type
+
+SWMM_VERSION = '5.1.015'
 
 
 ########################################################################################################################
@@ -63,10 +64,6 @@ class UserDict_:
     def update(self, d=None, **kwargs):
         self._data.update(d, **kwargs)
 
-    @property
-    def empty(self):
-        return not bool(self._data)
-
     def pop(self, key):
         return self._data.pop(key)
 
@@ -77,9 +74,11 @@ class UserDict_:
 ########################################################################################################################
 class BaseSectionObject:
     """base class for all section objects to unify operations
-    sections objects only have __init__ with object parameters"""
-    index = ''
-    table_inp_export = True
+    sections objects only have __init__ with object parameters
+
+    acts like a dict (getter and setter)"""
+    identifier = ''  # attribute of an object which will be used as identifiers
+    table_inp_export = True  # if an section is writeable as table. Default ist True
 
     def get(self, key):
         if isinstance(key, list):
@@ -109,11 +108,11 @@ class BaseSectionObject:
         return str(self)
 
     def __str__(self):
-        return self.to_debug_string()
+        return self._to_debug_string()
 
-    def to_debug_string(self):
-        """
-        for debugging purposes
+    def _to_debug_string(self):
+        """for debugging purposes
+
         string is almost equal to python syntax
         so you could copy it and past it into your code
 
@@ -133,6 +132,7 @@ class BaseSectionObject:
     def inp_line(self):
         """
         convert object to one line of the .inp file
+
         for .inp file writing
 
         Returns:
@@ -140,26 +140,43 @@ class BaseSectionObject:
         """
         di = self.to_dict_()
         s = ''
-        if isinstance(self.index, list):
-            s += ' '.join([str(di.pop(i)) for i in self.index])
+        if isinstance(self.identifier, list):
+            s += ' '.join([str(di.pop(i)) for i in self.identifier])
         else:
-            s += str(di.pop(self.index))
+            s += str(di.pop(self.identifier))
 
         s += ' ' + ' '.join([type2str(i) for i in di.values()])
         return s
 
     @classmethod
     def from_line(cls, *line):
+        """
+        convert line in the input file to the object
+
+        Args:
+            *line (list[str]): arguments in the line
+
+        Returns:
+            BaseSectionObject: object of the input file section
+        """
         return cls(*line)
 
     def copy(self):
+        """
+        copy object
+
+        Returns:
+            BaseSectionObject: copy of the object
+        """
         return type(self)(**vars(self).copy())
 
 
 ########################################################################################################################
 class InpSectionGeneric:
+    """abstract class for input file sections without objects"""
     @classmethod
     def from_lines(cls, lines):
+        """abstract function to read input file lines and create an section object"""
         pass
 
     def __repr__(self):
@@ -169,27 +186,33 @@ class InpSectionGeneric:
         pass
 
     def to_inp(self, fast=False):
+        """abstract function to write input file lines of an section object"""
         pass
 
 
 ########################################################################################################################
 class InpSection(UserDict_):
-    """each section of the .inp file is converted to such a section"""
+    def __init__(self, section_object):
+        """each section of the .inp file is converted to such a section
 
-    def __init__(self, index):
-        self.table_inp_export = True
-        if isinstance(index, str):
-            print('Warning, InpSection.__init__(mit string)')
-            self.index = index
-        if isinstance(index, list):
-            self.index = index
-            print('Warning, InpSection.__init__(mit list)')
-        elif isinstance(index, type):
-            if issubclass(index, BaseSectionObject):
-                self.index = index.index
-
-                self.table_inp_export = index.table_inp_export
+        Args:
+            section_object (BaseSectionObject):
+        """
         UserDict_.__init__(self)
+        self.section_object = section_object
+
+    @property
+    def _identifier(self):
+        return self.section_object.identifier
+
+    @property
+    def _table_inp_export(self):
+        return self.section_object.table_inp_export
+
+    @property
+    def data(self):
+        # for debugging
+        return self._data
 
     def append(self, item):
         """
@@ -202,13 +225,13 @@ class InpSection(UserDict_):
             for i in item:
                 self.append(i)
         else:
-            self[item.get(self.index)] = item
+            self[item.get(self._identifier)] = item
 
     @classmethod
     def from_lines(cls, lines, section_class):
-        """
+        """convert all lines of a section to this class and each line to a object
+
         for .inp file reading
-        convert all lines of a section to this class and each line to a object
 
         Args:
             lines (list[list[str]]): lines of a section in a .inp file
@@ -238,20 +261,17 @@ class InpSection(UserDict_):
 
     @property
     def frame(self):
-        """
-        convert section to a data-frame
-        for debugging purpose
+        """convert section to a data-frame
+
+        for debugging purposes
 
         Returns:
-            pandas.DataFrame:
+            pandas.DataFrame: section as table
         """
-        di = {}
-        if not self.empty:
-            for n, i in enumerate(self.values()):
-                di[n] = i.to_dict_()
-            return DataFrame.from_dict(di, 'index').set_index(self.index)
-        else:
+        if not self:  # if empty
             return DataFrame()
+
+        return DataFrame([i.to_dict_() for i in self.values()]).set_index(self._identifier)
 
     # def __repr__(self):
     #     return dataframe_to_inp_string(self.frame)
@@ -260,8 +280,8 @@ class InpSection(UserDict_):
     #     return dataframe_to_inp_string(self.frame)
 
     def to_inp(self, fast=False):
-        """
-        section to a multi-line string
+        """section to a multi-line string
+
         for .inp file writing
 
         Args:
@@ -270,36 +290,36 @@ class InpSection(UserDict_):
         Returns:
             str: .inp file string
         """
-        if self.empty:
+        if not self:  # if empty
             return ';; No Data'
 
-        if not self.table_inp_export:
-            fast = True
-
-        if fast:
-            s = ''
-            for i in self.values():
-                s += i.inp_line() + '\n'
-            return s
-
+        if fast or not self._table_inp_export:
+            return '\n'.join(o.inp_line() for o in self.values())
         else:
             return dataframe_to_inp_string(self.frame)
 
     def copy(self):
-        new = type(self)(self.index)
+        """deep copy the section
+
+        Returns:
+            InpSection: copy of the section
+        """
+        new = type(self)(self.section_object)
         new._data = deepcopy(self._data)
         return new
 
-    @classmethod
-    def from_frame(cls, df, section_class):
-        # TODO: testing
-        import numpy as np
-        a = np.vstack((df.index.values, df.values.T)).T
-        return cls.from_lines(a, section_class)
-        # return cls.from_lines([line.split() for line in dataframe_to_inp_string(df).split('\n')], section_class)
-
     def filter_keys(self, keys, by=None):
-        new = type(self)(self.index)
+        """
+        filter parts of the section with keys (identifier strings or attribute string)
+
+        Args:
+            keys (list): list of names to filter by (ether the identifier or the attribute of "by")
+            by (str): attribute name of the section object to filter by
+
+        Returns:
+            InpSection: new filtered section
+        """
+        new = type(self)(self._identifier)
         if by is not None:
             new._data = {k: self[k] for k in self.keys() if self[k][by] in keys}
         else:
@@ -307,14 +327,18 @@ class InpSection(UserDict_):
         return new
 
 
-class InpData(UserDict_):
+########################################################################################################################
+class InpData(dict):
+    """overall class for an input file"""
     def copy(self):
-        return InpData(deepcopy(self._data))
+        """deep copy of an object"""
+        return InpData(deepcopy(self))
 
 
+########################################################################################################################
 def dataframe_to_inp_string(df):
-    """
-    convert a data-frame into a multi-line string
+    """convert a data-frame into a multi-line string
+
     used to make a better readable .inp file and for debugging
 
     Args:
@@ -348,7 +372,17 @@ def dataframe_to_inp_string(df):
     return c.applymap(type2str).to_string(sparsify=False, line_width=999999)
 
 
+########################################################################################################################
 def txt_to_lines(content):
+    """
+    split lines into lists of lists of arguments
+
+    Args:
+        content (str): lines in inp file
+
+    Returns:
+        list[list[str]]: split lines
+    """
     for line in content.split('\n'):
         # ;; section comment
         # ; object comment / either inline(at the end of the line) or before the line

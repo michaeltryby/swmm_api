@@ -1,7 +1,7 @@
 from numpy import NaN
-from pandas import DataFrame
+from pandas import DataFrame, Series
 
-from .indices import Indices
+from .identifiers import IDENTIFIERS
 from ..helpers.type_converter import infer_type
 from ..inp_helpers import BaseSectionObject
 
@@ -40,7 +40,7 @@ class RainGage(BaseSectionObject):
         Units
             rain depth units used in the rain file, either IN (inches) or MM (millimeters).
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
 
     class Formats:
         INTENSITY = 'INTENSITY'
@@ -116,7 +116,7 @@ class Symbol(BaseSectionObject):
         Ycoord
             vertical coordinate relative to origin in lower left of map.
     """
-    index = Indices.Gage
+    identifier =IDENTIFIERS.Gage
 
     def __init__(self, Gage, x, y):
         """Assigns X,Y coordinates to drainage system nodes.
@@ -158,7 +158,7 @@ class Pattern(BaseSectionObject):
         - The pattern factors are applied as multipliers to any baseline dry weather flows or quality
             concentrations supplied in the [DWF] section.
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
 
     class Types:
         __class__ = 'Patter Types'
@@ -246,7 +246,7 @@ class Pollutant(BaseSectionObject):
         The dry weather flow concentration can be overridden for any specific node of the conveyance
         system by editing the node’s Inflows property.
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
 
     class Unit:
         MG_PER_L = 'MG/L'
@@ -331,7 +331,7 @@ class Transect(BaseSectionObject):
     SWMM will use the shorter overbank length in its calculations while increasing the main channel roughness to account
     for its longer length.
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
     table_inp_export = False
 
     def __init__(self, Name, station_elevations=None, bank_station_left=0, bank_station_right=0,
@@ -426,73 +426,6 @@ class Transect(BaseSectionObject):
         return s
 
 
-# class Loading(BaseSection):
-#     """
-#     Section:
-#         [LOADINGS]
-#
-#     Purpose:
-#         Specifies the pollutant buildup that exists on each subcatchment at the start of a simulation.
-#
-#     Format:
-#         Subcat  Pollut  InitBuildup  Pollut  InitBuildup ...
-#
-#     PC-SWMM-Format:
-#         Subcatchment Pollutant Buildup
-#
-#     Remarks:
-#         Subcat
-#             name of a subcatchment.
-#         Pollut
-#             name of a pollutant.
-#         InitBuildup
-#             initial buildup of pollutant (lbs/acre or kg/hectare).
-#
-#         More than one pair of pollutant - buildup values can be entered per line.
-#         If more than one line is needed, then the subcatchment name must still be entered first on the succeeding
-#         lines.
-#
-#         If an initial buildup is not specified for a pollutant,
-#         then its initial buildup is computed by applying the DRY_DAYS option
-#         (specified in the [OPTIONS] section) to the pollutant’s buildup function for each land use in the
-#         subcatchment.
-#     """
-#     index = 'Subcatchment'
-#
-#     def __init__(self, Subcatchment):
-#         self.Subcatchment = Subcatchment
-#
-#     @classmethod
-#     def convert_lines(cls, lines):
-#         """multiple lines for one entry"""
-#         new_lines = list()
-#         for line in lines:
-#             if line[1] in ['MONTHLY', 'DAILY', 'HOURLY', 'WEEKEND']:
-#                 new_lines.append(line)
-#             else:
-#                 new_lines[-1].append(line[1:])
-#
-#         # sec_lines = list()
-#         for line in new_lines:
-#             # sec_lines.append()
-#             yield cls(*line)
-#
-#         new_lines = {}
-#         for line in lines:
-#
-#             subcat = line[0]
-#
-#             it = iter(line[1:])
-#             for a in it:
-#                 b = next(it)
-#                 if subcat not in new_lines:
-#                     new_lines[subcat] = {'Pollutant': [a],
-#                                          'InitBuildup': [b]}
-#                 else:
-#                     new_lines[subcat]['Pollutant'].append(a)
-#                     new_lines[subcat]['InitBuildup'].append(b)
-
-
 class Control(BaseSectionObject):
     """
     Section:
@@ -538,7 +471,7 @@ class Control(BaseSectionObject):
 
         The objects and attributes that can appear in a condition clause are as follows:
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
     table_inp_export = False
 
     class Clauses:
@@ -670,7 +603,7 @@ class Curve(BaseSectionObject):
         PC1 100 5 300 10 500 20
 
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
     table_inp_export = False
 
     class TYPES:
@@ -721,11 +654,7 @@ class Curve(BaseSectionObject):
         for name, *line in lines:
             remains = iter(line)
 
-            if name == last:
-                # additional curve line
-                pass
-
-            else:
+            if name != last:
                 # new curve line
                 if last is not None:
                     # first return previous curve
@@ -740,14 +669,21 @@ class Curve(BaseSectionObject):
                 b = next(remains)
                 points.append(infer_type([a, b]))
 
+        # last
+        if last is not None:
+            yield cls(last, kind, points)
+
     @property
     def frame(self):
         return DataFrame.from_records(self.points, columns=self._get_names(self.kind))
 
     def inp_line(self):
-        f = '{}  {}\n'.format(self.Name, self.kind)
+        kind = self.kind
+        f = ''
+        # f = '{}  {}\n'.format(self.Name, self.kind)
         for x, y in self.points:  # [(x,y), (x,y), ...]
-            f += '{}  {:7.4f} {:7.4f}\n'.format(self.Name, x, y)
+            f += '{}  {} {:7.4f} {:7.4f}\n'.format(self.Name, kind, x, y)
+            kind = ''
         return f
 
 
@@ -802,26 +738,108 @@ class Timeseries(BaseSectionObject):
         HY1 0 0 1.25 100 2:30 150 3.0 120 4.5 0
         HY1 32:10 0 34.0 57 35.33 85 48.67 24 50 0
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
     table_inp_export = False
 
-    def __init__(self, Name, *args):
+    class TYPES:
+        FILE = 'FILE'
+
+    def __init__(self, Name):
+        """
+        Describes how a quantity varies over time.
+
+        Args:
+            Name (str): name assigned to time series.
+        """
         self.Name = str(Name)
 
     @classmethod
     def convert_lines(cls, lines):
-        pass
+        """
+        convert the input file section
+        an object uses multiple lines
 
-    @property
-    def frame(self):
-        pass
+        Args:
+            lines (str | list[list[str]]): lines in the input file section
 
-    def inp_line(self):
-        pass
+        Yields:
+            TimeseriesData | TimeseriesFile: Timeseries objects
+        """
+        data = list()
+        last = None
+
+        for name, *line in lines:
+            # ---------------------------------
+            if line[0].upper() == cls.TYPES.FILE:
+                yield TimeseriesFile(name, ' '.join(line[1:]))
+                last = name
+
+            # ---------------------------------
+            else:
+                if name != last:
+                    if last is not None:
+                        yield TimeseriesData(last, data)
+                    data = list()
+                    last = name
+
+                # -------------
+                iterator = iter(line)
+                for part in iterator:
+                    if '/' in part:
+                        date = part
+                        time = next(iterator)
+                        i = ' '.join([date, time])
+
+                    else:
+                        i = part
+
+                    v = float(next(iterator))
+                    data.append([i, v])
+
+        # last
+        if line[0].upper() != cls.TYPES.FILE:
+            yield TimeseriesData(last, data)
 
 
 class TimeseriesFile(Timeseries):
     def __init__(self, Name, filename):
-        Timeseries.__init__(Name)
-        self.kind = 'FILE'
+        """
+        Describes how a quantity varies over time.
+
+        Args:
+            Name (str): name assigned to time series.
+            filename (str): name of a file in which the time series data are stored
+        """
+        Timeseries.__init__(self, Name)
+        self.kind = self.TYPES.FILE
         self.filename = filename
+
+
+class TimeseriesData(Timeseries):
+    def __init__(self, Name, data):
+        """
+        Describes how a quantity varies over time.
+
+        Args:
+            Name (str): name assigned to time series.
+            data (list[tuple]): list of index/value tuple
+        """
+        Timeseries.__init__(self, Name)
+        self.data = data
+
+    @property
+    def frame(self):
+        """
+        convert object to pandas Series
+
+        Returns:
+            pandas.Series: Timeseries
+        """
+        datetime, values = zip(*self.data)
+        return Series(index=datetime, data=values, name=self.Name)
+
+    def inp_line(self):
+        f = ''
+        for datetime, value in self.data:
+            f += '{} {} {}\n'.format(self.Name, datetime, value)
+        return f

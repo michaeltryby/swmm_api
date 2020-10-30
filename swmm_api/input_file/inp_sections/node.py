@@ -1,10 +1,10 @@
 from numpy import NaN
 
 from ..inp_helpers import BaseSectionObject
-from .indices import Indices
+from .identifiers import IDENTIFIERS
 
 class Junction(BaseSectionObject):
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
 
     def __init__(self, Name, Elevation, MaxDepth=0, InitDepth=0, SurDepth=0, Aponded=0):
         """
@@ -94,7 +94,7 @@ class Storage(BaseSectionObject):
         Ksat.
         Otherwise seepage rate will vary with storage depth.
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
 
     class Types:
         TABULAR = 'TABULAR'
@@ -232,7 +232,7 @@ class Outfall(BaseSectionObject):
             optional name of a subcatchment that receives the outfall's discharge.
             The default is not to route the outfall’s discharge.
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
 
     class Types:
         FREE = 'FREE'

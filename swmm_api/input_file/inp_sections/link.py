@@ -1,49 +1,55 @@
 from numpy import NaN, isnan
 
-from .indices import Indices
+from .identifiers import IDENTIFIERS
 from ..inp_helpers import BaseSectionObject
 
 
 class Conduit(BaseSectionObject):
-    index = Indices.Name
+    """CONDUITS
+
+    Section:
+        [CONDUITS]
+
+    Purpose:
+        Identifies each conduit link of the drainage system. Conduits are pipes or channels that convey water
+        from one node to another.
+
+    Format:
+        Name  Node1  Node2  Length  N  Z1  Z2  (Q0  Qmax)
+
+    Format-PCSWMM:
+        Name FromNode ToNode Length Roughness InOffset OutOffset InitFlow MaxFlow
+
+    Remarks:
+        Name
+            name assigned to conduit link.
+        Node1
+            name of upstream node.
+        Node2
+            name of downstream node.
+        Length
+            conduit length (ft or m).
+        N
+            value of n (i.e., roughness parameter) in Manning’s equation.
+        Z1
+            offset of upstream end of conduit invert above the invert elevation of its upstream node (ft or m).
+        Z2
+            offset of downstream end of conduit invert above the invert elevation of its downstream node (ft
+            or m).
+        Q0
+            flow in conduit at start of simulation (flow units) (default is 0).
+        Qmax
+            maximum flow allowed in the conduit (flow units) (default is no limit).
+
+        These offsets are expressed as a relative distance above the node invert if the LINK_OFFSETS option
+        is set to DEPTH (the default) or as an absolute elevation if it is set to ELEVATION.
+    """
+    identifier =IDENTIFIERS.Name
 
     def __init__(self, Name, FromNode, ToNode, Length, Roughness, InOffset, OutOffset, InitFlow=0, MaxFlow=NaN):
-        """
-        Section:
-            [CONDUITS]
+        """Identifies each conduit link of the drainage system.
 
-        Purpose:
-            Identifies each conduit link of the drainage system. Conduits are pipes or channels that convey water
-            from one node to another.
-
-        Format:
-            Name  Node1  Node2  Length  N  Z1  Z2  (Q0  Qmax)
-
-        Format-PCSWMM:
-            Name FromNode ToNode Length Roughness InOffset OutOffset InitFlow MaxFlow
-
-        Remarks:
-            Name
-                name assigned to conduit link.
-            Node1
-                name of upstream node.
-            Node2
-                name of downstream node.
-            Length
-                conduit length (ft or m).
-            N
-                value of n (i.e., roughness parameter) in Manning’s equation.
-            Z1
-                offset of upstream end of conduit invert above the invert elevation of its upstream node (ft or m).
-            Z2
-                offset of downstream end of conduit invert above the invert elevation of its downstream node (ft or m).
-            Q0
-                flow in conduit at start of simulation (flow units) (default is 0).
-            Qmax
-                maximum flow allowed in the conduit (flow units) (default is no limit).
-
-            These offsets are expressed as a relative distance above the node invert if the LINK_OFFSETS option is set
-            to DEPTH (the default) or as an absolute elevation if it is set to ELEVATION.
+        Conduits are pipes or channels that convey water from one node to another.
 
         Args:
             Name (str): name assigned to conduit link.
@@ -70,7 +76,8 @@ class Conduit(BaseSectionObject):
 
 
 class Weir(BaseSectionObject):
-    """
+    """WEIRS
+
     Section:
         [WEIRS]
 
@@ -87,16 +94,25 @@ class Weir(BaseSectionObject):
     The geometry of a weir’s opening is described in the [XSECTIONS] section.
     The following shapes must be used with each type of weir:
 
+    =============  ===================
+    Weir Type      Cross-Section Shape
+    -------------  -------------------
+    Transverse     RECT_OPEN
+    Sideflow       RECT_OPEN
+    V-Notch        TRIANGULAR
+    Trapezoidal    TRAPEZOIDAL
+    Roadway        RECT_OPEN
+    =============  ===================
+
     The ROADWAY weir is a broad crested rectangular weir used model roadway crossings usually in conjunction with
     culvert-type conduits. It uses the FHWA HDS-5 method to determine a discharge coefficient as a function of flow
     depth and roadway width and surface.
-
     If no roadway data are provided then the weir behaves as a TRANSVERSE weir with Cd as its discharge coefficient.
     Note that if roadway data are provided, then values for the other optional weir parameters
     (NO for Gated, 0 for EC, 0 for Cd2, and NO for Sur)
     must be entered even though they do not apply to ROADWAY weirs.
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
 
     class Types:
         TRANSVERSE = 'TRANSVERSE'
@@ -112,7 +128,9 @@ class Weir(BaseSectionObject):
     def __init__(self, Name, FromNode, ToNode, Type, CrestHeight, Qcoeff, FlapGate=False, EndContractions=0,
                  EndCoeff=NaN,
                  Surcharge=True, RoadWidth=NaN, RoadSurface=NaN):
-        """
+        """Identifies each weir link of the drainage system.
+
+        Weirs are used to model flow diversions and storage node outlets.
 
         Args:
             Name (str): name assigned to weir link
@@ -162,7 +180,8 @@ class Weir(BaseSectionObject):
 
 
 class Outlet(BaseSectionObject):
-    """
+    """OUTLETS
+
     Section:
         [OUTLETS]
 
@@ -204,7 +223,7 @@ class Outlet(BaseSectionObject):
         - Gated:
             YES if flap gate present to prevent reverse flow, NO if not (default is NO).
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
 
     class Types:
         TABULAR_DEPTH = 'TABULAR/DEPTH'
@@ -213,12 +232,38 @@ class Outlet(BaseSectionObject):
         FUNCTIONAL_HEAD = 'FUNCTIONAL/HEAD'
 
     def __init__(self, Name, FromNode, ToNode, Offset, Type, *args, Curve=None, Gated=False):
+        """Identifies each outlet flow control device of the drainage system.
+
+        These devices are used to model outflows from storage units or flow diversions that have a user-defined
+        relation between flow rate and water depth.
+
+        Args:
+            Name (str): name assigned to outlet link.
+            FromNode (str): name of node on inlet end of link.
+            ToNode (str): name of node on outflow end of link.
+            Offset (float): amount that the outlet is offset above the invert of inlet node
+                (ft or m, expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
+            Type (str): one of Outlet.Types
+            *args: for automatic input file reading
+            Curve (str | list[float]):
+                - Qcurve:
+                    name of the rating curve listed in the [CURVES] section that describes
+                    outflow rate (flow units) as a function of:
+                        - water depth above the offset elevation at the inlet node (ft or m) for a TABULAR/DEPTH outlet
+                        - head difference (ft or m) between the inlet and outflow nodes for a TABULAR/HEAD outlet.
+                - C1, C2:
+                    coefficient and exponent, respectively, of a power function that relates outflow (Q) to:
+                        - water depth (ft or m) above the offset elevation at the inlet node for a FUNCTIONAL/DEPTH outlet
+                        - head difference (ft or m) between the inlet and outflow nodes for a FUNCTIONAL/HEAD outlet.
+                        (i.e., QQ = CC1HH CC2 where H is either depth or head).
+            Gated (bool): YES if flap gate present to prevent reverse flow, NO if not (default is NO).
+        """
         self.Name = str(Name)
 
         self.FromNode = str(FromNode)
         self.ToNode = str(ToNode)
-        self.Offset = Offset
-        self.Type = Type
+        self.Offset = float(Offset)
+        self.Type = str(Type)
 
         if args:
             if Type.startswith('TABULAR'):
@@ -232,35 +277,45 @@ class Outlet(BaseSectionObject):
 
         else:
             self.Curve = Curve
-            self.Gated = Gated
+            self.Gated = bool(Gated)
 
     def _tabular_init(self, Qcurve, Gated=False):
-        self.Curve = Qcurve
-        self.Gated = Gated
+        self.Curve = str(Qcurve)
+        self.Gated = bool(Gated)
 
     def _functional_init(self, C1, C2, Gated=False):
-        self.Curve = [C1, C2]
-        self.Gated = Gated
+        self.Curve = [float(C1), float(C2)]
+        self.Gated = bool(Gated)
 
 
 class Orifice(BaseSectionObject):
-    index = Indices.Name
+    """ORIFICES
+
+    Section:
+        [ORIFICES]
+
+    Purpose:
+        Identifies each orifice link of the drainage system. An orifice link serves to limit the
+        flow exiting a node and is often used to model flow diversions and storage node
+        outlets.
+
+    Format:
+        Name Node1 Node2 Type Offset Cd (Flap Orate)
+
+    The geometry of an orifice’s opening must be described in the [XSECTIONS] section.
+    The only allowable shapes are CIRCULAR and RECT_CLOSED (closed rectangular).
+    """
+    identifier =IDENTIFIERS.Name
 
     class Types:
         SIDE = 'SIDE'
         BOTTOM = 'BOTTOM'
 
     def __init__(self, Name, FromNode, ToNode, Type, Offset, Qcoeff, FlapGate=False, Orate=0):
-        """
-        From the User's Manual Version 5.1 (2015-09) page 308
+        """Identifies each orifice link of the drainage system.
 
-        Format:
-            Name Node1 Node2 Type Offset Cd (Flap Orate)
-
-        Purpose:
-                Identifies each orifice link of the drainage system. An orifice link serves to limit the
-                flow exiting a node and is often used to model flow diversions and storage node
-                outlets.
+        An orifice link serves to limit the flow exiting a node and
+        is often used to model flow diversions and storage node outlets.
 
         Args:
             Name (str): name assigned to orifice link.
@@ -275,9 +330,6 @@ class Orifice(BaseSectionObject):
             FlapGate (bool): YES if flap gate present to prevent reverse flow, NO if not (default is NO).
             Orate (int): time in decimal hours to open a fully closed orifice (or close a fully open one).
                             Use 0 if the orifice can open/close instantaneously.
-
-        The geometry of an orifice’s opening must be described in the [XSECTIONS] section.
-        The only allowable shapes are CIRCULAR and RECT_CLOSED (closed rectangular).
         """
         self.Name = str(Name)
         self.FromNode = str(FromNode)
@@ -290,7 +342,8 @@ class Orifice(BaseSectionObject):
 
 
 class Pump(BaseSectionObject):
-    """
+    """PUMPS
+
     Section:
         [PUMPS]
 
@@ -321,17 +374,28 @@ class Pump(BaseSectionObject):
 
     See Section 3.2 for a description of the different types of pumps available.
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
 
     class States:
         ON = 'ON'
         OFF = 'OFF'
 
     def __init__(self, Name, FromNode, ToNode, Pcurve, Status='ON', Startup=0, Shutoff=0):
+        """Identifies each pump link of the drainage system.
+
+        Args:
+            Name (str): name assigned to pump link.
+            FromNode (str): name of node on inlet side of pump.
+            ToNode (str): name of node on outlet side of pump.
+            Pcurve (str): name of pump curve listed in the [CURVES] section of the input.
+            Status (str): status at start of simulation (either ON or OFF; default is ON).
+            Startup (float): depth at inlet node when pump turns on (ft or m) (default is 0).
+            Shutoff (float): depth at inlet node when pump shuts off (ft or m) (default is 0).
+        """
         self.Name = str(Name)
         self.FromNode = str(FromNode)
         self.ToNode = str(ToNode)
-        self.Pcurve = Pcurve
-        self.Status = Status
-        self.Startup = Startup
-        self.Shutoff = Shutoff
+        self.Pcurve = str(Pcurve)
+        self.Status = str(Status)
+        self.Startup = float(Startup)
+        self.Shutoff = float(Shutoff)

@@ -1,7 +1,8 @@
 from numpy import NaN
+from pandas import DataFrame
 
-from ..inp_helpers import BaseSectionObject
-from .indices import Indices
+from ..inp_helpers import BaseSectionObject, SWMM_VERSION
+from .identifiers import IDENTIFIERS
 
 
 class SubCatchment(BaseSectionObject):
@@ -37,7 +38,7 @@ class SubCatchment(BaseSectionObject):
             optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow accumulation and
             melting over the subcatchment.
     """
-    index = Indices.Name
+    identifier =IDENTIFIERS.Name
 
     def __init__(self, Name, RainGage, Outlet, Area, Imperv, Width, Slope, CurbLen, SnowPack=NaN):
         """
@@ -58,7 +59,7 @@ class SubCatchment(BaseSectionObject):
 
 
 class SubArea(BaseSectionObject):
-    index = Indices.Subcatch
+    identifier =IDENTIFIERS.Subcatch
 
     class RoutToOption:
         __class__ = 'RoutTo Option'
@@ -124,7 +125,8 @@ class SubArea(BaseSectionObject):
 
 
 class Infiltration(BaseSectionObject):
-    index = Indices.Subcatch
+    identifier =IDENTIFIERS.Subcatch
+    table_inp_export = False
 
     def __init__(self, Subcatch):
         self.Subcatch = str(Subcatch)
@@ -141,24 +143,31 @@ class Infiltration(BaseSectionObject):
             subcls = InfiltrationCurveNumber
 
         # _____________________________________
-        # NEU in swmm 5.1.015
-        last_arg = args[-1]
-        cls_args = {
-            'HORTON': InfiltrationHorton,
-            'MODIFIED_HORTON': InfiltrationHorton,
-            'GREEN_AMPT': InfiltrationGreenAmpt,
-            'MODIFIED_GREEN_AMPT': InfiltrationGreenAmpt,
-            'CURVE_NUMBER': InfiltrationCurveNumber
-        }
-        if last_arg in cls_args:
-            subcls = cls_args[last_arg]
-            args = args[:-1]
+        sub_class_id = None
+        if SWMM_VERSION == '5.1.015':
+            # NEU in swmm 5.1.015
+            last_arg = args[-1]
+            cls_args = {
+                'HORTON': InfiltrationHorton,
+                'MODIFIED_HORTON': InfiltrationHorton,
+                'GREEN_AMPT': InfiltrationGreenAmpt,
+                'MODIFIED_GREEN_AMPT': InfiltrationGreenAmpt,
+                'CURVE_NUMBER': InfiltrationCurveNumber
+            }
+            if last_arg in cls_args:
+                sub_class_id = last_arg
+                subcls = cls_args[last_arg]
+                args = args[:-1]
 
         if subcls != InfiltrationHorton:
             args = args[:3]
 
         # _____________________________________
-        return subcls(Subcatch, *args, **kwargs)
+        o = subcls(Subcatch, *args, **kwargs)
+        # _____________________________________
+        if sub_class_id is not None:
+            o.kind = sub_class_id
+        return o
 
 
 class InfiltrationHorton(Infiltration):
@@ -183,6 +192,7 @@ class InfiltrationHorton(Infiltration):
         self.Decay = Decay
         self.DryTime = DryTime
         self.MaxInf = MaxInf
+        self.kind = NaN
 
 
 class InfiltrationGreenAmpt(Infiltration):
@@ -205,6 +215,7 @@ class InfiltrationGreenAmpt(Infiltration):
         self.Psi = Psi
         self.Ksat = Ksat
         self.IMD = IMD
+        self.kind = NaN
 
 
 class InfiltrationCurveNumber(Infiltration):
@@ -227,38 +238,37 @@ class InfiltrationCurveNumber(Infiltration):
         self.CurveNo = CurveNo
         self.Ksat = Ksat
         self.DryTime = DryTime
+        self.kind = NaN
 
 
 class Polygon(BaseSectionObject):
     """
     Section:
-        [VERTICES]
+        [POLYGONS]
 
     Purpose:
-        Assigns X,Y coordinates to interior vertex points of curved drainage system links.
+        Assigns X,Y coordinates to vertex points of polygons that define a subcatchment boundary.
 
     Format:
         Link Xcoord Ycoord
 
     Remarks:
-        Node
-            name of link.
+        Subcat
+            name of subcatchment.
         Xcoord
             horizontal coordinate of vertex relative to origin in lower left of map.
         Ycoord
             vertical coordinate of vertex relative to origin in lower left of map.
 
-        Include a separate line for each interior vertex of the link, ordered from the inlet node to the outlet
-        node.
-
-        Straight-line links have no interior vertices and therefore are not listed in this section.
+        Include a separate line for each vertex of the subcatchment polygon, ordered in a
+        consistent clockwise or counter-clockwise sequence.
     """
-    index = Indices.Subcatch
+    identifier =IDENTIFIERS.Subcatch
     table_inp_export = False
 
-    def __init__(self, Subcatch,  vertices):
+    def __init__(self, Subcatch,  polygon):
         self.Subcatch = str(Subcatch)
-        self.vertices = vertices
+        self.polygon = polygon
 
     @classmethod
     def convert_lines(cls, lines):
@@ -276,6 +286,85 @@ class Polygon(BaseSectionObject):
                 if last is not None:
                     yield cls(last, polygon)
                 last = Subcatch
-                polygon = list([x, y])
+                polygon = [[x, y]]
         # last
-        yield cls(last, polygon)
+        if last is not None:
+            yield cls(last, polygon)
+
+    @property
+    def frame(self):
+        return DataFrame.from_records(self.polygon, columns=['x', 'y'])
+
+    def inp_line(self):
+        return '\n'.join(['{}  {} {}'.format(self.Subcatch, x, y) for x, y in self.polygon])
+
+
+class Loading(BaseSectionObject):
+    """
+    Section:
+        [LOADINGS]
+
+    Purpose:
+        Specifies the pollutant buildup that exists on each subcatchment at the start of a simulation.
+
+    Format:
+        Subcat Pollut InitBuildup Pollut InitBuildup ...
+
+    Format-PCSWMM:
+        Subcatchment Pollutant Buildup
+
+    Remarks:
+        Subcat
+            name of a subcatchment.
+        Pollut
+            name of a pollutant.
+        InitBuildup
+            initial buildup of pollutant (lbs/acre or kg/hectare).
+
+        More than one pair of pollutant - buildup values can be entered per line. If more than
+        one line is needed, then the subcatchment name must still be entered first on the
+        succeeding lines.
+
+        If an initial buildup is not specified for a pollutant, then its initial buildup is computed
+        by applying the DRY_DAYS option (specified in the [OPTIONS] section) to the
+        pollutant’s buildup function for each land use in the subcatchment.
+
+    """
+    identifier =IDENTIFIERS.Subcatch
+    table_inp_export = False
+
+    def __init__(self, Subcatch,  pollutant_buildup):
+        self.Subcatch = str(Subcatch)
+        self.pollutant_buildup = pollutant_buildup
+
+    @classmethod
+    def convert_lines(cls, lines):
+        """multiple lines for one entry"""
+        last = None
+        pollutant_buildup = list()
+        for Subcatch, *line in lines:
+            if Subcatch != last:
+                # new curve line
+                if last is not None:
+                    # first return previous curve
+                    yield cls(last, pollutant_buildup)
+                # reset variables
+                pollutant_buildup = list()
+                last = Subcatch
+
+            # points in current line
+            remains = iter(line)
+            for pollutant in remains:
+                buildup = next(remains)
+                pollutant_buildup.append([pollutant, buildup])
+
+        # last
+        if last is not None:
+            yield cls(last, pollutant_buildup)
+
+    @property
+    def frame(self):
+        return DataFrame.from_records(self.pollutant_buildup, columns=['pollutant', 'initial buildup'])
+
+    def inp_line(self):
+        return '\n'.join(['{}  {} {}'.format(self.Subcatch, p, b) for p, b in self.pollutant_buildup])

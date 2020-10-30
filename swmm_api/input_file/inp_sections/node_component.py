@@ -1,7 +1,7 @@
 from numpy import NaN
 
 from ..inp_helpers import BaseSectionObject
-from.indices import Indices
+from.identifiers import IDENTIFIERS
 
 class DryWeatherFlow(BaseSectionObject):
     """
@@ -29,7 +29,7 @@ class DryWeatherFlow(BaseSectionObject):
     The patterns can be any combination of monthly, daily, hourly and weekend hourly
     patterns, listed in any order. See the [PATTERNS] section for more details.
     """
-    index = [Indices.Node, 'kind']
+    identifier =[IDENTIFIERS.Node, 'kind']
 
     def __init__(self, Node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN,
                  pattern5=NaN, pattern6=NaN, pattern7=NaN):
@@ -60,7 +60,7 @@ class DryWeatherFlow(BaseSectionObject):
 
 
 class Inflow(BaseSectionObject):
-    index = [Indices.Node, 'Constituent']
+    identifier =[IDENTIFIERS.Node, 'Constituent']
 
     class TypeOption:
         __class__ = 'Type Option'
@@ -116,7 +116,7 @@ class Coordinate(BaseSectionObject):
         Ycoord
             vertical coordinate relative to origin in lower left of map.
     """
-    index = Indices.Node
+    identifier =IDENTIFIERS.Node
 
     def __init__(self, Node, x, y):
         """Assigns X,Y coordinates to drainage system nodes.
