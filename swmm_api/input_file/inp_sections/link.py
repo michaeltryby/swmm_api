@@ -5,10 +5,7 @@ from ..inp_helpers import BaseSectionObject
 
 
 class Conduit(BaseSectionObject):
-    """CONDUITS
-
-    Section:
-        [CONDUITS]
+    """Section: **[CONDUITS]**
 
     Purpose:
         Identifies each conduit link of the drainage system. Conduits are pipes or channels that convey water
@@ -91,26 +88,27 @@ class Weir(BaseSectionObject):
     PC-SWMM Format:
         Name FromNode ToNode Type CrestHt Qcoeff Gated EndCon EndCoeff Surcharge RoadWidth RoadSurf
 
-    The geometry of a weir’s opening is described in the [XSECTIONS] section.
-    The following shapes must be used with each type of weir:
+    Remarks:
+        The geometry of a weir’s opening is described in the [XSECTIONS] section.
+        The following shapes must be used with each type of weir:
 
-    =============  ===================
-    Weir Type      Cross-Section Shape
-    -------------  -------------------
-    Transverse     RECT_OPEN
-    Sideflow       RECT_OPEN
-    V-Notch        TRIANGULAR
-    Trapezoidal    TRAPEZOIDAL
-    Roadway        RECT_OPEN
-    =============  ===================
+        =============  ===================
+        Weir Type      Cross-Section Shape
+        =============  ===================
+        Transverse     RECT_OPEN
+        Sideflow       RECT_OPEN
+        V-Notch        TRIANGULAR
+        Trapezoidal    TRAPEZOIDAL
+        Roadway        RECT_OPEN
+        =============  ===================
 
-    The ROADWAY weir is a broad crested rectangular weir used model roadway crossings usually in conjunction with
-    culvert-type conduits. It uses the FHWA HDS-5 method to determine a discharge coefficient as a function of flow
-    depth and roadway width and surface.
-    If no roadway data are provided then the weir behaves as a TRANSVERSE weir with Cd as its discharge coefficient.
-    Note that if roadway data are provided, then values for the other optional weir parameters
-    (NO for Gated, 0 for EC, 0 for Cd2, and NO for Sur)
-    must be entered even though they do not apply to ROADWAY weirs.
+        The ROADWAY weir is a broad crested rectangular weir used model roadway crossings usually in conjunction with
+        culvert-type conduits. It uses the FHWA HDS-5 method to determine a discharge coefficient as a function of flow
+        depth and roadway width and surface.
+        If no roadway data are provided then the weir behaves as a TRANSVERSE weir with Cd as its discharge coefficient.
+        Note that if roadway data are provided, then values for the other optional weir parameters
+        (NO for Gated, 0 for EC, 0 for Cd2, and NO for Sur)
+        must be entered even though they do not apply to ROADWAY weirs.
     """
     identifier =IDENTIFIERS.Name
 
