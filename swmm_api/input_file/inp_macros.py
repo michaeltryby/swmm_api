@@ -392,9 +392,6 @@ def remove_empty_sections(inp):
     return new_inp
 
 
-from mp.helpers.check_time import Timer
-
-
 def reduce_curves(inp):
     """
     get used CURVES from [STORAGE, OUTLETS, PUMPS and XSECTIONS] and keep only used curves in the section

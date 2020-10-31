@@ -1,49 +1,58 @@
 from numpy import NaN
 
-from ..inp_helpers import BaseSectionObject
 from .identifiers import IDENTIFIERS
+from ..inp_helpers import BaseSectionObject
+
 
 class Junction(BaseSectionObject):
-    identifier =IDENTIFIERS.Name
+    """
+    Section: [**JUNCTIONS**]
+
+    Purpose:
+        Identifies each junction node of the drainage system.
+        Junctions are points in space where channels and pipes connect together.
+        For sewer systems they can be either connection fittings or manholes.
+
+    Format:
+        ::
+
+            Name Elev (Ymax Y0 Ysur Apond)
+
+    Format-PC-SWMM:
+        ``Name  Elevation MaxDepth InitDepth SurDepth Aponded``
+
+    Remarks:
+        Name
+            name assigned to junction node.
+        Elev
+            elevation of junction invert (ft or m).
+        Ymax
+            depth from ground to invert elevation (ft or m) (default is 0).
+        Y0
+            water depth at start of simulation (ft or m) (default is 0).
+        Ysur
+            maximum additional head above ground elevation that manhole junction
+            can sustain under surcharge conditions (ft or m) (default is 0).
+        Apond
+            area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0).
+
+        If Ymax is 0 then SWMM sets the maximum depth equal to the distance
+        from the invert to the top of the highest connecting link.
+
+        If the junction is part of a force main section of the system then set Ysur
+        to the maximum pressure that the system can sustain.
+
+        Surface ponding can only occur when Apond is non-zero and the ALLOW_PONDING analysis option is turned on.
+
+    """
+    identifier = IDENTIFIERS.Name
 
     def __init__(self, Name, Elevation, MaxDepth=0, InitDepth=0, SurDepth=0, Aponded=0):
         """
-        Section:
-            [JUNCTIONS]
+        Identifies each junction node of the drainage system.
 
-        Purpose:
-            Identifies each junction node of the drainage system.
-            Junctions are points in space where channels and pipes connect together.
-            For sewer systems they can be either connection fittings or manholes.
-
-        Format:
-            Name Elev (Ymax Y0 Ysur Apond)
-
-        Format-PC-SWMM:
-            Name  Elevation MaxDepth InitDepth SurDepth Aponded
-
-        Remarks:
-            Name:
-                name assigned to junction node.
-            Elev:
-                elevation of junction invert (ft or m).
-            Ymax:
-                depth from ground to invert elevation (ft or m) (default is 0).
-            Y0:
-                water depth at start of simulation (ft or m) (default is 0).
-            Ysur:
-                maximum additional head above ground elevation that manhole junction
-                can sustain under surcharge conditions (ft or m) (default is 0).
-            Apond:
-                area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0).
-
-            If Ymax is 0 then SWMM sets the maximum depth equal to the distance
-            from the invert to the top of the highest connecting link.
-
-            If the junction is part of a force main section of the system then set Ysur
-            to the maximum pressure that the system can sustain.
-
-            Surface ponding can only occur when Apond is non-zero and the ALLOW_PONDING analysis option is turned on.
+        Junctions are points in space where channels and pipes connect together.
+        For sewer systems they can be either connection fittings or manholes.
 
         Args:
             Name (str): name assigned to junction node.
@@ -64,25 +73,26 @@ class Junction(BaseSectionObject):
 
 class Storage(BaseSectionObject):
     """
-    Section:
-        [STORAGE]
+    Section: [**STORAGE**]
 
     Purpose:
         Identifies each storage node of the drainage system.
         Storage nodes can have any shape as specified by a surface area versus water depth relation.
 
     Format:
-        Name Elev Ymax Y0 TABULAR    Acurve   (Apond Fevap Psi Ksat IMD)
-        Name Elev Ymax Y0 FUNCTIONAL A1 A2 A0 (Apond Fevap Psi Ksat IMD)
+        ::
+
+            Name Elev Ymax Y0 TABULAR    Acurve   (Apond Fevap Psi Ksat IMD)
+            Name Elev Ymax Y0 FUNCTIONAL A1 A2 A0 (Apond Fevap Psi Ksat IMD)
 
     PC-SWMM-Format:
-        Name Elev. MaxDepth InitDepth Shape Curve-Name/Params N/A Fevap Psi Ksat IMD
+        ``Name Elev. MaxDepth InitDepth Shape Curve-Name/Params N/A Fevap Psi Ksat IMD``
 
     Remarks:
         A1, A2, and A0 are used in the following expression that relates surface area (ft2 or m2) to water depth
         (ft or m) for a storage unit with FUNCTIONAL geometry:
 
-        𝐴rea = 𝐴0 + 𝐴1 * Depth ^ A2
+        Area = A0 + A1 * Depth ^ A2
 
         For TABULAR geometry, the surface area curve will be extrapolated outwards to meet the unit's maximum depth
         if need be.
@@ -94,7 +104,7 @@ class Storage(BaseSectionObject):
         Ksat.
         Otherwise seepage rate will vary with storage depth.
     """
-    identifier =IDENTIFIERS.Name
+    identifier = IDENTIFIERS.Name
 
     class Types:
         TABULAR = 'TABULAR'
@@ -103,6 +113,9 @@ class Storage(BaseSectionObject):
     def __init__(self, Name, Elevation, MaxDepth, InitDepth, Type, *args, Curve=None,
                  Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
         """
+        Identifies each storage node of the drainage system.
+
+        Storage nodes can have any shape as specified by a surface area versus water depth relation.
 
         Args:
             Name (str): name assigned to storage node.
@@ -114,9 +127,10 @@ class Storage(BaseSectionObject):
             Curve (str | list): name of curve in [CURVES] section with surface area (ft2 or m2)
                 as a function of depth (ft or m) for TABULAR geometry.
                 -OR- list with:
-                    A1 (float): coefficient of FUNCTIONAL relation between surface area and depth.
-                    A2 (float): exponent of FUNCTIONAL relation between surface area and depth.
-                    A0 (float): constant of FUNCTIONAL relation between surface area and depth.
+
+                   - A1 (:obj:`float`): coefficient of FUNCTIONAL relation between surface area and depth.
+                   - A2 (:obj:`float`): exponent of FUNCTIONAL relation between surface area and depth.
+                   - A0 (:obj:`float`): constant of FUNCTIONAL relation between surface area and depth.
 
             Apond (float): this parameter has been deprecated – use 0.
             Fevap (float): fraction of potential evaporation from surface realized (default is 0).
@@ -145,6 +159,7 @@ class Storage(BaseSectionObject):
 
     def _functional_init(self, A1, A2, A0, Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
         """
+        for storage type ``'FUNCTIONAL'``
 
         Args:
             A1 (float): coefficient of FUNCTIONAL relation between surface area and depth.
@@ -162,6 +177,7 @@ class Storage(BaseSectionObject):
 
     def _tabular_init(self, Acurve, Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
         """
+        for storage type ``'TABULAR'``
 
         Args:
             Acurve: name of curve in [CURVES] section with surface area (ft2 or m2)
@@ -177,6 +193,7 @@ class Storage(BaseSectionObject):
 
     def _optional_args(self, Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
         """
+        for the optional arguemts
 
         Args:
             Apond (float): this parameter has been deprecated – use 0.
@@ -184,9 +201,6 @@ class Storage(BaseSectionObject):
             Psi (float): soil suction head (inches or mm).
             Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
             IMD (float): soil initial moisture deficit (fraction).
-
-        Returns:
-
         """
         self.Apond = Apond
         self.Fevap = Fevap
@@ -197,42 +211,43 @@ class Storage(BaseSectionObject):
 
 class Outfall(BaseSectionObject):
     """
-    Section:
-        [OUTFALLS]
+    Section: [**OUTFALLS**]
 
     Purpose:
         Identifies each outfall node (i.e., final downstream boundary) of the drainage system and the corresponding
         water stage elevation. Only one link can be incident on an outfall node.
 
     Formats:
-        - Name Elev FREE               (Gated) (RouteTo)
-        - Name Elev NORMAL             (Gated) (RouteTo)
-        - Name Elev FIXED      Stage   (Gated) (RouteTo)
-        - Name Elev TIDAL      Tcurve  (Gated) (RouteTo)
-        - Name Elev TIMESERIES Tseries (Gated) (RouteTo)
+        ::
+
+            Name Elev FREE               (Gated) (RouteTo)
+            Name Elev NORMAL             (Gated) (RouteTo)
+            Name Elev FIXED      Stage   (Gated) (RouteTo)
+            Name Elev TIDAL      Tcurve  (Gated) (RouteTo)
+            Name Elev TIMESERIES Tseries (Gated) (RouteTo)
 
     Formats-PCSWMM:
-        - Name Elevation Type Data Gated Route-To
+        ``Name Elevation Type Data Gated Route-To``
 
     Remarks:
-        - Name:
+        Name
             name assigned to outfall node.
-        - Elev:
+        Elev
             invert elevation (ft or m).
-        - Stage:
+        Stage
             elevation of fixed stage outfall (ft or m).
-        - Tcurve:
+        Tcurve
             name of curve in [CURVES] section containing tidal height (i.e., outfall stage) v. hour of day over a
             complete tidal cycle.
-        - Tseries:
+        Tseries
             name of time series in [TIMESERIES] section that describes how outfall stage varies with time.
-        - Gated:
+        Gated:
             YES or NO depending on whether a flap gate is present that prevents reverse flow. The default is NO.
-        - RouteTo:
+        RouteTo
             optional name of a subcatchment that receives the outfall's discharge.
             The default is not to route the outfall’s discharge.
     """
-    identifier =IDENTIFIERS.Name
+    identifier = IDENTIFIERS.Name
 
     class Types:
         FREE = 'FREE'
@@ -243,7 +258,9 @@ class Outfall(BaseSectionObject):
 
     def __init__(self, Name, Elevation, Type, *args, Data=NaN, FlapGate=False, RouteTo=NaN):
         """Identifies each outfall node (i.e., final downstream boundary) of the drainage system and the corresponding
-        water stage elevation. Only one link can be incident on an outfall node.
+        water stage elevation.
+
+        Only one link can be incident on an outfall node.
 
         Args:
             Name (str): name assigned to outfall node.
@@ -251,15 +268,12 @@ class Outfall(BaseSectionObject):
             Type (str): one of <Types>
             *args: -Arguments below-
             Data (float | str): one of the following
+
                 Stage (float): elevation of fixed stage outfall (ft or m).
-                Tcurve (str): name of curve in [CURVES] section containing tidal height (i.e., outfall stage) v.
-                    hour of day over a complete tidal cycle.
-                Tseries (str): name of time series in [TIMESERIES] section that describes how outfall stage varies
-                with time.
-            FlapGate (bool): YES or NO depending on whether a flap gate is present that prevents reverse flow. The
-            default is NO.
-            RouteTo (str): optional name of a subcatchment that receives the outfall's discharge.
-                           The default is not to route the outfall’s discharge.
+                Tcurve (str): name of curve in [CURVES] section containing tidal height (i.e., outfall stage) v. hour of day over a complete tidal cycle.
+                Tseries (str): name of time series in [TIMESERIES] section that describes how outfall stage varies with time.
+            FlapGate (bool): YES or NO depending on whether a flap gate is present that prevents reverse flow. The default is NO.
+            RouteTo (str): optional name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
         """
         self.Name = str(Name)
         self.Elevation = Elevation

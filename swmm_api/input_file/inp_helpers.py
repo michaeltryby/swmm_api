@@ -131,9 +131,9 @@ class BaseSectionObject:
 
     def inp_line(self):
         """
-        convert object to one line of the .inp file
+        convert object to one line of the ``.inp``-file
 
-        for .inp file writing
+        for ``.inp``-file writing
 
         Returns:
             str: SWMM .inp file compatible string
@@ -151,13 +151,13 @@ class BaseSectionObject:
     @classmethod
     def from_line(cls, *line):
         """
-        convert line in the input file to the object
+        convert line in the ``.inp``-file to the object
 
         Args:
             *line (list[str]): arguments in the line
 
         Returns:
-            BaseSectionObject: object of the input file section
+            BaseSectionObject: object of the ``.inp``-file section
         """
         return cls(*line)
 
@@ -173,10 +173,18 @@ class BaseSectionObject:
 
 ########################################################################################################################
 class InpSectionGeneric:
-    """abstract class for input file sections without objects"""
+    """abstract class for ``.inp``-file sections without objects"""
     @classmethod
     def from_lines(cls, lines):
-        """abstract function to read input file lines and create an section object"""
+        """
+        read ``.inp``-file lines and create an section object
+
+        Args:
+            lines (str | list[list[str]]): lines in the section of the ``.inp``-file
+
+        Returns:
+            InpSectionGeneric: object of the section
+        """
         pass
 
     def __repr__(self):
@@ -186,7 +194,18 @@ class InpSectionGeneric:
         pass
 
     def to_inp(self, fast=False):
-        """abstract function to write input file lines of an section object"""
+        """
+        write ``.inp``-file lines of the section object
+
+        Args:
+            fast (bool): speeding up conversion
+
+                True: if no special formation of the input file is needed
+                False: section is converted into a table to prettify string output (slower)
+
+        Returns:
+            str: ``.inp``-file lines of the section object
+        """
         pass
 
 

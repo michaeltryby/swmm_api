@@ -12,7 +12,7 @@ class Conduit(BaseSectionObject):
         from one node to another.
 
     Format:
-        Name  Node1  Node2  Length  N  Z1  Z2  (Q0  Qmax)
+        ``Name  Node1  Node2  Length  N  Z1  Z2  (Q0  Qmax)``
 
     Format-PCSWMM:
         Name FromNode ToNode Length Roughness InOffset OutOffset InitFlow MaxFlow

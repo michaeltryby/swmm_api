@@ -1,27 +1,29 @@
 from numpy import NaN
 
+from .identifiers import IDENTIFIERS
 from ..inp_helpers import BaseSectionObject
-from.identifiers import IDENTIFIERS
+
 
 class DryWeatherFlow(BaseSectionObject):
     """
-    Section:
-        [DWF]
+    Section: [**DWF**]
 
     Purpose:
         Specifies dry weather flow and its quality entering the drainage system at specific nodes.
 
     Format:
-        Node Type Base (Pat1 Pat2 Pat3 Pat4)
+        ::
+
+            Node Type Base (Pat1 Pat2 Pat3 Pat4)
 
     Remarks:
-        - Node:
+        Node
             name of node where dry weather flow enters.
-        - Type:
+        Type
             keyword FLOW for flow or pollutant name for quality constituent.
-        - Base:
+        Base
             average baseline value for corresponding constituent (flow or concentration units).
-        - Pat1, Pat2, etc.:
+        Pat1, Pat2, etc.
             names of up to four time patterns appearing in the [PATTERNS] section.
 
     The actual dry weather input will equal the product of the baseline value and any adjustment factors
@@ -29,7 +31,7 @@ class DryWeatherFlow(BaseSectionObject):
     The patterns can be any combination of monthly, daily, hourly and weekend hourly
     patterns, listed in any order. See the [PATTERNS] section for more details.
     """
-    identifier =[IDENTIFIERS.Node, 'kind']
+    identifier = [IDENTIFIERS.Node, 'kind']
 
     def __init__(self, Node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN,
                  pattern5=NaN, pattern6=NaN, pattern7=NaN):
@@ -60,7 +62,7 @@ class DryWeatherFlow(BaseSectionObject):
 
 
 class Inflow(BaseSectionObject):
-    identifier =[IDENTIFIERS.Node, 'Constituent']
+    identifier = [IDENTIFIERS.Node, 'Constituent']
 
     class TypeOption:
         __class__ = 'Type Option'
@@ -99,14 +101,15 @@ class Inflow(BaseSectionObject):
 
 class Coordinate(BaseSectionObject):
     """
-    Section:
-        [COORDINATES]
+    Section: [**COORDINATES**]
 
     Purpose:
         Assigns X,Y coordinates to drainage system nodes.
 
     Format:
-        Node Xcoord Ycoord
+        ::
+
+            Node Xcoord Ycoord
 
     Remarks:
         Node
@@ -116,7 +119,7 @@ class Coordinate(BaseSectionObject):
         Ycoord
             vertical coordinate relative to origin in lower left of map.
     """
-    identifier =IDENTIFIERS.Node
+    identifier = IDENTIFIERS.Node
 
     def __init__(self, Node, x, y):
         """Assigns X,Y coordinates to drainage system nodes.
