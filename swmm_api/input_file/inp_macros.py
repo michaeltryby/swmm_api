@@ -444,7 +444,7 @@ def filter_nodes(inp, final_nodes):
 
     # __________________________________________
     if sec.TAGS in inp_new:
-        inp_new[sec.TAGS] = inp_new[sec.TAGS].filter_keys(final_nodes, which=TagsSection.Types.Node)
+        inp_new[sec.TAGS] = inp_new[sec.TAGS].filter_keys(final_nodes, which=TagsSection.TYPES.Node)
 
     # __________________________________________
     inp_new = remove_empty_sections(inp_new)
@@ -490,10 +490,10 @@ def filter_links(inp_original, final_nodes):
     # __________________________________________
     # section_filter[TAGS],  # node und link
     if sec.TAGS in inp:
-        old_tags = inp[sec.TAGS][TagsSection.Types.Link].copy()
+        old_tags = inp[sec.TAGS][TagsSection.TYPES.Link].copy()
         for name in old_tags:
             if name not in final_links:
-                inp[sec.TAGS][TagsSection.Types.Link].pop(name)
+                inp[sec.TAGS][TagsSection.TYPES.Link].pop(name)
 
     # __________________________________________
     if sec.VERTICES in inp:
@@ -541,10 +541,10 @@ def filter_subcatchments(inp_original, final_nodes):
     # __________________________________________
     # section_filter[TAGS],  # node und link
     if sec.TAGS in inp:
-        old_tags = inp[sec.TAGS][TagsSection.Types.Subcatch].copy()
+        old_tags = inp[sec.TAGS][TagsSection.TYPES.Subcatch].copy()
         for name in old_tags:
             if name not in inp[sec.SUBCATCHMENTS]:
-                inp[sec.TAGS][TagsSection.Types.Link].pop(name)
+                inp[sec.TAGS][TagsSection.TYPES.Link].pop(name)
 
     # __________________________________________
     if sec.POLYGONS in inp:

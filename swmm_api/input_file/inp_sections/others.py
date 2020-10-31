@@ -195,26 +195,28 @@ class Pattern(BaseSectionObject):
 
 class Pollutant(BaseSectionObject):
     """
-    Section:
-        [POLLUTANTS]
+    Section: [**POLLUTANTS**]
 
     Purpose:
         Identifies the pollutants being analyzed.
 
     Format:
-        Name Units Crain Cgw Cii Kd (Sflag CoPoll CoFract Cdwf Cinit)
+        ::
 
-    PC-SWMM-Format:
-        Name Units Crain Cgw Crdii Kdecay SnowOnly Co-Pollutant Co-Frac Cdwf Cinit
+            Name Units Crain Cgw Cii Kd (Sflag CoPoll CoFract Cdwf Cinit)
+
+    Format-PCSWMM:
+        ``Name Units Crain Cgw Crdii Kdecay SnowOnly Co-Pollutant Co-Frac Cdwf Cinit``
 
     Remarks:
         Name
             name assigned to pollutant.
         Units
             concentration units
-                MG/L for milligrams per liter
-                UG/L for micrograms per liter
-                #/L for direct count per liter
+
+                - ``MG/L`` for milligrams per liter
+                - ``UG/L`` for micrograms per liter
+                - ``#/L`` for direct count per liter
         Crain
             concentration of pollutant in rainfall (concentration units).
         Cgw
@@ -224,9 +226,9 @@ class Pollutant(BaseSectionObject):
         Kdecay
             first-order decay coefficient (1/days).
         Sflag
-            YES if pollutant buildup occurs only when there is snow cover, NO otherwise (default is NO).
+            YES if pollutant buildup occurs only when there is snow cover, NO otherwise (default is ``NO``).
         CoPoll
-            name of co-pollutant (default is no co-pollutant designated by a *).
+            name of co-pollutant (default is no co-pollutant designated by a ``*``).
         CoFract
             fraction of co-pollutant concentration (default is 0).
         Cdwf
@@ -234,17 +236,17 @@ class Pollutant(BaseSectionObject):
         Cinit
             pollutant concentration throughout the conveyance system at the start of the simulation (default is 0).
 
-        FLOW is a reserved word and cannot be used to name a pollutant.
+        ``FLOW`` is a reserved word and cannot be used to name a pollutant.
 
         Parameters Sflag through Cinit can be omitted if they assume their default values.
-        If there is no co-pollutant but non-default values for Cdwf or Cinit, then enter an asterisk (*)
+        If there is no co-pollutant but non-default values for Cdwf or Cinit, then enter an asterisk (``*``)
         for the co-pollutant name.
 
-        When pollutant X has a co-pollutant Y, it means that fraction CoFract of pollutant Y’s runoff
-        concentration is added to pollutant X’s runoff concentration when wash off from a subcatchment is computed.
+        When pollutant X has a co-pollutant Y, it means that fraction CoFract of pollutant Y's runoff
+        concentration is added to pollutant X's runoff concentration when wash off from a subcatchment is computed.
 
         The dry weather flow concentration can be overridden for any specific node of the conveyance
-        system by editing the node’s Inflows property.
+        system by editing the node's Inflows property.
     """
     identifier =IDENTIFIERS.Name
 
@@ -542,26 +544,26 @@ class Control(BaseSectionObject):
 
 class Curve(BaseSectionObject):
     """
-    Section:
-        [CURVES]
+    Section: [**CURVES**]
 
     Purpose:
         Describes a relationship between two variables in tabular format.
 
     Format:
-        Name Type X-value Y-value ...
+        ::
+
+            Name Type X-value Y-value ...
 
     Format-PCSWMM:
-            Name Type X-Value Y-Value
+            ``Name Type X-Value Y-Value``
 
     Remarks:
         Name
             name assigned to table
         Type
-            STORAGE / SHAPE / DIVERSION / TIDAL / PUMP1 / PUMP2 / PUMP3 / PUMP4 / RATING / CONTROL
+            ``STORAGE`` / ``SHAPE`` / ``DIVERSION`` / ``TIDAL`` / ``PUMP1`` / ``PUMP2`` / ``PUMP3`` / ``PUMP4`` / ``RATING`` / ``CONTROL``
         X-value
             an x (independent variable) value
-
         Y-value
             the y (dependent variable) value corresponding to x
 
@@ -570,38 +572,47 @@ class Curve(BaseSectionObject):
         be entered in increasing order.
 
         Choices for curve type have the following meanings (flows are expressed in the
-        user’s choice of flow units set in the [OPTIONS] section):
+        user’s choice of flow units set in the [``OPTIONS``] section):
 
-        STORAGE
-            surface area in ft2 (m2) v. depth in ft (m) for a storage unit node
-        SHAPE
-            width v. depth for a custom closed cross-section, both normalized with respect to full depth
-        DIVERSION
-            diverted outflow v. total inflow for a flow divider node
-        TIDAL
-            water surface elevation in ft (m) v. hour of the day for an outfall node
-        PUMP1
-            pump outflow v. increment of inlet node volume in ft3 (m3)
-        PUMP2
-            pump outflow v. increment of inlet node depth in ft (m)
-        PUMP3
-            pump outflow v. head difference between outlet and inlet nodes in ft (m)
-        PUMP4
-            pump outflow v. continuous depth in ft (m)
-        RATING
-            outlet flow v. head in ft (m)
-        CONTROL
-            control setting v. controller variable
+            ``STORAGE``
+                surface area in ft2 (m2) v. depth in ft (m) for a storage unit node
+            ``SHAPE``
+                width v. depth for a custom closed cross-section, both normalized with respect to full depth
+            ``DIVERSION``
+                diverted outflow v. total inflow for a flow divider node
+            ``TIDAL``
+                water surface elevation in ft (m) v. hour of the day for an outfall node
+            ``PUMP1``
+                pump outflow v. increment of inlet node volume in ft3 (m3)
+            ``PUMP2``
+                pump outflow v. increment of inlet node depth in ft (m)
+            ``PUMP3``
+                pump outflow v. head difference between outlet and inlet nodes in ft (m)
+            ``PUMP4``
+                pump outflow v. continuous depth in ft (m)
+            ``RATING``
+                outlet flow v. head in ft (m)
+            ``CONTROL``
+                control setting v. controller variable
 
     Examples:
-        ;Storage curve (x = depth, y = surface area)
-        AC1 STORAGE 0 1000 2 2000 4 3500 6 4200
-         8
-         5000
-        ;Type1 pump curve (x = inlet wet well volume, y = flow )
-        PC1 PUMP1
-        PC1 100 5 300 10 500 20
+        ::
 
+            ;Storage curve (x = depth, y = surface area)
+            AC1 STORAGE 0 1000 2 2000 4 3500 6 4200 8 5000
+            ;Type1 pump curve (x = inlet wet well volume, y = flow )
+            PC1 PUMP1
+            PC1 100 5 300 10 500 20
+
+    Args:
+        Name (str): name assigned to table
+        Type (str): one of ``STORAGE`` / ``SHAPE`` / ``DIVERSION`` / ``TIDAL`` / ``PUMP1`` / ``PUMP2`` / ``PUMP3`` / ``PUMP4`` / ``RATING`` / ``CONTROL``
+        points (list[list[float, float]]): tuple of X-value (an independent variable) and  Y-value (an dependent variable)
+
+    Attributes:
+        Name (str): name assigned to table
+        Type (str): one of ``STORAGE`` / ``SHAPE`` / ``DIVERSION`` / ``TIDAL`` / ``PUMP1`` / ``PUMP2`` / ``PUMP3`` / ``PUMP4`` / ``RATING`` / ``CONTROL``
+        points (list[list[float, float]]): tuple of X-value (an independent variable) and  Y-value (an dependent variable)
     """
     identifier =IDENTIFIERS.Name
     table_inp_export = False
@@ -619,37 +630,38 @@ class Curve(BaseSectionObject):
         CONTROL = 'CONTROL'
 
     @classmethod
-    def _get_names(cls, kind):
+    def _get_names(cls, Type):
         TYPES = cls.TYPES
-        if kind == TYPES.STORAGE:
+        if Type == TYPES.STORAGE:
             return ['depth', 'area']
-        elif kind == TYPES.SHAPE:
+        elif Type == TYPES.SHAPE:
             return ['depth', 'width']
-        elif kind == TYPES.DIVERSION:
+        elif Type == TYPES.DIVERSION:
             return ['inflow', 'outflow']
-        elif kind == TYPES.TIDAL:
+        elif Type == TYPES.TIDAL:
             return ['hour', 'elevation']
-        elif kind == TYPES.PUMP1:
+        elif Type == TYPES.PUMP1:
             return ['volume', 'outflow']
-        elif kind == TYPES.PUMP2:
+        elif Type == TYPES.PUMP2:
             return ['depth', 'outflow']
-        elif kind == TYPES.PUMP3:
+        elif Type == TYPES.PUMP3:
             return ['head diff', 'outflow']
-        elif kind == TYPES.PUMP4:
+        elif Type == TYPES.PUMP4:
             return ['depth', 'outflow']
-        elif kind == TYPES.RATING:
+        elif Type == TYPES.RATING:
             return ['head', 'flow']
-        elif kind == TYPES.CONTROL:
+        elif Type == TYPES.CONTROL:
             return ['variable', 'setting']
 
-    def __init__(self, Name, kind, points):
+    def __init__(self, Name, Type, points):
         self.Name = str(Name)
-        self.kind = kind.upper()
+        self.Type = Type.upper()
         self.points = points
 
     @classmethod
     def convert_lines(cls, lines):
         last = None
+        Type = None
         points = list()
         for name, *line in lines:
             remains = iter(line)
@@ -658,11 +670,11 @@ class Curve(BaseSectionObject):
                 # new curve line
                 if last is not None:
                     # first return previous curve
-                    yield cls(last, kind, points)
+                    yield cls(last, Type, points)
                 # reset variables
                 points = list()
                 last = name
-                kind = next(remains)
+                Type = next(remains)
 
             # points in current line
             for a in remains:
@@ -671,19 +683,19 @@ class Curve(BaseSectionObject):
 
         # last
         if last is not None:
-            yield cls(last, kind, points)
+            yield cls(last, Type, points)
 
     @property
     def frame(self):
-        return DataFrame.from_records(self.points, columns=self._get_names(self.kind))
+        return DataFrame.from_records(self.points, columns=self._get_names(self.Type))
 
     def inp_line(self):
-        kind = self.kind
+        Type = self.Type
         f = ''
         # f = '{}  {}\n'.format(self.Name, self.kind)
         for x, y in self.points:  # [(x,y), (x,y), ...]
-            f += '{}  {} {:7.4f} {:7.4f}\n'.format(self.Name, kind, x, y)
-            kind = ''
+            f += '{}  {} {:7.4f} {:7.4f}\n'.format(self.Name, Type, x, y)
+            Type = ''
         return f
 
 

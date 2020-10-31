@@ -7,58 +7,103 @@ from .identifiers import IDENTIFIERS
 
 class SubCatchment(BaseSectionObject):
     """
-    Section:
-        [SUBCATCHMENTS]
+    Section: [**SUBCATCHMENTS**]
 
     Purpose:
         Identifies each subcatchment within the study area. Subcatchments are land area
         units which generate runoff from rainfall.
 
     Format:
-        Name Rgage OutID Area %Imperv Width Slope Clength (Spack)
+        ::
 
-    Remarks:
-        - Name:
-            name assigned to subcatchment.
-        - Rgage:
-            name of rain gage in [RAINGAGES] section assigned to subcatchment.
-        - OutID:
-            name of node or subcatchment that receives runoff from subcatchment.
-        - Area:
-            area of subcatchment (acres or hectares).
-        - %Imperv:
-            percent imperviousness of subcatchment.
-        - Width:
-            characteristic width of subcatchment (ft or meters).
-        - Slope:
-            subcatchment slope (percent).
-        - Clength:
-            total curb length (any length units). Use 0 if not applicable.
-        - Spack:
-            optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow accumulation and
-            melting over the subcatchment.
+            Name Rgage OutID Area %Imperv Width Slope Clength (Spack)
+
+    Format-PCSWMM:
+        ``Name RainGage Outlet Area %Imperv Width %Slope CurbLen SnowPack``
+
+    Args:
+        Name (str): name assigned to subcatchment.
+        RainGage (str): name of rain gage in [RAINGAGES] section assigned to subcatchment. ``Rgage``
+        Outlet (str): name of node or subcatchment that receives runoff from subcatchment. ``OutID``
+        Area (float): area of subcatchment (acres or hectares).
+        Imperv (float): percent imperviousness of subcatchment. ``%Imperv``
+        Width (float): characteristic width of subcatchment (ft or meters).
+        Slope (float): subcatchment slope (percent).
+        CurbLen (float): total curb length (any length units). Use 0 if not applicable. ``Clength``
+        SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow accumulation and melting over the subcatchment. ``Spack``
+
+    Attributes:
+        Name (str): name assigned to subcatchment.
+        RainGage (str): name of rain gage in [RAINGAGES] section assigned to subcatchment. ``Rgage``
+        Outlet (str): name of node or subcatchment that receives runoff from subcatchment. ``OutID``
+        Area (float): area of subcatchment (acres or hectares).
+        Imperv (float): percent imperviousness of subcatchment. ``%Imperv``
+        Width (float): characteristic width of subcatchment (ft or meters).
+        Slope (float): subcatchment slope (percent).
+        CurbLen (float): total curb length (any length units). Use 0 if not applicable. ``Clength``
+        SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow accumulation and melting over the subcatchment. ``Spack``
     """
     identifier =IDENTIFIERS.Name
 
-    def __init__(self, Name, RainGage, Outlet, Area, Imperv, Width, Slope, CurbLen, SnowPack=NaN):
-        """
-
-
-        Name RainGage Outlet Area %Imperv Width %Slope CurbLen SnowPack
-        """
-
+    def __init__(self, Name, RainGage, Outlet, Area, Imperv, Width, Slope, CurbLen=0, SnowPack=NaN):
         self.Name = str(Name)
-        self.RainGage = RainGage
+        self.RainGage = str(RainGage)
         self.Outlet = str(Outlet)
-        self.Area = Area
-        self.Imperv = Imperv
-        self.Width = Width
-        self.Slope = Slope
-        self.CurbLen = CurbLen
+        self.Area = float(Area)
+        self.Imperv = float(Imperv)
+        self.Width = float(Width)
+        self.Slope = float(Slope)
+        self.CurbLen = float(CurbLen)
         self.SnowPack = SnowPack
 
 
 class SubArea(BaseSectionObject):
+    """
+    Section: [**SUBAREAS**]
+
+    Purpose:
+        Supplies information about pervious and impervious areas for each subcatchment.
+        Each subcatchment can consist of a pervious sub-area, an impervious sub-area with
+        depression storage, and an impervious sub-area without depression storage.
+
+    Format:
+        ::
+
+            Subcat Nimp Nperv Simp Sperv %Zero RouteTo (%Routed)
+
+    Format-PCSWMM:
+        ``Subcatchment N-Imperv N-Perv S-Imperv S-Perv PctZero RouteTo PctRouted``
+
+    Args:
+        Subcatch (str): subcatchment name. ``Subcat``
+        N_Imperv (float): Manning's n for overland flow over the impervious sub-area. ``Nimp``
+        N_Perv (float): Manning's n for overland flow over the pervious sub-area. ``Nperv``
+        S_Imperv (float): depression storage for impervious sub-area (inches or mm). ``Simp``
+        S_Perv (float): depression storage for pervious sub-area (inches or mm). ``Sperv``
+        PctZero (float): percent of impervious area with no depression storage. ``%Zero``
+        RouteTo (str):
+
+            - ``IMPERVIOUS`` if pervious area runoff runs onto impervious area,
+            - ``PERVIOUS`` if impervious runoff runs onto pervious area,
+            - ``OUTLET`` if both areas drain to the subcatchment's outlet (default = ``OUTLET``).
+
+        PctRouted (float): percent of runoff routed from one type of area to another (default = 100). ``%Routed``
+
+    Attributes:
+        Subcatch (str): subcatchment name. ``Subcat``
+        N_Imperv (float): Manning's n for overland flow over the impervious sub-area. ``Nimp``
+        N_Perv (float): Manning's n for overland flow over the pervious sub-area. ``Nperv``
+        S_Imperv (float): depression storage for impervious sub-area (inches or mm). ``Simp``
+        S_Perv (float): depression storage for pervious sub-area (inches or mm). ``Sperv``
+        PctZero (float): percent of impervious area with no depression storage. ``%Zero``
+        RouteTo (str):
+
+            - ``IMPERVIOUS`` if pervious area runoff runs onto impervious area,
+            - ``PERVIOUS`` if impervious runoff runs onto pervious area,
+            - ``OUTLET`` if both areas drain to the subcatchment's outlet (default = ``OUTLET``).
+
+        PctRouted (float): percent of runoff routed from one type of area to another (default = 100). ``%Routed``
+    """
     identifier =IDENTIFIERS.Subcatch
 
     class RoutToOption:
@@ -67,61 +112,15 @@ class SubArea(BaseSectionObject):
         PERVIOUS = 'PERVIOUS'
         OUTLET = 'OUTLET'
 
-    def __init__(self, Subcatch, N_Imperv, N_Perv, S_Imperv, S_Perv, PctZero, RouteTo=RoutToOption.OUTLET,
-                 PctRouted=100):
-        """
-        Section:
-            [SUBAREAS]
-
-        Purpose:
-            Supplies information about pervious and impervious areas for each subcatchment.
-            Each subcatchment can consist of a pervious sub-area, an impervious sub-area with
-            depression storage, and an impervious sub-area without depression storage.
-
-        Format:
-            Subcat Nimp Nperv Simp Sperv %Zero RouteTo (%Routed)
-
-        Format-PCSWMM:
-            Subcatchment N-Imperv N-Perv S-Imperv S-Perv PctZero RouteTo PctRouted
-
-        Remarks:
-            Subcat
-                subcatchment name.
-            Nimp
-                Manning's n for overland flow over the impervious sub-area.
-            Nperv
-                Manning's n for overland flow over the pervious sub-area.
-            Simp
-                depression storage for impervious sub-area (inches or mm).
-            Sperv
-                depression storage for pervious sub-area (inches or mm).
-            %Zero
-                percent of impervious area with no depression storage.
-            RouteTo
-                IMPERVIOUS if pervious area runoff runs onto impervious area,
-                PERVIOUS if impervious runoff runs onto pervious area,
-                or OUTLET if both areas drain to the subcatchment's outlet (default = OUTLET).
-            %Routed
-                percent of runoff routed from one type of area to another (default = 100).
-
-        Args:
-            subcatchment (str):
-            N_Imperv (float):
-            N_Perv (float):
-            S_Imperv (float):
-            S_Perv (float):
-            PctZero (float):
-            RouteTo (str):
-            PctRouted (float):
-        """
+    def __init__(self, Subcatch, N_Imperv, N_Perv, S_Imperv, S_Perv, PctZero, RouteTo=RoutToOption.OUTLET, PctRouted=100):
         self.Subcatch = str(Subcatch)
-        self.N_Imperv = N_Imperv
-        self.N_Perv = N_Perv
-        self.S_Imperv = S_Imperv
-        self.S_Perv = S_Perv
-        self.PctZero = PctZero
-        self.RouteTo = RouteTo
-        self.PctRouted = PctRouted
+        self.N_Imperv = float(N_Imperv)
+        self.N_Perv = float(N_Perv)
+        self.S_Imperv = float(S_Imperv)
+        self.S_Perv = float(S_Perv)
+        self.PctZero = float(PctZero)
+        self.RouteTo = str(RouteTo)
+        self.PctRouted = float(PctRouted)
 
 
 class Infiltration(BaseSectionObject):
@@ -243,25 +242,31 @@ class InfiltrationCurveNumber(Infiltration):
 
 class Polygon(BaseSectionObject):
     """
-    Section:
-        [POLYGONS]
+    Section: [**POLYGONS**]
 
     Purpose:
         Assigns X,Y coordinates to vertex points of polygons that define a subcatchment boundary.
 
     Format:
-        Link Xcoord Ycoord
+        ::
+
+            Link Xcoord Ycoord
 
     Remarks:
-        Subcat
-            name of subcatchment.
-        Xcoord
-            horizontal coordinate of vertex relative to origin in lower left of map.
-        Ycoord
-            vertical coordinate of vertex relative to origin in lower left of map.
-
         Include a separate line for each vertex of the subcatchment polygon, ordered in a
         consistent clockwise or counter-clockwise sequence.
+
+    Args:
+        Subcatch (str): name of subcatchment. ``Subcat``
+        polygon (list[list[float,float]]): coordinate of the polygon relative to origin in lower left of map.
+            - Xcoord: horizontal coordinate of vertex
+            - Ycoord: vertical coordinate of vertex
+
+    Attributes:
+        Subcatch (str): name of subcatchment. ``Subcat``
+        polygon (list[list[float,float]]): coordinate of the polygon relative to origin in lower left of map.
+            - Xcoord: horizontal coordinate of vertex
+            - Ycoord: vertical coordinate of vertex
     """
     identifier =IDENTIFIERS.Subcatch
     table_inp_export = False
@@ -301,26 +306,20 @@ class Polygon(BaseSectionObject):
 
 class Loading(BaseSectionObject):
     """
-    Section:
-        [LOADINGS]
+    Section: [**LOADINGS**]
 
     Purpose:
         Specifies the pollutant buildup that exists on each subcatchment at the start of a simulation.
 
     Format:
-        Subcat Pollut InitBuildup Pollut InitBuildup ...
+        ::
+
+            Subcat Pollut InitBuildup Pollut InitBuildup ...
 
     Format-PCSWMM:
-        Subcatchment Pollutant Buildup
+        ``Subcatchment Pollutant Buildup``
 
     Remarks:
-        Subcat
-            name of a subcatchment.
-        Pollut
-            name of a pollutant.
-        InitBuildup
-            initial buildup of pollutant (lbs/acre or kg/hectare).
-
         More than one pair of pollutant - buildup values can be entered per line. If more than
         one line is needed, then the subcatchment name must still be entered first on the
         succeeding lines.
@@ -328,6 +327,20 @@ class Loading(BaseSectionObject):
         If an initial buildup is not specified for a pollutant, then its initial buildup is computed
         by applying the DRY_DAYS option (specified in the [OPTIONS] section) to the
         pollutant’s buildup function for each land use in the subcatchment.
+
+    Args:
+        Subcatch (str): name of a subcatchment.
+        pollutant_buildup (list[list[str, float]]): tuple of
+
+            - Pollut: name of a pollutant.
+            - InitBuildup: initial buildup of pollutant (lbs/acre or kg/hectare).
+
+    Attributes:
+        Subcatch (str): name of a subcatchment.
+        pollutant_buildup (list[list[str, float]]): tuple of
+
+            - Pollut: name of a pollutant.
+            - InitBuildup: initial buildup of pollutant (lbs/acre or kg/hectare).
 
     """
     identifier =IDENTIFIERS.Subcatch

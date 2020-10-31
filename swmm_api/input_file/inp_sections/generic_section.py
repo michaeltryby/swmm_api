@@ -123,25 +123,18 @@ class ReportSection(UserDict_, InpSectionGeneric):
         INPUT
             specifies whether or not a summary of the input data should be provided in the output report.
             The default is NO.
-
         CONTINUITY
             specifies whether continuity checks should be reported or not. The default is YES.
-
         FLOWSTATS
             specifies whether summary flow statistics should be reported or not. The default is YES.
-
         CONTROLS
             specifies whether all control actions taken during a simulation should be listed or not. The default is NO.
-
         SUBCATCHMENTS
             gives a list of subcatchments whose results are to be reported. The default is NONE.
-
         NODES
             gives a list of nodes whose results are to be reported. The default is NONE.
-
         LINKS
             gives a list of links whose results are to be reported. The default is NONE.
-
         LID
             specifies that the LID control Name in subcatchment Subcatch should have a
             detailed performance report for it written to file Fname.
@@ -149,7 +142,7 @@ class ReportSection(UserDict_, InpSectionGeneric):
         The SUBCATCHMENTS, NODES, LINKS, and LID lines can be repeated multiple times.
     """
 
-    class Options:
+    class KEYS:
         INPUT = 'INPUT'
         CONTINUITY = 'CONTINUITY'
         FLOWSTATS = 'FLOWSTATS'
@@ -161,87 +154,87 @@ class ReportSection(UserDict_, InpSectionGeneric):
 
     @property
     def INPUT(self):
-        if self.Options.INPUT in self:
-            return self[self.Options.INPUT]
+        if self.KEYS.INPUT in self:
+            return self[self.KEYS.INPUT]
         else:
             return True
 
     @INPUT.setter
     def INPUT(self, value):
-        if self.Options.INPUT in self:
-            self[self.Options.INPUT] = value
+        if self.KEYS.INPUT in self:
+            self[self.KEYS.INPUT] = value
 
     @property
     def FLOWSTATS(self):
-        if self.Options.FLOWSTATS in self:
-            return self[self.Options.FLOWSTATS]
+        if self.KEYS.FLOWSTATS in self:
+            return self[self.KEYS.FLOWSTATS]
         else:
             return True
 
     @FLOWSTATS.setter
     def FLOWSTATS(self, value):
-        if self.Options.FLOWSTATS in self:
-            self[self.Options.FLOWSTATS] = value
+        if self.KEYS.FLOWSTATS in self:
+            self[self.KEYS.FLOWSTATS] = value
 
     @property
     def CONTROLS(self):
-        if self.Options.CONTROLS in self:
-            return self[self.Options.CONTROLS]
+        if self.KEYS.CONTROLS in self:
+            return self[self.KEYS.CONTROLS]
         else:
             return False
 
     @CONTROLS.setter
     def CONTROLS(self, value):
-        if self.Options.CONTROLS in self:
-            self[self.Options.CONTROLS] = value
+        if self.KEYS.CONTROLS in self:
+            self[self.KEYS.CONTROLS] = value
 
     @property
     def SUBCATCHMENTS(self):
-        if self.Options.SUBCATCHMENTS in self:
-            return self[self.Options.SUBCATCHMENTS]
+        if self.KEYS.SUBCATCHMENTS in self:
+            return self[self.KEYS.SUBCATCHMENTS]
         else:
             return None
 
     @SUBCATCHMENTS.setter
     def SUBCATCHMENTS(self, value):
-        if self.Options.SUBCATCHMENTS in self:
-            self[self.Options.SUBCATCHMENTS] = value
+        if self.KEYS.SUBCATCHMENTS in self:
+            self[self.KEYS.SUBCATCHMENTS] = value
 
     @property
     def NODES(self):
-        if self.Options.NODES in self:
-            return self[self.Options.NODES]
+        if self.KEYS.NODES in self:
+            return self[self.KEYS.NODES]
         else:
             return None
 
     @NODES.setter
     def NODES(self, value):
-        if self.Options.NODES in self:
-            self[self.Options.NODES] = value
+        if self.KEYS.NODES in self:
+            self[self.KEYS.NODES] = value
 
     @property
     def LINKS(self):
-        if self.Options.LINKS in self:
-            return self[self.Options.LINKS]
+        if self.KEYS.LINKS in self:
+            return self[self.KEYS.LINKS]
         else:
             return None
 
     @LINKS.setter
     def LINKS(self, value):
-        if self.Options.LINKS in self:
-            self[self.Options.LINKS] = value
+        if self.KEYS.LINKS in self:
+            self[self.KEYS.LINKS] = value
 
     @property
     def LID(self):
-        if self.Options.LID in self:
-            return self[self.Options.LID]
+        if self.KEYS.LID in self:
+            return self[self.KEYS.LID]
         else:
             return None
 
     @LID.setter
     def LID(self, value):
-        if self.Options.LID in self:
-            self[self.Options.LID] = value
+        if self.KEYS.LID in self:
+            self[self.KEYS.LID] = value
 
     @classmethod
     def from_lines(cls, lines):
@@ -255,7 +248,7 @@ class ReportSection(UserDict_, InpSectionGeneric):
             if len(line) == 1:
                 value = infer_type(line[0])
 
-            elif (label == cls.Options.LID) and (len(line) == 3):
+            elif (label == cls.KEYS.LID) and (len(line) == 3):
                 value = {'Name': line[0],
                          'Subcatch': line[1],
                          'Fname': line[2]}
@@ -263,10 +256,10 @@ class ReportSection(UserDict_, InpSectionGeneric):
             else:
                 value = infer_type(line)
 
-            if label in [cls.Options.SUBCATCHMENTS,
-                         cls.Options.NODES,
-                         cls.Options.LINKS,
-                         cls.Options.LID]:
+            if label in [cls.KEYS.SUBCATCHMENTS,
+                         cls.KEYS.NODES,
+                         cls.KEYS.LINKS,
+                         cls.KEYS.LID]:
                 if isinstance(value, str) and (value.upper() == 'ALL'):
                     pass
                 elif value is None:
@@ -546,7 +539,7 @@ class TagsSection(UserDict_, InpSectionGeneric):
     # def __init__(self):
     #     UserDict_.__init__(self)
 
-    class Types:
+    class TYPES:
         Node = IDENTIFIERS.Node
         Subcatch = IDENTIFIERS.Subcatch
         Link = IDENTIFIERS.Link
@@ -608,17 +601,23 @@ class MapSection(InpSectionGeneric):
             DIMENSIONS X1 Y1 X2 Y2
             UNITS FEET / METERS / DEGREES / NONE
 
-    Remarks:
-        X1
-            lower-left X coordinate of full map extent
-        Y1
-            lower-left Y coordinate of full map extent
-        X2
-            upper-right X coordinate of full map extent
-        Y2
-             upper-right Y coordinate of full map extent
+    Args:
+        dimensions (list[float, float, float, float]): lower-left and upper-right coordinates of the full map extent
+
+            - lower_left_x (:obj:`float`): lower-left X coordinate ``X1``
+            - lower_left_y (:obj:`float`): lower-left Y coordinate ``Y1``
+            - upper_right_x (:obj:`float`): upper-right X coordinate ``X2``
+            - upper_right_y (:obj:`float`): upper-right Y coordinate ``Y2``
+        units (str): one of FEET / METERS / DEGREES / NONE see :py:attr:`~MapSection.UNITS`
+
+    Attributes:
+        lower_left_x (float): lower-left X coordinate ``X1``
+        lower_left_y (float): lower-left Y coordinate ``Y1``
+        upper_right_x (float): upper-right X coordinate ``X2``
+        upper_right_y (float): upper-right Y coordinate ``Y2``
+        units (str): one of FEET / METERS / DEGREES / NONE see :py:attr:`~MapSection.UNITS`
     """
-    class Parts:
+    class KEYS:
         DIMENSIONS = 'DIMENSIONS'
         UNITS = 'UNITS'
 
@@ -629,17 +628,6 @@ class MapSection(InpSectionGeneric):
         NONE = None
 
     def __init__(self, dimensions, units='Meters'):
-        """Provides dimensions and distance units for the map.
-
-        Args:
-            dimensions (tuple[float, float, float, float]): lower-left and upper-right coordinates of the full map extent
-
-                - lower_left_x (:obj:`float`): lower-left X coordinate
-                - lower_left_y (:obj:`float`): lower-left Y coordinate
-                - upper_right_x (:obj:`float`): upper-right X coordinate
-                - upper_right_y (:obj:`float`): upper-right Y coordinate
-            units (str): one of FEET / METERS / DEGREES / NONE see :py:attr:`~MapSection.UNITS`
-        """
         self.lower_left_x = dimensions[0]
         self.lower_left_y = dimensions[1]
         self.upper_right_x = dimensions[2]
@@ -660,10 +648,10 @@ class MapSection(InpSectionGeneric):
         args = list()
         for line in lines:
             name = line[0]
-            if name == cls.Parts.DIMENSIONS:
+            if name == cls.KEYS.DIMENSIONS:
                 args.append(line[1:])
 
-            elif name == cls.Parts.UNITS:
+            elif name == cls.KEYS.UNITS:
                 args.append(line[1])
             else:
                 pass
@@ -678,7 +666,7 @@ class MapSection(InpSectionGeneric):
     #     pass
 
     def to_inp(self, fast=False):
-        s = '{} {}\n'.format(self.Parts.DIMENSIONS, ' '.join([str(i) for i in [self.lower_left_x, self.lower_left_y,
-                                                                             self.upper_right_x, self.upper_right_y]]))
-        s += '{} {}'.format(self.Parts.UNITS, self.units)
+        s = '{} {}\n'.format(self.KEYS.DIMENSIONS, ' '.join([str(i) for i in [self.lower_left_x, self.lower_left_y,
+                                                                              self.upper_right_x, self.upper_right_y]]))
+        s += '{} {}'.format(self.KEYS.UNITS, self.units)
         return s

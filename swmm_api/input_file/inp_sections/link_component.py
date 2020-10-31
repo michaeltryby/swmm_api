@@ -6,11 +6,46 @@ from ..inp_helpers import BaseSectionObject
 
 
 class CrossSection(BaseSectionObject):
+    """
+    Section: [**XSECTIONS**]
+
+    Purpose:
+        Provides cross-section geometric data for conduit and regulator links of the drainage system.
+
+    Formats:
+        ::
+
+            Link Shape      Geom1 Geom2 Geom3 Geom4 (Barrels Culvert)
+            Link CUSTOM     Geom1 Curve (Barrels)
+            Link IRREGULAR  Tsect
+
+    Format-PCSWMM:
+        ``Link Shape Geom1 Geom2 Geom3 Geom4 (Barrels Culvert)``
+
+    Remarks:
+        The Culvert code number is used only for conduits that act as culverts
+        and should be analyzed for inlet control conditions using the FHWA HDS-5 method.
+
+        The ``CUSTOM`` shape is a closed conduit whose width versus height is described by a user-supplied Shape Curve.
+
+        An ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect object.
+
+    Attributes:
+        Link (str): name of the conduit, orifice, or weir.
+        Shape (str): cross-section shape (see Tables D-1 below or 3-1 for available shapes).
+        Geom1 (float): full height of the cross-section (ft or m).
+        Geom2-4: auxiliary parameters (width, side slopes, etc.) as listed in Table D-1.
+        Barrels (int): number of barrels (i.e., number of parallel pipes of equal size, slope, and roughness) associated with a conduit (default is 1).
+        Culvert (int): code number from Table A.10 for the conduit’s inlet geometry if it is a culvert subject to possible inlet flow control (leave blank otherwise).
+        Curve (str): name of a Shape Curve in the [``CURVES``] section that defines how width varies with depth.
+        Tsect (str): name of an entry in the [``TRANSECTS``] section that describes the crosssection geometry of an irregular channel.
+    """
     identifier =IDENTIFIERS.Link
 
-    class Shapes:
+    class SHAPES:
         IRREGULAR = 'IRREGULAR'
         CUSTOM = 'CUSTOM'
+
         CIRCULAR = 'CIRCULAR'
         FORCE_MAIN = 'FORCE_MAIN'
         FILLED_CIRCULAR = 'FILLED_CIRCULAR'
@@ -36,22 +71,21 @@ class CrossSection(BaseSectionObject):
 
     def __init__(self, Link):
         self.Link = str(Link)
+        self.Shape = None
+        self.Geom1 = NaN
+        self.Curve = NaN
+        self.Tsect = NaN
+        self.Geom2 = NaN  # 0
+        self.Geom3 = NaN  # 0
+        self.Geom4 = NaN  # 0
+        self.Barrels = NaN  # 1
+        self.Culvert = NaN
 
     @classmethod
     def from_line(cls, Link, Shape, *line):
-        """
-
-        Link Shape Geom1 Geom2 Geom3 Geom4 Barrels Culvert
-
-        Args:
-            line ():
-
-        Returns:
-
-        """
-        if Shape == cls.Shapes.IRREGULAR:
+        if Shape == cls.SHAPES.IRREGULAR:
             return CrossSectionIrregular(Link, *line)
-        elif Shape == cls.Shapes.CUSTOM:
+        elif Shape == cls.SHAPES.CUSTOM:
             return CrossSectionCustom(Link, *line)
         else:
             return CrossSectionShape(Link, Shape, *line)
@@ -59,155 +93,120 @@ class CrossSection(BaseSectionObject):
 
 class CrossSectionShape(CrossSection):
     def __init__(self, Link, Shape, Geom1, Geom2=0, Geom3=0, Geom4=0, Barrels=1, Culvert=NaN):
-        """
-        PC-SWMM-Format:
-            Link Shape Geom1 Geom2 Geom3 Geom4 (Barrels Culvert)
-
-        Args:
-            Link ():
-            Shape ():
-            Geom1 ():
-            Geom2 ():
-            Geom3 ():
-            Geom4 ():
-            Barrels ():
-            Culvert ():
-        """
-        self.Shape = Shape
-        self.Geom1 = Geom1
-        self.Curve = NaN
-        self.Tsect = NaN
-        self.Geom2 = Geom2
-        self.Geom3 = Geom3
-        self.Geom4 = Geom4
-        self.Culvert = Culvert
-        self.Barrels = Barrels
         CrossSection.__init__(self, Link)
+        self.Shape = str(Shape)
+        self.Geom1 = float(Geom1)
+        self.Geom2 = float(Geom2)
+        self.Geom3 = float(Geom3)
+        self.Geom4 = float(Geom4)
+        self.Barrels = int(Barrels)
+        self.Culvert = Culvert
 
 
 class CrossSectionIrregular(CrossSection):
-    def __init__(self, Link, Tsect, Geom2=0, Geom3=0, Geom4=0, Barrels=1):
-        """
-        Link IRREGULAR Tsect
-
-        Args:
-            Link ():
-            Tsect ():
-        """
-        self.Shape = CrossSection.Shapes.IRREGULAR
-        self.Geom1 = NaN
-        self.Curve = NaN
-        self.Tsect = str(Tsect)
-        self.Geom2 = Geom2  # TODO not documentation conform
-        self.Geom3 = Geom3  # TODO not documentation conform
-        self.Geom4 = Geom4  # TODO not documentation conform
-        self.Barrels = Barrels
+    """An ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect object."""
+    def __init__(self, Link, Tsect, *args):
         CrossSection.__init__(self, Link)
+        self.Shape = CrossSection.SHAPES.IRREGULAR
+        self.Tsect = str(Tsect)
 
 
 class CrossSectionCustom(CrossSection):
+    """The ``CUSTOM`` shape is a closed conduit whose width versus height is described by a user-supplied Shape Curve."""
     def __init__(self, Link, Geom1, Curve, Geom3=0, Geom4=0, Barrels=1):
-        """
-        Link CUSTOM Geom1 Curve (Barrels)
-
-        Args:
-            Link ():
-            Geom1 ():
-            Curve ():
-            Geom3 ():
-            Geom4 ():
-            Barrels ():
-        """
-        self.Shape = CrossSection.Shapes.CUSTOM
-        self.Geom1 = Geom1
-        self.Curve = str(Curve)
-        self.Tsect = NaN
-        self.Geom2 = NaN
-        self.Geom3 = Geom3  # TODO not documentation conform
-        self.Geom4 = Geom4  # TODO not documentation conform
-        self.Barrels = Barrels
         CrossSection.__init__(self, Link)
+        self.Shape = CrossSection.SHAPES.CUSTOM
+        self.Geom1 = float(Geom1)
+        self.Curve = str(Curve)
+        if Barrels != 1:
+            self.Geom3 = float(Geom3)
+            self.Geom4 = float(Geom4)
+            self.Barrels = int(Barrels)
 
 
 class Loss(BaseSectionObject):
+    """
+    Section: [**LOSSES**]
+
+    Purpose:
+        Specifies minor head loss coefficients, flap gates, and seepage rates for conduits.
+
+    Formats:
+        ::
+
+            Conduit Kentry Kexit Kavg (Flap Seepage)
+
+    Format-PCSWMM:
+        ``Link Inlet Outlet Average FlapGate SeepageRate``
+
+    Remarks:
+        Minor losses are only computed for the Dynamic Wave flow routing option (see
+        [OPTIONS] section). They are computed as Kv 2 /2g where K = minor loss coefficient, v
+        = velocity, and g = acceleration of gravity. Entrance losses are based on the velocity
+        at the entrance of the conduit, exit losses on the exit velocity, and average losses on
+        the average velocity.
+
+        Only enter data for conduits that actually have minor losses, flap valves, or seepage
+        losses.
+
+    Args:
+        Link (str): name of conduit ``Conduit``
+        Inlet (float): entrance minor head loss coefficient. ``Kentry``
+        Outlet (float): exit minor head loss coefficient. ``Kexit``
+        Average (float): average minor head loss coefficient across length of conduit. ``Kavg``
+        FlapGate (bool): YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO). ``Flap``
+        SeepageRate (float): Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.) ``Seepage``
+
+    Attributes:
+        Link (str): name of conduit ``Conduit``
+        Inlet (float): entrance minor head loss coefficient. ``Kentry``
+        Outlet (float): exit minor head loss coefficient. ``Kexit``
+        Average (float): average minor head loss coefficient across length of conduit. ``Kavg``
+        FlapGate (bool): YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO). ``Flap``
+        SeepageRate (float): Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.) ``Seepage``
+    """
     identifier =IDENTIFIERS.Link
 
     def __init__(self, Link, Inlet=0, Outlet=0, Average=0, FlapGate=False, SeepageRate=0):
-        """
-        Section:
-            [LOSSES]
-
-        Purpose:
-            Specifies minor head loss coefficients, flap gates, and seepage rates for conduits.
-
-        Formats:
-            Conduit Kentry Kexit Kavg (Flap Seepage)
-
-        PC-SWMM-Format:
-            Link Inlet Outlet Average FlapGate SeepageRate
-
-        Remarks:
-            - Conduit:
-                name of conduit.
-            - Kentry:
-                entrance minor head loss coefficient.
-            - Kexit:
-                exit minor head loss coefficient.
-            - Kavg:
-                average minor head loss coefficient across length of conduit.
-            - Flap:
-                YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO).
-            - Seepage:
-                Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.)
-
-            Minor losses are only computed for the Dynamic Wave flow routing option (see
-            [OPTIONS] section). They are computed as Kv 2 /2g where K = minor loss coefficient, v
-            = velocity, and g = acceleration of gravity. Entrance losses are based on the velocity
-            at the entrance of the conduit, exit losses on the exit velocity, and average losses on
-            the average velocity.
-
-            Only enter data for conduits that actually have minor losses, flap valves, or seepage
-            losses.
-
-        Args:
-            Link (str): name of conduit
-            Inlet (float): entrance minor head loss coefficient.
-            Outlet (float): exit minor head loss coefficient.
-            Average (float): average minor head loss coefficient across length of conduit.
-            FlapGate (bool): YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO).
-            SeepageRate (float): Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.)
-        """
         self.Link = str(Link)
-        self.Inlet = Inlet
-        self.Outlet = Outlet
-        self.Average = Average
-        self.FlapGate = FlapGate
-        self.SeepageRate = SeepageRate
+        self.Inlet = float(Inlet)
+        self.Outlet = float(Outlet)
+        self.Average = float(Average)
+        self.FlapGate = bool(FlapGate)
+        self.SeepageRate = float(SeepageRate)
 
 
 class Vertices(BaseSectionObject):
     """
-    Section:
-        [VERTICES]
+    Section: [**VERTICES**]
 
     Purpose:
         Assigns X,Y coordinates to interior vertex points of curved drainage system links.
 
     Format:
-        Link Xcoord Ycoord
+        ::
+
+            Link Xcoord Ycoord
 
     Remarks:
-        Node
-            name of link.
-        Xcoord
-            horizontal coordinate of vertex relative to origin in lower left of map.
-        Ycoord
-            vertical coordinate of vertex relative to origin in lower left of map.
+        Straight-line links have no interior vertices and therefore are not listed in this section.
 
         Include a separate line for each interior vertex of the link, ordered from the inlet node to the outlet
         node.
 
-        Straight-line links have no interior vertices and therefore are not listed in this section.
+    Args:
+        Link (str): name of link.
+        vertices (list[list[float, float]]): vertices relative to origin in lower left of map.
+
+            - Xcoord: horizontal coordinate
+            - Ycoord: vertical coordinate
+
+    Attributes:
+        Link (str): name of link.
+        vertices (list[list[float, float]]): vertices relative to origin in lower left of map.
+
+            - Xcoord: horizontal coordinate
+            - Ycoord: vertical coordinate
     """
     identifier =IDENTIFIERS.Link
     table_inp_export = False
@@ -242,4 +241,11 @@ class Vertices(BaseSectionObject):
 
     @property
     def frame(self):
+        """convert Vertices object to a data-frame
+
+        for debugging purposes
+
+        Returns:
+            pandas.DataFrame: section as table
+        """
         return DataFrame.from_records(self.vertices, columns=['x', 'y'])

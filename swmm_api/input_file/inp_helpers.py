@@ -77,8 +77,10 @@ class BaseSectionObject:
     sections objects only have __init__ with object parameters
 
     acts like a dict (getter and setter)"""
-    identifier = ''  # attribute of an object which will be used as identifiers
-    table_inp_export = True  # if an section is writeable as table. Default ist True
+    identifier = ''
+    """str: attribute of an object which will be used as identifiers"""
+    table_inp_export = True
+    """bool: if an section is writeable as table. Default ist True"""
 
     def get(self, key):
         if isinstance(key, list):
@@ -200,8 +202,8 @@ class InpSectionGeneric:
         Args:
             fast (bool): speeding up conversion
 
-                True: if no special formation of the input file is needed
-                False: section is converted into a table to prettify string output (slower)
+                - :obj:`True`: if no special formation of the input file is needed
+                - :obj:`False`: section is converted into a table to prettify string output (slower)
 
         Returns:
             str: ``.inp``-file lines of the section object
@@ -301,13 +303,16 @@ class InpSection(UserDict_):
     def to_inp(self, fast=False):
         """section to a multi-line string
 
-        for .inp file writing
+        write ``.inp``-file lines of the section object
 
         Args:
-            fast (bool): don't use any formatting else format as table
+            fast (bool): speeding up conversion
+
+                - :obj:`True`: if no special formation of the input file is needed
+                - :obj:`False`: section is converted into a table to prettify string output (slower)
 
         Returns:
-            str: .inp file string
+             str: ``.inp``-file lines of the section object
         """
         if not self:  # if empty
             return ';; No Data'

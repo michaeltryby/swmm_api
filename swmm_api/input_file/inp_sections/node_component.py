@@ -17,83 +17,115 @@ class DryWeatherFlow(BaseSectionObject):
             Node Type Base (Pat1 Pat2 Pat3 Pat4)
 
     Remarks:
-        Node
-            name of node where dry weather flow enters.
-        Type
-            keyword FLOW for flow or pollutant name for quality constituent.
-        Base
-            average baseline value for corresponding constituent (flow or concentration units).
         Pat1, Pat2, etc.
-            names of up to four time patterns appearing in the [PATTERNS] section.
-
-    The actual dry weather input will equal the product of the baseline value and any adjustment factors
-    supplied by the specified patterns. (If not supplied, an adjustment factor defaults to 1.0.)
-    The patterns can be any combination of monthly, daily, hourly and weekend hourly
-    patterns, listed in any order. See the [PATTERNS] section for more details.
-    """
-    identifier = [IDENTIFIERS.Node, 'kind']
-
-    def __init__(self, Node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN,
-                 pattern5=NaN, pattern6=NaN, pattern7=NaN):
-        """Specifies dry weather flow and its quality entering the drainage system at specific nodes.
+            names of up to four time patterns appearing in the [``PATTERNS``] section.
 
         The actual dry weather input will equal the product of the baseline value and any adjustment factors
         supplied by the specified patterns. (If not supplied, an adjustment factor defaults to 1.0.)
         The patterns can be any combination of monthly, daily, hourly and weekend hourly
         patterns, listed in any order. See the [PATTERNS] section for more details.
 
-        Args:
-            Node (str): name of node where dry weather flow enters.
-            kind (str): keyword FLOW for flow or pollutant name for quality constituent.
-            Base (float): average baseline value for corresponding constituent (flow or concentration units).
-            pattern1 (str, Optional): monthly-pattern
-            pattern2 (str, Optional): daily-pattern
-            pattern3 (str, Optional): hourly-pattern
-            pattern4 (str, Optional): weekend-hourly-pattern
-            pattern5 (str, Optional): ???
-        """
+    Args:
+        Node (str): name of node where dry weather flow enters.
+        kind (str): keyword ``FLOW`` for flow or pollutant name for quality constituent. ``Type``
+        Base (float): average baseline value for corresponding constituent (flow or concentration units).
+        pattern1 (str, Optional): i.e.: monthly-pattern ``Pat1``
+        pattern2 (str, Optional): i.e.: daily-pattern ``Pat2``
+        pattern3 (str, Optional): i.e.: hourly-pattern
+        pattern4 (str, Optional): i.e.: weekend-hourly-pattern
+
+    Attributes:
+        kind (str): keyword ``FLOW`` for flow or pollutant name for quality constituent. ``Type``
+        Base (float): average baseline value for corresponding constituent (flow or concentration units).
+        pattern1 (str, Optional): i.e.: monthly-pattern ``Pat1``
+        pattern2 (str, Optional): i.e.: daily-pattern ``Pat2``
+        pattern3 (str, Optional): i.e.: hourly-pattern
+    """
+    identifier = [IDENTIFIERS.Node, 'kind']
+
+    def __init__(self, Node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN, *patternx):
         self.Node = str(Node)
+        """str: name of node where dry weather flow enters."""
         self.kind = kind
         self.Base = Base
         self.pattern1 = pattern1
         self.pattern2 = pattern2
         self.pattern3 = pattern3
         self.pattern4 = pattern4
+        """str, Optional: i.e. weekend-hourly-pattern"""
 
 
 class Inflow(BaseSectionObject):
+    """
+    Section: [**INFLOWS**]
+
+    Purpose:
+        Specifies external hydrographs and pollutographs that enter the drainage system at specific nodes.
+
+    Formats:
+        ::
+
+            Node FLOW   Tseries  (FLOW (1.0     Sfactor Base Pat))
+            Node Pollut Tseries  (Type (Mfactor Sfactor Base Pat))
+
+    Formats-PCSWMM:
+        ``Node Constituent TimeSeries Type Mfactor Sfactor Baseline Pattern``
+
+    Remarks:
+        External inflows are represented by both a constant and time varying component as follows:
+        | Inflow = (Baseline value)*(Pattern factor) + (Scaling factor)*(Time series value)
+
+        If an external inflow of a pollutant concentration is specified for a node,
+        then there must also be an external inflow of FLOW provided for the same node, unless the node is an Outfall.
+        In that case a pollutant can enter the system during periods
+        when the outfall is submerged and reverse flow occurs.
+
+    Examples:
+        ::
+
+            NODE2  FLOW N2FLOW
+            NODE33 TSS  N33TSS CONCEN
+
+            ;Mass inflow of BOD in time series N65BOD given in lbs/hr ;(126 converts lbs/hr to mg/sec)
+            NODE65 BOD N65BOD MASS 126
+            ;Flow inflow with baseline and scaling factor
+            N176 FLOW FLOW_176 FLOW 1.0 0.5 12.7 FlowPat
+
+    Args:
+        Node (str): name of node where external inflow enters.
+        Constituent (str): ``'FLOW'`` or name of pollutant. ``Pollut``
+        TimeSeries (str): name of time series in [``TIMESERIES``] section describing how external flow or pollutant loading varies with time. ``Tseries``
+        Type (str): ``'FLOW'`` or ``CONCEN`` if pollutant inflow is described as a concentration, ``MASS`` if it is described as a mass flow rate (default is ``CONCEN``).
+        Mfactor (float): the factor that converts the inflow’s mass flow rate units into the project’s mass units per second, where the project’s mass units are those specified for the pollutant in the [POLLUTANTS] section (default is 1.0 - see example below).
+        Sfactor (float): scaling factor that multiplies the recorded time series values (default is 1.0).
+        Baseline (float): constant baseline value added to the time series value (default is 0.0). ``Base``
+        Pattern (str): name of optional time pattern in [PATTERNS] section used to adjust the baseline value on a periodic basis. ``Pat``
+
+    Attributes:
+        Node (str): name of node where external inflow enters.
+        Constituent (str): ``'FLOW'`` or name of pollutant. ``Pollut``
+        TimeSeries (str): name of time series in [``TIMESERIES``] section describing how external flow or pollutant loading varies with time. ``Tseries``
+        Type (str): ``'FLOW'`` or ``CONCEN`` if pollutant inflow is described as a concentration, ``MASS`` if it is described as a mass flow rate (default is ``CONCEN``).
+        Mfactor (float): the factor that converts the inflow’s mass flow rate units into the project’s mass units per second, where the project’s mass units are those specified for the pollutant in the [POLLUTANTS] section (default is 1.0 - see example below).
+        Sfactor (float): scaling factor that multiplies the recorded time series values (default is 1.0).
+        Baseline (float): constant baseline value added to the time series value (default is 0.0). ``Base``
+        Pattern (str): name of optional time pattern in [PATTERNS] section used to adjust the baseline value on a periodic basis. ``Pat``
+    """
     identifier = [IDENTIFIERS.Node, 'Constituent']
 
-    class TypeOption:
-        __class__ = 'Type Option'
+    class TYPES:
         FLOW = 'FLOW'
 
-    def __init__(self, Node, Constituent, TimeSeries=None, Type=TypeOption.FLOW, Mfactor=1.0, Sfactor=1.0, Baseline=0.,
+    def __init__(self, Node, Constituent, TimeSeries=None, Type=TYPES.FLOW, Mfactor=1.0, Sfactor=1.0, Baseline=0.,
                  Pattern=NaN):
-        """
-        Node FLOW   Tseries (FLOW (1.0     Sfactor Base Pat))
-        Node Pollut Tseries (Type (Mfactor Sfactor Base Pat))
-
-        Node
-        Pollut
-        Tseries
-        Type        CONCEN* / MASS / FLOW
-        Mfactor     (1.0)
-        Sfactor     (1.0)
-        Base        (0.0)
-        Pat
-
-
-        Node Constituent TimeSeries Type Mfactor Sfactor Baseline Pattern
-        """
         self.Node = str(Node)
-        self.Constituent = Constituent
+        self.Constituent = str(Constituent)
         self.TimeSeries = TimeSeries
-        self.Type = Type
-        self.Mfactor = Mfactor
-        self.Sfactor = Sfactor
-        self.Baseline = Baseline
-        self.Pattern = Pattern
+        self.Type = str(Type)
+        self.Mfactor = float(Mfactor)
+        self.Sfactor = float(Sfactor)
+        self.Baseline = float(Baseline)
+        self.Pattern = str(Pattern)
 
         if (TimeSeries is None) or (TimeSeries == ''):
             self.TimeSeries = '""'
@@ -111,24 +143,19 @@ class Coordinate(BaseSectionObject):
 
             Node Xcoord Ycoord
 
-    Remarks:
-        Node
-            name of node.
-        Xcoord
-            horizontal coordinate relative to origin in lower left of map.
-        Ycoord
-            vertical coordinate relative to origin in lower left of map.
+    Args:
+        Node (str): name of node.
+        x (float): horizontal coordinate relative to origin in lower left of map. ``Xcoord``
+        y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
+
+    Attributes:
+        Node (str): name of node.
+        x (float): horizontal coordinate relative to origin in lower left of map. ``Xcoord``
+        y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
     """
     identifier = IDENTIFIERS.Node
 
     def __init__(self, Node, x, y):
-        """Assigns X,Y coordinates to drainage system nodes.
-
-        Args:
-            Node (str): name of node.
-            x (float): horizontal coordinate relative to origin in lower left of map.
-            y (float): vertical coordinate relative to origin in lower left of map.
-        """
         self.Node = str(Node)
         self.x = x
         self.y = y
