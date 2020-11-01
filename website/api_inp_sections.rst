@@ -91,8 +91,6 @@ Input File Sections
     Control
     Curve
     Timeseries
-    TimeseriesFile
-    TimeseriesData
 
 
 Generic Sections

@@ -8,71 +8,64 @@ from ..inp_helpers import BaseSectionObject
 
 class RainGage(BaseSectionObject):
     """
-    Section:
-        [RAINGAGES]
+    Section: [**RAINGAGES**]
 
     Purpose:
         Identifies each rain gage that provides rainfall data for the study area.
 
     Formats:
-        Name Form Intvl SCF TIMESERIES Tseries
-        Name Form Intvl SCF FILE       Fname   Sta Units
+        ::
 
-    PC-SWMM-Format:
-        Name Format Interval SCF Source
+            Name Form Intvl SCF TIMESERIES Tseries
+            Name Form Intvl SCF FILE       Fname   Sta Units
 
-    Remarks:
-        Name
-            name assigned to rain gage.
-        Form
-            form of recorded rainfall, either INTENSITY, VOLUME or CUMULATIVE.
-        Intvl
-            time interval between gage readings in decimal hours or hours:minutes format (e.g., 0:15 for 15-minute
-            readings).
-        SCF
-            snow catch deficiency correction factor (use 1.0 for no adjustment).
-        Tseries
-            name of time series in [TIMESERIES] section with rainfall data.
-        Fname
-            name of external file with rainfall data. Rainfall files are discussed in Section 11.3 Rainfall Files.
-        Sta
-            name of recording station used in the rain file.
-        Units
-            rain depth units used in the rain file, either IN (inches) or MM (millimeters).
+    Format-PCSWMM:
+        ``Name Format Interval SCF Source``
+
+    Args:
+        Name (str): name assigned to rain gage.
+        Format (str): form of recorded rainfall, either INTENSITY, VOLUME or CUMULATIVE.
+        Interval (str, Timedelta): time interval between gage readings in decimal hours or hours:minutes format
+                                    (e.g., 0:15 for 15-minute readings). ``Intvl``
+        SCF (float): snow catch deficiency correction factor (use 1.0 for no adjustment).
+        Source (str): one of ``'TIMESERIES'`` ``'FILE'``
+        *args: for automatic inp file reading
+        Timeseries (str): name of time series in [TIMESERIES] section with rainfall data. ``Tseries``
+        Filename (str): name of external file with rainfall data.
+                        Rainfall files are discussed in Section 11.3 Rainfall Files. ``Fname``
+        Station (str): name of recording station used in the rain file. ``Sta``
+        Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
+
+    Attributes:
+        Name (str): name assigned to rain gage.
+        Format (str): form of recorded rainfall, either INTENSITY, VOLUME or CUMULATIVE.
+        Interval (str, Timedelta): time interval between gage readings in decimal hours or hours:minutes format
+                                    (e.g., 0:15 for 15-minute readings). ``Intvl``
+        SCF (float): snow catch deficiency correction factor (use 1.0 for no adjustment).
+        Source (str): one of ``'TIMESERIES'`` ``'FILE'``
+        Timeseries (str): name of time series in [TIMESERIES] section with rainfall data. ``Tseries``
+        Filename (str): name of external file with rainfall data.
+                        Rainfall files are discussed in Section 11.3 Rainfall Files. ``Fname``
+        Station (str): name of recording station used in the rain file. ``Sta``
+        Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
     """
     identifier =IDENTIFIERS.Name
 
-    class Formats:
+    class FORMATS:
         INTENSITY = 'INTENSITY'
         VOLUME = 'VOLUME'
         CUMULATIVE = 'CUMULATIVE'
 
-    class Sources:
+    class SOURCES:
         TIMESERIES = 'TIMESERIES'
         FILE = 'FILE'
 
-    class Unit:
+    class UNITS:
         IN = 'IN'
         MM = 'MM'
 
     def __init__(self, Name, Format, Interval, SCF, Source, *args, Timeseries=NaN, Filename=NaN, Station=NaN,
                  Units=NaN):
-        """
-
-        Args:
-            Name (str): name assigned to rain gage.
-            Format (str): form of recorded rainfall, either INTENSITY, VOLUME or CUMULATIVE.
-            Interval (str, Timedelta): time interval between gage readings in decimal hours or hours:minutes format
-                                        (e.g., 0:15 for 15-minute readings).
-            SCF (float): snow catch deficiency correction factor (use 1.0 for no adjustment).
-            Source (str):
-            *args:
-            Timeseries (str): name of time series in [TIMESERIES] section with rainfall data.
-            Filename (str): name of external file with rainfall data.
-                            Rainfall files are discussed in Section 11.3 Rainfall Files.
-            Station (str): name of recording station used in the rain file.
-            Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
-        """
         self.Name = str(Name)
         self.Format = Format
         self.Interval = Interval
@@ -84,48 +77,44 @@ class RainGage(BaseSectionObject):
         self.Station = Station
         self.Units = Units
 
-        l = len(args)
         if args:
-            if (Source == RainGage.Sources.TIMESERIES) and (l == 1):
+            if (Source == RainGage.SOURCES.TIMESERIES) and (len(args) == 1):
                 self.Timeseries = args[0]
-            elif Source == RainGage.Sources.FILE:
 
+            elif Source == RainGage.SOURCES.FILE:
                 self.Filename = args[0]
                 self.Station = args[1]
                 self.Units = args[2]
+
             else:
                 raise NotImplementedError()
 
 
 class Symbol(BaseSectionObject):
     """
-    Section:
-        [SYMBOLS]
+    Section: [**SYMBOLS**]
 
     Purpose:
         Assigns X,Y coordinates to rain gage symbols.
 
     Format:
-        Gage Xcoord Ycoord
+        ::
 
-    Remarks:
-        Gage
-            name of rain gage.
-        Xcoord
-            horizontal coordinate relative to origin in lower left of map.
-        Ycoord
-            vertical coordinate relative to origin in lower left of map.
+            Gage Xcoord Ycoord
+
+    Args:
+        Gage (str): name of gage.
+        x (float): horizontal coordinate relative to origin in lower left of map. ``Xcoord``
+        y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
+
+    Attributes:
+        Gage (str): name of gage.
+        x (float): horizontal coordinate relative to origin in lower left of map. ``Xcoord``
+        y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
     """
     identifier =IDENTIFIERS.Gage
 
     def __init__(self, Gage, x, y):
-        """Assigns X,Y coordinates to drainage system nodes.
-
-        Args:
-            Node (str): name of node.
-            x (float): horizontal coordinate relative to origin in lower left of map.
-            y (float): vertical coordinate relative to origin in lower left of map.
-        """
         self.Gage = str(Gage)
         self.x = x
         self.y = y
@@ -133,8 +122,7 @@ class Symbol(BaseSectionObject):
 
 class Pattern(BaseSectionObject):
     """
-    Section:
-        [PATTERNS]
+    Section: [**PATTERNS**]
 
     Purpose:
         Specifies time pattern of dry weather flow or quality in the form of adjustment factors
@@ -142,25 +130,55 @@ class Pattern(BaseSectionObject):
 
 
     Format:
-        - Name MONTHLY Factor1 Factor2 ... Factor12
-        - Name DAILY Factor1  Factor2  ...  Factor7
-        - Name HOURLY Factor1  Factor2  ...  Factor24
-        - Name WEEKEND Factor1  Factor2  ...  Factor24
+        ::
+
+            Name MONTHLY Factor1 Factor2 ... Factor12
+            Name DAILY Factor1  Factor2  ...  Factor7
+            Name HOURLY Factor1  Factor2  ...  Factor24
+            Name WEEKEND Factor1  Factor2  ...  Factor24
 
     Remarks:
-        - The MONTHLY format is used to set monthly pattern factors for dry weather flow constituents.
-        - The DAILY format is used to set dry weather pattern factors for each day of the week, where Sunday is day 1.
-        - The HOURLY format is used to set dry weather factors for each hour of the day starting from midnight.
-            If these factors are different for weekend days than for weekday days then the WEEKEND format can be used
-            to specify hourly adjustment factors just for weekends.
-        - More than one line can be used to enter a pattern’s factors by repeating the pattern’s name
-            (but not the pattern type) at the beginning of each additional line.
-        - The pattern factors are applied as multipliers to any baseline dry weather flows or quality
-            concentrations supplied in the [DWF] section.
+        The MONTHLY format is used to set monthly pattern factors for dry weather flow constituents.
+
+        The DAILY format is used to set dry weather pattern factors for each day of the week, where Sunday is day 1.
+
+        The HOURLY format is used to set dry weather factors for each hour of the day starting from midnight.
+        If these factors are different for weekend days than for weekday days then the WEEKEND format can be used
+        to specify hourly adjustment factors just for weekends.
+
+        More than one line can be used to enter a pattern’s factors by repeating the pattern’s name
+        (but not the pattern type) at the beginning of each additional line.
+
+        The pattern factors are applied as multipliers to any baseline dry weather flows or quality
+        concentrations supplied in the [DWF] section.
+
+    Examples:
+        ::
+
+            ; Day of week adjustment factors
+            D1 DAILY 0.5 1.0 1.0 1.0 1.0 1.0 0.5
+            D2 DAILY 0.8 0.9 1.0 1.1 1.0 0.9 0.8
+
+            ; Hourly adjustment factors
+            H1 HOURLY 0.5 0.6 0.7 0.8 0.8 0.9
+            H1        1.1 1.2 1.3 1.5 1.1 1.0
+            H1        0.9 0.8 0.7 0.6 0.5 0.5
+            H1        0.5 0.5 0.5 0.5 0.5 0.5
+
+    Args:
+        Name (str): name used to identify the pattern.
+        Type (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
+        Factors (list): multiplier values.
+        *factors: for automatic inp file reading
+
+    Attributes:
+        Name (str): name used to identify the pattern.
+        Type (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
+        Factors (list): multiplier values.
     """
     identifier =IDENTIFIERS.Name
 
-    class Types:
+    class TYPES:
         __class__ = 'Patter Types'
         MONTHLY = 'MONTHLY'
         DAILY = 'DAILY'
@@ -180,17 +198,14 @@ class Pattern(BaseSectionObject):
         """multiple lines for one entry"""
         new_lines = list()
         for line in lines:
-            if line[1] in ['MONTHLY', 'DAILY', 'HOURLY', 'WEEKEND']:
+            if line[1] in [cls.TYPES.MONTHLY, cls.TYPES.DAILY,
+                           cls.TYPES.HOURLY, cls.TYPES.WEEKEND]:
                 new_lines.append(line)
             else:
                 new_lines[-1] += line[1:]
 
-        # sec_lines = list()
         for line in new_lines:
-            # sec_lines.append()
             yield cls(*line)
-
-        # return sec_lines
 
 
 class Pollutant(BaseSectionObject):
@@ -209,33 +224,6 @@ class Pollutant(BaseSectionObject):
         ``Name Units Crain Cgw Crdii Kdecay SnowOnly Co-Pollutant Co-Frac Cdwf Cinit``
 
     Remarks:
-        Name
-            name assigned to pollutant.
-        Units
-            concentration units
-
-                - ``MG/L`` for milligrams per liter
-                - ``UG/L`` for micrograms per liter
-                - ``#/L`` for direct count per liter
-        Crain
-            concentration of pollutant in rainfall (concentration units).
-        Cgw
-            concentration of pollutant in groundwater (concentration units).
-        Cii
-            concentration of pollutant in inflow/infiltration (concentration units).
-        Kdecay
-            first-order decay coefficient (1/days).
-        Sflag
-            YES if pollutant buildup occurs only when there is snow cover, NO otherwise (default is ``NO``).
-        CoPoll
-            name of co-pollutant (default is no co-pollutant designated by a ``*``).
-        CoFract
-            fraction of co-pollutant concentration (default is 0).
-        Cdwf
-            pollutant concentration in dry weather flow (default is 0).
-        Cinit
-            pollutant concentration throughout the conveyance system at the start of the simulation (default is 0).
-
         ``FLOW`` is a reserved word and cannot be used to name a pollutant.
 
         Parameters Sflag through Cinit can be omitted if they assume their default values.
@@ -247,6 +235,42 @@ class Pollutant(BaseSectionObject):
 
         The dry weather flow concentration can be overridden for any specific node of the conveyance
         system by editing the node's Inflows property.
+
+    Args:
+        Name (str): name assigned to pollutant.
+        Units (str): concentration units
+
+                - ``MG/L`` for milligrams per liter
+                - ``UG/L`` for micrograms per liter
+                - ``#/L`` for direct count per liter
+
+        Crain (float): concentration of pollutant in rainfall (concentration units).
+        Cgw (float): concentration of pollutant in groundwater (concentration units).
+        Crdii (float): concentration of pollutant in inflow/infiltration (concentration units). ``Cii``
+        Kdecay (float): first-order decay coefficient (1/days).
+        SnowOnly (bool): ``YES`` if pollutant buildup occurs only when there is snow cover, ``NO`` otherwise (default is ``NO``). ``Sflag``
+        Co_Pollutant (str): name of co-pollutant (default is no co-pollutant designated by a ``*``). ``CoPoll``
+        Co_Frac (float): fraction of co-pollutant concentration (default is 0). ``CoFract``
+        Cdwf (float): pollutant concentration in dry weather flow (default is 0).
+        Cinit (float): pollutant concentration throughout the conveyance system at the start of the simulation (default is 0).
+
+    Attributes:
+        Name (str): name assigned to pollutant.
+        Units (str): concentration units
+
+                - ``MG/L`` for milligrams per liter
+                - ``UG/L`` for micrograms per liter
+                - ``#/L`` for direct count per liter
+
+        Crain (float): concentration of pollutant in rainfall (concentration units).
+        Cgw (float): concentration of pollutant in groundwater (concentration units).
+        Crdii (float): concentration of pollutant in inflow/infiltration (concentration units). ``Cii``
+        Kdecay (float): first-order decay coefficient (1/days).
+        SnowOnly (bool): ``YES`` if pollutant buildup occurs only when there is snow cover, ``NO`` otherwise (default is ``NO``). ``Sflag``
+        Co_Pollutant (str): name of co-pollutant (default is no co-pollutant designated by a ``*``). ``CoPoll``
+        Co_Frac (float): fraction of co-pollutant concentration (default is 0). ``CoFract``
+        Cdwf (float): pollutant concentration in dry weather flow (default is 0).
+        Cinit (float): pollutant concentration throughout the conveyance system at the start of the simulation (default is 0).
     """
     identifier =IDENTIFIERS.Name
 
@@ -258,83 +282,93 @@ class Pollutant(BaseSectionObject):
     def __init__(self, Name, Units, Crain, Cgw, Crdii, Kdecay,
                  SnowOnly=False, Co_Pollutant='*', Co_Frac=0, Cdwf=0, Cinit=0):
         self.Name = str(Name)
-        self.Units = Units
-        self.Crain = Crain
-        self.Cgw = Cgw
-        self.Crdii = Crdii
-        self.Kdecay = Kdecay
-        self.SnowOnly = SnowOnly
-        self.Co_Pollutant = Co_Pollutant
-        self.Co_Frac = Co_Frac
-        self.Cdwf = Cdwf
-        self.Cinit = Cinit
+        self.Units = str(Units)
+        self.Crain = float(Crain)
+        self.Cgw = float(Cgw)
+        self.Crdii = float(Crdii)
+        self.Kdecay = float(Kdecay)
+        self.SnowOnly = bool(SnowOnly)
+        self.Co_Pollutant = str(Co_Pollutant)
+        self.Co_Frac = float(Co_Frac)
+        self.Cdwf = float(Cdwf)
+        self.Cinit = float(Cinit)
 
 
 class Transect(BaseSectionObject):
     """
-    Section:
-        [TRANSECTS]
+    Section: [**TRANSECTS**]
 
     Purpose:
         Describes the cross-section geometry of natural channels or conduits with irregular shapes
         following the HEC-2 data format.
 
     Formats:
-        NC Nleft Nright Nchanl
-        X1 Name Nsta Xleft Xright 0 0 0 Lfactor Wfactor Eoffset
-        GR Elev Station ... Elev Station
+
+        ::
+
+            NC Nleft Nright Nchanl
+            X1 Name Nsta Xleft Xright 0 0 0 Lfactor Wfactor Eoffset
+            GR Elev Station ... Elev Station
 
     Remarks:
-        Nleft:
-            Manning’s n of right overbank portion of channel (use 0 if no change from previous NC line).
-        Nright:
-            Manning’s n of right overbank portion of channel (use 0 if no change from previous NC line.
-        Nchanl:
-            Manning’s n of main channel portion of channel (use 0 if no change from previous NC line.
-        Name:
-            name assigned to transect.
-        Nsta:
-            number of stations across cross-section at which elevation data is supplied.
-        Xleft:
-            station position which ends the left overbank portion of the channel (ft or m).
-        Xright :
-            station position which begins the right overbank portion of the channel (ft or m).
-        Lfactor:
-            meander modifier that represents the ratio of the length of a meandering main channel to the length of the
-            overbank area that surrounds it (use 0 if not applicable).
-        Wfactor:
-            factor by which distances between stations should be multiplied to increase (or decrease)
-            the width of the channel (enter 0 if not applicable).
-        Eoffset:
-            amount added (or subtracted) from the elevation of each station (ft or m).
-        Elev:
-            elevation of the channel bottom at a cross-section station relative to some fixed reference (ft or m).
-        Station:
-            distance of a cross-section station from some fixed reference (ft or m).
+        Transect geometry is described as shown below, assuming that one is looking in a downstream direction:
 
-    Transect geometry is described as shown below, assuming that one is looking in a downstream direction:
+        The first line in this section must always be a NC line. After that, the NC line is only needed when a transect has
+        different Manning’s n values than the previous one.
 
-    The first line in this section must always be a NC line. After that, the NC line is only needed when a transect has
-    different Manning’s n values than the previous one.
+        The Manning’s n values on the NC line will supersede any roughness value entered for the conduit which uses the
+        irregular cross-section.
 
-    The Manning’s n values on the NC line will supersede any roughness value entered for the conduit which uses the
-    irregular cross-section.
+        There should be one X1 line for each transect.
+        Any number of GR lines may follow, and each GR line can have any number of Elevation-Station data pairs.
+        (In HEC-2 the GR line is limited to 5 stations.)
 
-    There should be one X1 line for each transect.
-    Any number of GR lines may follow, and each GR line can have any number of Elevation-Station data pairs.
-    (In HEC-2 the GR line is limited to 5 stations.)
+        The station that defines the left overbank boundary on the X1 line must correspond to one of the station entries
+        on the GR lines that follow. The same holds true for the right overbank boundary. If there is no match, a warning
+        will be issued and the program will assume that no overbank area exists.
 
-    The station that defines the left overbank boundary on the X1 line must correspond to one of the station entries
-    on the GR lines that follow. The same holds true for the right overbank boundary. If there is no match, a warning
-    will be issued and the program will assume that no overbank area exists.
+        The meander modifier is applied to all conduits that use this particular transect for their cross section.
+        It assumes that the length supplied for these conduits is that of the longer main channel.
+        SWMM will use the shorter overbank length in its calculations while increasing the main channel roughness to account
+        for its longer length.
 
-    The meander modifier is applied to all conduits that use this particular transect for their cross section.
-    It assumes that the length supplied for these conduits is that of the longer main channel.
-    SWMM will use the shorter overbank length in its calculations while increasing the main channel roughness to account
-    for its longer length.
+    Args:
+        roughness_left (float): Manning’s n of right overbank portion of channel (use 0 if no change from previous NC line). ``Nleft``
+        roughness_right (float): Manning’s n of right overbank portion of channel (use 0 if no change from previous NC line. ``Nright``
+        roughness_channel (float): Manning’s n of main channel portion of channel (use 0 if no change from previous NC line. ``Nchanl``
+        Name (str): name assigned to transect.
+        bank_station_left (float): station position which ends the left overbank portion of the channel (ft or m). ``Xleft``
+        bank_station_right (float): station position which begins the right overbank portion of the channel (ft or m). ``Xright``
+        modifier_meander (float): meander modifier that represents the ratio of the length of a meandering main channel to the length of the overbank area that surrounds it (use 0 if not applicable). ``Lfactor``
+        modifier_stations (float): factor by which distances between stations should be multiplied to increase (or decrease) the width of the channel (enter 0 if not applicable). ``Wfactor``
+        modifier_elevations (float): amount added (or subtracted) from the elevation of each station (ft or m). ``Eoffset``
+        station_elevations (list[list[float, float]]): of the tuple:
+
+            Elev (float): elevation of the channel bottom at a cross-section station relative to some fixed reference (ft or m).
+            Station (float): distance of a cross-section station from some fixed reference (ft or m).
+
+    Attributes:
+        roughness_left (float): Manning’s n of right overbank portion of channel (use 0 if no change from previous NC line). ``Nleft``
+        roughness_right (float): Manning’s n of right overbank portion of channel (use 0 if no change from previous NC line. ``Nright``
+        roughness_channel (float): Manning’s n of main channel portion of channel (use 0 if no change from previous NC line. ``Nchanl``
+        Name (str): name assigned to transect.
+        bank_station_left (float): station position which ends the left overbank portion of the channel (ft or m). ``Xleft``
+        bank_station_right (float): station position which begins the right overbank portion of the channel (ft or m). ``Xright``
+        modifier_meander (float): meander modifier that represents the ratio of the length of a meandering main channel to the length of the overbank area that surrounds it (use 0 if not applicable). ``Lfactor``
+        modifier_stations (float): factor by which distances between stations should be multiplied to increase (or decrease) the width of the channel (enter 0 if not applicable). ``Wfactor``
+        modifier_elevations (float): amount added (or subtracted) from the elevation of each station (ft or m). ``Eoffset``
+        station_elevations (list[list[float, float]]): of the tuple:
+
+            Elev (float): elevation of the channel bottom at a cross-section station relative to some fixed reference (ft or m).
+            Station (float): distance of a cross-section station from some fixed reference (ft or m).
     """
     identifier =IDENTIFIERS.Name
     table_inp_export = False
+
+    class KEYS:
+        NC = 'NC'
+        X1 = 'X1'
+        GR = 'GR'
 
     def __init__(self, Name, station_elevations=None, bank_station_left=0, bank_station_right=0,
                  roughness_left=0, roughness_right=0, roughness_channel=0,
@@ -364,22 +398,22 @@ class Transect(BaseSectionObject):
     def add_station_elevation(self, station, elevation):
         self.station_elevations.append([float(station), float(elevation)])
 
-    def set_roughness(self, left=0, right=0, channel=0):
+    def set_roughness(self, left=0., right=0., channel=0.):
         self.roughness_left = float(left)
         self.roughness_right = float(right)
         self.roughness_channel = float(channel)
 
-    def set_bank_stations(self, left=0, right=0):
+    def set_bank_stations(self, left=0., right=0.):
         self.bank_station_left = float(left)
         self.bank_station_right = float(right)
 
-    def set_modifiers(self, meander=0, stations=0, elevations=0):
+    def set_modifiers(self, meander=0., stations=0., elevations=0.):
         self.modifier_stations = float(stations)
         self.modifier_elevations = float(elevations)
         self.modifier_meander = float(meander)
 
     def get_number_stations(self):
-        """get number of stations"""
+        """``Nsta`` number of stations across cross-section at which elevation data is supplied."""
         return len(self.station_elevations)
 
     @classmethod
@@ -389,10 +423,10 @@ class Transect(BaseSectionObject):
         last = None
 
         for line in lines:
-            if line[0] == 'NC':
+            if line[0] == cls.KEYS.NC:
                 last_roughness = line[1:]
 
-            elif line[0] == 'X1':
+            elif line[0] == cls.KEYS.X1:
                 if last is not None:
                     yield last
                 last = cls(Name=line[1])
@@ -400,7 +434,7 @@ class Transect(BaseSectionObject):
                 last.set_modifiers(*line[8:])
                 last.set_roughness(*last_roughness)
 
-            elif line[0] == 'GR':
+            elif line[0] == cls.KEYS.GR:
                 it = iter(line[1:])
                 for station in it:
                     elevation = next(it)
@@ -408,21 +442,21 @@ class Transect(BaseSectionObject):
         yield last
 
     def inp_line(self):
-        s = 'NC {} {} {}\n'.format(self.roughness_left, self.roughness_right, self.roughness_channel)
-        s += 'X1 {} {} {} {} 0 0 0 {} {} {}\n'.format(self.Name, self.get_number_stations(),
+        s = '{} {} {} {}\n'.format(self.KEYS.NC, self.roughness_left, self.roughness_right, self.roughness_channel)
+        s += '{} {} {} {} {} 0 0 0 {} {} {}\n'.format(self.KEYS.X1, self.Name, self.get_number_stations(),
                                                       self.bank_station_left, self.bank_station_right,
-                                                      self.modifier_stations, self.modifier_elevations,
-                                                      self.modifier_meander)
-        s += 'GR'
+                                                      self.modifier_meander, self.modifier_stations,
+                                                      self.modifier_elevations,)
+        s += self.KEYS.GR
         i = 0
         for x, y in self.station_elevations:
             s += ' {} {}'.format(x, y)
             i += 1
             if i == 5:
                 i = 0
-                s += '\nGR'
+                s += '\n' + self.KEYS.GR
 
-        if s.endswith('GR'):
+        if s.endswith(self.KEYS.GR):
             s = s[:-3]
         s += '\n'
         return s
@@ -430,8 +464,7 @@ class Transect(BaseSectionObject):
 
 class Control(BaseSectionObject):
     """
-    Section:
-        [CONTROLS]
+    Section: [**CONTROLS**]
 
     Purpose:
         Determines how pumps and regulators will be adjusted based on simulation time or
@@ -439,19 +472,21 @@ class Control(BaseSectionObject):
 
     Formats:
         Each control rule is a series of statements of the form:
-        RULE ruleID
-        IF condition_1
-        AND condition_2
-        OR condition_3
-        AND condition_4
-        Etc.
-        THEN action_1
-        AND action_2
-        Etc.
-        ELSE action_3
-        AND action_4
-        Etc.
-        PRIORITY value
+        ::
+
+            RULE ruleID
+            IF condition_1
+            AND condition_2
+            OR condition_3
+            AND condition_4
+            Etc.
+            THEN action_1
+            AND action_2
+            Etc.
+            ELSE action_3
+            AND action_4
+            Etc.
+            PRIORITY value
 
     Remarks:
         RuleID an ID label assigned to the rule.
@@ -466,12 +501,12 @@ class Control(BaseSectionObject):
         Attribute is the name of an attribute or property of the object, Relation is a
         relational operator (=, <>, <, <=, >, >=), and Value is an attribute value.
 
-        Some examples of condition clauses are:
+    Examples:
+        ::
+
             NODE N23 DEPTH > 10
             PUMP P45 STATUS = OFF
             SIMULATION TIME = 12:45:00
-
-        The objects and attributes that can appear in a condition clause are as follows:
     """
     identifier =IDENTIFIERS.Name
     table_inp_export = False
@@ -701,26 +736,19 @@ class Curve(BaseSectionObject):
 
 class Timeseries(BaseSectionObject):
     """
-    Section:
-        [TIMESERIES]
+    Section: [**TIMESERIES**]
 
     Purpose:
         Describes how a quantity varies over time.
 
     Formats:
-        - Name ( Date ) Hour Value ...
-        - Name Time Value ...
-        - Name FILE Fname
+        ::
+
+            Name ( Date ) Hour Value ...
+            Name Time Value ...
+            Name FILE Fname
 
     Remarks:
-        - Name: name assigned to time series.
-        - Date: date in Month/Day/Year format (e.g., June 15, 2001 would be 6/15/2001).
-        - Hour: 24-hour military time (e.g., 8:40 pm would be 20:40) relative to the last date specified
-               (or to midnight of the starting date of the simulation if no previous date was specified).
-        - Time: hours since the start of the simulation, expressed as a decimal number or as hours:minutes.
-        - Value: value corresponding to given date and time.
-        - Fname: name of a file in which the time series data are stored
-
         There are two options for supplying the data for a time series:
         i.: directly within this input file section as described by the first two formats
         ii.: through an external data file named with the third format.
@@ -742,13 +770,19 @@ class Timeseries(BaseSectionObject):
         For the first method, dates need only be entered at points in time when a new day occurs.
 
     Examples:
-        ;Rainfall time series with dates specified
-        TS1 6-15-2001 7:00 0.1 8:00 0.2 9:00 0.05 10:00 0
-        TS1 6-21-2001 4:00 0.2 5:00 0 14:00 0.1 15:00 0 335
 
-        ;Inflow hydrograph - time relative to start of simulation
-        HY1 0 0 1.25 100 2:30 150 3.0 120 4.5 0
-        HY1 32:10 0 34.0 57 35.33 85 48.67 24 50 0
+        ::
+
+            ;Rainfall time series with dates specified
+            TS1 6-15-2001 7:00 0.1 8:00 0.2 9:00 0.05 10:00 0
+            TS1 6-21-2001 4:00 0.2 5:00 0 14:00 0.1 15:00 0 335
+
+            ;Inflow hydrograph - time relative to start of simulation
+            HY1 0 0 1.25 100 2:30 150 3.0 120 4.5 0
+            HY1 32:10 0 34.0 57 35.33 85 48.67 24 50 0
+
+    Args:
+        Name (str): name assigned to time series.
     """
     identifier =IDENTIFIERS.Name
     table_inp_export = False
@@ -757,12 +791,6 @@ class Timeseries(BaseSectionObject):
         FILE = 'FILE'
 
     def __init__(self, Name):
-        """
-        Describes how a quantity varies over time.
-
-        Args:
-            Name (str): name assigned to time series.
-        """
         self.Name = str(Name)
 
     @classmethod
@@ -814,28 +842,51 @@ class Timeseries(BaseSectionObject):
 
 
 class TimeseriesFile(Timeseries):
-    def __init__(self, Name, filename):
-        """
+    """
+    Section: [**TIMESERIES**]
+
+    Purpose:
         Describes how a quantity varies over time.
 
-        Args:
-            Name (str): name assigned to time series.
-            filename (str): name of a file in which the time series data are stored
-        """
+    Formats:
+        ::
+
+            Name FILE Fname
+
+    Args:
+        Name (str): name assigned to time series.
+        filename (str): name of a file in which the time series data are stored ``Fname``
+    """
+    def __init__(self, Name, filename):
         Timeseries.__init__(self, Name)
         self.kind = self.TYPES.FILE
         self.filename = filename
 
 
 class TimeseriesData(Timeseries):
-    def __init__(self, Name, data):
-        """
+    """
+    Section: [**TIMESERIES**]
+
+    Purpose:
         Describes how a quantity varies over time.
 
-        Args:
-            Name (str): name assigned to time series.
-            data (list[tuple]): list of index/value tuple
-        """
+    Formats:
+        ::
+
+            Name ( Date ) Hour Value ...
+            Name Time Value ...
+
+    Args:
+        Name (str): name assigned to time series.
+        data (list[tuple]): list of index/value tuple with:
+
+            - Date: date in Month/Day/Year format (e.g., June 15, 2001 would be 6/15/2001).
+            - Hour: 24-hour military time (e.g., 8:40 pm would be 20:40) relative to the last date specified
+                   (or to midnight of the starting date of the simulation if no previous date was specified).
+            - Time: hours since the start of the simulation, expressed as a decimal number or as hours:minutes.
+            - Value: value corresponding to given date and time.
+    """
+    def __init__(self, Name, data):
         Timeseries.__init__(self, Name)
         self.data = data
 
