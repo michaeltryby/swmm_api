@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
+from matplotlib import patches
+from shapely import geometry as shp
 
 from .graph_macros import inp_to_graph, get_path
 from ..inp_macros import find_link
-from ..inp_sections import Outfall
+from ..inp_sections import Outfall, Polygon, SubCatchment
 from ..inp_sections.labels import *
 
 
@@ -45,10 +46,18 @@ def plot_map(inp):  # TODO
                 x, y = zip(*points)
                 ax.plot(x, y, 'y-')
 
-    for poly in inp[POLYGONS].values():
+    for poly in inp[POLYGONS].values():  # type: Polygon
         # x, y = zip(*poly.polygon)
-        ax.add_patch(Polygon(poly.polygon, closed=True, fill=False, hatch='/'))
+        ax.add_patch(patches.Polygon(poly.polygon, closed=True, fill=False, hatch='/'))
         # ax.plot(x, y, 'r-')
+        center = shp.Polygon(poly.polygon).centroid
+
+        ax.scatter(x=center.x, y=center.y, marker='s', c='k', zorder=999)
+
+        subcatch = inp[SUBCATCHMENTS][poly.Subcatch]  # type: SubCatchment
+        outlet = subcatch.Outlet
+        outlet_point = inp[COORDINATES][outlet]
+        ax.plot([center.x, outlet_point.x], [center.y, outlet_point.y], 'r--')
 
     coords = inp[COORDINATES].frame
     node_style = {
@@ -99,7 +108,8 @@ def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
 
     nodes_dict = dict()
     for s in [JUNCTIONS, OUTFALLS, STORAGE]:
-        nodes_dict.update(inp[s])
+        if s in inp:
+            nodes_dict.update(inp[s])
 
     # ---------------
     node_station = dict()
