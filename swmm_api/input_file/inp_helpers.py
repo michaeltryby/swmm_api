@@ -1,8 +1,9 @@
-from pandas import DataFrame
-from numpy import isnan
 from copy import deepcopy
 
-from .helpers.type_converter import type2str, infer_type
+from numpy import isnan
+from pandas import DataFrame
+
+from swmm_api.input_file.type_converter import type2str, infer_type
 
 SWMM_VERSION = '5.1.015'
 
@@ -131,7 +132,7 @@ class BaseSectionObject:
                 args.append('{} = {}'.format(k, d))
         return '{}({})'.format(self.__class__.__name__, ', '.join(args))
 
-    def inp_line(self):
+    def to_inp_line(self):
         """
         convert object to one line of the ``.inp``-file
 
@@ -151,7 +152,7 @@ class BaseSectionObject:
         return s
 
     @classmethod
-    def from_line(cls, *line):
+    def from_inp_line(cls, *line):
         """
         convert line in the ``.inp``-file to the object
 
@@ -176,8 +177,9 @@ class BaseSectionObject:
 ########################################################################################################################
 class InpSectionGeneric:
     """abstract class for ``.inp``-file sections without objects"""
+
     @classmethod
-    def from_lines(cls, lines):
+    def from_inp_lines(cls, lines):
         """
         read ``.inp``-file lines and create an section object
 
@@ -195,7 +197,7 @@ class InpSectionGeneric:
     def __str__(self):
         pass
 
-    def to_inp(self, fast=False):
+    def to_inp_lines(self, fast=False):
         """
         write ``.inp``-file lines of the section object
 
@@ -249,7 +251,7 @@ class InpSection(UserDict_):
             self[item.get(self._identifier)] = item
 
     @classmethod
-    def from_lines(cls, lines, section_class):
+    def from_inp_lines(cls, lines, section_class):
         """convert all lines of a section to this class and each line to a object
 
         for .inp file reading
@@ -276,9 +278,31 @@ class InpSection(UserDict_):
         # each line is a object
         for line in lines:
             line = infer_type(line)
-            inp_section.append(section_class.from_line(*line))
+            inp_section.append(section_class.from_inp_line(*line))
 
         return inp_section
+
+    def to_inp_lines(self, fast=False):
+        """section to a multi-line string
+
+        write ``.inp``-file lines of the section object
+
+        Args:
+            fast (bool): speeding up conversion
+
+                - :obj:`True`: if no special formation of the input file is needed
+                - :obj:`False`: section is converted into a table to prettify string output (slower)
+
+        Returns:
+             str: ``.inp``-file lines of the section object
+        """
+        if not self:  # if empty
+            return ';; No Data'
+
+        if fast or not self._table_inp_export:
+            return '\n'.join(o.to_inp_line() for o in self.values())
+        else:
+            return dataframe_to_inp_string(self.frame)
 
     @property
     def frame(self):
@@ -299,28 +323,6 @@ class InpSection(UserDict_):
     #
     # def __str__(self):
     #     return dataframe_to_inp_string(self.frame)
-
-    def to_inp(self, fast=False):
-        """section to a multi-line string
-
-        write ``.inp``-file lines of the section object
-
-        Args:
-            fast (bool): speeding up conversion
-
-                - :obj:`True`: if no special formation of the input file is needed
-                - :obj:`False`: section is converted into a table to prettify string output (slower)
-
-        Returns:
-             str: ``.inp``-file lines of the section object
-        """
-        if not self:  # if empty
-            return ';; No Data'
-
-        if fast or not self._table_inp_export:
-            return '\n'.join(o.inp_line() for o in self.values())
-        else:
-            return dataframe_to_inp_string(self.frame)
 
     def copy(self):
         """deep copy the section
@@ -354,6 +356,7 @@ class InpSection(UserDict_):
 ########################################################################################################################
 class InpData(dict):
     """overall class for an input file"""
+
     def copy(self):
         """deep copy of an object"""
         return InpData(deepcopy(self))

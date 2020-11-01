@@ -2,7 +2,6 @@ import re
 from inspect import isclass, isfunction
 
 from .inp_sections.labels import *
-from .helpers.custom_iterator import custom_iter
 from .inp_helpers import InpSection, InpData
 from .inp_sections.types import SECTION_TYPES, GUI_SECTIONS
 from .inp_sections.generic_section import convert_title, convert_options, convert_evaporation, convert_temperature
@@ -18,7 +17,22 @@ CONVERTER.update({
     TEMPERATURE: convert_temperature,  # dict
 })
 
+# ___________________________________________________________________
+# to create a progressbar in the reading process
+# only needed with big (> 200 MB) files
+if 0:
+    try:
+        from tqdm import tqdm as _custom_iter
+    except ImportError as e:
+        def _custom_iter(i, desc=None):
+            return i
 
+else:
+    def _custom_iter(i, desc=None):
+        return i
+
+
+########################################################################################################################
 def _read_inp_file_raw(filename):
     """
     reads full .inp file and splits the text into a dict of sections and each sections into a string
@@ -63,7 +77,7 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
     if custom_converter is not None:
         converter.update(custom_converter)
 
-    # iter_ = custom_iter(inp.items(), desc='convert sections')
+    # iter_ = _custom_iter(inp.items(), desc='convert sections')
     iter_ = inp.items()
     for head, lines in iter_:
         if (convert_sections is not None) and (head not in convert_sections):
@@ -74,7 +88,7 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
 
         if head in converter:
             # lines = list(txt_to_lines(lines))
-            # lines = custom_iter(lines, desc=head)
+            # lines = _custom_iter(lines, desc=head)
 
             section_ = converter[head]
 
@@ -82,12 +96,12 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
                 inp[head] = section_(lines)
 
             elif isclass(section_):  # section_ ... type/class
-                if hasattr(section_, 'from_lines'):
-                    inp[head] = section_.from_lines(lines)  # section has multiple options over multiple lines
+                if hasattr(section_, 'from_inp_lines'):
+                    inp[head] = section_.from_inp_lines(lines)  # section has multiple options over multiple lines
                     # REPORT, TIMESERIES, CURVES, TAGS
                 else:
                     # each line is a object OR each object has multiple lines
-                    inp[head] = InpSection.from_lines(lines, section_)
+                    inp[head] = InpSection.from_inp_lines(lines, section_)
 
             else:
                 raise NotImplemented()

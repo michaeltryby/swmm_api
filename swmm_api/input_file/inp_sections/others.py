@@ -2,7 +2,7 @@ from numpy import NaN
 from pandas import DataFrame, Series
 
 from .identifiers import IDENTIFIERS
-from ..helpers.type_converter import infer_type
+from swmm_api.input_file.type_converter import infer_type
 from ..inp_helpers import BaseSectionObject
 
 
@@ -441,7 +441,7 @@ class Transect(BaseSectionObject):
                     last.add_station_elevation(station, elevation)
         yield last
 
-    def inp_line(self):
+    def to_inp_line(self):
         s = '{} {} {} {}\n'.format(self.KEYS.NC, self.roughness_left, self.roughness_right, self.roughness_channel)
         s += '{} {} {} {} {} 0 0 0 {} {} {}\n'.format(self.KEYS.X1, self.Name, self.get_number_stations(),
                                                       self.bank_station_left, self.bank_station_right,
@@ -569,7 +569,7 @@ class Control(BaseSectionObject):
 
         # return sec_lines
 
-    def inp_line(self):
+    def to_inp_line(self):
         s = '{} {}\n'.format(self.Clauses.RULE, self.Name)
         s += '{} {}\n'.format(self.Clauses.IF, '\n'.join([' '.join(c) for c in self.conditions]))
         s += '{} {}\n'.format(self.Clauses.THEN, '\n'.join([' '.join(a) for a in self.actions]))
@@ -724,7 +724,7 @@ class Curve(BaseSectionObject):
     def frame(self):
         return DataFrame.from_records(self.points, columns=self._get_names(self.Type))
 
-    def inp_line(self):
+    def to_inp_line(self):
         Type = self.Type
         f = ''
         # f = '{}  {}\n'.format(self.Name, self.kind)
@@ -901,7 +901,7 @@ class TimeseriesData(Timeseries):
         datetime, values = zip(*self.data)
         return Series(index=datetime, data=values, name=self.Name)
 
-    def inp_line(self):
+    def to_inp_line(self):
         f = ''
         for datetime, value in self.data:
             f += '{} {} {}\n'.format(self.Name, datetime, value)

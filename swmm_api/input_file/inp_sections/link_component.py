@@ -82,7 +82,7 @@ class CrossSection(BaseSectionObject):
         self.Culvert = NaN
 
     @classmethod
-    def from_line(cls, Link, Shape, *line):
+    def from_inp_line(cls, Link, Shape, *line):
         if Shape == cls.SHAPES.IRREGULAR:
             return CrossSectionIrregular(Link, *line)
         elif Shape == cls.SHAPES.CUSTOM:
@@ -236,7 +236,7 @@ class Vertices(BaseSectionObject):
         if last is not None:
             yield cls(last, vertices)
 
-    def inp_line(self):
+    def to_inp_line(self):
         return '\n'.join(['{}  {} {}'.format(self.Link, x, y) for x, y in self.vertices])
 
     @property

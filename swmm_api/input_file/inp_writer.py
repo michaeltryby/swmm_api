@@ -1,7 +1,7 @@
 from pandas import set_option as set_pandas_options
 
 from .inp_helpers import InpSection, InpSectionGeneric
-from .helpers.type_converter import type2str
+from swmm_api.input_file.type_converter import type2str
 from .inp_sections.labels import *
 
 set_pandas_options("display.max_colwidth", 10000)
@@ -90,7 +90,7 @@ def section_to_string(section, fast=True):
 
     # ----------------------
     elif isinstance(section, (InpSection, InpSectionGeneric)):  # V0.4
-        f += section.to_inp(fast=fast)
+        f += section.to_inp_lines(fast=fast)
 
     # ----------------------
     f += '\n'

@@ -1,56 +1,72 @@
-import networkx as nx
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
 
-from swmm_api.input_file.inp_sections.labels import *
-from ..inp_sections_generic import CoordinatesSection
+from .graph_macros import inp_to_graph, get_path
+from ..inp_macros import find_link
 from ..inp_sections import Outfall
-
-def inp_to_graph(inp):
-    g = nx.Graph()
-    for edge_kind in [CONDUITS,
-                      WEIRS,
-                      PUMPS,
-                      ORIFICES,
-                      OUTLETS]:
-        if edge_kind in inp:
-            for e in inp[edge_kind].values():
-                g.add_edge(str(e.FromNode), str(e.ToNode))
-    return g
+from ..inp_sections.labels import *
 
 
-def get_path(g, start, end):
-    return list(nx.all_simple_paths(g, start, end))[0]
+def plot_map(inp):  # TODO
+    fig, ax = plt.subplots()
 
+    # for name, node in coords[::80].iterrows():
+    #     ax.text(node.x, node.y, name, horizontalalignment='center', verticalalignment='baseline')
 
-def plot_network(inp, g, ax=None, **kwargs):
-    """
+    ax.set_axis_off()
+    ax.set_aspect(1.0)
 
-    Args:
-        inp:
-        g:
-        ax:
-        **kwargs:
+    # map_dim = inp[MAP]['DIMENSIONS']
+    # x_min, x_max = map_dim['lower-left X'], map_dim['upper-right X']
+    # delta_x = x_max - x_min
+    # y_min, y_max = map_dim['lower-left Y'], map_dim['upper-right Y']
+    # delta_y = y_max - y_min
+    # fig.set_size_inches(w=118.0 / 2.51, h=(118.0 * delta_y / delta_x) / 2.51)
+    # ax.set_xlim(x_min, x_max)
+    # ax.set_ylim(y_min, y_max)
 
-    Returns:
-        (plt.Figure, plt.Axes):
-    """
-    coords = None
+    def _points(c):
+        return c.x, c.y
 
-    if COORDINATES in inp:
-        coords_sec = inp[COORDINATES]
-        if isinstance(coords_sec, list):
-            coords = dict()
-            for name, x, y in inp[COORDINATES]:
-                coords[name] = (float(x), float(y))
-        elif isinstance(coords_sec, CoordinatesSection):
-            coords = dict()
-            for name, c in inp[COORDINATES].items():
-                coords[name] = (float(c['x']), float(c['y']))
+    for section in [CONDUITS,
+                    PUMPS,
+                    ORIFICES,
+                    WEIRS,
+                    OUTLETS]:
+        if section in inp:
+            for link in inp[section].values():
+                if link.Name in inp[VERTICES]:
+                    points = [_points(inp[COORDINATES][link.FromNode])] \
+                             + inp[VERTICES][link.Name].vertices \
+                             + [_points(inp[COORDINATES][link.ToNode])]
+                else:
+                    points = [_points(inp[COORDINATES][link.FromNode]), _points(inp[COORDINATES][link.ToNode])]
 
-    if ax is None:
-        fig, ax = plt.subplots()
-    nx.draw(g, coords, ax=ax, **kwargs)
-    return ax.get_figure(), ax  # type: plt.Figure, plt.Axes
+                x, y = zip(*points)
+                ax.plot(x, y, 'y-')
+
+    for poly in inp[POLYGONS].values():
+        # x, y = zip(*poly.polygon)
+        ax.add_patch(Polygon(poly.polygon, closed=True, fill=False, hatch='/'))
+        # ax.plot(x, y, 'r-')
+
+    coords = inp[COORDINATES].frame
+    node_style = {
+        JUNCTIONS: {'marker': '.', 'color': 'b'},
+        STORAGE: {'marker': 's', 'color': 'g'},
+        OUTFALLS: {'marker': '^', 'color': 'r'},
+
+    }
+    ax.scatter(x=coords.x, y=coords.y, marker=node_style[JUNCTIONS]['marker'], c=node_style[JUNCTIONS]['color'], edgecolors='k', zorder=999)
+
+    for section in [STORAGE, OUTFALLS]:
+        if section in inp:
+            is_in_sec = coords.index.isin(inp[section].keys())
+            ax.scatter(x=coords[is_in_sec].x, y=coords[is_in_sec].y,
+                       marker=node_style[section]['marker'], c=node_style[section]['color'], edgecolors='k', zorder=9999)
+
+    fig.tight_layout()
+    return fig, ax
 
 
 class COLS:
@@ -62,7 +78,7 @@ class COLS:
     NODE_STATION = 'node'
 
 
-def get_plot_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
+def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
     g = inp_to_graph(inp)
     sub_list = get_path(g, start=start_node, end=end_node)
 
@@ -140,7 +156,7 @@ def get_plot_longitudinal_data(inp, start_node, end_node, out=None, zero_node=No
 
 
 def plot_longitudinal(inp, start_node, end_node, out=None, ax=None, zero_node=None):
-    res = get_plot_longitudinal_data(inp, start_node, end_node, out, zero_node=zero_node)
+    res = get_longitudinal_data(inp, start_node, end_node, out, zero_node=zero_node)
 
     if ax is None:
         fig, ax = plt.subplots()

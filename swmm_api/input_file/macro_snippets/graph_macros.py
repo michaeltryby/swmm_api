@@ -1,9 +1,44 @@
 import networkx as nx
-from networkx.algorithms.components import node_connected_component
+from networkx import node_connected_component
 
-from .inp_macros import (reduce_curves, reduce_raingages, filter_nodes, filter_links, filter_subcatchments,
-                         remove_empty_sections, )
-from .testing.inp_graph_network import inp_to_graph
+from ..inp_macros import (filter_nodes, filter_links, filter_subcatchments, reduce_curves,
+                          reduce_raingages, remove_empty_sections, )
+from ..inp_sections.labels import CONDUITS, WEIRS, PUMPS, ORIFICES, OUTLETS
+
+
+def inp_to_graph(inp):
+    """
+
+    Args:
+        inp ():
+
+    Returns:
+
+    """
+    g = nx.Graph()
+    for edge_kind in [CONDUITS,
+                      WEIRS,
+                      PUMPS,
+                      ORIFICES,
+                      OUTLETS]:
+        if edge_kind in inp:
+            for e in inp[edge_kind].values():
+                g.add_edge(e.FromNode, e.ToNode)
+    return g
+
+
+def get_path(g, start, end):
+    """
+
+    Args:
+        g ():
+        start ():
+        end ():
+
+    Returns:
+
+    """
+    return list(nx.all_simple_paths(g, start, end))[0]
 
 
 def split_network(inp, keep_node, split_at_node=None, keep_split_node=True):

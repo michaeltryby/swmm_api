@@ -1,7 +1,7 @@
 from pandas import DataFrame
 
 from .identifiers import IDENTIFIERS
-from ..helpers.type_converter import infer_type, type2str
+from swmm_api.input_file.type_converter import infer_type, type2str
 from ..inp_helpers import InpSectionGeneric, UserDict_, txt_to_lines
 
 
@@ -152,92 +152,8 @@ class ReportSection(UserDict_, InpSectionGeneric):
         LINKS = 'LINKS'
         LID = 'LID'
 
-    @property
-    def INPUT(self):
-        if self.KEYS.INPUT in self:
-            return self[self.KEYS.INPUT]
-        else:
-            return True
-
-    @INPUT.setter
-    def INPUT(self, value):
-        if self.KEYS.INPUT in self:
-            self[self.KEYS.INPUT] = value
-
-    @property
-    def FLOWSTATS(self):
-        if self.KEYS.FLOWSTATS in self:
-            return self[self.KEYS.FLOWSTATS]
-        else:
-            return True
-
-    @FLOWSTATS.setter
-    def FLOWSTATS(self, value):
-        if self.KEYS.FLOWSTATS in self:
-            self[self.KEYS.FLOWSTATS] = value
-
-    @property
-    def CONTROLS(self):
-        if self.KEYS.CONTROLS in self:
-            return self[self.KEYS.CONTROLS]
-        else:
-            return False
-
-    @CONTROLS.setter
-    def CONTROLS(self, value):
-        if self.KEYS.CONTROLS in self:
-            self[self.KEYS.CONTROLS] = value
-
-    @property
-    def SUBCATCHMENTS(self):
-        if self.KEYS.SUBCATCHMENTS in self:
-            return self[self.KEYS.SUBCATCHMENTS]
-        else:
-            return None
-
-    @SUBCATCHMENTS.setter
-    def SUBCATCHMENTS(self, value):
-        if self.KEYS.SUBCATCHMENTS in self:
-            self[self.KEYS.SUBCATCHMENTS] = value
-
-    @property
-    def NODES(self):
-        if self.KEYS.NODES in self:
-            return self[self.KEYS.NODES]
-        else:
-            return None
-
-    @NODES.setter
-    def NODES(self, value):
-        if self.KEYS.NODES in self:
-            self[self.KEYS.NODES] = value
-
-    @property
-    def LINKS(self):
-        if self.KEYS.LINKS in self:
-            return self[self.KEYS.LINKS]
-        else:
-            return None
-
-    @LINKS.setter
-    def LINKS(self, value):
-        if self.KEYS.LINKS in self:
-            self[self.KEYS.LINKS] = value
-
-    @property
-    def LID(self):
-        if self.KEYS.LID in self:
-            return self[self.KEYS.LID]
-        else:
-            return None
-
-    @LID.setter
-    def LID(self, value):
-        if self.KEYS.LID in self:
-            self[self.KEYS.LID] = value
-
     @classmethod
-    def from_lines(cls, lines):
+    def from_inp_lines(cls, lines):
         if isinstance(lines, str):
             lines = txt_to_lines(lines)
 
@@ -274,7 +190,7 @@ class ReportSection(UserDict_, InpSectionGeneric):
                 rep[label] = value
         return rep
 
-    def to_inp(self, fast=False):
+    def to_inp_lines(self, fast=False):
         f = ''
         max_len = len(max(self.keys(), key=len)) + 2
 
@@ -545,7 +461,7 @@ class TagsSection(UserDict_, InpSectionGeneric):
         Link = IDENTIFIERS.Link
 
     @classmethod
-    def from_lines(cls, lines):
+    def from_inp_lines(cls, lines):
         if isinstance(lines, str):
             lines = txt_to_lines(lines)
 
@@ -568,7 +484,7 @@ class TagsSection(UserDict_, InpSectionGeneric):
             tags_df[type_] = DataFrame.from_dict(self._data[type_], orient='index')
         return tags_df
 
-    def to_inp(self, fast=False):
+    def to_inp_lines(self, fast=False):
         if not self:  # if empty
             return '; NO data'
         f = ''
@@ -641,7 +557,7 @@ class MapSection(InpSectionGeneric):
                            self.upper_right_y], self.units)
 
     @classmethod
-    def from_lines(cls, lines):
+    def from_inp_lines(cls, lines):
         if isinstance(lines, str):
             lines = txt_to_lines(lines)
 
@@ -665,7 +581,7 @@ class MapSection(InpSectionGeneric):
     #     return self.to_inp()
     #     pass
 
-    def to_inp(self, fast=False):
+    def to_inp_lines(self, fast=False):
         s = '{} {}\n'.format(self.KEYS.DIMENSIONS, ' '.join([str(i) for i in [self.lower_left_x, self.lower_left_y,
                                                                               self.upper_right_x, self.upper_right_y]]))
         s += '{} {}'.format(self.KEYS.UNITS, self.units)

@@ -13,13 +13,13 @@ from ..output_file import SwmmOutHandler, parquet
 from .inp_reader import read_inp_file
 from .inp_helpers import InpData, InpSection
 from .inp_writer import write_inp_file, inp2string, section_to_string
-from .helpers.type_converter import offset2delta
+from .type_converter import offset2delta
 
 
 def section_from_frame(df, section_class):
-    # TODO: testing
+    # TODO: macro_snippets
     a = np.vstack((df.index.values, df.values.T)).T
-    return InpSection.from_lines(a, section_class)
+    return InpSection.from_inp_lines(a, section_class)
     # return cls.from_lines([line.split() for line in dataframe_to_inp_string(df).split('\n')], section_class)
 
 

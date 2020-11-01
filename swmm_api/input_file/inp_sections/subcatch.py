@@ -184,7 +184,7 @@ class Infiltration(BaseSectionObject):
         self.Subcatch = str(Subcatch)
 
     @classmethod
-    def from_line(cls, Subcatch, *args, **kwargs):
+    def from_inp_line(cls, Subcatch, *args, **kwargs):
         n_args = len(args) + len(kwargs.keys()) + 1
         if n_args == 6:  # hortn
             subcls = InfiltrationHorton
@@ -398,7 +398,7 @@ class Polygon(BaseSectionObject):
     def frame(self):
         return DataFrame.from_records(self.polygon, columns=['x', 'y'])
 
-    def inp_line(self):
+    def to_inp_line(self):
         return '\n'.join(['{}  {} {}'.format(self.Subcatch, x, y) for x, y in self.polygon])
 
 
@@ -477,5 +477,5 @@ class Loading(BaseSectionObject):
     def frame(self):
         return DataFrame.from_records(self.pollutant_buildup, columns=['pollutant', 'initial buildup'])
 
-    def inp_line(self):
+    def to_inp_line(self):
         return '\n'.join(['{}  {} {}'.format(self.Subcatch, p, b) for p, b in self.pollutant_buildup])
