@@ -4,6 +4,18 @@ from pandas.tseries.frequencies import to_offset
 from numpy import ndarray
 
 
+def to_bool(x):
+    if isinstance(x, bool):
+        return x
+    else:
+        if x == 'YES':
+            return True
+        elif x == 'NO':
+            return False
+        else:
+            raise NotImplemented('x not a bool: {}'.format(x))
+
+
 def infer_type(x):
     """
     infer generic type of inp-file-string

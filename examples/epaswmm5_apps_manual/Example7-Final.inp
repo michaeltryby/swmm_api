@@ -1,19 +1,12 @@
 [TITLE]
-;;Project Title/Notes
 Example 7
 Dual Drainage System
 Final Design
 
 [OPTIONS]
-;;Option             Value
-FLOW_UNITS           CMS
+FLOW_UNITS           CFS
 INFILTRATION         HORTON
 FLOW_ROUTING         DYNWAVE
-LINK_OFFSETS         DEPTH
-MIN_SLOPE            0
-ALLOW_PONDING        NO
-SKIP_STEADY_STATE    NO
-
 START_DATE           01/01/2007
 START_TIME           00:00:00
 REPORT_START_DATE    01/01/2007
@@ -27,35 +20,32 @@ REPORT_STEP          00:01:00
 WET_STEP             00:01:00
 DRY_STEP             01:00:00
 ROUTING_STEP         0:00:15 
-RULE_STEP            00:00:00
-
+ALLOW_PONDING        NO
 INERTIAL_DAMPING     PARTIAL
-NORMAL_FLOW_LIMITED  SLOPE
-FORCE_MAIN_EQUATION  H-W
 VARIABLE_STEP        0.75
 LENGTHENING_STEP     0
 MIN_SURFAREA         0
-MAX_TRIALS           0
-HEAD_TOLERANCE       0
-SYS_FLOW_TOL         5
-LAT_FLOW_TOL         5
-MINIMUM_STEP         0.5
-THREADS              1
+NORMAL_FLOW_LIMITED  SLOPE
+SKIP_STEADY_STATE    NO
+FORCE_MAIN_EQUATION  H-W
+LINK_OFFSETS         DEPTH
+MIN_SLOPE            0
 
 [EVAPORATION]
-;;Data Source    Parameters
-;;-------------- ----------------
-CONSTANT         0.0
-DRY_ONLY         NO
+;;Type       Parameters
+;;---------- ----------
+CONSTANT     0.0
 
 [RAINGAGES]
-;;Name           Format    Interval SCF      Source    
+;;               Rain      Time   Snow   Data      
+;;Name           Type      Intrvl Catch  Source    
 ;;-------------- --------- ------ ------ ----------
-RainGage         INTENSITY 0:05     1.0      TIMESERIES 100-yr          
+RainGage         INTENSITY 0:05   1.0    TIMESERIES 100-yr          
 
 [SUBCATCHMENTS]
-;;Name           Rain Gage        Outlet           Area     %Imperv  Width    %Slope   CurbLen  SnowPack        
-;;-------------- ---------------- ---------------- -------- -------- -------- -------- -------- ----------------
+;;                                                 Total    Pcnt.             Pcnt.    Curb     Snow    
+;;Name           Raingage         Outlet           Area     Imperv   Width    Slope    Length   Pack    
+;;-------------- ---------------- ---------------- -------- -------- -------- -------- -------- --------
 S1               RainGage         Aux1             4.55     56.8     1587     2        0                        
 S2               RainGage         Aux2             4.74     63.0     1653     2        0                        
 S3               RainGage         Aux3             3.74     39.5     1456     3.1      0                        
@@ -87,7 +77,8 @@ S6               4.5        0.2        6.5        7          0
 S7               4.5        0.2        6.5        7          0         
 
 [JUNCTIONS]
-;;Name           Elevation  MaxDepth   InitDepth  SurDepth   Aponded   
+;;               Invert     Max.       Init.      Surcharge  Ponded    
+;;Name           Elev.      Depth      Depth      Depth      Area      
 ;;-------------- ---------- ---------- ---------- ---------- ----------
 J1               4969       0          0          0          0         
 J2a              4966.7     0          0          0          0         
@@ -106,12 +97,14 @@ Aux2             4971.8     0          0          0          0
 Aux3             4968.5     0          0          0          0         
 
 [OUTFALLS]
-;;Name           Elevation  Type       Stage Data       Gated    Route To        
-;;-------------- ---------- ---------- ---------------- -------- ----------------
-O1               4956       FREE                        NO                       
+;;               Invert     Outfall    Stage/Table      Tide
+;;Name           Elev.      Type       Time Series      Gate
+;;-------------- ---------- ---------- ---------------- ----
+O1               4956       FREE                        NO
 
 [CONDUITS]
-;;Name           From Node        To Node          Length     Roughness  InOffset   OutOffset  InitFlow   MaxFlow   
+;;               Inlet            Outlet                      Manning    Inlet      Outlet     Init.      Max.      
+;;Name           Node             Node             Length     N          Offset     Offset     Flow       Flow      
 ;;-------------- ---------------- ---------------- ---------- ---------- ---------- ---------- ---------- ----------
 C2a              J2a              J2               157.48     0.016      4          4          0          0         
 C2               J2               J11              526.0      0.016      4          6          0          0         
@@ -138,8 +131,8 @@ P7               J7               J10              507.76     0.016      0      
 P8               J10              J11              144.50     0.016      0          0          0          0         
 
 [XSECTIONS]
-;;Link           Shape        Geom1            Geom2      Geom3      Geom4      Barrels    Culvert   
-;;-------------- ------------ ---------------- ---------- ---------- ---------- ---------- ----------
+;;Link           Shape        Geom1            Geom2      Geom3      Geom4      Barrels   
+;;-------------- ------------ ---------------- ---------- ---------- ---------- ----------
 C2a              IRREGULAR    Half_Street      3          5          5          1                    
 C2               IRREGULAR    Half_Street      3          5          5          1                    
 C3               CIRCULAR     2.25             0          0          0          1                    
@@ -165,16 +158,19 @@ P7               CIRCULAR     2                0          0          0          
 P8               CIRCULAR     3.17             0          0          0          1                    
 
 [TRANSECTS]
-;;Transect Data in HEC-2 format
-;
+
 NC 0.016    0.016    0.016   
 X1 Full_Street       7        0.0      0.0      0.0      0.0      0.0      0.0      0.0     
 GR 1.3      -40      0.5      -20      0        -20      0.8      0        0        20      
 GR 0.5      20       1.3      40      
-;
+
 NC 0.016    0.016    0.016   
 X1 Half_Street       5        0.0      0.0      0.0      0.0      0.0      0.0      0.0     
 GR 1.3      -40      0.5      -20      0        -20      0.8      0        1.3      0       
+
+[LOSSES]
+;;Link           Inlet      Outlet     Average    Flap Gate 
+;;-------------- ---------- ---------- ---------- ----------
 
 [TIMESERIES]
 ;;Name           Date       Time       Value     
@@ -203,7 +199,7 @@ GR 1.3      -40      0.5      -20      0        -20      0.8      0        1.3  
 2-yr                        1:45       0.14      
 2-yr                        1:50       0.13      
 2-yr                        1:55       0.13      
-;
+
 10-yr                       0:00       0.49      
 10-yr                       0:05       0.56      
 10-yr                       0:10       0.65      
@@ -228,7 +224,7 @@ GR 1.3      -40      0.5      -20      0        -20      0.8      0        1.3  
 10-yr                       1:45       0.27      
 10-yr                       1:50       0.26      
 10-yr                       1:55       0.25      
-;
+
 100-yr                      0:00       1         
 100-yr                      0:05       1.14      
 100-yr                      0:10       1.33      
@@ -253,7 +249,7 @@ GR 1.3      -40      0.5      -20      0        -20      0.8      0        1.3  
 100-yr                      1:45       0.71      
 100-yr                      1:50       0.69      
 100-yr                      1:55       0.67      
-;
+
 Inflow_100yr                0:00:15    0         
 Inflow_100yr                0:00:30    0         
 Inflow_100yr                0:00:45    0         
@@ -3134,16 +3130,10 @@ Inflow_100yr                11:59:15   0
 Inflow_100yr                11:59:30   0         
 Inflow_100yr                11:59:45   0         
 Inflow_100yr                12:00:00   0         
-;
-relative_test               12.4       12        
-relative_test               14.6       1.2       
-;
-absolute_test    1/1/2007   1:00       2         
-absolute_test    1/2/2007   2:00       5         
 
 [REPORT]
-;;Reporting Options
 INPUT      YES
+CONTROLS   NO
 SUBCATCHMENTS ALL
 NODES ALL
 LINKS ALL

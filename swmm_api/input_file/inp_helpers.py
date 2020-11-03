@@ -1,3 +1,4 @@
+from collections import Iterable
 from copy import deepcopy
 
 from numpy import isnan
@@ -277,7 +278,6 @@ class InpSection(UserDict_):
         # -----------------------
         # each line is a object
         for line in lines:
-            line = infer_type(line)
             inp_section.append(section_class.from_inp_line(*line))
 
         return inp_section
@@ -331,7 +331,10 @@ class InpSection(UserDict_):
             InpSection: copy of the section
         """
         new = type(self)(self.section_object)
-        new._data = deepcopy(self._data)
+        # ΔTime: 18.678 s
+        # new._data = deepcopy(self._data)
+        # ΔTime: 2.943 s
+        new._data = {k: self[k].copy() for k in self}
         return new
 
     def filter_keys(self, keys, by=None):
@@ -345,11 +348,13 @@ class InpSection(UserDict_):
         Returns:
             InpSection: new filtered section
         """
-        new = type(self)(self._identifier)
-        if by is not None:
-            new._data = {k: self[k] for k in self.keys() if self[k][by] in keys}
-        else:
+        new = type(self)(self.section_object)
+        if by is None:
             new._data = {k: self[k] for k in set(self.keys()).intersection(keys)}
+        elif isinstance(by, (list, set, tuple)):
+            new._data = {k: self[k] for k in self.keys() if all(map(lambda b: self[k][b] in keys, by))}
+        else:
+            new._data = {k: self[k] for k in self.keys() if self[k][by] in keys}
         return new
 
 
@@ -359,7 +364,13 @@ class InpData(dict):
 
     def copy(self):
         """deep copy of an object"""
+        # ΔTime: 2.107 s
         return InpData(deepcopy(self))
+
+    def copy2(self):
+        """deep copy of an object"""
+        # ΔTime: 0.336 s
+        return type(self)(**{k: self[k] if isinstance(self[k], str) else self[k].copy() for k in self})
 
 
 ########################################################################################################################

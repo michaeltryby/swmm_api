@@ -1,4 +1,4 @@
-from swmm_api.report_file.report import Report
+from swmm_api import read_rpt_file
 import pandas as pd
 
 pd.set_option('display.max_columns', 35)
@@ -7,7 +7,7 @@ pd.set_option('display.max_rows', 50)
 pd.set_option('display.max_colwidth', 150)
 
 if __name__ == '__main__':
-    r = Report('epaswmm5_apps_manual/Example7-Final.rpt')
+    r = read_rpt_file('epaswmm5_apps_manual/Example7-Final.rpt')
     r.flow_classification_summary
 
     # r.flow_routing_continuity

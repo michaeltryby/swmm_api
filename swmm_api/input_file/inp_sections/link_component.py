@@ -1,8 +1,9 @@
-from numpy import NaN
+from numpy import NaN, isnan
 from pandas import DataFrame
 
 from .identifiers import IDENTIFIERS
 from ..inp_helpers import BaseSectionObject
+from ..type_converter import to_bool
 
 
 class CrossSection(BaseSectionObject):
@@ -69,17 +70,18 @@ class CrossSection(BaseSectionObject):
         BASKETHANDLE = 'BASKETHANDLE'
         SEMICIRCULAR = 'SEMICIRCULAR'
 
-    def __init__(self, Link):
+    def __init__(self, Link, **kwargs):
         self.Link = str(Link)
         self.Shape = None
         self.Geom1 = NaN
         self.Curve = NaN
         self.Tsect = NaN
-        self.Geom2 = NaN  # 0
-        self.Geom3 = NaN  # 0
-        self.Geom4 = NaN  # 0
+        self.Geom2 = 0  # 0
+        self.Geom3 = 0  # 0
+        self.Geom4 = 0  # 0
         self.Barrels = NaN  # 1
         self.Culvert = NaN
+        # according to the c code 6 arguments are needed to not raise an error / non sense but you have to
 
     @classmethod
     def from_inp_line(cls, Link, Shape, *line):
@@ -92,8 +94,8 @@ class CrossSection(BaseSectionObject):
 
 
 class CrossSectionShape(CrossSection):
-    def __init__(self, Link, Shape, Geom1, Geom2=0, Geom3=0, Geom4=0, Barrels=1, Culvert=NaN):
-        CrossSection.__init__(self, Link)
+    def __init__(self, Link, Shape, Geom1, Geom2=0, Geom3=0, Geom4=0, Barrels=1, Culvert=NaN, **kwargs):
+        CrossSection.__init__(self, Link, **kwargs)
         self.Shape = str(Shape)
         self.Geom1 = float(Geom1)
         self.Geom2 = float(Geom2)
@@ -105,22 +107,22 @@ class CrossSectionShape(CrossSection):
 
 class CrossSectionIrregular(CrossSection):
     """An ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect object."""
-    def __init__(self, Link, Tsect, *args):
-        CrossSection.__init__(self, Link)
+    def __init__(self, Link, Tsect, *args, **kwargs):
+        CrossSection.__init__(self, Link, **kwargs)
         self.Shape = CrossSection.SHAPES.IRREGULAR
         self.Tsect = str(Tsect)
+        self.Geom1 = NaN
 
 
 class CrossSectionCustom(CrossSection):
     """The ``CUSTOM`` shape is a closed conduit whose width versus height is described by a user-supplied Shape Curve."""
-    def __init__(self, Link, Geom1, Curve, Geom3=0, Geom4=0, Barrels=1):
-        CrossSection.__init__(self, Link)
+    def __init__(self, Link, Geom1, Curve, Geom3=0, Geom4=0, Barrels=1, **kwargs):
+        CrossSection.__init__(self, Link, **kwargs)
         self.Shape = CrossSection.SHAPES.CUSTOM
         self.Geom1 = float(Geom1)
         self.Curve = str(Curve)
-        if Barrels != 1:
-            self.Geom3 = float(Geom3)
-            self.Geom4 = float(Geom4)
+        self.Geom2 = NaN
+        if Barrels != 1 or not isinstance(Barrels, str) and ~isnan(Barrels):
             self.Barrels = int(Barrels)
 
 
@@ -172,7 +174,7 @@ class Loss(BaseSectionObject):
         self.Inlet = float(Inlet)
         self.Outlet = float(Outlet)
         self.Average = float(Average)
-        self.FlapGate = bool(FlapGate)
+        self.FlapGate = to_bool(FlapGate)
         self.SeepageRate = float(SeepageRate)
 
 

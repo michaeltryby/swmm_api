@@ -2,6 +2,7 @@ from numpy import NaN
 
 from .identifiers import IDENTIFIERS
 from ..inp_helpers import BaseSectionObject
+from ..type_converter import to_bool
 
 
 class Junction(BaseSectionObject):
@@ -52,11 +53,11 @@ class Junction(BaseSectionObject):
 
     def __init__(self, Name, Elevation, MaxDepth=0, InitDepth=0, SurDepth=0, Aponded=0):
         self.Name = str(Name)
-        self.Elevation = Elevation
-        self.MaxDepth = MaxDepth
-        self.InitDepth = InitDepth
-        self.SurDepth = SurDepth
-        self.Aponded = Aponded
+        self.Elevation = float(Elevation)
+        self.MaxDepth = float(MaxDepth)
+        self.InitDepth = float(InitDepth)
+        self.SurDepth = float(SurDepth)
+        self.Aponded = float(Aponded)
 
 
 class Storage(BaseSectionObject):
@@ -101,7 +102,7 @@ class Storage(BaseSectionObject):
         *args (): -Arguments below-
         Curve (str | list):
 
-            - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth (ft or m) for ``TABULAR`` geometry.
+            - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth (ft or m) for ``TABULAR`` geometry. ``Acurve``
             - :obj:`list`: ``FUNCTIONAL`` relation between surface area and depth with
 
                - A1 (:obj:`float`): coefficient
@@ -122,7 +123,7 @@ class Storage(BaseSectionObject):
         Type (str): ``TABULAR`` or ``FUNCTIONAL``
         Curve (str | list):
 
-            - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth (ft or m) for ``TABULAR`` geometry.
+            - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth (ft or m) for ``TABULAR`` geometry. ``Acurve``
             - :obj:`list`: ``FUNCTIONAL`` relation between surface area and depth with
 
                - A1 (:obj:`float`): coefficient
@@ -144,9 +145,9 @@ class Storage(BaseSectionObject):
     def __init__(self, Name, Elevation, MaxDepth, InitDepth, Type, *args, Curve=None,
                  Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
         self.Name = str(Name)
-        self.Elevation = Elevation
-        self.MaxDepth = MaxDepth
-        self.InitDepth = InitDepth
+        self.Elevation = float(Elevation)
+        self.MaxDepth = float(MaxDepth)
+        self.InitDepth = float(InitDepth)
         self.Type = Type
 
         if args:
@@ -180,12 +181,12 @@ class Storage(BaseSectionObject):
         self.Curve = [A1, A2, A0]
         self._optional_args(Apond, Fevap, Psi, Ksat, IMD)
 
-    def _tabular_init(self, Acurve, Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
+    def _tabular_init(self, Curve, Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
         """
         for storage type ``'TABULAR'``
 
         Args:
-            Acurve: name of curve in [CURVES] section with surface area (ft2 or m2)
+            Curve (str): name of curve in [CURVES] section with surface area (ft2 or m2)
                 as a function of depth (ft or m) for TABULAR geometry.
             Apond (float): this parameter has been deprecated – use 0.
             Fevap (float): fraction of potential evaporation from surface realized (default is 0).
@@ -193,7 +194,7 @@ class Storage(BaseSectionObject):
             Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
             IMD (float): soil initial moisture deficit (fraction).
         """
-        self.Curve = Acurve
+        self.Curve = Curve
         self._optional_args(Apond, Fevap, Psi, Ksat, IMD)
 
     def _optional_args(self, Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
@@ -207,11 +208,11 @@ class Storage(BaseSectionObject):
             Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
             IMD (float): soil initial moisture deficit (fraction).
         """
-        self.Apond = Apond
-        self.Fevap = Fevap
-        self.Psi = Psi
-        self.Ksat = Ksat
-        self.IMD = IMD
+        self.Apond = float(Apond)
+        self.Fevap = float(Fevap)
+        self.Psi = float(Psi)
+        self.Ksat = float(Ksat)
+        self.IMD = float(IMD)
 
 
 class Outfall(BaseSectionObject):
@@ -272,7 +273,7 @@ class Outfall(BaseSectionObject):
 
     def __init__(self, Name, Elevation, Type, *args, Data=NaN, FlapGate=False, RouteTo=NaN):
         self.Name = str(Name)
-        self.Elevation = Elevation
+        self.Elevation = float(Elevation)
         self.Type = Type
 
         if args:
@@ -284,7 +285,7 @@ class Outfall(BaseSectionObject):
                 self._no_data_init(*args)
         else:
             self.Data = Data
-            self.FlapGate = FlapGate
+            self.FlapGate = to_bool(FlapGate)
             self.RouteTo = RouteTo
 
     def _no_data_init(self, Gated=False, RouteTo=NaN):
@@ -298,7 +299,7 @@ class Outfall(BaseSectionObject):
                            The default is not to route the outfall’s discharge.
         """
         self.Data = NaN
-        self.FlapGate = Gated
+        self.FlapGate = to_bool(Gated)
         self.RouteTo = RouteTo
 
     def _data_init(self, Data=NaN, Gated=False, RouteTo=NaN):
@@ -318,5 +319,5 @@ class Outfall(BaseSectionObject):
                            The default is not to route the outfall’s discharge.
         """
         self.Data = Data
-        self.FlapGate = Gated
+        self.FlapGate = to_bool(Gated)
         self.RouteTo = RouteTo

@@ -1,4 +1,5 @@
 from os import path, listdir, mkdir, remove
+from shutil import rmtree
 
 from swmm_api import read_inp_file, write_inp_file, swmm5_run
 
@@ -10,7 +11,7 @@ if not path.isdir(temp_dir):
 
 parent_dir = path.dirname(__file__)
 example_dirs = [
-    # path.join(parent_dir, 'epaswmm5_apps_manual'),
+    path.join(parent_dir, 'epaswmm5_apps_manual'),
     path.join(parent_dir, 'epaswmm5_apps_manual', 'projects')
 ]
 for folder in example_dirs:
@@ -22,5 +23,5 @@ for folder in example_dirs:
 
             swmm5_run(inp_fn, init_print=False)
             remove(inp_fn.replace('.inp', '.rpt'))
-            remove(inp_fn.replace('.inp', '.out'))
             print(fn, 'CHECK')
+rmtree(temp_dir)

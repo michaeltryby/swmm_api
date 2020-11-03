@@ -2,7 +2,7 @@ import re
 from inspect import isclass, isfunction
 
 from .inp_sections.labels import *
-from .inp_helpers import InpSection, InpData
+from .inp_helpers import InpSection, InpData, txt_to_lines
 from .inp_sections.types import SECTION_TYPES, GUI_SECTIONS
 from .inp_sections.generic_section import convert_title, convert_options, convert_evaporation, convert_temperature
 
@@ -22,7 +22,11 @@ CONVERTER.update({
 # only needed with big (> 200 MB) files
 if 0:
     try:
-        from tqdm import tqdm as _custom_iter
+        from tqdm import tqdm
+        def _custom_iter(i, desc=None):
+            if isinstance(i, str):
+                i = list(txt_to_lines(i))
+            return tqdm(i, desc=desc)
     except ImportError as e:
         def _custom_iter(i, desc=None):
             return i
@@ -87,8 +91,7 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
             continue
 
         if head in converter:
-            # lines = list(txt_to_lines(lines))
-            # lines = _custom_iter(lines, desc=head)
+            lines = _custom_iter(lines, desc=head)
 
             section_ = converter[head]
 
@@ -110,7 +113,7 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
 
 
 def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_converter=None,
-                  ignore_gui_sections=True):
+                  ignore_gui_sections=False):
     """
     read .inp file and convert given/all sections
 

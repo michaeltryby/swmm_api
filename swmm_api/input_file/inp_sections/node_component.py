@@ -125,7 +125,7 @@ class Inflow(BaseSectionObject):
         self.Mfactor = float(Mfactor)
         self.Sfactor = float(Sfactor)
         self.Baseline = float(Baseline)
-        self.Pattern = str(Pattern)
+        self.Pattern = Pattern
 
         if (TimeSeries is None) or (TimeSeries == ''):
             self.TimeSeries = '""'
@@ -157,5 +157,5 @@ class Coordinate(BaseSectionObject):
 
     def __init__(self, Node, x, y):
         self.Node = str(Node)
-        self.x = x
-        self.y = y
+        self.x = float(x)
+        self.y = float(y)

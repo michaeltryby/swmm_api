@@ -6,7 +6,7 @@ __version__ = "0.1"
 __license__ = "MIT"
 
 import pandas as pd
-from io import StringIO
+
 from .helpers import _get_title_of_part, _remove_lines, _part_to_frame, _continuity_part_to_dict
 
 """
@@ -302,5 +302,5 @@ class Report:
         return self._conduit_surcharge_summary
 
 
-def get_item_in_line(line, item):
-    return float([v.strip() for v in line.split()][item])
+def read_rpt_file(report_filename):
+    return Report(report_filename)

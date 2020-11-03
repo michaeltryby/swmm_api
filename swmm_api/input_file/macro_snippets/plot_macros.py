@@ -46,18 +46,19 @@ def plot_map(inp):  # TODO
                 x, y = zip(*points)
                 ax.plot(x, y, 'y-')
 
-    for poly in inp[POLYGONS].values():  # type: Polygon
-        # x, y = zip(*poly.polygon)
-        ax.add_patch(patches.Polygon(poly.polygon, closed=True, fill=False, hatch='/'))
-        # ax.plot(x, y, 'r-')
-        center = shp.Polygon(poly.polygon).centroid
+    if POLYGONS in inp:
+        for poly in inp[POLYGONS].values():  # type: Polygon
+            # x, y = zip(*poly.polygon)
+            ax.add_patch(patches.Polygon(poly.polygon, closed=True, fill=False, hatch='/'))
+            # ax.plot(x, y, 'r-')
+            center = shp.Polygon(poly.polygon).centroid
 
-        ax.scatter(x=center.x, y=center.y, marker='s', c='k', zorder=999)
+            ax.scatter(x=center.x, y=center.y, marker='s', c='k', zorder=999)
 
-        subcatch = inp[SUBCATCHMENTS][poly.Subcatch]  # type: SubCatchment
-        outlet = subcatch.Outlet
-        outlet_point = inp[COORDINATES][outlet]
-        ax.plot([center.x, outlet_point.x], [center.y, outlet_point.y], 'r--')
+            subcatch = inp[SUBCATCHMENTS][poly.Subcatch]  # type: SubCatchment
+            outlet = subcatch.Outlet
+            outlet_point = inp[COORDINATES][outlet]
+            ax.plot([center.x, outlet_point.x], [center.y, outlet_point.y], 'r--')
 
     coords = inp[COORDINATES].frame
     node_style = {

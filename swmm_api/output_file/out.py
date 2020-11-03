@@ -17,6 +17,10 @@ from . import parquet
 class SwmmOutHandler:
     """
     read the binary .out-file of EPA-SWMM
+
+    based on the python package swmmtoolbox
+
+    combined the reader of swmmtoolbox with the functionality of pandas
     """
 
     def __init__(self, filename):
@@ -363,9 +367,26 @@ class SwmmOutHandler:
         parquet.write(self.to_frame(), self.filename.replace('.out', '.parquet'))
 
 
+def read_out_file(out_filename):
+    """
+    read the binary ``.out``-file of EPA-SWMM
+
+    based on the python package swmmtoolbox
+
+    combined the reader of swmmtoolbox with the functionality of pandas
+
+    Returns:
+        SwmmOutHandler: class to extract data fromm the ``.out``-file
+    """
+    return SwmmOutHandler(out_filename)
+
+
 def out2frame(out_file):
     """
     read the binary .out file from EPA-SWMM and return a pandas Dataframe
+
+    Attention! don't use this if many object are in the out file an you only need few objects.
+    Use ``.get_part`` functionality of base class (return of ``read_out_file`` function)
 
     Args:
         out_file (str): path to out file

@@ -2,7 +2,7 @@ from numpy import NaN
 from pandas import DataFrame, Series
 
 from .identifiers import IDENTIFIERS
-from swmm_api.input_file.type_converter import infer_type
+from swmm_api.input_file.type_converter import infer_type, to_bool
 from ..inp_helpers import BaseSectionObject
 
 
@@ -69,7 +69,7 @@ class RainGage(BaseSectionObject):
         self.Name = str(Name)
         self.Format = Format
         self.Interval = Interval
-        self.SCF = SCF
+        self.SCF = float(SCF)
         self.Source = Source
 
         self.Timeseries = Timeseries
@@ -116,8 +116,8 @@ class Symbol(BaseSectionObject):
 
     def __init__(self, Gage, x, y):
         self.Gage = str(Gage)
-        self.x = x
-        self.y = y
+        self.x = float(x)
+        self.y = float(y)
 
 
 class Pattern(BaseSectionObject):
@@ -287,7 +287,7 @@ class Pollutant(BaseSectionObject):
         self.Cgw = float(Cgw)
         self.Crdii = float(Crdii)
         self.Kdecay = float(Kdecay)
-        self.SnowOnly = bool(SnowOnly)
+        self.SnowOnly = to_bool(SnowOnly)
         self.Co_Pollutant = str(Co_Pollutant)
         self.Co_Frac = float(Co_Frac)
         self.Cdwf = float(Cdwf)
@@ -857,7 +857,7 @@ class TimeseriesFile(Timeseries):
         Name (str): name assigned to time series.
         filename (str): name of a file in which the time series data are stored ``Fname``
     """
-    def __init__(self, Name, filename):
+    def __init__(self, Name, filename, kind=None):
         Timeseries.__init__(self, Name)
         self.kind = self.TYPES.FILE
         self.filename = filename

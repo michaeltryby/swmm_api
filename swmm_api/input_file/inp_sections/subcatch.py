@@ -256,7 +256,7 @@ class InfiltrationHorton(Infiltration):
         DryTime (float): time it takes for fully saturated soil to dry (days).
         MaxInf (float): maximum infiltration volume possible (0 if not applicable) (in or mm).
     """
-    def __init__(self, Subcatch, MaxRate, MinRate, Decay, DryTime, MaxInf):
+    def __init__(self, Subcatch, MaxRate, MinRate, Decay, DryTime, MaxInf, kind=None):
         Infiltration.__init__(self, Subcatch)
         self.MaxRate = float(MaxRate)
         self.MinRate = float(MinRate)
@@ -293,7 +293,7 @@ class InfiltrationGreenAmpt(Infiltration):
         Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
         IMD (float): initial soil moisture deficit (volume of voids / total volume).
     """
-    def __init__(self, Subcatch, Psi, Ksat, IMD):
+    def __init__(self, Subcatch, Psi, Ksat, IMD, kind=None):
         Infiltration.__init__(self, Subcatch)
         self.Psi = float(Psi)
         self.Ksat = float(Ksat)
@@ -330,7 +330,7 @@ class InfiltrationCurveNumber(Infiltration):
             (This property has been deprecated and is no longer used.)
         DryTime (float): time it takes for fully saturated soil to dry (days).
     """
-    def __init__(self, Subcatch, CurveNo, Ksat, DryTime):
+    def __init__(self, Subcatch, CurveNo, Ksat, DryTime, kind=None):
         Infiltration.__init__(self, Subcatch)
         self.CurveNo = CurveNo
         self.Ksat = Ksat

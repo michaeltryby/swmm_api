@@ -147,3 +147,7 @@ def _continuity_part_to_dict(raw):
     #         res[key] = value
 
     return res
+
+
+# def get_item_in_line(line, item):
+#     return float([v.strip() for v in line.split()][item])

@@ -500,7 +500,8 @@ class TagsSection(UserDict_, InpSectionGeneric):
         """which=one of TagsSection.Types"""
         new = type(self)()
         new._data = {k: v for k, v in self.items() if k != which}
-        new._data[which] = {k: self[k] for k in set(self[which].keys()).intersection(keys)}
+        if which in self:
+            new._data[which] = {k: self[which][k] for k in set(self[which].keys()).intersection(keys)}
         return new
 
 
@@ -544,10 +545,10 @@ class MapSection(InpSectionGeneric):
         NONE = None
 
     def __init__(self, dimensions, units='Meters'):
-        self.lower_left_x = dimensions[0]
-        self.lower_left_y = dimensions[1]
-        self.upper_right_x = dimensions[2]
-        self.upper_right_y = dimensions[3]
+        self.lower_left_x = float(dimensions[0])
+        self.lower_left_y = float(dimensions[1])
+        self.upper_right_x = float(dimensions[2])
+        self.upper_right_y = float(dimensions[3])
         self.units = units
 
     def copy(self):

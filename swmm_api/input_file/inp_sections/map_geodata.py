@@ -1,4 +1,3 @@
-from .map_data import CoordinatesSection, VerticesSection, PolygonSection
 from .node_component import Coordinate
 from ..inp_helpers import InpSection
 import geopandas as gpd

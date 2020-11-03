@@ -2,6 +2,7 @@ from numpy import NaN, isnan
 
 from .identifiers import IDENTIFIERS
 from ..inp_helpers import BaseSectionObject
+from ..type_converter import to_bool
 
 
 class Conduit(BaseSectionObject):
@@ -55,12 +56,12 @@ class Conduit(BaseSectionObject):
         self.Name = str(Name)
         self.FromNode = str(FromNode)
         self.ToNode = str(ToNode)
-        self.Length = Length
-        self.Roughness = Roughness
-        self.InOffset = InOffset
-        self.OutOffset = OutOffset
-        self.InitFlow = InitFlow
-        self.MaxFlow = MaxFlow
+        self.Length = float(Length)
+        self.Roughness = float(Roughness)
+        self.InOffset = float(InOffset)
+        self.OutOffset = float(OutOffset)
+        self.InitFlow = float(InitFlow)
+        self.MaxFlow = float(MaxFlow)
 
 
 class Weir(BaseSectionObject):
@@ -161,14 +162,14 @@ class Weir(BaseSectionObject):
         self.Type = str(Type)
         self.CrestHeight = float(CrestHeight)
         self.Qcoeff = float(Qcoeff)
-        self.FlapGate = bool(FlapGate)
+        self.FlapGate = to_bool(FlapGate)
         self.EndContractions = EndContractions
-        if isnan(EndCoeff):
+        if not isinstance(EndCoeff, str) and isnan(EndCoeff):
             EndCoeff = Qcoeff
         self.EndCoeff = float(EndCoeff)
-        self.Surcharge = bool(Surcharge)
+        self.Surcharge = to_bool(Surcharge)
         self.RoadWidth = float(RoadWidth)
-        self.RoadSurf = RoadSurface
+        self.RoadSurface = RoadSurface
 
 
 class Outlet(BaseSectionObject):
@@ -261,15 +262,15 @@ class Outlet(BaseSectionObject):
 
         else:
             self.Curve = Curve
-            self.Gated = bool(Gated)
+            self.Gated = to_bool(Gated)
 
     def _tabular_init(self, Qcurve, Gated=False):
         self.Curve = str(Qcurve)
-        self.Gated = bool(Gated)
+        self.Gated = to_bool(Gated)
 
     def _functional_init(self, C1, C2, Gated=False):
         self.Curve = [float(C1), float(C2)]
-        self.Gated = bool(Gated)
+        self.Gated = to_bool(Gated)
 
 
 class Orifice(BaseSectionObject):
@@ -329,7 +330,7 @@ class Orifice(BaseSectionObject):
         self.Type = str(Type)
         self.Offset = float(Offset)
         self.Qcoeff = float(Qcoeff)
-        self.FlapGate = bool(FlapGate)
+        self.FlapGate = to_bool(FlapGate)
         self.Orate = int(Orate)
 
 
