@@ -1,12 +1,19 @@
 from os import path, mkdir, listdir
+
 import numpy as np
 
-from .inp_sections.identifiers import IDENTIFIERS
+from .inp_helpers import InpData, InpSection
+from .inp_reader import read_inp_file, _convert_sections
 from .inp_sections import *
 from .inp_sections import labels as sec
-from .inp_reader import read_inp_file, _convert_sections
-from .inp_helpers import InpData, InpSection
+from .inp_sections.identifiers import IDENTIFIERS
 from .inp_writer import section_to_string
+
+"""
+a collection of macros to manipulate an inp-file
+
+use this file as an example for the usage of this package
+"""
 
 
 def section_from_frame(df, section_class):
@@ -41,16 +48,16 @@ def combined_subcatchment_infos(inp):
     return inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
 
 
-def find_node(inp, label):
-    for kind in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
-        if (kind in inp) and (label in inp[kind]):
-            return inp[kind][label]
+def find_node(inp, node_label):
+    for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
+        if (section in inp) and (node_label in inp[section]):
+            return inp[section][node_label]
 
 
 def find_link(inp, label):
-    for kind in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
-        if (kind in inp) and (label in inp[kind]):
-            return inp[kind][label]
+    for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
+        if (section in inp) and (label in inp[section]):
+            return inp[section][label]
 
 
 def calc_slope(inp, link):
@@ -65,18 +72,18 @@ def delete_node(inp, node):
         n = node
         node = n.Name
 
-    for kind in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
-        if (kind in inp) and (node in inp[kind]):
-            inp[kind].pop(node)
+    for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
+        if (section in inp) and (node in inp[section]):
+            inp[section].pop(node)
     inp[sec.COORDINATES].pop(node)
 
     # delete connected links
-    for i_name, i in inp[sec.CONDUITS].copy().items():
-        if (i.ToNode == node) or (i.FromNode == node):
-            # print('DELETE (link): ', i_name)
-            inp[sec.CONDUITS].pop(i_name)
-            inp[sec.XSECTIONS].pop(i_name)
-            inp[sec.VERTICES].pop(i_name)
+    for link in inp[sec.CONDUITS].keys().copy():
+        if (inp[sec.CONDUITS][link].ToNode == node) or (inp[sec.CONDUITS][link].FromNode == node):
+            # print('DELETE (link): ', link)
+            inp[sec.CONDUITS].pop(link)
+            inp[sec.XSECTIONS].pop(link)
+            inp[sec.VERTICES].pop(link)
 
     return inp
 
@@ -138,7 +145,7 @@ def conduit_iter_over_inp(inp, start, end=None):
 
 
 def junction_to_storage(inp, label, *args, **kwargs):
-    j = inp[sec.JUNCTIONS].pop(label)  # type: S.Junction
+    j = inp[sec.JUNCTIONS].pop(label)  # type: Junction
     if sec.STORAGE not in inp:
         inp[sec.STORAGE] = InpSection(Storage)
     inp[sec.STORAGE].append(Storage(Name=label, Elevation=j.Elevation, MaxDepth=j.MaxDepth,
@@ -146,7 +153,7 @@ def junction_to_storage(inp, label, *args, **kwargs):
 
 
 def junction_to_outfall(inp, label, *args, **kwargs):
-    j = inp[sec.JUNCTIONS].pop(label)  # type: S.Junction
+    j = inp[sec.JUNCTIONS].pop(label)  # type: Junction
     if sec.OUTFALLS not in inp:
         inp[sec.OUTFALLS] = InpSection(Outfall)
     inp[sec.OUTFALLS].append(Outfall(Name=label, Elevation=j.Elevation, *args, **kwargs))
@@ -175,7 +182,8 @@ def reduce_curves(inp):
     used_curves = set()
     for section in [sec.STORAGE, sec.OUTLETS, sec.PUMPS, sec.XSECTIONS]:
         if section in inp:
-            used_curves |= {inp[section][name].Curve for name in inp[section] if isinstance(inp[section][name].Curve, str)}
+            used_curves |= {inp[section][name].Curve for name in inp[section] if
+                            isinstance(inp[section][name].Curve, str)}
     inp[sec.CURVES] = inp[sec.CURVES].filter_keys(used_curves)
     return inp
 
@@ -196,9 +204,7 @@ def reduce_raingages(inp):
     inp[sec.RAINGAGES] = inp[sec.RAINGAGES].filter_keys(needed_raingages)
     return inp
 
-from mp.helpers.check_time import timeit, Timer
 
-@timeit
 def filter_nodes(inp, final_nodes):
     """
 
@@ -229,7 +235,7 @@ def filter_nodes(inp, final_nodes):
     inp = remove_empty_sections(inp)
     return inp
 
-@timeit
+
 def filter_links(inp, final_nodes):
     """
     filter links by nodes in the network
@@ -266,12 +272,10 @@ def filter_links(inp, final_nodes):
 
     return inp
 
-@timeit
+
 def filter_subcatchments(inp, final_nodes):
     if sec.SUBCATCHMENTS in inp:
-
-        with Timer('inp[sec.SUBCATCHMENTS].copy()'):
-            sub_orig = inp[sec.SUBCATCHMENTS].copy()
+        sub_orig = inp[sec.SUBCATCHMENTS].copy()
         # all with an outlet to final_nodes
         inp[sec.SUBCATCHMENTS] = inp[sec.SUBCATCHMENTS].filter_keys(final_nodes, by='Outlet')
         # all with an outlet to an subcatchment

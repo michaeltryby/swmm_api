@@ -1,8 +1,11 @@
 from .node_component import Coordinate
 from ..inp_helpers import InpSection
 import geopandas as gpd
+import numpy as np
 from pandas import DataFrame
 from shapely.geometry import Point, LineString, Polygon
+
+from ..inp_macros import section_from_frame
 
 """
 TESTING:
@@ -30,7 +33,8 @@ class CoordinatesSectionGeo(InpSection):
         x_name = 'x'
         y_name = 'y'
         df = DataFrame.from_dict({x_name: data.geometry.x, y_name: data.geometry.y})
-        return cls.from_frame(df, section_class=Coordinate)
+        a = np.vstack((df.index.values, df.values.T)).T
+        return CoordinatesSectionGeo.from_inp_lines(a, section_class=Coordinate)
 
 
 class VerticesSectionGeo(InpSection):

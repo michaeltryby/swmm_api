@@ -11,6 +11,7 @@ With this package you can read INP-files, manipulate them and write new ones.
 You can run swmm within the python api.
 And you can read the OUT-file as a pandas DataFrame for further analysis.
 
+This package is based on the command line SWMM syntax. ([see Appendix D in the SWMM User Manual 5.1](https://www.epa.gov/water-research/storm-water-management-model-swmm-version-51-users-manual))
 
 ## Install the package:
 ```bash
@@ -20,9 +21,9 @@ pip install swmm-api
 ## Read the INP-File
 ```python
 from swmm_api.input_file.inp_sections.labels import TIMESERIES
-from swmm_api.input_file import read_inp_file
+from swmm_api import read_inp_file
 from swmm_api.input_file.inp_helpers import InpSection
-inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])
+inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])   # type: swmm_api.input_file.inp_helpers.InpData
 
 # convert_sections limits the convertions during the reading of the file to the following section
 # remove "convert_sections" to convert all sections 
@@ -36,26 +37,32 @@ see [examples/inp_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-
 
 ## Write the manipulated INP-File
 ```python
-from swmm_api.input_file import write_inp_file
+from swmm_api import write_inp_file
 write_inp_file(inp, 'new_inputfile.inp')
 ```
 
 
 ## Run SWMM
 ```python
-from swmm_api.run import swmm5_run
+from swmm_api import swmm5_run
 swmm5_run('new_inputfile.inp')
 ```
 
 ## Read the OUT-File
 ```python
-from swmm_api.output_file import out2frame
-df = out2frame('new_inputfile.out')  # type: pandas.DataFrame
+from swmm_api import read_out_file
+out = read_out_file('new_inputfile.out')   # type: swmm_api.output_file.out.SwmmOutHandler
+df = out.to_frame()  # type: pandas.DataFrame
 ```
 see [examples/out_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/out_file_reader.ipynb)
 
 
 ## Read the RPT-File
+```python
+from swmm_api import read_rpt_file
+rpt = read_rpt_file('new_inputfile.rpt')  # type: swmm_api.report_file.report.Report
+node_flooding_summary = rpt.node_flooding_summary  # type: pandas.DataFrame
+```
 see [examples/rpt_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/rpt_file_reader.ipynb)
 
 MORE INFORMATIONS COMMING SOON
