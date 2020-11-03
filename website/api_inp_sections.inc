@@ -1,6 +1,5 @@
-===============================
-API for the Input File Sections
-===============================
+Input File Sections
+-------------------
 
 Import from
 `swmm_api.input_file.inp_sections.labels <https://gitlab.com/markuspichler/swmm_api/-/blob/master/swmm_api/input_file/inp_sections/labels.py>`_
@@ -13,8 +12,6 @@ all section headers, so you don't have to write every string for your own and sa
 Each section has a specific type, which can be seen under:
 `swmm_api.input_file.inp_sections.types <https://gitlab.com/markuspichler/swmm_api/-/blob/master/swmm_api/input_file/inp_sections/types.py>`_
 
-Input File Sections
-===================
 
 .. currentmodule:: swmm_api.input_file.inp_sections.generic_section
 
@@ -94,14 +91,14 @@ Input File Sections
 
 
 Generic Sections
-----------------
+^^^^^^^^^^^^^^^^
 
 .. automodule:: swmm_api.input_file.inp_sections.generic_section
     :members:
     :no-undoc-members:
 
 Node Sections
--------------
+^^^^^^^^^^^^^
 
 .. automodule:: swmm_api.input_file.inp_sections.node
     :members:
@@ -112,7 +109,7 @@ Node Sections
     :no-undoc-members:
 
 Link Sections
--------------
+^^^^^^^^^^^^^
 
 .. automodule:: swmm_api.input_file.inp_sections.link
     :members:
@@ -123,7 +120,7 @@ Link Sections
     :no-undoc-members:
 
 Subcatchment Sections
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: swmm_api.input_file.inp_sections.subcatch
     :members:
@@ -131,7 +128,7 @@ Subcatchment Sections
 
 
 Other Object-based Sections
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: swmm_api.input_file.inp_sections.others
     :members:

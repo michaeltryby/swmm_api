@@ -11,7 +11,7 @@ from ..inp_macros import (reduce_curves, reduce_raingages, combined_subcatchment
 from ..inp_reader import read_inp_file
 from ..inp_sections import labels as sec
 from ..inp_sections.types import SECTION_TYPES
-from ..inp_writer import write_inp_file, inp2string
+from ..inp_writer import write_inp_file, inp_to_string
 from ..type_converter import offset2delta
 from ...output_file import parquet
 from ...output_file.out import read_out_file
@@ -47,7 +47,7 @@ class InpMacros(InpData):
         return str(self)
 
     def __str__(self):
-        return inp2string(self)
+        return inp_to_string(self)
 
     def read_file(self, **kwargs):
         data = read_inp_file(self.filename, **kwargs)

@@ -75,7 +75,9 @@ class UserDict_:
 
 ########################################################################################################################
 class BaseSectionObject:
-    """base class for all section objects to unify operations
+    """
+    base class for all section objects to unify operations
+
     sections objects only have __init__ with object parameters
 
     acts like a dict (getter and setter)"""
@@ -216,34 +218,42 @@ class InpSectionGeneric:
 
 ########################################################################################################################
 class InpSection(UserDict_):
+    """
+    class for ``.inp``-file sections with objects (i.e. nodes, links, subcatchments, raingages, ...)
+    """
     def __init__(self, section_object):
-        """each section of the .inp file is converted to such a section
+        """
+        create an object for ``.inp``-file sections with objects (i.e. nodes, links, subcatchments, raingages, ...)
 
         Args:
-            section_object (BaseSectionObject):
+            section_object (BaseSectionObject): object class which is stored in this section.
+                This information is used to set the index of the section and
+                to decide if the section can be exported (converted to a string) as a table.
         """
         UserDict_.__init__(self)
         self.section_object = section_object
 
     @property
     def _identifier(self):
+        # to set the index of the section (key to select an object an index for the dataframe export)
         return self.section_object.identifier
 
     @property
     def _table_inp_export(self):
+        # if the section can be exported (converted to a string) as a table.
         return self.section_object.table_inp_export
 
-    @property
-    def data(self):
-        # for debugging
-        return self._data
+    # @property
+    # def data(self):
+    #     # for debugging
+    #     return self._data
 
     def append(self, item):
         """
-        add object(s)/item(s) to section
+        add object(s) to section
 
         Args:
-            item (BaseSectionObject | list[BaseSectionObject]):
+            item (BaseSectionObject | list[BaseSectionObject]): new objects
         """
         if isinstance(item, (list, tuple)):
             for i in item:
@@ -253,16 +263,17 @@ class InpSection(UserDict_):
 
     @classmethod
     def from_inp_lines(cls, lines, section_class):
-        """convert all lines of a section to this class and each line to a object
+        """
+        convert the lines of a section to this class and each line to a object
 
-        for .inp file reading
+        This function is used for the ``.inp``-file reading
 
         Args:
-            lines (list[list[str]]): lines of a section in a .inp file
-            section_class (BaseSectionObject):
+            lines (list[list[str]]): lines of a section in a ``.inp``-file
+            section_class (BaseSectionObject): object class which is stored in this section.
 
         Returns:
-            InpSection: of one section
+            InpSection: section of the ``.inp``-file
         """
         inp_section = cls(section_class)
 
@@ -283,9 +294,10 @@ class InpSection(UserDict_):
         return inp_section
 
     def to_inp_lines(self, fast=False):
-        """section to a multi-line string
+        """
+        convert the section to a multi-line ``.inp``-file conform string
 
-        write ``.inp``-file lines of the section object
+        This function is used for the ``.inp``-file writing
 
         Args:
             fast (bool): speeding up conversion
@@ -294,7 +306,7 @@ class InpSection(UserDict_):
                 - :obj:`False`: section is converted into a table to prettify string output (slower)
 
         Returns:
-             str: ``.inp``-file lines of the section object
+             str: lines of the ``.inp``-file section
         """
         if not self:  # if empty
             return ';; No Data'
@@ -306,9 +318,9 @@ class InpSection(UserDict_):
 
     @property
     def frame(self):
-        """convert section to a data-frame
+        """convert section to a pandas data-frame
 
-        for debugging purposes
+        This property is used for debugging purposes and data analysis of the input data of the swmm model.
 
         Returns:
             pandas.DataFrame: section as table
@@ -325,7 +337,8 @@ class InpSection(UserDict_):
     #     return dataframe_to_inp_string(self.frame)
 
     def copy(self):
-        """deep copy the section
+        """
+        get a copy of the section
 
         Returns:
             InpSection: copy of the section
@@ -360,15 +373,22 @@ class InpSection(UserDict_):
 
 ########################################################################################################################
 class InpData(dict):
-    """overall class for an input file"""
+    """
+    overall class for an input file
 
+    child class of dict
+
+    just used for the copy function and to identify ``.inp``-file data
+    """
     def copy(self):
-        """deep copy of an object"""
-        # ΔTime: 2.107 s
-        return InpData(deepcopy(self))
+        """
+        get a copy of the ``.inp``-file data
 
-    def copy2(self):
-        """deep copy of an object"""
+        Returns:
+            InpData: a copy of the ``.inp``-file data
+        """
+        # ΔTime: 2.107 s
+        # return InpData(deepcopy(self))  # way slower
         # ΔTime: 0.336 s
         return type(self)(**{k: self[k] if isinstance(self[k], str) else self[k].copy() for k in self})
 

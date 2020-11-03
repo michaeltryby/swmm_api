@@ -115,17 +115,17 @@ def _convert_sections(inp, ignore_sections=None, convert_sections=None, custom_c
 def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_converter=None,
                   ignore_gui_sections=False):
     """
-    read .inp file and convert given/all sections
+    read ``.inp``-file and convert the sections in pythonic objects
 
     Args:
         filename (str): path/filename to .inp file
-        ignore_sections (list[str]): don't convert ignored sections
-        convert_sections (list[str]): only convert these sections
+        ignore_sections (list[str]): don't convert ignored sections. Default: ignore none.
+        convert_sections (list[str]): only convert these sections Default: convert all
         custom_converter (dict): dictionary of {section: converter/section_type}
-        ignore_gui_sections (bool): don't convert gui sections (ie. for commandline use)
+        ignore_gui_sections (bool): don't convert gui/geo sections (ie. for commandline use)
 
     Returns:
-        InpData: of sections of the .inp file
+        InpData: dict-like data of the sections in the ``.inp``-file
     """
     if ignore_gui_sections:
         if ignore_sections is None:

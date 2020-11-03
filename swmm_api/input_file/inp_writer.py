@@ -50,14 +50,15 @@ def _sort_by(key):
 
 def section_to_string(section, fast=True):
     """
-    create string of a section in an inp file
+    create a string of a section in an ``.inp``-file
 
     Args:
-        section (swmm_api.input_file.inp_helpers.BaseSectionObject | swmm_api.input_file.inp_helpers.InpSectionGeneric):
+        section (swmm_api.input_file.inp_helpers.InpSection | swmm_api.input_file.inp_helpers.InpSectionGeneric):
+            section of an ``.inp``-file
         fast (bool): don't use any formatting else format as table
 
     Returns:
-        str: string of input section
+        str: string of the ``.inp``-file section
     """
     f = ''
 
@@ -97,16 +98,16 @@ def section_to_string(section, fast=True):
     return f
 
 
-def inp2string(inp, fast=True):
+def inp_to_string(inp, fast=True):
     """
-    create string of inp file
+    create the string of a new ``.inp``-file
 
     Args:
-        inp (swmm_api.input_file.inp_helpers.InpData):
+        inp (swmm_api.input_file.inp_helpers.InpData): dict-like Input-file data with several sections
         fast (bool): don't use any formatting else format as table
 
     Returns:
-        str: string of input file
+        str: string of input file text
     """
     f = ''
     for head in sorted(inp.keys(), key=_sort_by):
@@ -118,12 +119,12 @@ def inp2string(inp, fast=True):
 
 def write_inp_file(inp, filename, fast=True):
     """
-    write new .inp file
+    create/write a new ``.inp``-file
 
     Args:
-        inp (swmm_api.input_file.inp_helpers.InpData):
-        filename (str): path/filename of resulting .inp-file
+        inp (swmm_api.input_file.inp_helpers.InpData): dict-like ``.inp``-file data with several sections
+        filename (str): path/filename of created ``.inp``-file
         fast (bool): don't use any formatting else format as table
     """
     with open(filename, 'w') as f:
-        f.write(inp2string(inp, fast=fast))
+        f.write(inp_to_string(inp, fast=fast))
