@@ -15,18 +15,13 @@ Each section has a specific type, which can be seen under:
 
 .. currentmodule:: swmm_api.input_file.inp_sections.generic_section
 
-.. rubric:: Converter for Generic Sections
+.. rubric:: Generic Sections
 
 .. autosummary::
-    convert_title
-    convert_options
-    convert_evaporation
-    convert_temperature
-
-.. rubric:: Classes of Generic Sections
-
-.. autosummary::
+    OptionSection
     ReportSection
+    EvaporationSection
+    TemperatureSection
     TagsSection
     MapSection
 

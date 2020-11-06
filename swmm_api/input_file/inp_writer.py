@@ -1,10 +1,5 @@
-from pandas import set_option as set_pandas_options
-
 from .inp_helpers import InpSection, InpSectionGeneric
-from swmm_api.input_file.type_converter import type2str
 from .inp_sections.labels import *
-
-set_pandas_options("display.max_colwidth", 10000)
 
 sections_order = [TITLE,
                   OPTIONS,
@@ -67,17 +62,17 @@ def section_to_string(section, fast=True):
         f += section
 
     # ----------------------
-    elif isinstance(section, list):  # V0.1
-        for line in section:
-            f += type2str(line) + '\n'
-
-    # ----------------------
-    elif isinstance(section, dict):  # V0.2
-        max_len = len(max(section.keys(), key=len)) + 2
-        for sub in section:
-            f += '{key}{value}'.format(key=sub.ljust(max_len),
-                                       value=type2str(section[sub]) + '\n')
-
+    # elif isinstance(section, list):  # V0.1
+    #     for line in section:
+    #         f += type2str(line) + '\n'
+    #
+    # # ----------------------
+    # elif isinstance(section, dict):  # V0.2
+    #     max_len = len(max(section.keys(), key=len)) + 2
+    #     for sub in section:
+    #         f += '{key}{value}'.format(key=sub.ljust(max_len),
+    #                                    value=type2str(section[sub]) + '\n')
+    #
     # ----------------------
     # elif isinstance(section, (DataFrame, Series)):  # V0.3
     #     if section.empty:

@@ -3,10 +3,11 @@ from os import path, mkdir, listdir
 import numpy as np
 
 from .inp_helpers import InpData, InpSection
-from .inp_reader import read_inp_file, _convert_sections
+from .inp_reader import read_inp_file, convert_section
 from .inp_sections import *
 from .inp_sections import labels as sec
 from .inp_sections.identifiers import IDENTIFIERS
+from .inp_sections.types import SECTION_TYPES
 from .inp_writer import section_to_string
 
 """
@@ -33,14 +34,12 @@ def split_inp_to_files(inp_fn, **kwargs):
 
 
 def read_split_inp_file(inp_fn):
-    inp = dict()
+    inp = InpData()
     for header_file in listdir(inp_fn):
         header = header_file.replace('.txt', '')
         with open(path.join(inp_fn, header_file), 'r') as f:
-            inp[header] = f.read()
+            inp[header] = convert_section(header, f.read(), SECTION_TYPES)
 
-    inp = InpData(inp)
-    inp = _convert_sections(inp)
     return inp
 
 

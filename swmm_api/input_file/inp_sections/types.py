@@ -2,11 +2,10 @@ from swmm_api.input_file.inp_sections.labels import *
 from swmm_api.input_file.inp_sections import *
 
 SECTION_TYPES = {
-    TITLE: str,
-    OPTIONS: dict,
-    EVAPORATION: dict,
-    TEMPERATURE: dict,
-
+    # TITLE: str,
+    OPTIONS: OptionSection,
+    EVAPORATION: EvaporationSection,
+    TEMPERATURE: TemperatureSection,
     REPORT: ReportSection,
     # -----
     # something different

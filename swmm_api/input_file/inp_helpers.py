@@ -1,81 +1,91 @@
-from copy import deepcopy
-
 from numpy import isnan
 from pandas import DataFrame
+from tqdm import tqdm
 
-from swmm_api.input_file.type_converter import type2str, infer_type
+from swmm_api.input_file.type_converter import type2str
 
 SWMM_VERSION = '5.1.015'
 
 
+class CustomDict(dict):
+    pass
 ########################################################################################################################
-class UserDict_:
-    """imitate UserDict / user class like dict but operations only effect self._data"""
-
-    def __init__(self, d=None, **kwargs):
-        if d is None:
-            self._data = kwargs
-        else:
-            if isinstance(d, dict):
-                self._data = d
-            else:
-                self._data = dict(d)
-
-    def __len__(self):
-        return self._data.__len__()
-
-    def __getitem__(self, key):
-        return self._data.__getitem__(key)
-
-    def __setitem__(self, key, item):
-        self._data.__setitem__(key, item)
-        # for debugging
-        if key[0].isdigit():
-            pre = 'z__'
-        else:
-            pre = ''
-        exec(f'self.{pre}{key.replace("-", "_")} = self["{key}"]')
-
-    def __delitem__(self, key):
-        self._data.__delitem__(key)
-
-    def __iter__(self):
-        return self._data.__iter__()
-
-    def __contains__(self, key):
-        return self._data.__contains__(key)
-
-    def __repr__(self):
-        return self._data.__repr__()
-
-    def __str__(self):
-        return self._data.__str__()
-
-    def get(self, key, default=None):
-        if isinstance(key, list):
-            return (self.get(k) for k in key)
-        return self._data.get(key) if key in self else default
-
-    def copy(self):
-        return type(self)(deepcopy(self._data))
-
-    def values(self):
-        return self._data.values()
-
-    def keys(self):
-        return self._data.keys()
-
-    def items(self):
-        return self._data.items()
-
-    def update(self, d=None, **kwargs):
-        self._data.update(d, **kwargs)
-
-    def pop(self, key):
-        return self._data.pop(key)
-
-    def __bool__(self):
-        return bool(self._data)
+# class CustomDict:
+#     """imitate UserDict / user class like dict but operations only effect self._data"""
+#
+#     def __init__(self, d=None, **kwargs):
+#         if d is None:
+#             self._data = kwargs
+#         else:
+#             if isinstance(d, dict):
+#                 self._data = d
+#             else:
+#                 self._data = dict(d)
+#
+#     def __len__(self):
+#         return self._data.__len__()
+#
+#     def __getitem__(self, key):
+#         return self._data.__getitem__(key)
+#
+#     def __setitem__(self, key, item):
+#         self._data.__setitem__(key, item)
+#         # TODO: 3x slower
+#         # for debugging
+#         # key_ = key
+#         # if isinstance(key_, tuple):
+#         #     key_ = '_'.join(key)
+#         # else:
+#         #     key = f'"{key}"'
+#         #
+#         # # if key_[0].isdigit():
+#         # #     pre = 'z__'
+#         # # else:
+#         # #     pre = ''
+#         #
+#         # key_ = key_.replace("-", "_").replace(".", "_")
+#         # exec(f'self.{"z__" * key_[0].isdigit()}{key_} = self[{key}]')
+#
+#     def __delitem__(self, key):
+#         self._data.__delitem__(key)
+#
+#     def __iter__(self):
+#         return self._data.__iter__()
+#
+#     def __contains__(self, key):
+#         return self._data.__contains__(key)
+#
+#     def __repr__(self):
+#         return self._data.__repr__()
+#
+#     def __str__(self):
+#         return self._data.__str__()
+#
+#     def get(self, key, default=None):
+#         if isinstance(key, list):
+#             return (self.get(k) for k in key)
+#         return self._data.get(key) if key in self else default
+#
+#     def copy(self):
+#         return type(self)(deepcopy(self._data))
+#
+#     def values(self):
+#         return self._data.values()
+#
+#     def keys(self):
+#         return self._data.keys()
+#
+#     def items(self):
+#         return self._data.items()
+#
+#     def update(self, d=None, **kwargs):
+#         self._data.update(d, **kwargs)
+#
+#     def pop(self, key):
+#         return self._data.pop(key)
+#
+#     def __bool__(self):
+#         return bool(self._data)
 
 
 ########################################################################################################################
@@ -183,12 +193,16 @@ class BaseSectionObject:
 
     @classmethod
     def create_section(cls):
-        """create an object for ``.inp``-file sections with objects (i.e. nodes, links, subcatchments, raingages, ...)"""
+        """
+        create an object for ``.inp``-file sections with objects
+
+        i.e. nodes, links, subcatchments, raingages, ...
+        """
         return InpSection(cls)
 
 
 ########################################################################################################################
-class InpSectionGeneric:
+class InpSectionGeneric(CustomDict):
     """abstract class for ``.inp``-file sections without objects"""
 
     @classmethod
@@ -204,12 +218,6 @@ class InpSectionGeneric:
         """
         pass
 
-    def __repr__(self):
-        pass
-
-    def __str__(self):
-        pass
-
     def to_inp_lines(self, fast=False):
         """
         write ``.inp``-file lines of the section object
@@ -223,11 +231,16 @@ class InpSectionGeneric:
         Returns:
             str: ``.inp``-file lines of the section object
         """
-        pass
+        f = ''
+        max_len = len(max(self.keys(), key=len)) + 2
+        for sub in self:
+            f += '{key}{value}'.format(key=sub.ljust(max_len),
+                                       value=type2str(self[sub]) + '\n')
+        return f
 
 
 ########################################################################################################################
-class InpSection(UserDict_):
+class InpSection(CustomDict):
     """
     class for ``.inp``-file sections with objects (i.e. nodes, links, subcatchments, raingages, ...)
     """
@@ -240,7 +253,7 @@ class InpSection(UserDict_):
                 This information is used to set the index of the section and
                 to decide if the section can be exported (converted to a string) as a table.
         """
-        UserDict_.__init__(self)
+        CustomDict.__init__(self)
         self._section_object = section_object
 
     @property
@@ -252,11 +265,6 @@ class InpSection(UserDict_):
     def _table_inp_export(self):
         # if the section can be exported (converted to a string) as a table.
         return self._section_object._table_inp_export
-
-    # @property
-    # def data(self):
-    #     # for debugging
-    #     return self._data
 
     def append(self, item):
         """
@@ -279,7 +287,7 @@ class InpSection(UserDict_):
         This function is used for the ``.inp``-file reading
 
         Args:
-            lines (list[list[str]]): lines of a section in a ``.inp``-file
+            lines (str | list[list[str]]): lines of a section in a ``.inp``-file
             section_class (BaseSectionObject): object class which is stored in this section.
 
         Returns:
@@ -287,8 +295,33 @@ class InpSection(UserDict_):
         """
         inp_section = cls(section_class)
 
+        def txt_to_lines(content):
+            # TODO: convert to regex
+            import re
+            r"\[(\w+)\]"
+            x = re.findall(r'^\s*([^;\n]+)\s*$', content)
+
+            for line in content.split('\n'):
+                # ;; section comment
+                # ; object comment / either inline(at the end of the line) or before the line
+                # if ';' in line:
+                #     line
+                line = line.split(';')[0]
+                line = line.strip()
+                if line == '':  # ignore empty and comment lines
+                    continue
+                else:
+                    yield line.split()
+
         if isinstance(lines, str):
-            lines = txt_to_lines(lines)
+            if len(lines) > 10000000:
+                n_lines = lines.count('\n') + 1
+                # to create a progressbar in the reading process
+                # only needed with big (> 200 MB) files
+                lines = txt_to_lines(lines)
+                lines = tqdm(lines, desc=section_class.__name__, total=n_lines)
+            else:
+                lines = txt_to_lines(lines)
 
         if hasattr(section_class, 'convert_lines'):
             # each object has multiple lines
@@ -340,12 +373,6 @@ class InpSection(UserDict_):
 
         return DataFrame([i.to_dict_() for i in self.values()]).set_index(self._identifier)
 
-    # def __repr__(self):
-    #     return dataframe_to_inp_string(self.frame)
-    #
-    # def __str__(self):
-    #     return dataframe_to_inp_string(self.frame)
-
     def copy(self):
         """
         get a copy of the section
@@ -382,7 +409,7 @@ class InpSection(UserDict_):
 
 
 ########################################################################################################################
-class InpData(UserDict_):
+class InpData(CustomDict):
     """
     overall class for an input file
 
@@ -437,28 +464,8 @@ def dataframe_to_inp_string(df):
                 # because pandas 1.0
                 # c.index.levels[0].name = ';' + c.index.levels[0].name
 
-    return c.applymap(type2str).to_string(sparsify=False, line_width=999999)
-
-
-########################################################################################################################
-def txt_to_lines(content):
-    """
-    split lines into lists of lists of arguments
-
-    Args:
-        content (str): lines in inp file
-
-    Returns:
-        list[list[str]]: split lines
-    """
-    for line in content.split('\n'):
-        # ;; section comment
-        # ; object comment / either inline(at the end of the line) or before the line
-        # if ';' in line:
-        #     line
-        line = line.split(';')[0]
-        line = line.strip()
-        if line == '':  # ignore empty and comment lines
-            continue
-        else:
-            yield line.split()
+    return c.applymap(type2str).to_string(sparsify=False,
+                                          line_width=999999,
+                                          max_rows=999999,
+                                          max_cols=999999,
+                                          max_colwidth=999999)

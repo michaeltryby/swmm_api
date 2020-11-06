@@ -2,33 +2,19 @@ from pandas import DataFrame
 
 from .identifiers import IDENTIFIERS
 from swmm_api.input_file.type_converter import infer_type, type2str
-from ..inp_helpers import InpSectionGeneric, UserDict_, txt_to_lines
+from ..inp_helpers import InpSectionGeneric
 
 
-def convert_title(lines):
-    """
-    Section: [**TITLE**]
-
-    Purpose:
-        Attaches a descriptive title to the problem being analyzed.
-
-    Format:
-        Any number of lines may be entered. The first line will be used as a page header in the output report.
-
-    Args:
-        lines (list):
-
-    Returns:
-        str: the title
-    """
-    if isinstance(lines, str):
-        return lines
-    else:
-        title = '\n'.join([' '.join([str(word) for word in line]) for line in lines])
-        return title
+def check_line(line):
+    line = line.split(';')[0]
+    line = line.strip()
+    # if line == '':  # ignore empty and comment lines
+    #     continue
+    # else:
+    return line.split()
 
 
-def convert_options(lines):
+class OptionSection(InpSectionGeneric):
     """
     Section: [**OPTIONS**]
 
@@ -87,18 +73,23 @@ def convert_options(lines):
     Returns:
         dict: options
     """
-    if isinstance(lines, str):
-        lines = txt_to_lines(lines)
+    @classmethod
+    def from_inp_lines(cls, lines):
+        if isinstance(lines, str):
+            lines = lines.split('\n')
 
-    options = dict()
-    for line in lines:
-        label = line.pop(0)
-        assert len(line) == 1
-        options[label] = infer_type(line[0])
-    return options
+        data = cls()
+        for line in lines:
+            line = check_line(line)
+            if not line:
+                continue
+            label = line.pop(0)
+            assert len(line) == 1
+            data[label] = infer_type(line[0])
+        return data
 
 
-class ReportSection(UserDict_, InpSectionGeneric):
+class ReportSection(InpSectionGeneric):
     """
     Section: [**REPORT**]
 
@@ -155,11 +146,14 @@ class ReportSection(UserDict_, InpSectionGeneric):
     @classmethod
     def from_inp_lines(cls, lines):
         if isinstance(lines, str):
-            lines = txt_to_lines(lines)
+            lines = lines.split('\n')
 
-        rep = cls()
+        data = cls()
 
         for line in lines:
+            line = check_line(line)
+            if not line:
+                continue
             label = line.pop(0)
             if len(line) == 1:
                 value = infer_type(line[0])
@@ -182,13 +176,13 @@ class ReportSection(UserDict_, InpSectionGeneric):
                     pass
                 elif not isinstance(value, list):
                     value = [value]
-            if label not in rep:
-                rep[label] = value
-            elif isinstance(rep[label], list):
-                rep[label] += value
+            if label not in data:
+                data[label] = value
+            elif isinstance(data[label], list):
+                data[label] += value
             else:
-                rep[label] = value
-        return rep
+                data[label] = value
+        return data
 
     def to_inp_lines(self, fast=False):
         f = ''
@@ -216,7 +210,7 @@ class ReportSection(UserDict_, InpSectionGeneric):
         return f
 
 
-def convert_evaporation(lines):
+class EvaporationSection(InpSectionGeneric):
     """
     Section: [**EVAPORATION**]
 
@@ -282,48 +276,53 @@ def convert_evaporation(lines):
     Returns:
         dict: evaporation_options
     """
+    @classmethod
+    def from_inp_lines(cls, lines):
+        if isinstance(lines, str):
+            lines = lines.split('\n')
 
-    if isinstance(lines, str):
-        lines = txt_to_lines(lines)
+        data = cls()
+        for line in lines:
+            line = check_line(line)
+            if not line:
+                continue
+            label = line.pop(0)
+            if len(line) == 1:
+                value = line[0]
 
-    options = {}
-    for label, *line in lines:
-        if len(line) == 1:
-            value = line[0]
-
-        elif label == 'TEMPERATURE':
-            assert len(line) == 0
-            value = ''
-
-        elif label == 'MONTHLY':
-            assert len(line) == 12
-            value = line
-
-        elif label == 'FILE':
-            if len(line) == 12:
-                value = line
-            elif len(line) == 0:
+            elif label == 'TEMPERATURE':
+                assert len(line) == 0
                 value = ''
+
+            elif label == 'MONTHLY':
+                assert len(line) == 12
+                value = line
+
+            elif label == 'FILE':
+                if len(line) == 12:
+                    value = line
+                elif len(line) == 0:
+                    value = ''
+                else:
+                    raise NotImplementedError()
+
             else:
-                raise NotImplementedError()
+                value = line
 
-        else:
-            value = line
+            data[label] = infer_type(value)
 
-        options[label] = infer_type(value)
+        mult_infos = [x in data for x in ['CONSTANT', 'MONTHLY', 'TIMESERIES', 'TEMPERATURE', 'FILE']]
 
-    mult_infos = [x in options for x in ['CONSTANT', 'MONTHLY', 'TIMESERIES', 'TEMPERATURE', 'FILE']]
+        if sum(mult_infos) != 1:
+            if sum(mult_infos) == 0:
+                data['CONSTANT'] = 0
+            else:
+                raise UserWarning('Too much evaporation')
 
-    if sum(mult_infos) != 1:
-        if sum(mult_infos) == 0:
-            options['CONSTANT'] = 0
-        else:
-            raise UserWarning('Too much evaporation')
-
-    return options
+        return data
 
 
-def convert_temperature(lines):
+class TemperatureSection(InpSectionGeneric):
     """
     Section: [**TEMPERATURE**]
 
@@ -395,62 +394,65 @@ def convert_temperature(lines):
     Returns:
         dict: temperature section
     """
+    @classmethod
+    def from_inp_lines(cls, lines):
+        if isinstance(lines, str):
+            lines = lines.split('\n')
 
-    if isinstance(lines, str):
-        lines = txt_to_lines(lines)
+        data = cls()
+        for line in lines:
+            line = check_line(line)
+            if not line:
+                continue
+            sub_head = line.pop(0)
+            n_options = len(line)
 
-    new_lines = dict()
-    for line in lines:
-
-        sub_head = line.pop(0)
-        n_options = len(line)
-
-        if sub_head == 'TIMESERIES':
-            assert n_options == 1
-            opt = line[0]
-
-        elif sub_head == 'FILE':
-            if n_options == 1:
-                opt = line[0]
-            else:
-                opt = line
-
-        elif sub_head == 'WINDSPEED':
-            subsub_head = line[0]
-            if subsub_head == 'FILE':
+            if sub_head == 'TIMESERIES':
                 assert n_options == 1
                 opt = line[0]
-            elif subsub_head == 'MONTHLY':
-                assert n_options == 13
+
+            elif sub_head == 'FILE':
+                if n_options == 1:
+                    opt = line[0]
+                else:
+                    opt = line
+
+            elif sub_head == 'WINDSPEED':
+                subsub_head = line[0]
+                if subsub_head == 'FILE':
+                    assert n_options == 1
+                    opt = line[0]
+                elif subsub_head == 'MONTHLY':
+                    assert n_options == 13
+                    opt = line
+                else:
+                    raise NotImplementedError()
+
+            elif sub_head == 'SNOWMELT':
+                assert n_options == 6
                 opt = line
+
+            elif sub_head == 'ADC':
+                subsub_head = line.pop(0)
+                sub_head += ' ' + subsub_head
+                if subsub_head == 'IMPERVIOUS':
+                    assert n_options == 11
+                    opt = line
+                elif subsub_head == 'PERVIOUS':
+                    assert n_options == 11
+                    opt = line
+                else:
+                    raise NotImplementedError()
+
             else:
-                raise NotImplementedError()
-
-        elif sub_head == 'SNOWMELT':
-            assert n_options == 6
-            opt = line
-
-        elif sub_head == 'ADC':
-            subsub_head = line.pop(0)
-            sub_head += ' ' + subsub_head
-            if subsub_head == 'IMPERVIOUS':
-                assert n_options == 11
                 opt = line
-            elif subsub_head == 'PERVIOUS':
-                assert n_options == 11
-                opt = line
-            else:
-                raise NotImplementedError()
 
-        else:
-            opt = line
+            data[sub_head] = opt
 
-        new_lines[sub_head] = opt
-
-    return new_lines
+        return data
 
 
-class TagsSection(UserDict_, InpSectionGeneric):
+class TagsSection(InpSectionGeneric):
     """Section: [**TAGS**]"""
     # def __init__(self):
     #     UserDict_.__init__(self)
@@ -463,33 +465,37 @@ class TagsSection(UserDict_, InpSectionGeneric):
     @classmethod
     def from_inp_lines(cls, lines):
         if isinstance(lines, str):
-            lines = txt_to_lines(lines)
+            lines = lines.split('\n')
 
         # TAGS AS DATAFRAME
         # tags = DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
-        new = cls()
+        data = cls()
         for line in lines:
-            kind, name, tag = line
-            if kind not in new._data:
-                new._data[kind] = dict()
+            line = check_line(line)
+            if not line:
+                continue
 
-            new._data[kind][name] = tag
-        return new
+            kind, name, tag = line
+            if kind not in data:
+                data[kind] = dict()
+
+            data[kind][name] = tag
+        return data
 
     @property
     def to_pandas(self):
         # MAKE TAGS TO SERIES
         tags_df = dict()
-        for type_ in self._data:
-            tags_df[type_] = DataFrame.from_dict(self._data[type_], orient='index')
+        for type_ in self:
+            tags_df[type_] = DataFrame.from_dict(self[type_], orient='index')
         return tags_df
 
     def to_inp_lines(self, fast=False):
         if not self:  # if empty
             return '; NO data'
         f = ''
-        max_len_type = len(max(self._data.keys(), key=len)) + 2
-        for type_, tags in self._data.items():
+        max_len_type = len(max(self.keys(), key=len)) + 2
+        for type_, tags in self.items():
             max_len_name = len(max(tags.keys(), key=len)) + 2
             for name, tag in tags.items():
                 f += '{{:<{len1}}} {{:<{len2}}} {{}}\n'.format(len1=max_len_type, len2=max_len_name).format(type_, name,
@@ -538,52 +544,28 @@ class MapSection(InpSectionGeneric):
         DIMENSIONS = 'DIMENSIONS'
         UNITS = 'UNITS'
 
-    class UNITS:
+    class UNIT_OPTIONS:
         FEET = 'FEET'
         METERS = 'METERS'
         DEGREES = 'DEGREES'
         NONE = None
 
-    def __init__(self, dimensions, units='Meters'):
-        self.lower_left_x = float(dimensions[0])
-        self.lower_left_y = float(dimensions[1])
-        self.upper_right_x = float(dimensions[2])
-        self.upper_right_y = float(dimensions[3])
-        self.units = units
-
-    def copy(self):
-        return type(self)([self.lower_left_x,
-                           self.lower_left_y,
-                           self.upper_right_x,
-                           self.upper_right_y], self.units)
-
     @classmethod
     def from_inp_lines(cls, lines):
         if isinstance(lines, str):
-            lines = txt_to_lines(lines)
+            lines = lines.split('\n')
 
-        args = list()
+        data = cls()
         for line in lines:
-            name = line[0]
+            line = check_line(line)
+            if not line:
+                continue
+            name = line.pop(0).upper()
             if name == cls.KEYS.DIMENSIONS:
-                args.append(line[1:])
+                data[name] = [float(i) for i in line]
 
             elif name == cls.KEYS.UNITS:
-                args.append(line[1])
+                data[name] = line[0]
             else:
-                pass
-        new_map = cls(*args)
-        return new_map
-
-    # def __repr__(self):
-    #     pass
-    #
-    # def __str__(self):
-    #     return self.to_inp()
-    #     pass
-
-    def to_inp_lines(self, fast=False):
-        s = '{} {}\n'.format(self.KEYS.DIMENSIONS, ' '.join([str(i) for i in [self.lower_left_x, self.lower_left_y,
-                                                                              self.upper_right_x, self.upper_right_y]]))
-        s += '{} {}'.format(self.KEYS.UNITS, self.units)
-        return s
+                raise NotImplementedError()
+        return data

@@ -196,16 +196,18 @@ class Pattern(BaseSectionObject):
     @classmethod
     def convert_lines(cls, lines):
         """multiple lines for one entry"""
-        new_lines = list()
+        args = list()
         for line in lines:
             if line[1] in [cls.TYPES.MONTHLY, cls.TYPES.DAILY,
                            cls.TYPES.HOURLY, cls.TYPES.WEEKEND]:
-                new_lines.append(line)
+                if args:
+                    yield cls(*args)
+                args = line
             else:
-                new_lines[-1] += line[1:]
-
-        for line in new_lines:
-            yield cls(*line)
+                args += line[1:]
+        # last
+        if args:
+            yield cls(*args)
 
 
 class Pollutant(BaseSectionObject):
@@ -529,45 +531,38 @@ class Control(BaseSectionObject):
     @classmethod
     def convert_lines(cls, lines):
         """multiple lines for one entry"""
-        new_lines = list()
-        new_obj = list()
+        args = list()
         is_condition = False
         is_action = False
         for line in lines:
             if line[0] == cls.Clauses.RULE:
-                if new_obj:
-                    new_lines.append(new_obj)
-                    new_obj = list()
-                new_obj.append(line[1])
+                if args:
+                    yield cls(*args)
+                    args = list()
+                args.append(line[1])
                 is_action = False
 
             elif line[0] == cls.Clauses.IF:
-                new_obj.append([line[1:]])
+                args.append([line[1:]])
                 is_condition = True
 
             elif line[0] == cls.Clauses.THEN:
-                new_obj.append([line[1:]])
+                args.append([line[1:]])
                 is_condition = False
                 is_action = True
 
             elif line[0] == cls.Clauses.PRIORITY:
-                new_obj.append(line[1])
+                args.append(line[1])
                 is_action = False
 
             elif is_condition:
-                new_obj[-1].append(line)
+                args[-1].append(line)
 
             elif is_action:
-                new_obj[-1].append(line)
+                args[-1].append(line)
 
-        new_lines.append(new_obj)
-
-        # sec_lines = list()
-        for line in new_lines:
-            # sec_lines.append()
-            yield cls(*line)
-
-        # return sec_lines
+        # last
+        yield cls(*args)
 
     def to_inp_line(self):
         s = '{} {}\n'.format(self.Clauses.RULE, self.Name)

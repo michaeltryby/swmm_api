@@ -26,7 +26,6 @@ Input File Helpers
     InpSection
     InpData
     dataframe_to_inp_string
-    txt_to_lines
 
 .. automodule:: swmm_api.input_file.inp_helpers
     :members:

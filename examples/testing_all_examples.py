@@ -1,6 +1,8 @@
 from os import path, listdir, mkdir, remove
 from shutil import rmtree
 
+from tqdm import tqdm
+
 from swmm_api import read_inp_file, write_inp_file, swmm5_run
 
 """if no error occur pretty much everything works (or more test cases are needed)"""
@@ -14,7 +16,8 @@ example_dirs = [
     path.join(parent_dir, 'epaswmm5_apps_manual'),
     path.join(parent_dir, 'epaswmm5_apps_manual', 'projects')
 ]
-for folder in example_dirs:
+process_bar = tqdm(example_dirs)
+for folder in process_bar:
     for fn in listdir(folder):
         if '.inp' in fn:
             inp = read_inp_file(path.join(folder, fn), ignore_gui_sections=False)
