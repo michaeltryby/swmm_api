@@ -49,7 +49,7 @@ class Junction(BaseSectionObject):
                             can sustain under surcharge conditions (ft or m) (default is 0). ``Ysur``
         Aponded (float): area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0). ``Apond``
     """
-    identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.Name
 
     def __init__(self, Name, Elevation, MaxDepth=0, InitDepth=0, SurDepth=0, Aponded=0):
         self.Name = str(Name)
@@ -136,7 +136,7 @@ class Storage(BaseSectionObject):
         Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
         IMD (float): soil initial moisture deficit (fraction).
     """
-    identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.Name
 
     class TYPES:
         TABULAR = 'TABULAR'
@@ -262,7 +262,7 @@ class Outfall(BaseSectionObject):
         FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
         RouteTo (str, Optional): optional name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
     """
-    identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.Name
 
     class TYPES:
         FREE = 'FREE'

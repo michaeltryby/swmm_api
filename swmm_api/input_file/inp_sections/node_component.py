@@ -41,7 +41,7 @@ class DryWeatherFlow(BaseSectionObject):
         pattern2 (str, Optional): i.e.: daily-pattern ``Pat2``
         pattern3 (str, Optional): i.e.: hourly-pattern
     """
-    identifier = [IDENTIFIERS.Node, 'kind']
+    _identifier = [IDENTIFIERS.Node, 'kind']
 
     def __init__(self, Node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN, *patternx):
         self.Node = str(Node)
@@ -111,7 +111,7 @@ class Inflow(BaseSectionObject):
         Baseline (float): constant baseline value added to the time series value (default is 0.0). ``Base``
         Pattern (str): name of optional time pattern in [PATTERNS] section used to adjust the baseline value on a periodic basis. ``Pat``
     """
-    identifier = [IDENTIFIERS.Node, 'Constituent']
+    _identifier = [IDENTIFIERS.Node, 'Constituent']
 
     class TYPES:
         FLOW = 'FLOW'
@@ -153,7 +153,7 @@ class Coordinate(BaseSectionObject):
         x (float): horizontal coordinate relative to origin in lower left of map. ``Xcoord``
         y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
     """
-    identifier = IDENTIFIERS.Node
+    _identifier = IDENTIFIERS.Node
 
     def __init__(self, Node, x, y):
         self.Node = str(Node)

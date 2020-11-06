@@ -49,7 +49,7 @@ class RainGage(BaseSectionObject):
         Station (str): name of recording station used in the rain file. ``Sta``
         Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
     """
-    identifier =IDENTIFIERS.Name
+    _identifier =IDENTIFIERS.Name
 
     class FORMATS:
         INTENSITY = 'INTENSITY'
@@ -112,7 +112,7 @@ class Symbol(BaseSectionObject):
         x (float): horizontal coordinate relative to origin in lower left of map. ``Xcoord``
         y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
     """
-    identifier =IDENTIFIERS.Gage
+    _identifier =IDENTIFIERS.Gage
 
     def __init__(self, Gage, x, y):
         self.Gage = str(Gage)
@@ -176,7 +176,7 @@ class Pattern(BaseSectionObject):
         Type (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
         Factors (list): multiplier values.
     """
-    identifier =IDENTIFIERS.Name
+    _identifier =IDENTIFIERS.Name
 
     class TYPES:
         __class__ = 'Patter Types'
@@ -272,7 +272,7 @@ class Pollutant(BaseSectionObject):
         Cdwf (float): pollutant concentration in dry weather flow (default is 0).
         Cinit (float): pollutant concentration throughout the conveyance system at the start of the simulation (default is 0).
     """
-    identifier =IDENTIFIERS.Name
+    _identifier =IDENTIFIERS.Name
 
     class Unit:
         MG_PER_L = 'MG/L'
@@ -362,8 +362,8 @@ class Transect(BaseSectionObject):
             Elev (float): elevation of the channel bottom at a cross-section station relative to some fixed reference (ft or m).
             Station (float): distance of a cross-section station from some fixed reference (ft or m).
     """
-    identifier =IDENTIFIERS.Name
-    table_inp_export = False
+    _identifier =IDENTIFIERS.Name
+    _table_inp_export = False
 
     class KEYS:
         NC = 'NC'
@@ -508,8 +508,8 @@ class Control(BaseSectionObject):
             PUMP P45 STATUS = OFF
             SIMULATION TIME = 12:45:00
     """
-    identifier =IDENTIFIERS.Name
-    table_inp_export = False
+    _identifier =IDENTIFIERS.Name
+    _table_inp_export = False
 
     class Clauses:
         __class__ = 'Clauses'
@@ -649,8 +649,8 @@ class Curve(BaseSectionObject):
         Type (str): one of ``STORAGE`` / ``SHAPE`` / ``DIVERSION`` / ``TIDAL`` / ``PUMP1`` / ``PUMP2`` / ``PUMP3`` / ``PUMP4`` / ``RATING`` / ``CONTROL``
         points (list[list[float, float]]): tuple of X-value (an independent variable) and  Y-value (an dependent variable)
     """
-    identifier =IDENTIFIERS.Name
-    table_inp_export = False
+    _identifier =IDENTIFIERS.Name
+    _table_inp_export = False
 
     class TYPES:
         STORAGE = 'STORAGE'
@@ -784,8 +784,8 @@ class Timeseries(BaseSectionObject):
     Args:
         Name (str): name assigned to time series.
     """
-    identifier =IDENTIFIERS.Name
-    table_inp_export = False
+    _identifier =IDENTIFIERS.Name
+    _table_inp_export = False
 
     class TYPES:
         FILE = 'FILE'

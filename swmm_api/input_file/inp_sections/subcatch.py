@@ -43,7 +43,7 @@ class SubCatchment(BaseSectionObject):
         CurbLen (float): total curb length (any length units). Use 0 if not applicable. ``Clength``
         SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow accumulation and melting over the subcatchment. ``Spack``
     """
-    identifier =IDENTIFIERS.Name
+    _identifier =IDENTIFIERS.Name
 
     def __init__(self, Name, RainGage, Outlet, Area, Imperv, Width, Slope, CurbLen=0, SnowPack=NaN):
         self.Name = str(Name)
@@ -104,7 +104,7 @@ class SubArea(BaseSectionObject):
 
         PctRouted (float): percent of runoff routed from one type of area to another (default = 100). ``%Routed``
     """
-    identifier =IDENTIFIERS.Subcatch
+    _identifier =IDENTIFIERS.Subcatch
 
     class RoutToOption:
         __class__ = 'RoutTo Option'
@@ -177,8 +177,8 @@ class Infiltration(BaseSectionObject):
     Attributes:
         Subcatch (str): subcatchment name. ``Subcat``
     """
-    identifier =IDENTIFIERS.Subcatch
-    table_inp_export = False
+    _identifier =IDENTIFIERS.Subcatch
+    _table_inp_export = False
 
     def __init__(self, Subcatch):
         self.Subcatch = str(Subcatch)
@@ -366,8 +366,8 @@ class Polygon(BaseSectionObject):
             - Xcoord: horizontal coordinate of vertex
             - Ycoord: vertical coordinate of vertex
     """
-    identifier =IDENTIFIERS.Subcatch
-    table_inp_export = False
+    _identifier =IDENTIFIERS.Subcatch
+    _table_inp_export = False
 
     def __init__(self, Subcatch,  polygon):
         self.Subcatch = str(Subcatch)
@@ -441,8 +441,8 @@ class Loading(BaseSectionObject):
             - InitBuildup: initial buildup of pollutant (lbs/acre or kg/hectare).
 
     """
-    identifier =IDENTIFIERS.Subcatch
-    table_inp_export = False
+    _identifier =IDENTIFIERS.Subcatch
+    _table_inp_export = False
 
     def __init__(self, Subcatch,  pollutant_buildup):
         self.Subcatch = str(Subcatch)

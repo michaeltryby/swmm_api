@@ -50,7 +50,7 @@ class Conduit(BaseSectionObject):
         InitFlow (float): flow in conduit at start of simulation (flow units) (default is 0). ``Q0``
         MaxFlow (float): maximum flow allowed in the conduit (flow units) (default is no limit). ``Qmax``
     """
-    identifier =IDENTIFIERS.Name
+    _identifier =IDENTIFIERS.Name
 
     def __init__(self, Name, FromNode, ToNode, Length, Roughness, InOffset, OutOffset, InitFlow=0, MaxFlow=NaN):
         self.Name = str(Name)
@@ -140,7 +140,7 @@ class Weir(BaseSectionObject):
         RoadWidth (float): width of road lanes and shoulders for ``ROADWAY`` weir (ft or m). ``Width``
         RoadSurface (str): type of road surface for ``ROADWAY`` weir: ``PAVED`` or ``GRAVEL``. ``Surface``
     """
-    identifier =IDENTIFIERS.Name
+    _identifier =IDENTIFIERS.Name
 
     class TYPES:
         TRANSVERSE = 'TRANSVERSE'
@@ -235,7 +235,7 @@ class Outlet(BaseSectionObject):
 
         Gated (bool): ``YES`` if flap gate present to prevent reverse flow, ``NO`` if not (default is ``NO``).
     """
-    identifier =IDENTIFIERS.Name
+    _identifier =IDENTIFIERS.Name
 
     class TYPES:
         TABULAR_DEPTH = 'TABULAR/DEPTH'
@@ -317,7 +317,7 @@ class Orifice(BaseSectionObject):
         Orate (int): time in decimal hours to open a fully closed orifice (or close a fully open one).
                         Use 0 if the orifice can open/close instantaneously.
     """
-    identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.Name
 
     class TYPES:
         SIDE = 'SIDE'
@@ -369,7 +369,7 @@ class Pump(BaseSectionObject):
 
     See Section 3.2 for a description of the different types of pumps available.
     """
-    identifier =IDENTIFIERS.Name
+    _identifier =IDENTIFIERS.Name
 
     class STATES:
         ON = 'ON'

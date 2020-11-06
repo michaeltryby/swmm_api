@@ -1,4 +1,3 @@
-from collections import Iterable
 from copy import deepcopy
 
 from numpy import isnan
@@ -30,6 +29,12 @@ class UserDict_:
 
     def __setitem__(self, key, item):
         self._data.__setitem__(key, item)
+        # for debugging
+        if key[0].isdigit():
+            pre = 'z__'
+        else:
+            pre = ''
+        exec(f'self.{pre}{key.replace("-", "_")} = self["{key}"]')
 
     def __delitem__(self, key):
         self._data.__delitem__(key)
@@ -81,9 +86,9 @@ class BaseSectionObject:
     sections objects only have __init__ with object parameters
 
     acts like a dict (getter and setter)"""
-    identifier = ''
+    _identifier = ''
     """str: attribute of an object which will be used as identifiers"""
-    table_inp_export = True
+    _table_inp_export = True
     """bool: if an section is writeable as table. Default ist True"""
 
     def get(self, key):
@@ -146,10 +151,10 @@ class BaseSectionObject:
         """
         di = self.to_dict_()
         s = ''
-        if isinstance(self.identifier, list):
-            s += ' '.join([str(di.pop(i)) for i in self.identifier])
+        if isinstance(self._identifier, list):
+            s += ' '.join([str(di.pop(i)) for i in self._identifier])
         else:
-            s += str(di.pop(self.identifier))
+            s += str(di.pop(self._identifier))
 
         s += ' ' + ' '.join([type2str(i) for i in di.values()])
         return s
@@ -175,6 +180,11 @@ class BaseSectionObject:
             BaseSectionObject: copy of the object
         """
         return type(self)(**vars(self).copy())
+
+    @classmethod
+    def create_section(cls):
+        """create an object for ``.inp``-file sections with objects (i.e. nodes, links, subcatchments, raingages, ...)"""
+        return InpSection(cls)
 
 
 ########################################################################################################################
@@ -226,22 +236,22 @@ class InpSection(UserDict_):
         create an object for ``.inp``-file sections with objects (i.e. nodes, links, subcatchments, raingages, ...)
 
         Args:
-            section_object (BaseSectionObject): object class which is stored in this section.
+            section_object (BaseSectionObject-like): object class which is stored in this section.
                 This information is used to set the index of the section and
                 to decide if the section can be exported (converted to a string) as a table.
         """
         UserDict_.__init__(self)
-        self.section_object = section_object
+        self._section_object = section_object
 
     @property
     def _identifier(self):
         # to set the index of the section (key to select an object an index for the dataframe export)
-        return self.section_object.identifier
+        return self._section_object._identifier
 
     @property
     def _table_inp_export(self):
         # if the section can be exported (converted to a string) as a table.
-        return self.section_object.table_inp_export
+        return self._section_object._table_inp_export
 
     # @property
     # def data(self):
@@ -343,7 +353,7 @@ class InpSection(UserDict_):
         Returns:
             InpSection: copy of the section
         """
-        new = type(self)(self.section_object)
+        new = type(self)(self._section_object)
         # ΔTime: 18.678 s
         # new._data = deepcopy(self._data)
         # ΔTime: 2.943 s
@@ -361,7 +371,7 @@ class InpSection(UserDict_):
         Returns:
             InpSection: new filtered section
         """
-        new = type(self)(self.section_object)
+        new = type(self)(self._section_object)
         if by is None:
             new._data = {k: self[k] for k in set(self.keys()).intersection(keys)}
         elif isinstance(by, (list, set, tuple)):
@@ -372,7 +382,7 @@ class InpSection(UserDict_):
 
 
 ########################################################################################################################
-class InpData(dict):
+class InpData(UserDict_):
     """
     overall class for an input file
 
