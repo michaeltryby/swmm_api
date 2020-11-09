@@ -267,6 +267,15 @@ class InpSectionGeneric(dict):
                                        value=type2str(self[sub]) + '\n')
         return f
 
+    def copy(self):
+        """
+        get a copy of the ``.inp``-file data
+
+        Returns:
+            InpData: a copy of the ``.inp``-file data
+        """
+        return type(self)(dict.copy(self))
+
 
 ########################################################################################################################
 class InpSection(CustomDict):
@@ -440,15 +449,33 @@ class InpData(CustomDict):
         Returns:
             InpData: a copy of the ``.inp``-file data
         """
-        # ΔTime: 2.107 s
-        # return InpData(deepcopy(self))  # way slower
-        # ΔTime: 0.336 s
-        return type(self)(**{k: self[k] if isinstance(self[k], str) else self[k].copy() for k in self})
+        new = type(self)()
+        for key in self:
+            if isinstance(self[key], str):
+                new[key] = self[key]
+            else:
+                new[key] = self[key].copy()
+            exec(f'new.{key} = new["{key}"]')
+        return new
 
     def __setitem__(self, key, item):
         self._data.__setitem__(key, item)
         exec(f'self.{key} = self["{key}"]')
 
+    def __getitem__(self, key):
+        """
+
+        Returns:
+            InpSection | InpSectionGeneric:
+        """
+        return self._data.__getitem__(key)
+        # return super()._data.__getitem__(self, key)
+
+    # def __getattr__(self, item):
+    #     return self._data[item]
+    #
+    # def __setattr__(self, key, value):
+    #     self[key] = value
 
 ########################################################################################################################
 def dataframe_to_inp_string(df):

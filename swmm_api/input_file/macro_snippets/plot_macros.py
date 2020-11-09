@@ -9,6 +9,14 @@ from ..inp_sections.labels import *
 
 
 def plot_map(inp):  # TODO
+    """
+
+    Args:
+        inp ():
+
+    Returns:
+        matplotlib.Figure, matplotlib.Axes:
+    """
     fig, ax = plt.subplots()
 
     # for name, node in coords[::80].iterrows():

@@ -717,12 +717,12 @@ class Curve(BaseSectionObject):
         return DataFrame.from_records(self.points, columns=self._get_names(self.Type))
 
     def to_inp_line(self):
-        Type = self.Type
-        f = ''
-        # f = '{}  {}\n'.format(self.Name, self.kind)
-        for x, y in self.points:  # [(x,y), (x,y), ...]
+        points = iter(self.points)
+        x, y = next(points)
+        f = '{}  {} {:7.4f} {:7.4f}\n'.format(self.Name, self.Type, x, y)
+        Type = ' ' * len(self.Type)
+        for x, y in points:  # [(x,y), (x,y), ...]
             f += '{}  {} {:7.4f} {:7.4f}\n'.format(self.Name, Type, x, y)
-            Type = ''
         return f
 
 

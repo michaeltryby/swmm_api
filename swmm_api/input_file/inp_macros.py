@@ -9,6 +9,7 @@ from .inp_sections import labels as sec
 from .inp_sections.identifiers import IDENTIFIERS
 from .inp_sections.types import SECTION_TYPES
 from .inp_writer import section_to_string
+from .macro_snippets.curve_simplification import ramer_douglas
 
 """
 a collection of macros to manipulate an inp-file
@@ -48,6 +49,16 @@ def combined_subcatchment_infos(inp):
 
 
 def find_node(inp, node_label):
+    """
+    find node in inp data
+
+    Args:
+        inp (InpData): inp data
+        node_label (str): node Name/label
+
+    Returns:
+        Junction | Storage | Outfall: searched node (if not found None)
+    """
     for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
         if (section in inp) and (node_label in inp[section]):
             return inp[section][node_label]
@@ -64,6 +75,16 @@ def calc_slope(inp, link):
 
 
 def delete_node(inp, node):
+    """
+    delete node in inp data
+
+    Args:
+        inp (InpData): inp data
+        node (str | Junction | Storage | Outfall): node to delete
+
+    Returns:
+        InpData: inp data
+    """
     # print('DELETE (node): ', node)
     if isinstance(node, str):
         n = find_node(inp, node)
@@ -71,10 +92,9 @@ def delete_node(inp, node):
         n = node
         node = n.Name
 
-    for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
+    for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE, sec.COORDINATES]:
         if (section in inp) and (node in inp[section]):
             inp[section].pop(node)
-    inp[sec.COORDINATES].pop(node)
 
     # delete connected links
     for link in inp[sec.CONDUITS].keys().copy():
@@ -87,16 +107,33 @@ def delete_node(inp, node):
     return inp
 
 
-def combine_conduits(inp, c1, c2):
+def combine_conduits(inp, c1, c2, keep_first=True):
+    """
+    combine the two conduits to one
+
+    Args:
+        inp (InpData): inp data
+        c1 (str | Conduit): conduit 1 to combine
+        c2 (str | Conduit): conduit 2 to combine
+        keep_first (bool): keep first (of conduit 1) cross-section; else use second (of conduit 2)
+
+    Returns:
+        InpData: inp data
+    """
     if isinstance(c1, str):
         c1 = inp[sec.CONDUITS][c1]
     if isinstance(c2, str):
         c2 = inp[sec.CONDUITS][c2]
 
-    c_new = c2.copy()
+    c_new = c2.copy()  # type: Conduit
     c_new.Length += c1.Length
 
-    v_new = inp[sec.VERTICES][c1.Name] + inp[sec.VERTICES][c2.Name]
+    # vertices + Coord of middle node
+    v_new = inp[sec.VERTICES][c1.Name].vertices + inp[sec.VERTICES][c2.Name].vertices
+
+    # Loss
+    if sec.LOSSES in inp and c_new.Name in inp[sec.LOSSES]:
+        pass
 
     xs_new = inp[sec.XSECTIONS][c2.Name]
 
@@ -113,6 +150,29 @@ def combine_conduits(inp, c1, c2):
     inp[sec.VERTICES][c_new.Name] = v_new
     inp[sec.CONDUITS].append(c_new)
     inp[sec.XSECTIONS].append(xs_new)
+    return inp
+
+
+def dissolve_node(inp, node):
+    """
+    delete node and combine conduits
+
+    Args:
+        inp (InpData): inp data
+        node (str | Junction | Storage | Outfall): node to delete
+
+    Returns:
+        InpData: inp data
+    """
+    if isinstance(node, str):
+        node = find_node(inp, node)
+    # create new section with only
+    c1 = inp[sec.CONDUITS].filter_keys([node.Name], 'ToNode')
+    if c1:
+        c2 = inp[sec.CONDUITS].filter_keys([node.Name], 'FromNode')
+        inp = combine_conduits(inp, c1, c2)
+    else:
+        inp = delete_node()
     return inp
 
 
@@ -187,6 +247,23 @@ def reduce_curves(inp):
     return inp
 
 
+def simplify_curves(curve_section, dist=0.001):
+    """
+    simplify curves with the algorithm by Ramer and Douglas
+
+    Args:
+        curve_section (InpSection[Curve]): old section
+        dist (float): maximum Ramer-Douglas distance
+
+    Returns:
+        InpSection[Curve]: new section
+    """
+    new = Curve.create_section()
+    for label, curve in curve_section.items():
+        new[label] = Curve(curve.Name, curve.Type, points=ramer_douglas(curve_section[label].points, dist=dist))
+    return new
+
+
 def reduce_raingages(inp):
     """
     get used RAINGAGES from SUBCATCHMENTS and keep only used raingages in the section
@@ -206,13 +283,14 @@ def reduce_raingages(inp):
 
 def filter_nodes(inp, final_nodes):
     """
+     filter nodes in the network
 
     Args:
-        inp ():
-        final_nodes ():
+        inp (InpData):
+        final_nodes (list | set):
 
     Returns:
-
+        InpData: new input data
     """
     for section in [sec.JUNCTIONS,
                     sec.OUTFALLS,
