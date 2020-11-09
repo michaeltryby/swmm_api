@@ -46,8 +46,8 @@ def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_
     Args:
         filename (str): path/filename to .inp file
         ignore_sections (list[str]): don't convert ignored sections. Default: ignore none.
-        convert_sections (list[str]): only convert these sections Default: convert all
-        custom_converter (dict): dictionary of {section: converter/section_type}
+        convert_sections (list[str]): only convert these sections. Default: convert all
+        custom_converter (dict): dictionary of {section: converter/section_type} Default: :py:const:`SECTION_TYPES`
         ignore_gui_sections (bool): don't convert gui/geo sections (ie. for commandline use)
 
     Returns:

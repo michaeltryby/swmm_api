@@ -1,3 +1,5 @@
+from typing import Union
+
 from numpy import NaN
 
 from .identifiers import IDENTIFIERS
@@ -191,14 +193,25 @@ class Storage(BaseSectionObject):
         Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
         IMD (float): soil initial moisture deficit (fraction).
     """
+    Name: str
+    Elevation: float
+    MaxDepth: float
+    InitDepth: float
+    Type: str
+    Curve: Union[str, list]
+    Apond: float
+    Fevap: float
+    Psi: float
+    Ksat: float
+    IMD: float
     _identifier = IDENTIFIERS.Name
 
     class TYPES:
         TABULAR = 'TABULAR'
         FUNCTIONAL = 'FUNCTIONAL'
 
-    def __init__(self, Name, Elevation, MaxDepth, InitDepth, Type, *args, Curve=None,
-                 Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
+    def __init__(self, Name: str, Elevation: float, MaxDepth: float, InitDepth: float, Type: str, *args, Curve=None,
+                 Apond: float=0, Fevap: float=0, Psi: float=NaN, Ksat: float=NaN, IMD: float=NaN):
         self.Name = str(Name)
         self.Elevation = float(Elevation)
         self.MaxDepth = float(MaxDepth)

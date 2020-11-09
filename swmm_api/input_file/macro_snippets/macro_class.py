@@ -5,7 +5,7 @@ from os import path, remove
 from pandas import to_datetime, DataFrame, Series
 
 from ..inp_helpers import InpData
-from ..inp_macros import (reduce_curves, reduce_raingages, combined_subcatchment_infos, find_node,
+from ..inp_macros import (reduce_curves, reduce_raingages, combined_subcatchment_frame, find_node,
                           find_link, calc_slope, delete_node, combine_conduits,
                           conduit_iter_over_inp, junction_to_outfall, junction_to_storage, )
 from ..inp_reader import read_inp_file
@@ -227,7 +227,7 @@ class InpMacros(InpData):
         reduce_raingages(self)
 
     def combined_subcatchment_infos(self):
-        return combined_subcatchment_infos(self)
+        return combined_subcatchment_frame(self)
 
     def find_node(self, label):
         return find_node(self, label)

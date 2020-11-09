@@ -1,6 +1,7 @@
 from .labels import *
 from swmm_api.input_file.inp_sections import *
 
+"""objects or section class for a section in the inp-file"""
 SECTION_TYPES = {
     # TITLE: str,
     OPTIONS: OptionSection,
@@ -49,6 +50,7 @@ SECTION_TYPES = {
     CURVES: Curve,
     TIMESERIES: Timeseries,
 }
+"""objects or section class for a section in the inp-file"""
 
 GEO_SECTIONS = [
     COORDINATES,

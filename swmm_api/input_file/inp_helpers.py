@@ -10,7 +10,7 @@ SWMM_VERSION = '5.1.015'
 
 ########################################################################################################################
 class CustomDict:
-    """imitate UserDict / user class like dict but operations only effect self._data"""
+    """imitate :class:`collections.UserDict` (:term:`dict-like <mapping>`) but operations only effect self._data"""
 
     def __init__(self, d=None, **kwargs):
         if d is None:
@@ -101,7 +101,7 @@ class BaseSectionObject:
 
     sections objects only have __init__ with object parameters
 
-    acts like a dict (getter and setter)"""
+    acts :term:`like a dict <mapping>` (getter and setter)"""
     _identifier = ''
     """str: attribute of an object which will be used as identifiers"""
     _table_inp_export = True
@@ -232,7 +232,11 @@ class BaseSectionObject:
 
 ########################################################################################################################
 class InpSectionGeneric(dict):
-    """abstract class for ``.inp``-file sections without objects"""
+    """
+    abstract class for ``.inp``-file sections without objects
+
+    :term:`dict-like <mapping>`"
+    """
 
     @classmethod
     def from_inp_lines(cls, lines):

@@ -19,22 +19,57 @@ use this file as an example for the usage of this package
 
 
 def section_from_frame(df, section_class):
+    """
+    create a inp-file section from an pandas DataFrame
+
+    Args:
+        df (pandas.DataFrame): data
+        section_class (BaseSectionObject):
+
+    Returns:
+        InpSection: converted section
+    """
     # TODO: macro_snippets
-    a = np.vstack((df.index.values, df.values.T)).T
-    return InpSection.from_inp_lines(a, section_class)
+    values = np.vstack((df.index.values, df.values.T)).T
+    return section_class.create_section(values)
     # return cls.from_lines([line.split() for line in dataframe_to_inp_string(df).split('\n')], section_class)
 
 
-def split_inp_to_files(inp_fn, **kwargs):
+def split_inp_to_files(inp_fn, convert_sections=[], **kwargs):
+    """
+    spit an inp-file into the sections and write per section one file
+
+    creates a subdirectory in the directory of the input file with the name of the input file (without ``.inp``)
+    and creates for each section a ``.txt``-file
+
+    Args:
+        inp_fn (str): path to inp-file
+        convert_sections (list): only convert these sections. Default: convert no section
+        **kwargs: keyword arguments of the :func:`~swmm_api.input_file.inp_reader.read_inp_file`-function
+
+    Keyword Args:
+        ignore_sections (list[str]): don't convert ignored sections. Default: ignore none.
+        custom_converter (dict): dictionary of {section: converter/section_type} Default: :const:`SECTION_TYPES`
+        ignore_gui_sections (bool): don't convert gui/geo sections (ie. for commandline use)
+    """
     parent = inp_fn.replace('.inp', '')
     mkdir(parent)
-    inp = read_inp_file(inp_fn, **kwargs)
+    inp = read_inp_file(inp_fn, convert_sections=convert_sections, **kwargs)
     for s in inp.keys():
         with open(path.join(parent, s + '.txt'), 'w') as f:
             f.write(section_to_string(inp[s], fast=False))
 
 
 def read_split_inp_file(inp_fn):
+    """
+    use this function to read an split inp-file after splitting the file with the :func:`~split_inp_to_files`-function
+
+    Args:
+        inp_fn (str): path of the directory of the split inp-file
+
+    Returns:
+        InpData: inp-file data
+    """
     inp = InpData()
     for header_file in listdir(inp_fn):
         header = header_file.replace('.txt', '')
@@ -44,20 +79,29 @@ def read_split_inp_file(inp_fn):
     return inp
 
 
-def combined_subcatchment_infos(inp):
+def combined_subcatchment_frame(inp):
+    """
+    combine all information of the subcatchment data-frames
+
+    Args:
+        inp (InpData): inp-file data
+
+    Returns:
+        pandas.DataFrame: combined subcatchment data
+    """
     return inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
 
 
 def find_node(inp, node_label):
     """
-    find node in inp data
+    find node in inp-file data
 
     Args:
-        inp (InpData): inp data
+        inp (InpData): inp-file data
         node_label (str): node Name/label
 
     Returns:
-        Junction | Storage | Outfall: searched node (if not found None)
+        Junction or Storage or Outfall: searched node (if not found None)
     """
     for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
         if (section in inp) and (node_label in inp[section]):
@@ -65,12 +109,32 @@ def find_node(inp, node_label):
 
 
 def find_link(inp, label):
+    """
+    find link in inp-file data
+
+    Args:
+        inp (InpData): inp-file data
+        label (str): link Name/label
+
+    Returns:
+        Conduit | Weir | Outlet | Orifice | Pump: searched link (if not found None)
+    """
     for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
         if (section in inp) and (label in inp[section]):
             return inp[section][label]
 
 
 def calc_slope(inp, link):
+    """
+    calculate the slop of a link
+
+    Args:
+        inp (InpData): inp-file data
+        link (Conduit | Weir | Outlet | Orifice | Pump): link
+
+    Returns:
+        float: slop of the link
+    """
     return (find_node(inp, link.FromNode).Elevation - find_node(inp, link.ToNode).Elevation) / link.Length
 
 
@@ -178,15 +242,18 @@ def dissolve_node(inp, node):
 
 def conduit_iter_over_inp(inp, start, end=None):
     """
+    iterate of the inp-file data
+
     only correct when FromNode and ToNode are in the correct direction
     doesn't look backwards if split node
 
     Args:
-        inp:
-        start (str):
+        inp (InpData): inp-file data
+        start (str): start node label
+        end (str): end node label
 
-    Returns:
-        Yields: input conduits
+    Yields:
+        Conduit: input conduits
     """
     node = start
     while True:
@@ -204,6 +271,16 @@ def conduit_iter_over_inp(inp, start, end=None):
 
 
 def junction_to_storage(inp, label, *args, **kwargs):
+    """
+    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to :class:`~swmm_api.input_file.inp_sections.node.Storage`
+    and add it to the STORAGE section
+
+    Args:
+        inp (InpData): inp-file data
+        label (str): label of the junction
+        *args: argument of the :class:`~swmm_api.input_file.inp_sections.node.Storage`-class
+        **kwargs: keyword arguments of the :class:`~swmm_api.input_file.inp_sections.node.Storage`-class
+    """
     j = inp[sec.JUNCTIONS].pop(label)  # type: Junction
     if sec.STORAGE not in inp:
         inp[sec.STORAGE] = InpSection(Storage)
@@ -212,6 +289,16 @@ def junction_to_storage(inp, label, *args, **kwargs):
 
 
 def junction_to_outfall(inp, label, *args, **kwargs):
+    """
+    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to :class:`~swmm_api.input_file.inp_sections.node.Outfall`
+    and add it to the OUTFALLS section
+
+    Args:
+        inp (InpData): inp-file data
+        label (str): label of the junction
+        *args: argument of the :class:`~swmm_api.input_file.inp_sections.node.Outfall`-class
+        **kwargs: keyword arguments of the :class:`~swmm_api.input_file.inp_sections.node.Outfall`-class
+    """
     j = inp[sec.JUNCTIONS].pop(label)  # type: Junction
     if sec.OUTFALLS not in inp:
         inp[sec.OUTFALLS] = InpSection(Outfall)
@@ -219,6 +306,15 @@ def junction_to_outfall(inp, label, *args, **kwargs):
 
 
 def remove_empty_sections(inp):
+    """
+    remove empty inp-file data sections
+
+    Args:
+        inp (InpData): inp-file data
+
+    Returns:
+        InpData: cleaned inp-file data
+    """
     new_inp = InpData()
     for section in inp:
         if inp[section]:
@@ -231,10 +327,10 @@ def reduce_curves(inp):
     get used CURVES from [STORAGE, OUTLETS, PUMPS and XSECTIONS] and keep only used curves in the section
 
     Args:
-        inp (InpData): input file data
+        inp (InpData): inp-file data
 
     Returns:
-        InpData: input file data with filtered CURVES section
+        InpData: inp-file data with filtered CURVES section
     """
     if sec.CURVES not in inp:
         return inp
@@ -269,10 +365,10 @@ def reduce_raingages(inp):
     get used RAINGAGES from SUBCATCHMENTS and keep only used raingages in the section
 
     Args:
-        inp (InpData): input file data
+        inp (InpData):  inp-file data
 
     Returns:
-        InpData: input file data with filtered RAINGAGES section
+        InpData: inp-file data with filtered RAINGAGES section
     """
     if sec.SUBCATCHMENTS not in inp or sec.RAINGAGES not in inp:
         return inp
@@ -286,11 +382,11 @@ def filter_nodes(inp, final_nodes):
      filter nodes in the network
 
     Args:
-        inp (InpData):
+        inp (InpData): inp-file data
         final_nodes (list | set):
 
     Returns:
-        InpData: new input data
+        InpData: new inp-file data
     """
     for section in [sec.JUNCTIONS,
                     sec.OUTFALLS,
@@ -318,11 +414,11 @@ def filter_links(inp, final_nodes):
     filter links by nodes in the network
 
     Args:
-        inp (InpData):
+        inp (InpData): inp-file data
         final_nodes (list | set):
 
     Returns:
-        InpData: new input data
+        InpData: new inp-file data
     """
     # __________________________________________
     final_links = set()
@@ -351,6 +447,16 @@ def filter_links(inp, final_nodes):
 
 
 def filter_subcatchments(inp, final_nodes):
+    """
+    filter subcatchments by nodes in the network
+
+    Args:
+        inp (InpData): inp-file data
+        final_nodes (list | set):
+
+    Returns:
+        InpData: new inp-file data
+    """
     if sec.SUBCATCHMENTS in inp:
         sub_orig = inp[sec.SUBCATCHMENTS].copy()
         # all with an outlet to final_nodes
@@ -378,3 +484,11 @@ def filter_subcatchments(inp, final_nodes):
     # __________________________________________
     inp = remove_empty_sections(inp)
     return inp
+
+
+def group_edit(inp):
+    # for objects of type (Subcatchments, Infiltration, Junctions, Storage Units, or Conduits)
+    # with tag equal to
+    # edit the property
+    # by replacing it with
+    pass

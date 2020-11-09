@@ -8,7 +8,7 @@ Input File Manipulation-Macros
 .. autosummary::
     section_from_frame
     split_inp_to_files
-    combined_subcatchment_infos
+    combined_subcatchment_frame
     find_node
     find_link
     calc_slope
@@ -23,3 +23,7 @@ Input File Manipulation-Macros
     filter_nodes
     filter_links
     filter_subcatchments
+
+.. automodule:: swmm_api.input_file.inp_macros
+    :members:
+    :no-undoc-members:
