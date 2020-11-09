@@ -1,17 +1,21 @@
 from pandas import DataFrame
 
 from .identifiers import IDENTIFIERS
-from swmm_api.input_file.type_converter import infer_type, type2str
+from ..type_converter import infer_type, type2str
 from ..inp_helpers import InpSectionGeneric
 
 
-def check_line(line):
-    line = line.split(';')[0]
-    line = line.strip()
-    # if line == '':  # ignore empty and comment lines
-    #     continue
-    # else:
-    return line.split()
+def line_iter(lines):
+    if isinstance(lines, str):
+        lines = lines.split('\n')
+
+    for line in lines:
+        line = line.split(';')[0]
+        line = line.strip()
+        if line == '':  # ignore empty and comment lines
+            continue
+        else:
+            yield line.split()
 
 
 class OptionSection(InpSectionGeneric):
@@ -75,17 +79,10 @@ class OptionSection(InpSectionGeneric):
     """
     @classmethod
     def from_inp_lines(cls, lines):
-        if isinstance(lines, str):
-            lines = lines.split('\n')
-
         data = cls()
-        for line in lines:
-            line = check_line(line)
-            if not line:
-                continue
-            label = line.pop(0)
+        for key, *line in line_iter(lines):
             assert len(line) == 1
-            data[label] = infer_type(line[0])
+            data[key] = infer_type(line[0])
         return data
 
 
@@ -145,20 +142,12 @@ class ReportSection(InpSectionGeneric):
 
     @classmethod
     def from_inp_lines(cls, lines):
-        if isinstance(lines, str):
-            lines = lines.split('\n')
-
         data = cls()
-
-        for line in lines:
-            line = check_line(line)
-            if not line:
-                continue
-            label = line.pop(0)
+        for key, *line in line_iter(lines):
             if len(line) == 1:
                 value = infer_type(line[0])
 
-            elif (label == cls.KEYS.LID) and (len(line) == 3):
+            elif (key == cls.KEYS.LID) and (len(line) == 3):
                 value = {'Name': line[0],
                          'Subcatch': line[1],
                          'Fname': line[2]}
@@ -166,7 +155,7 @@ class ReportSection(InpSectionGeneric):
             else:
                 value = infer_type(line)
 
-            if label in [cls.KEYS.SUBCATCHMENTS,
+            if key in [cls.KEYS.SUBCATCHMENTS,
                          cls.KEYS.NODES,
                          cls.KEYS.LINKS,
                          cls.KEYS.LID]:
@@ -176,12 +165,12 @@ class ReportSection(InpSectionGeneric):
                     pass
                 elif not isinstance(value, list):
                     value = [value]
-            if label not in data:
-                data[label] = value
-            elif isinstance(data[label], list):
-                data[label] += value
+            if key not in data:
+                data[key] = value
+            elif isinstance(data[key], list):
+                data[key] += value
             else:
-                data[label] = value
+                data[key] = value
         return data
 
     def to_inp_lines(self, fast=False):
@@ -276,29 +265,32 @@ class EvaporationSection(InpSectionGeneric):
     Returns:
         dict: evaporation_options
     """
+
+    class KEYS:
+        CONSTANT = 'CONSTANT'
+        MONTHLY = 'MONTHLY'
+        TIMESERIES = 'TIMESERIES'
+        TEMPERATURE = 'TEMPERATURE'
+        FILE = 'FILE'
+        RECOVERY = 'RECOVERY'
+        DRY_ONLY = 'DRY_ONLY'
+
     @classmethod
     def from_inp_lines(cls, lines):
-        if isinstance(lines, str):
-            lines = lines.split('\n')
-
         data = cls()
-        for line in lines:
-            line = check_line(line)
-            if not line:
-                continue
-            label = line.pop(0)
+        for key, *line in line_iter(lines):
             if len(line) == 1:
                 value = line[0]
 
-            elif label == 'TEMPERATURE':
+            elif key == cls.KEYS.TEMPERATURE:
                 assert len(line) == 0
                 value = ''
 
-            elif label == 'MONTHLY':
+            elif key == cls.KEYS.MONTHLY:
                 assert len(line) == 12
                 value = line
 
-            elif label == 'FILE':
+            elif key == cls.KEYS.FILE:
                 if len(line) == 12:
                     value = line
                 elif len(line) == 0:
@@ -309,13 +301,14 @@ class EvaporationSection(InpSectionGeneric):
             else:
                 value = line
 
-            data[label] = infer_type(value)
+            data[key] = infer_type(value)
 
-        mult_infos = [x in data for x in ['CONSTANT', 'MONTHLY', 'TIMESERIES', 'TEMPERATURE', 'FILE']]
+        mult_infos = [x in data for x in [cls.KEYS.CONSTANT, cls.KEYS.MONTHLY, cls.KEYS.TIMESERIES,
+                                          cls.KEYS.TEMPERATURE, cls.KEYS.FILE]]
 
         if sum(mult_infos) != 1:
             if sum(mult_infos) == 0:
-                data['CONSTANT'] = 0
+                data[cls.KEYS.CONSTANT] = 0
             else:
                 raise UserWarning('Too much evaporation')
 
@@ -376,9 +369,9 @@ class TemperatureSection(InpSectionGeneric):
             fraction of area covered by snow when ratio of snow depth to depth at 100% cover is 0.9
 
     Use the ``TIMESERIES`` line to read air temperature from a time series or the ``FILE`` line
-    to read it from an external Climate file. Climate files are discussed in Section 11.4
-
-    Climate Files. If neither format is used, then air temperature remains constant at 70 degrees F.
+    to read it from an external Climate file.
+    Climate files are discussed in Section 11.4 Climate Files.
+    If neither format is used, then air temperature remains constant at 70 degrees F.
 
     Wind speed can be specified either by monthly average values or by the same
     Climate file used for air temperature. If neither option appears, then wind speed is
@@ -387,128 +380,61 @@ class TemperatureSection(InpSectionGeneric):
     Separate Areal Depletion Curves (ADC) can be defined for impervious and pervious
     sub-areas. The ADC parameters will default to 1.0 (meaning no depletion) if no data
     are supplied for a particular type of sub-area.
-
-    Args:
-        lines (str | list[list[str]]): line of input file
-
-    Returns:
-        dict: temperature section
     """
+
+    class KEYS:
+        TIMESERIES = 'TIMESERIES'
+        FILE = 'FILE'
+        WINDSPEED_MONTHLY = 'WINDSPEED MONTHLY'
+        WINDSPEED_FILE = 'WINDSPEED FILE'
+        SNOWMELT = 'SNOWMELT'
+        ADC_IMPERVIOUS = 'ADC IMPERVIOUS'
+        ADC_PERVIOUS = 'ADC PERVIOUS'
+
     @classmethod
     def from_inp_lines(cls, lines):
-        if isinstance(lines, str):
-            lines = lines.split('\n')
-
         data = cls()
-        for line in lines:
-            line = check_line(line)
-            if not line:
-                continue
-            sub_head = line.pop(0)
+        for key, *line in line_iter(lines):
             n_options = len(line)
 
-            if sub_head == 'TIMESERIES':
+            if key == cls.KEYS.TIMESERIES:
                 assert n_options == 1
-                opt = line[0]
+                value = line[0]
 
-            elif sub_head == 'FILE':
+            elif key == cls.KEYS.FILE:
                 if n_options == 1:
-                    opt = line[0]
+                    value = line[0]
                 else:
-                    opt = line
+                    value = line
 
-            elif sub_head == 'WINDSPEED':
-                subsub_head = line[0]
-                if subsub_head == 'FILE':
+            elif cls.KEYS.WINDSPEED_FILE.startswith(key):
+                key += ' ' + line.pop(0)
+                if key == cls.KEYS.WINDSPEED_FILE:
                     assert n_options == 1
-                    opt = line[0]
-                elif subsub_head == 'MONTHLY':
+                    value = line[0]
+                elif key == cls.KEYS.WINDSPEED_MONTHLY:
                     assert n_options == 13
-                    opt = line
+                    value = line
                 else:
                     raise NotImplementedError()
 
-            elif sub_head == 'SNOWMELT':
+            elif key == cls.KEYS.SNOWMELT:
                 assert n_options == 6
-                opt = line
+                value = line
 
-            elif sub_head == 'ADC':
-                subsub_head = line.pop(0)
-                sub_head += ' ' + subsub_head
-                if subsub_head == 'IMPERVIOUS':
-                    assert n_options == 11
-                    opt = line
-                elif subsub_head == 'PERVIOUS':
-                    assert n_options == 11
-                    opt = line
-                else:
+            elif cls.KEYS.ADC_IMPERVIOUS.startswith(key):
+                key += ' ' + line.pop(0)
+                assert n_options == 11
+                value = line
+                if key not in [cls.KEYS.ADC_IMPERVIOUS, cls.KEYS.ADC_PERVIOUS]:
                     raise NotImplementedError()
 
             else:
-                opt = line
+                value = line
 
-            data[sub_head] = opt
+            data[key] = value
 
         return data
-
-
-class TagsSection(InpSectionGeneric):
-    """Section: [**TAGS**]"""
-    # def __init__(self):
-    #     UserDict_.__init__(self)
-
-    class TYPES:
-        Node = IDENTIFIERS.Node
-        Subcatch = IDENTIFIERS.Subcatch
-        Link = IDENTIFIERS.Link
-
-    @classmethod
-    def from_inp_lines(cls, lines):
-        if isinstance(lines, str):
-            lines = lines.split('\n')
-
-        # TAGS AS DATAFRAME
-        # tags = DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
-        data = cls()
-        for line in lines:
-            line = check_line(line)
-            if not line:
-                continue
-
-            kind, name, tag = line
-            if kind not in data:
-                data[kind] = dict()
-
-            data[kind][name] = tag
-        return data
-
-    @property
-    def to_pandas(self):
-        # MAKE TAGS TO SERIES
-        tags_df = dict()
-        for type_ in self:
-            tags_df[type_] = DataFrame.from_dict(self[type_], orient='index')
-        return tags_df
-
-    def to_inp_lines(self, fast=False):
-        if not self:  # if empty
-            return '; NO data'
-        f = ''
-        max_len_type = len(max(self.keys(), key=len)) + 2
-        for type_, tags in self.items():
-            max_len_name = len(max(tags.keys(), key=len)) + 2
-            for name, tag in tags.items():
-                f += '{{:<{len1}}} {{:<{len2}}} {{}}\n'.format(len1=max_len_type, len2=max_len_name).format(type_, name,
-                                                                                                            tag)
-        return f
-
-    def filter_keys(self, keys, which):
-        """which=one of TagsSection.Types"""
-        new = type(self)()
-        new._data = {k: v for k, v in self.items() if k != which}
-        if which in self:
-            new._data[which] = {k: self[which][k] for k in set(self[which].keys()).intersection(keys)}
-        return new
 
 
 class MapSection(InpSectionGeneric):
@@ -552,15 +478,9 @@ class MapSection(InpSectionGeneric):
 
     @classmethod
     def from_inp_lines(cls, lines):
-        if isinstance(lines, str):
-            lines = lines.split('\n')
-
         data = cls()
-        for line in lines:
-            line = check_line(line)
-            if not line:
-                continue
-            name = line.pop(0).upper()
+        for name, *line in line_iter(lines):
+            name = name.upper()
             if name == cls.KEYS.DIMENSIONS:
                 data[name] = [float(i) for i in line]
 
@@ -569,3 +489,53 @@ class MapSection(InpSectionGeneric):
             else:
                 raise NotImplementedError()
         return data
+
+
+class TagsSection(InpSectionGeneric):
+    """Section: [**TAGS**]"""
+    class TYPES:
+        Node = IDENTIFIERS.Node
+        Subcatch = IDENTIFIERS.Subcatch
+        Link = IDENTIFIERS.Link
+
+    @classmethod
+    def from_inp_lines(cls, lines):
+        data = cls()
+        for kind, name, tag in line_iter(lines):
+            if kind not in data:
+                data[kind] = dict()
+            data[kind][name] = tag
+        return data
+
+    @staticmethod
+    def lines_to_frame(lines):
+        # TAGS AS DATAFRAME
+        return DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
+
+    @property
+    def to_pandas(self):
+        # MAKE TAGS TO SERIES
+        tags_df = dict()
+        for type_ in self:
+            tags_df[type_] = DataFrame.from_dict(self[type_], orient='index')
+        return tags_df
+
+    def to_inp_lines(self, fast=False):
+        if not self:  # if empty
+            return '; NO data'
+        f = ''
+        max_len_type = len(max(self.keys(), key=len)) + 2
+        for type_, tags in self.items():
+            max_len_name = len(max(tags.keys(), key=len)) + 2
+            for name, tag in tags.items():
+                f += '{{:<{len1}}} {{:<{len2}}} {{}}\n'.format(len1=max_len_type, len2=max_len_name).format(type_, name,
+                                                                                                            tag)
+        return f
+
+    def filter_keys(self, keys, which):
+        """which=one of TagsSection.Types"""
+        new = type(self)()
+        new._data = {k: v for k, v in self.items() if k != which}
+        if which in self:
+            new._data[which] = {k: self[which][k] for k in set(self[which].keys()).intersection(keys)}
+        return new

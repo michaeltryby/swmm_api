@@ -218,8 +218,7 @@ class Vertices(BaseSectionObject):
         self.vertices = vertices
 
     @classmethod
-    def convert_lines(cls, lines):
-        """multiple lines for one entry"""
+    def _convert_lines(cls, lines):
         vertices = list()
         last = None
 

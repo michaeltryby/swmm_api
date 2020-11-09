@@ -16,7 +16,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='swmm-api',
-    version='0.1.alpha19',
+    version='0.1.alpha20',
     packages=['swmm_api',
               'swmm_api.report_file',
               'swmm_api.output_file',
@@ -29,7 +29,7 @@ setup(
     author='Markus Pichler',
     author_email='markus.pichler@tugraz.at',
     description='US-EPA-SWMM python interface',
-    # scripts=['bin/idf_analysis'],
+    # scripts=[],
     install_requires=requirements,
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -37,5 +37,15 @@ setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Hydrology',
+        'Topic :: Software Development :: Libraries',
+        'Topic :: Software Development :: Libraries :: Application Frameworks',
+        # 'Framework :: SWMM',
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Science/Research',
+        'Natural Language :: English'
     ],
+    keywords='swmm environment civil engineering api',
+    python_requires='>= 3.5',
 )

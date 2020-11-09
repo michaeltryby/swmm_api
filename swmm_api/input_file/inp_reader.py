@@ -6,6 +6,17 @@ from .inp_sections.types import SECTION_TYPES, GUI_SECTIONS
 
 
 def convert_section(head, lines, converter):
+    """
+    convert section string to a section object
+
+    Args:
+        head (str): header of the section
+        lines (str): lines in the section
+        converter (dict): dict of converters assigned to header {header: converter]
+
+    Returns:
+        str | InpSection | InpSectionGeneric: converted section
+    """
     if head in converter:
         section_ = converter[head]
 
@@ -28,7 +39,7 @@ def convert_section(head, lines, converter):
 
 
 def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_converter=None,
-                  ignore_gui_sections=False):
+                  ignore_gui_sections=True):
     """
     read ``.inp``-file and convert the sections in pythonic objects
 
@@ -49,7 +60,8 @@ def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_
     if ignore_gui_sections:
         ignore_sections += GUI_SECTIONS
     for s in ignore_sections:
-        converter.pop(s)
+        if s in converter:
+            converter.pop(s)
 
     if custom_converter is not None:
         converter.update(custom_converter)

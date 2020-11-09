@@ -1,91 +1,97 @@
 from numpy import isnan
 from pandas import DataFrame
 from tqdm import tqdm
+import re
 
-from swmm_api.input_file.type_converter import type2str
+from .type_converter import type2str
 
 SWMM_VERSION = '5.1.015'
 
 
-class CustomDict(dict):
-    pass
 ########################################################################################################################
-# class CustomDict:
-#     """imitate UserDict / user class like dict but operations only effect self._data"""
-#
-#     def __init__(self, d=None, **kwargs):
-#         if d is None:
-#             self._data = kwargs
-#         else:
-#             if isinstance(d, dict):
-#                 self._data = d
-#             else:
-#                 self._data = dict(d)
-#
-#     def __len__(self):
-#         return self._data.__len__()
-#
-#     def __getitem__(self, key):
-#         return self._data.__getitem__(key)
-#
-#     def __setitem__(self, key, item):
-#         self._data.__setitem__(key, item)
-#         # TODO: 3x slower
-#         # for debugging
-#         # key_ = key
-#         # if isinstance(key_, tuple):
-#         #     key_ = '_'.join(key)
-#         # else:
-#         #     key = f'"{key}"'
-#         #
-#         # # if key_[0].isdigit():
-#         # #     pre = 'z__'
-#         # # else:
-#         # #     pre = ''
-#         #
-#         # key_ = key_.replace("-", "_").replace(".", "_")
-#         # exec(f'self.{"z__" * key_[0].isdigit()}{key_} = self[{key}]')
-#
-#     def __delitem__(self, key):
-#         self._data.__delitem__(key)
-#
-#     def __iter__(self):
-#         return self._data.__iter__()
-#
-#     def __contains__(self, key):
-#         return self._data.__contains__(key)
-#
-#     def __repr__(self):
-#         return self._data.__repr__()
-#
-#     def __str__(self):
-#         return self._data.__str__()
-#
-#     def get(self, key, default=None):
-#         if isinstance(key, list):
-#             return (self.get(k) for k in key)
-#         return self._data.get(key) if key in self else default
-#
-#     def copy(self):
-#         return type(self)(deepcopy(self._data))
-#
-#     def values(self):
-#         return self._data.values()
-#
-#     def keys(self):
-#         return self._data.keys()
-#
-#     def items(self):
-#         return self._data.items()
-#
-#     def update(self, d=None, **kwargs):
-#         self._data.update(d, **kwargs)
-#
-#     def pop(self, key):
-#         return self._data.pop(key)
-#
-#     def __bool__(self):
-#         return bool(self._data)
+class CustomDict:
+    """imitate UserDict / user class like dict but operations only effect self._data"""
+
+    def __init__(self, d=None, **kwargs):
+        if d is None:
+            self._data = kwargs
+        else:
+            if isinstance(d, dict):
+                self._data = d
+            else:
+                self._data = dict(d)
+
+    def __len__(self):
+        return self._data.__len__()
+
+    def __getitem__(self, key):
+        return self._data.__getitem__(key)
+
+    def __setitem__(self, key, item):
+        self._data.__setitem__(key, item)
+        # TODO: 3x slower
+        # try except is even slower
+        # for debugging
+
+        # try:
+        #     exec(f'self.{key} = item')
+        # except (SyntaxError, AttributeError):
+        #     pass
+
+        # key_ = key
+        # if isinstance(key_, tuple):
+        #     key_ = '_'.join(key)
+        # else:
+        #     key = f'"{key}"'
+        #
+        # # if key_[0].isdigit():
+        # #     pre = 'z__'
+        # # else:
+        # #     pre = ''
+        #
+        # key_ = key_.replace("-", "_").replace(".", "_")
+        # exec(f'self.{"z__" * key_[0].isdigit()}{key_} = self[{key}]')
+
+    def __delitem__(self, key):
+        self._data.__delitem__(key)
+
+    def __iter__(self):
+        return self._data.__iter__()
+
+    def __contains__(self, key):
+        return self._data.__contains__(key)
+
+    def __repr__(self):
+        return self._data.__repr__()
+
+    def __str__(self):
+        return self._data.__str__()
+
+    def get(self, key, default=None):
+        if isinstance(key, list):
+            return (self.get(k) for k in key)
+        return self._data.get(key) if key in self else default
+
+    def copy(self):
+        return type(self)(self._data.copy())
+
+    def values(self):
+        return self._data.values()
+
+    def keys(self):
+        return self._data.keys()
+
+    def items(self):
+        return self._data.items()
+
+    def update(self, d=None, **kwargs):
+        self._data.update(d, **kwargs)
+
+    def pop(self, key):
+        return self._data.pop(key)
+
+    def __bool__(self):
+        return bool(self._data)
 
 
 ########################################################################################################################
@@ -192,17 +198,40 @@ class BaseSectionObject:
         return type(self)(**vars(self).copy())
 
     @classmethod
-    def create_section(cls):
+    def create_section(cls, lines=None):
         """
         create an object for ``.inp``-file sections with objects
 
         i.e. nodes, links, subcatchments, raingages, ...
         """
-        return InpSection(cls)
+        if lines is None:
+            return InpSection(cls)
+        else:
+            sec = InpSection(cls)
+            for obj in cls._convert_lines(lines):
+                sec.append(obj)
+            return sec
+
+    @classmethod
+    def _convert_lines(cls, lines):
+        """
+        convert the ``.inp``-file section
+
+        creates an object for each line and yields them
+
+        Args:
+            lines (list[list[str]]): lines in the input file section
+
+        Yields:
+            BaseSectionObject: object of the ``.inp``-file section
+        """
+        # overwrite if each object has multiple lines
+        for line in lines:
+            yield cls.from_inp_line(*line)
 
 
 ########################################################################################################################
-class InpSectionGeneric(CustomDict):
+class InpSectionGeneric(dict):
     """abstract class for ``.inp``-file sections without objects"""
 
     @classmethod
@@ -257,6 +286,10 @@ class InpSection(CustomDict):
         self._section_object = section_object
 
     @property
+    def objects(self):
+        return self._data
+
+    @property
     def _identifier(self):
         # to set the index of the section (key to select an object an index for the dataframe export)
         return self._section_object._identifier
@@ -293,25 +326,19 @@ class InpSection(CustomDict):
         Returns:
             InpSection: section of the ``.inp``-file
         """
-        inp_section = cls(section_class)
 
         def txt_to_lines(content):
-            # TODO: convert to regex
-            import re
-            r"\[(\w+)\]"
-            x = re.findall(r'^\s*([^;\n]+)\s*$', content)
-
-            for line in content.split('\n'):
+            for line in re.findall(r'^[ \t]*([^;\n]+)[ \t]*;?[^\n]*$', content, flags=re.M):
                 # ;; section comment
                 # ; object comment / either inline(at the end of the line) or before the line
                 # if ';' in line:
                 #     line
-                line = line.split(';')[0]
-                line = line.strip()
-                if line == '':  # ignore empty and comment lines
-                    continue
-                else:
-                    yield line.split()
+                # line = line.split(';')[0]
+                # line = line.strip()
+                # if line == '':  # ignore empty and comment lines
+                #     continue
+                # else:
+                yield line.split()
 
         if isinstance(lines, str):
             if len(lines) > 10000000:
@@ -323,18 +350,7 @@ class InpSection(CustomDict):
             else:
                 lines = txt_to_lines(lines)
 
-        if hasattr(section_class, 'convert_lines'):
-            # each object has multiple lines
-            for section_class_line in section_class.convert_lines(lines):
-                inp_section.append(section_class_line)
-            return inp_section
-
-        # -----------------------
-        # each line is a object
-        for line in lines:
-            inp_section.append(section_class.from_inp_line(*line))
-
-        return inp_section
+        return section_class.create_section(lines)
 
     def to_inp_lines(self, fast=False):
         """
@@ -428,6 +444,10 @@ class InpData(CustomDict):
         # return InpData(deepcopy(self))  # way slower
         # ΔTime: 0.336 s
         return type(self)(**{k: self[k] if isinstance(self[k], str) else self[k].copy() for k in self})
+
+    def __setitem__(self, key, item):
+        self._data.__setitem__(key, item)
+        exec(f'self.{key} = self["{key}"]')
 
 
 ########################################################################################################################

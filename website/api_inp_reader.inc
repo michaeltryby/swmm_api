@@ -7,6 +7,7 @@ Input File Reader
 
 .. autosummary::
     read_inp_file
+    convert_section
 
 .. automodule:: swmm_api.input_file.inp_reader
     :members:

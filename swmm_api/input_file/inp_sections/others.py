@@ -2,7 +2,7 @@ from numpy import NaN
 from pandas import DataFrame, Series
 
 from .identifiers import IDENTIFIERS
-from swmm_api.input_file.type_converter import infer_type, to_bool
+from ..type_converter import infer_type, to_bool
 from ..inp_helpers import BaseSectionObject
 
 
@@ -194,8 +194,7 @@ class Pattern(BaseSectionObject):
             self.Factors = list(float(f) for f in factors)
 
     @classmethod
-    def convert_lines(cls, lines):
-        """multiple lines for one entry"""
+    def _convert_lines(cls, lines):
         args = list()
         for line in lines:
             if line[1] in [cls.TYPES.MONTHLY, cls.TYPES.DAILY,
@@ -276,7 +275,7 @@ class Pollutant(BaseSectionObject):
     """
     _identifier =IDENTIFIERS.Name
 
-    class Unit:
+    class UNITS:
         MG_PER_L = 'MG/L'
         UG_PER_L = 'UG/L'
         COUNT_PER_L = '#/L'
@@ -419,8 +418,7 @@ class Transect(BaseSectionObject):
         return len(self.station_elevations)
 
     @classmethod
-    def convert_lines(cls, lines):
-        """multiple lines for one entry"""
+    def _convert_lines(cls, lines):
         last_roughness = [0, 0, 0]
         last = None
 
@@ -529,8 +527,7 @@ class Control(BaseSectionObject):
         self.priority = int(priority)
 
     @classmethod
-    def convert_lines(cls, lines):
-        """multiple lines for one entry"""
+    def _convert_lines(cls, lines):
         args = list()
         is_condition = False
         is_action = False
@@ -689,7 +686,7 @@ class Curve(BaseSectionObject):
         self.points = points
 
     @classmethod
-    def convert_lines(cls, lines):
+    def _convert_lines(cls, lines):
         last = None
         Type = None
         points = list()
@@ -789,17 +786,7 @@ class Timeseries(BaseSectionObject):
         self.Name = str(Name)
 
     @classmethod
-    def convert_lines(cls, lines):
-        """
-        convert the input file section
-        an object uses multiple lines
-
-        Args:
-            lines (str | list[list[str]]): lines in the input file section
-
-        Yields:
-            TimeseriesData | TimeseriesFile: Timeseries objects
-        """
+    def _convert_lines(cls, lines):
         data = list()
         last = None
 
@@ -901,3 +888,18 @@ class TimeseriesData(Timeseries):
         for datetime, value in self.data:
             f += '{} {} {}\n'.format(self.Name, datetime, value)
         return f
+
+
+class Tag(BaseSectionObject):
+    """Section: [**TAGS**]"""
+    _identifier = ('kind', IDENTIFIERS.Name)
+
+    class TYPES:
+        Node = IDENTIFIERS.Node
+        Subcatch = IDENTIFIERS.Subcatch
+        Link = IDENTIFIERS.Link
+
+    def __init__(self, kind, Name, tag):
+        self.kind = kind
+        self.Name = Name
+        self.tag = tag

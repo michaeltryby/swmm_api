@@ -1,4 +1,4 @@
-from swmm_api.input_file.inp_sections.labels import *
+from .labels import *
 from swmm_api.input_file.inp_sections import *
 
 SECTION_TYPES = {
@@ -50,11 +50,14 @@ SECTION_TYPES = {
     TIMESERIES: Timeseries,
 }
 
-GUI_SECTIONS = [
-    MAP,
+GEO_SECTIONS = [
     COORDINATES,
     VERTICES,
-    POLYGONS,
+    POLYGONS
+]
+
+GUI_SECTIONS = [
+    MAP,
     SYMBOLS,
     LABELS,
     BACKDROP,

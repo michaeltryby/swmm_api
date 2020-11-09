@@ -374,8 +374,7 @@ class Polygon(BaseSectionObject):
         self.polygon = polygon
 
     @classmethod
-    def convert_lines(cls, lines):
-        """multiple lines for one entry"""
+    def _convert_lines(cls, lines):
         polygon = list()
         last = None
 
@@ -449,8 +448,7 @@ class Loading(BaseSectionObject):
         self.pollutant_buildup = pollutant_buildup
 
     @classmethod
-    def convert_lines(cls, lines):
-        """multiple lines for one entry"""
+    def _convert_lines(cls, lines):
         last = None
         pollutant_buildup = list()
         for Subcatch, *line in lines:
