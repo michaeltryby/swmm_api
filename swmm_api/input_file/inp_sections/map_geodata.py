@@ -1,9 +1,10 @@
 import numpy as np
+import shapely.geometry as sh
 from geopandas import GeoSeries
 from pandas import DataFrame
-from shapely.geometry import Point, LineString, Polygon
 
-from .node_component import Coordinate
+from . import Conduit, Vertices, Coordinate, Polygon
+from .labels import CONDUITS, VERTICES, COORDINATES
 from ..inp_helpers import InpSection
 
 """
@@ -12,48 +13,99 @@ not ready
 """
 
 
+class InpSectionGeo(InpSection):
+    @property
+    def geo_series(self):
+        return GeoSeries({l: i.geo for l, i in self.items()}, crs="EPSG:32633", name='geometry')  # .simplify(0.5)
+
+
+class CoordinateGeo(Coordinate):
+    _section_class = InpSectionGeo
+
+    @property
+    def geo(self):
+        return sh.Point(self.point)
+
+
+class VerticesGeo(Vertices):
+    _section_class = InpSectionGeo
+
+    @property
+    def geo(self):
+        return sh.LineString(self.vertices)
+
+
+class PolygonGeo(Polygon):
+    _section_class = InpSectionGeo
+
+    @property
+    def geo(self):
+        return sh.Polygon(self.polygon)
+
+
 def coordinates_to_geopandas(section):
-    return GeoSeries({l: Point(c.x, c.y) for l, c in section.items()}, crs="EPSG:32633")
+    return GeoSeries({l: sh.Point(c.point) for l, c in section.items()}, crs="EPSG:32633")
 
 
-def geopandas_to_coordinates(data):
-    return Coordinate.create_section([[label, point.x, point.x] for label, point in data.iteritems()])
+def geopandas_to_coordinates(data: GeoSeries) -> InpSection:
+    return Coordinate.create_section(zip(data.index, data.x, data.y))
+
+def geopandas_to_vertices(data: GeoSeries) -> InpSection:
+    # geometry mit MultiLineString deswegen v[0] mit ersten und einzigen linestring zu verwenden
+    s = Vertices.create_section()
+    # s.update({i: Vertices(i, v) for i, v in zip(data.index, map(lambda i: list(i.coords), data.values))})
+    s.update({i: Vertices(i, list(v.coords)) for i, v in data.to_dict().items()})
+    return s
 
 
-class CoordinatesSectionGeo(InpSection):
-    @property
-    def geo_series(self):
-        df = self.frame
-        return GeoSeries(index=df.index,
-                         crs="EPSG:32633",
-                         data=[Point(xy) for xy in zip(df['x'], df['y'])])
+def remove_coordinates_from_vertices(inp):
+    new_vertices_section = dict()
+    for link in inp[VERTICES]:  # type: str
+        conduit = inp[CONDUITS][link]  # type: Conduit
+        new_vertices = list()
+        n1 = inp[COORDINATES][conduit.FromNode]
 
-    @classmethod
-    def from_geopandas(cls, data):
-        x_name = 'x'
-        y_name = 'y'
-        df = DataFrame.from_dict({x_name: data.geometry.x, y_name: data.geometry.y})
-        a = np.vstack((df.index.values, df.values.T)).T
-        return CoordinatesSectionGeo.from_inp_lines(a, section_class=Coordinate)
+        new_vertices.append(inp[COORDINATES][conduit.FromNode])
+        new_vertices += inp[VERTICES][link].vertices
+        new_vertices.append(inp[COORDINATES][conduit.ToNode])
+        new_vertices_section[link] = new_vertices
+    return new_vertices_section
 
 
-class VerticesSectionGeo(InpSection):
-    @property
-    def geo_series(self):
-        geometry = [list(Point(p.values()) for p in points) for points in self.values()]
-        geometry = [LineString(list(tuple(p.values()) for p in points)) for points in self.values()]
-        # sometimes ony 1 Point > raises error > LineString needs at least 2 Points
-        return GeoSeries(index=self.keys(),
-                         crs="EPSG:32633",
-                         data=geometry)
-
-
-class PolygonSectionGeo(InpSection):
-    @property
-    def geo_series(self):
-        # geometry = [list(Point(p.values()) for p in points) for points in self.values()]
-        geometry = [Polygon(list(tuple(p.values()) for p in points)) for points in self.values()]
-        # sometimes ony 1 Point > raises error > LineString needs at least 2 Points
-        return GeoSeries(index=self.keys(),
-                         crs="EPSG:32633",
-                         data=geometry)
+# class CoordinatesSectionGeo(InpSection):
+#     @property
+#     def geo_series(self):
+#         df = self.frame
+#         return GeoSeries(index=df.index,
+#                          crs="EPSG:32633",
+#                          data=[sh.Point(xy) for xy in zip(df['x'], df['y'])])
+#
+#     @classmethod
+#     def from_geopandas(cls, data):
+#         x_name = 'x'
+#         y_name = 'y'
+#         df = DataFrame.from_dict({x_name: data.geometry.x, y_name: data.geometry.y})
+#         a = np.vstack((df.index.values, df.values.T)).T
+#         return CoordinatesSectionGeo.from_inp_lines(a, section_class=Coordinate)
+#
+#
+# class VerticesSectionGeo(InpSection):
+#     @property
+#     def geo_series(self):
+#         geometry = [list(sh.Point(p.values()) for p in points) for points in self.values()]
+#         geometry = [sh.LineString(list(tuple(p.values()) for p in points)) for points in self.values()]
+#         # sometimes ony 1 Point > raises error > LineString needs at least 2 Points
+#         return GeoSeries(index=self.keys(),
+#                          crs="EPSG:32633",
+#                          data=geometry)
+#
+#
+# class PolygonSectionGeo(InpSection):
+#     @property
+#     def geo_series(self):
+#         # geometry = [list(Point(p.values()) for p in points) for points in self.values()]
+#         geometry = [sh.Polygon(list(tuple(p.values()) for p in points)) for points in self.values()]
+#         # sometimes ony 1 Point > raises error > LineString needs at least 2 Points
+#         return GeoSeries(index=self.keys(),
+#                          crs="EPSG:32633",
+#                          data=geometry)

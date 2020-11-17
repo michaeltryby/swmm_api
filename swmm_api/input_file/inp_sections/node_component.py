@@ -159,3 +159,7 @@ class Coordinate(BaseSectionObject):
         self.Node = str(Node)
         self.x = float(x)
         self.y = float(y)
+
+    @property
+    def point(self):
+        return self.x, self.y

@@ -534,8 +534,7 @@ class TagsSection(InpSectionGeneric):
 
     def filter_keys(self, keys, which):
         """which=one of TagsSection.Types"""
-        new = type(self)()
-        new._data = {k: v for k, v in self.items() if k != which}
+        new = type(self)({k: v for k, v in self.items() if k != which})
         if which in self:
-            new._data[which] = {k: self[which][k] for k in set(self[which].keys()).intersection(keys)}
+            new[which] = {k: self[which][k] for k in set(self[which].keys()).intersection(keys)}
         return new

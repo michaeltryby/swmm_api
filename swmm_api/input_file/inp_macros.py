@@ -1,3 +1,4 @@
+from collections import ChainMap
 from os import path, mkdir, listdir
 
 import numpy as np
@@ -7,9 +8,10 @@ from .inp_reader import read_inp_file, convert_section
 from .inp_sections import *
 from .inp_sections import labels as sec
 from .inp_sections.identifiers import IDENTIFIERS
+from .inp_sections.labels import VERTICES, COORDINATES
 from .inp_sections.types import SECTION_TYPES
 from .inp_writer import section_to_string
-from .macro_snippets.curve_simplification import ramer_douglas
+from .macro_snippets.curve_simplification import ramer_douglas, _vec2d_dist
 
 """
 a collection of macros to manipulate an inp-file
@@ -103,9 +105,25 @@ def find_node(inp, node_label):
     Returns:
         Junction or Storage or Outfall: searched node (if not found None)
     """
+    nodes = nodes_dict(inp)
+    if node_label in nodes:
+        return nodes[node_label]
+
+
+def nodes_dict(inp):
+    nodes = ChainMap()
     for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
-        if (section in inp) and (node_label in inp[section]):
-            return inp[section][node_label]
+        if section in inp:
+            nodes.maps.append(inp[section])
+    return nodes
+
+
+def links_dict(inp):
+    links = ChainMap()
+    for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
+        if section in inp:
+            links.maps.append(inp[section])
+    return links
 
 
 def find_link(inp, label):
@@ -119,9 +137,9 @@ def find_link(inp, label):
     Returns:
         Conduit | Weir | Outlet | Orifice | Pump: searched link (if not found None)
     """
-    for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
-        if (section in inp) and (label in inp[section]):
-            return inp[section][label]
+    links = links_dict(inp)
+    if label in links:
+        return links[label]
 
 
 def calc_slope(inp, link):
@@ -236,7 +254,7 @@ def dissolve_node(inp, node):
         c2 = inp[sec.CONDUITS].filter_keys([node.Name], 'FromNode')
         inp = combine_conduits(inp, c1, c2)
     else:
-        inp = delete_node()
+        inp = delete_node(node.Name)
     return inp
 
 
@@ -301,8 +319,18 @@ def junction_to_outfall(inp, label, *args, **kwargs):
     """
     j = inp[sec.JUNCTIONS].pop(label)  # type: Junction
     if sec.OUTFALLS not in inp:
-        inp[sec.OUTFALLS] = InpSection(Outfall)
+        inp[sec.OUTFALLS] = Outfall.create_section()
     inp[sec.OUTFALLS].append(Outfall(Name=label, Elevation=j.Elevation, *args, **kwargs))
+
+
+def rename_node(label, new_label):
+    # TODO !!
+    pass
+
+
+def rename_link(label, new_label):
+    # TODO !!
+    pass
 
 
 def remove_empty_sections(inp):
@@ -434,7 +462,7 @@ def filter_links(inp, final_nodes):
     # __________________________________________
     for section in [sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
         if section in inp:
-            inp[section] = inp[section].filter_keys(final_links, by=IDENTIFIERS.Link)
+            inp[section] = inp[section].filter_keys(final_links)
 
     # __________________________________________
     if sec.TAGS in inp:
@@ -492,3 +520,52 @@ def group_edit(inp):
     # edit the property
     # by replacing it with
     pass
+
+
+def add_coordinates_to_vertices(inp):
+    links = links_dict(inp)
+
+    for label, link in links.items():
+        inner_vertices = list()
+        if label in VERTICES:
+            inner_vertices = inp[VERTICES][label].vertices
+
+        yield label, [inp[COORDINATES][link.FromNode].point] + inner_vertices + [inp[COORDINATES][link.ToNode].point]
+
+
+def update_vertices(inp):
+    links = links_dict(inp)
+    coords = inp[COORDINATES]
+    for l in links.values():  # type: Conduit # or Weir or Orifice or Pump or Outlet
+        v = list()
+        if l.Name in VERTICES:
+            v = inp[VERTICES][l.Name].vertices
+        inp[VERTICES][l.Name].vertices = [coords[l.FromNode].point] + v + [coords[l.ToNode].point]
+    return inp
+
+
+def reduce_vertices(inp):
+    links = links_dict(inp)
+
+    for l in links.values():  # type: Conduit # or Weir or Orifice or Pump or Outlet
+        if l.Name in VERTICES:
+            v = inp[VERTICES][l.Name].vertices
+            p = inp[COORDINATES][l.FromNode].point
+            if _vec2d_dist(p, v[0]) < 0.25:
+                v = v[1:]
+
+            p = inp[COORDINATES][l.ToNode].point
+            if _vec2d_dist(p, v[-1]) < 0.25:
+                v = v[:-1]
+
+            inp[VERTICES][l.Name].vertices = v
+    return inp
+
+
+def update_inp(inp, inp_new):
+    for sec in inp_new:
+        if sec not in inp:
+            inp[sec] = inp_new[sec]
+        else:
+            inp[sec].update(inp_new[sec])
+    return inp

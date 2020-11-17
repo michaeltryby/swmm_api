@@ -95,139 +95,48 @@ class CustomDict:
 
 
 ########################################################################################################################
-class BaseSectionObject:
+class InpData(CustomDict):
     """
-    base class for all section objects to unify operations
+    overall class for an input file
 
-    sections objects only have __init__ with object parameters
+    child class of dict
 
-    acts :term:`like a dict <mapping>` (getter and setter)"""
-    _identifier = ''
-    """str: attribute of an object which will be used as identifiers"""
-    _table_inp_export = True
-    """bool: if an section is writeable as table. Default ist True"""
-
-    def get(self, key):
-        if isinstance(key, list):
-            return tuple([self.get(k) for k in key])
-        return self.to_dict_().get(key)
-
-    def set(self, key, value):
-        assert key in self.to_dict_()
-        vars(self)[key] = value
-
-    def __getitem__(self, key):
-        return self.get(key)
-
-    def __setitem__(self, key, item):
-        self.set(key, item)
-
-    def to_dict_(self):
-        """
-        get all object parameters as dictionary
-
-        Returns:
-            dict:
-        """
-        return vars(self).copy()
-
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        return self._to_debug_string()
-
-    def _to_debug_string(self):
-        """for debugging purposes
-
-        string is almost equal to python syntax
-        so you could copy it and past it into your code
-
-        Returns:
-            str: debug string of the object
-        """
-        args = list()
-        for k, d in self.to_dict_().items():
-            if isinstance(d, float) and isnan(d):
-                args.append('{} = NaN'.format(k))
-            elif isinstance(d, str):
-                args.append('{} = "{}"'.format(k, d))
-            else:
-                args.append('{} = {}'.format(k, d))
-        return '{}({})'.format(self.__class__.__name__, ', '.join(args))
-
-    def to_inp_line(self):
-        """
-        convert object to one line of the ``.inp``-file
-
-        for ``.inp``-file writing
-
-        Returns:
-            str: SWMM .inp file compatible string
-        """
-        di = self.to_dict_()
-        s = ''
-        if isinstance(self._identifier, list):
-            s += ' '.join([str(di.pop(i)) for i in self._identifier])
-        else:
-            s += str(di.pop(self._identifier))
-
-        s += ' ' + ' '.join([type2str(i) for i in di.values()])
-        return s
-
-    @classmethod
-    def from_inp_line(cls, *line):
-        """
-        convert line in the ``.inp``-file to the object
-
-        Args:
-            *line (list[str]): arguments in the line
-
-        Returns:
-            BaseSectionObject: object of the ``.inp``-file section
-        """
-        return cls(*line)
-
+    just used for the copy function and to identify ``.inp``-file data
+    """
     def copy(self):
         """
-        copy object
+        get a copy of the ``.inp``-file data
 
         Returns:
-            BaseSectionObject: copy of the object
+            InpData: a copy of the ``.inp``-file data
         """
-        return type(self)(**vars(self).copy())
+        new = type(self)()
+        for key in self:
+            if isinstance(self[key], str):
+                new[key] = self[key]
+            else:
+                new[key] = self[key].copy()
+            exec(f'new.{key} = new["{key}"]')
+        return new
 
-    @classmethod
-    def create_section(cls, lines=None):
+    def __setitem__(self, key, item):
+        self._data.__setitem__(key, item)
+        exec(f'self.{key} = self["{key}"]')
+
+    def __getitem__(self, key):
         """
-        create an object for ``.inp``-file sections with objects
 
-        i.e. nodes, links, subcatchments, raingages, ...
+        Returns:
+            InpSection | InpSectionGeneric:
         """
-        if lines is None:
-            return InpSection(cls)
-        else:
-            sec = InpSection(cls)
-            for obj in cls._convert_lines(lines):
-                sec.append(obj)
-            return sec
+        return self._data.__getitem__(key)
+        # return super()._data.__getitem__(self, key)
 
-    @classmethod
-    def _convert_lines(cls, lines):
-        """
-        convert the ``.inp``-file section
-
-        creates an object for each line and yields them
-
-        Args:
-            lines (list[list[str]]): lines in the input file section
-
-        Yields:
-            BaseSectionObject: object of the ``.inp``-file section
-        """
-        # overwrite if each object has multiple lines
-        for line in lines:
-            yield cls.from_inp_line(*line)
+    # def __getattr__(self, item):
+    #     return self._data[item]
+    #
+    # def __setattr__(self, key, value):
+    #     self[key] = value
 
 
 ########################################################################################################################
@@ -421,8 +330,8 @@ class InpSection(CustomDict):
         filter parts of the section with keys (identifier strings or attribute string)
 
         Args:
-            keys (list): list of names to filter by (ether the identifier or the attribute of "by")
-            by (str): attribute name of the section object to filter by
+            keys (list | set): list of names to filter by (ether the identifier or the attribute of "by")
+            by (str | list[str] |tuple[str]): attribute name of the section object to filter by
 
         Returns:
             InpSection: new filtered section
@@ -433,53 +342,147 @@ class InpSection(CustomDict):
         elif isinstance(by, (list, set, tuple)):
             new._data = {k: self[k] for k in self.keys() if all(map(lambda b: self[k][b] in keys, by))}
         else:
-            new._data = {k: self[k] for k in self.keys() if self[k][by] in keys}
+            new._data = {k: self[k] for k in self.keys() if self[k][by] == keys}
         return new
 
 
 ########################################################################################################################
-class InpData(CustomDict):
+class BaseSectionObject:
     """
-    overall class for an input file
+    base class for all section objects to unify operations
 
-    child class of dict
+    sections objects only have __init__ with object parameters
 
-    just used for the copy function and to identify ``.inp``-file data
-    """
-    def copy(self):
-        """
-        get a copy of the ``.inp``-file data
+    acts :term:`like a dict <mapping>` (getter and setter)"""
+    _identifier = ''
+    """str: attribute of an object which will be used as identifiers"""
+    _table_inp_export = True
+    """bool: if an section is writeable as table. Default ist True"""
 
-        Returns:
-            InpData: a copy of the ``.inp``-file data
-        """
-        new = type(self)()
-        for key in self:
-            if isinstance(self[key], str):
-                new[key] = self[key]
-            else:
-                new[key] = self[key].copy()
-            exec(f'new.{key} = new["{key}"]')
-        return new
+    _section_class = InpSection
 
-    def __setitem__(self, key, item):
-        self._data.__setitem__(key, item)
-        exec(f'self.{key} = self["{key}"]')
+    def get(self, key):
+        if isinstance(key, list):
+            return tuple([self.get(k) for k in key])
+        return self.to_dict_().get(key)
+
+    def set(self, key, value):
+        assert key in self.to_dict_()
+        vars(self)[key] = value
 
     def __getitem__(self, key):
+        return self.get(key)
+
+    def __setitem__(self, key, item):
+        self.set(key, item)
+
+    def to_dict_(self):
         """
+        get all object parameters as dictionary
 
         Returns:
-            InpSection | InpSectionGeneric:
+            dict:
         """
-        return self._data.__getitem__(key)
-        # return super()._data.__getitem__(self, key)
+        return vars(self).copy()
 
-    # def __getattr__(self, item):
-    #     return self._data[item]
-    #
-    # def __setattr__(self, key, value):
-    #     self[key] = value
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return self._to_debug_string()
+
+    def _to_debug_string(self):
+        """for debugging purposes
+
+        string is almost equal to python syntax
+        so you could copy it and past it into your code
+
+        Returns:
+            str: debug string of the object
+        """
+        args = list()
+        for k, d in self.to_dict_().items():
+            if isinstance(d, float) and isnan(d):
+                args.append('{} = NaN'.format(k))
+            elif isinstance(d, str):
+                args.append('{} = "{}"'.format(k, d))
+            else:
+                args.append('{} = {}'.format(k, d))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(args))
+
+    def to_inp_line(self):
+        """
+        convert object to one line of the ``.inp``-file
+
+        for ``.inp``-file writing
+
+        Returns:
+            str: SWMM .inp file compatible string
+        """
+        di = self.to_dict_()
+        s = ''
+        if isinstance(self._identifier, list):
+            s += ' '.join([str(di.pop(i)) for i in self._identifier])
+        else:
+            s += str(di.pop(self._identifier))
+
+        s += ' ' + ' '.join([type2str(i) for i in di.values()])
+        return s
+
+    @classmethod
+    def from_inp_line(cls, *line):
+        """
+        convert line in the ``.inp``-file to the object
+
+        Args:
+            *line (list[str]): arguments in the line
+
+        Returns:
+            BaseSectionObject: object of the ``.inp``-file section
+        """
+        return cls(*line)
+
+    def copy(self):
+        """
+        copy object
+
+        Returns:
+            BaseSectionObject: copy of the object
+        """
+        return type(self)(**vars(self).copy())
+
+    @classmethod
+    def create_section(cls, lines=None):
+        """
+        create an object for ``.inp``-file sections with objects
+
+        i.e. nodes, links, subcatchments, raingages, ...
+        """
+        if lines is None:
+            return cls._section_class(cls)
+        else:
+            sec = cls._section_class(cls)
+            for obj in cls._convert_lines(lines):
+                sec.append(obj)
+            return sec
+
+    @classmethod
+    def _convert_lines(cls, lines):
+        """
+        convert the ``.inp``-file section
+
+        creates an object for each line and yields them
+
+        Args:
+            lines (list[list[str]]): lines in the input file section
+
+        Yields:
+            BaseSectionObject: object of the ``.inp``-file section
+        """
+        # overwrite if each object has multiple lines
+        for line in lines:
+            yield cls.from_inp_line(*line)
+
 
 ########################################################################################################################
 def dataframe_to_inp_string(df):

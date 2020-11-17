@@ -3,7 +3,7 @@ from matplotlib import patches
 from shapely import geometry as shp
 
 from .graph_macros import inp_to_graph, get_path
-from ..inp_macros import find_link
+from ..inp_macros import find_link, update_vertices
 from ..inp_sections import Outfall, Polygon, SubCatchment
 from ..inp_sections.labels import *
 
@@ -34,25 +34,11 @@ def plot_map(inp):  # TODO
     # ax.set_xlim(x_min, x_max)
     # ax.set_ylim(y_min, y_max)
 
-    def _points(c):
-        return c.x, c.y
+    update_vertices(inp)
 
-    for section in [CONDUITS,
-                    PUMPS,
-                    ORIFICES,
-                    WEIRS,
-                    OUTLETS]:
-        if section in inp:
-            for link in inp[section].values():
-                if link.Name in inp[VERTICES]:
-                    points = [_points(inp[COORDINATES][link.FromNode])] \
-                             + inp[VERTICES][link.Name].vertices \
-                             + [_points(inp[COORDINATES][link.ToNode])]
-                else:
-                    points = [_points(inp[COORDINATES][link.FromNode]), _points(inp[COORDINATES][link.ToNode])]
-
-                x, y = zip(*points)
-                ax.plot(x, y, 'y-')
+    for link, vertices in inp[VERTICES].items():
+        x, y = zip(*vertices.vertices)
+        ax.plot(x, y, 'y-')
 
     if POLYGONS in inp:
         for poly in inp[POLYGONS].values():  # type: Polygon

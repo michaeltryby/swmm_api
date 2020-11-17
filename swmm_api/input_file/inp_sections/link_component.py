@@ -122,6 +122,8 @@ class CrossSectionCustom(CrossSection):
         self.Geom1 = float(Geom1)
         self.Curve = str(Curve)
         self.Geom2 = NaN
+        self.Geom3 = float(Geom3)
+        self.Geom4 = float(Geom4)
         if Barrels != 1 or not isinstance(Barrels, str) and ~isnan(Barrels):
             self.Barrels = int(Barrels)
 

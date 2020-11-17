@@ -4,7 +4,7 @@ from numpy import NaN
 
 from .identifiers import IDENTIFIERS
 from ..inp_helpers import BaseSectionObject
-from ..type_converter import to_bool
+from ..type_converter import to_bool, infer_type
 
 # NEU in python 3.7
 # from dataclasses import dataclass
@@ -246,7 +246,7 @@ class Storage(BaseSectionObject):
             Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
             IMD (float): soil initial moisture deficit (fraction).
         """
-        self.Curve = [A1, A2, A0]
+        self.Curve = infer_type([A1, A2, A0])
         self._optional_args(Apond, Fevap, Psi, Ksat, IMD)
 
     def _tabular_init(self, Curve, Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
