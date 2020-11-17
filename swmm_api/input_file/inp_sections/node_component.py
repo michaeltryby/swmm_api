@@ -163,3 +163,7 @@ class Coordinate(BaseSectionObject):
     @property
     def point(self):
         return self.x, self.y
+
+    def to_inp_line(self):
+        # separate function to keep accuracy
+        return f'{self.Node} {self.x} {self.y}'
