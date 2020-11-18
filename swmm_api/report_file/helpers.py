@@ -7,6 +7,8 @@ __license__ = "MIT"
 
 from io import StringIO
 import pandas as pd
+import re
+from numpy import NaN
 
 
 def _get_title_of_part(part, alt):
@@ -88,30 +90,29 @@ def _part_to_frame(part):
     Returns:
         pandas.DataFrame: some kind of summary table
     """
-    lines = part.split('\n')
+    subs = re.split(r"\s*-+\n", part)
+    if len(subs) == 4:
+        notes, header, data, sytem = subs
+    elif len(subs) == 1:
+        # no data
+        return pd.DataFrame()
+    else:
+        notes, header, data = subs
+    header = ['_'.join([i for i in c if i is not NaN]) for c in pd.read_fwf(StringIO(header), header=None).values.T]
+    # re.split(r"\s\s\s+", line.strip())
+    df = pd.DataFrame(line.split() for line in data.split('\n'))
 
-    notes = []
-    data = []
-    header = []
+    if df.iloc[:, -1].unique()[0] == 'ltr':
+        del df[df.columns[-1]]
 
-    sep_count = 0
-    for line in lines:
+    for c, h in enumerate(header):
+        if 'days hr:min' in h:
+            df[c] = df[c] + ' ' + df.pop(c+1)
 
-        if len(line.strip()) == line.count('-'):  # line is only separator  OLD: '-----' in line:
-            sep_count += 1
-        else:
-            if sep_count == 0:
-                notes.append(line)
-            elif sep_count == 1:
-                header.append(line)
-            else:
-                data.append(line)
+    df.columns = header
 
-    # --------------------------------------------
-    df = pd.read_fwf(StringIO('\n'.join(header + data)),
-                     header=list(range(len(header))), index_col=0)
-    rename_cols = lambda col: '_'.join(str(c) for c in col if 'Unnamed:' not in c).strip().replace('_/', '/').replace('/_', '/')
-    df.columns = [rename_cols(col) for col in df.columns.to_list()]
+    df = df.set_index(header[0])
+
     for col in df:
         if 'Type' in col:
             pass
@@ -119,12 +120,47 @@ def _part_to_frame(part):
             df[col] = pd.to_timedelta(df[col].str.replace('  ', ' days ') + ':00')
         else:
             df[col] = df[col].astype(float)
+    #
+    # notes = str()
+    # data = []
+    # header = []
+    # sep_count = 0
+    # for line in part.split('\n'):
+    #     if len(line.strip()) == line.count('-'):  # line is only separator  OLD: '-----' in line:
+    #         sep_count += 1
+    #     elif sep_count == 0:
+    #         notes += line + '\n'
+    #     elif sep_count == 1:
+    #         header.append(line)
+    #     else:
+    #         data.append(line)
+    #
+    # # --------------------------------------------
+    # df = pd.read_fwf(StringIO('\n'.join(header)), header=list(range(len(header))))
+    # rename_cols = lambda col: '_'.join(str(c) for c in col if 'Unnamed:' not in c).strip().replace('_/', '/').replace(
+    #     '/_', '/')
+    # df.columns = [rename_cols(col) for col in df.columns.to_list()]
+    #
+    # df = pd.read_fwf(StringIO('\n'.join(header + data)),
+    #                  header=list(range(len(header))), index_col=0)
+    # rename_cols = lambda col: '_'.join(str(c) for c in col if 'Unnamed:' not in c).strip().replace('_/', '/').replace('/_', '/')
+    # df.columns = [rename_cols(col) for col in df.columns.to_list()]
+    # for col in df:
+    #     if 'Type' in col:
+    #         pass
+    #     elif 'days hr:min' in col:
+    #         df[col] = pd.to_timedelta(df[col].str.replace('  ', ' days ') + ':00')
+    #     else:
+    #         df[col] = df[col].astype(float)
     return df.copy()
 
 
 def _continuity_part_to_dict(raw):
     # p = self.converted('Flow Routing Continuity')
     # title = raw[:raw.index(p)]
+    if raw is None:
+        return dict()
+
     df = pd.read_fwf(StringIO(raw), index_col=0, header=[0, 1, 2])
 
     df.columns = df.columns.droplevel(2)

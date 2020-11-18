@@ -5,7 +5,8 @@ __email__ = "markus.pichler@tugraz.at"
 __version__ = "0.1"
 __license__ = "MIT"
 
-import pandas as pd
+from pandas import to_datetime
+from pandas._libs.tslibs.timedeltas import Timedelta
 
 from .helpers import _get_title_of_part, _remove_lines, _part_to_frame, _continuity_part_to_dict
 
@@ -79,6 +80,8 @@ class Report:
 
     def converted(self, key):
         if key not in self.converted_parts:
+            if key not in self.raw_parts:
+                return ''
             self.converted_parts[key] = _remove_lines(self.raw_parts[key], title=True, empty=False)
 
         return self.converted_parts[key]
@@ -131,7 +134,7 @@ class Report:
             dict: Flow Routing Continuity
         """
         if self._flow_routing_continuity is None:
-            raw = self.raw_parts['Flow Routing Continuity']
+            raw = self.raw_parts.get('Flow Routing Continuity', None)
             self._flow_routing_continuity = _continuity_part_to_dict(raw)
         return self._flow_routing_continuity
 
@@ -144,7 +147,7 @@ class Report:
             dict: Runoff Quantity Continuity
         """
         if self._runoff_quantity_continuity is None:
-            raw = self.raw_parts['Runoff Quantity Continuity']
+            raw = self.raw_parts.get('Runoff Quantity Continuity', None)
             self._runoff_quantity_continuity = _continuity_part_to_dict(raw)
         return self._runoff_quantity_continuity
 
@@ -197,6 +200,9 @@ class Report:
         """
         if self._node_surcharge_summary is None:
             p = self.converted('Node Surcharge Summary')
+            # if 'No nodes were surcharged.' in p:
+            #     self._node_surcharge_summary = pd.DataFrame()
+            # else:
             self._node_surcharge_summary = _part_to_frame(p)
         return self._node_surcharge_summary
 
@@ -208,18 +214,12 @@ class Report:
         Returns:
             pandas.DataFrame: Node Flooding Summary
         """
-        # parts = report_to_dict(fn)
         if self._node_flooding_summary is None:
-            # --------------------------------------------
             p = self.converted('Node Flooding Summary')
-
-            # --------------------------------------------
-            if 'No nodes were flooded.' in p:
-                self._node_flooding_summary = pd.DataFrame()
-
-            # --------------------------------------------
-            else:
-                self._node_flooding_summary = _part_to_frame(p)
+            # if 'No nodes were flooded.' in p:
+            #     self._node_flooding_summary = pd.DataFrame()
+            # else:
+            self._node_flooding_summary = _part_to_frame(p)
         return self._node_flooding_summary
 
     @property
@@ -292,14 +292,112 @@ class Report:
             p = self.converted('Conduit Surcharge Summary')
 
             # --------------------------------------------
-            if 'No conduits were surcharged.' in p:
-                self._conduit_surcharge_summary = pd.DataFrame()
-
-            else:
-                p = p.replace('--------- Hours Full -------- ', 'HoursFull Hours Full HoursFull')
-                p = p.replace('Both Ends', 'Both_Ends')
-                self._conduit_surcharge_summary = _part_to_frame(p)
+            # if 'No conduits were surcharged.' in p:
+            #     self._conduit_surcharge_summary = pd.DataFrame()
+            #
+            # else:
+            p = p.replace('--------- Hours Full -------- ', 'HoursFull Hours Full HoursFull')
+            p = p.replace('Both Ends', 'Both_Ends')
+            self._conduit_surcharge_summary = _part_to_frame(p)
         return self._conduit_surcharge_summary
+
+    def get_simulation_info(self):
+        t = self.raw_parts.get('Simulation Infos', None)
+        if t:
+            return dict(line.strip().split(':', 1) for line in t.split('\n'))
+
+    @property
+    def analyse_start(self):
+        v = self.get_simulation_info()['Analysis begun on']
+        if v:
+            return to_datetime(v)
+
+    @property
+    def analyse_end(self):
+        v = self.get_simulation_info()['Analysis ended on']
+        if v:
+            return to_datetime(v)
+
+    @property
+    def analyse_duration(self):
+        v = self.get_simulation_info()['Total elapsed time']
+        if v:
+            if '< 1 sec' in v:
+                return Timedelta(seconds=1)
+
+            return Timedelta(v)
+
+    def get_errors(self):
+        t = self.raw_parts.get('Version+Title', None)
+        if t:
+            di = dict()
+            for line in t.split('\n'):
+                line = line.strip()
+                if line.startswith('ERROR'):
+                    label, txt = line.split(':', 1)
+                    if label in di:
+                        di[label].append(txt)
+                    else:
+                        di[label] = [txt]
+            return di
+
+    def get_warnings(self):
+        """
+        WARNING 01: wet weather time step reduced to recording interval for Rain Gage xxx.
+            The wet weather time step was automatically reduced so that no period with rainfall would be skipped
+            during a simulation.
+        WARNING 02: maximum depth increased for Node xxx.
+            The maximum depth for the node was automatically increased to match the top of the highest connecting
+            conduit.
+        WARNING 03: negative offset ignored for Link xxx.
+            The link’s stipulated offset was below the connecting node's invert so its actual offset was set to 0.
+        WARNING 04: minimum elevation drop used for Conduit xxx.
+            The elevation drop between the end nodes of the conduit was below 0.001 ft (0.00035 m) so the latter
+            value was used instead to calculate its slope.
+        WARNING 05: minimum slope used for Conduit xxx.
+            The conduit's computed slope was below the user-specified Minimum Conduit Slope so the latter value was
+            used instead.
+        WARNING 06: dry weather time step increased to wet weather time step.
+            The user-specified time step for computing runoff during dry weather periods was lower than that set for
+            wet weather periods and was automatically increased to the wet weather value.
+        WARNING 07: routing time step reduced to wet weather time step.
+            The user-specified time step for flow routing was larger than the wet weather runoff time step and was
+            automatically reduced to the runoff time step to prevent loss of accuracy.
+        WARNING 08: elevation drop exceeds length for Conduit xxx.
+            The elevation drop across the ends of a conduit exceeds its length. The program computes the conduit's
+            slope as the elevation drop divided by the length instead of using the more accurate right triangle
+            method. The user should check for errors in the length and in both the invert elevations and offsets at
+            the conduit's upstream and downstream nodes.
+        WARNING 09: time series interval greater than recording interval for Rain Gage xxx.
+            The smallest time interval between entries in the precipitation time series used by the rain gage is
+            greater than the recording time interval specified for the gage. If this was not actually intended then
+            what appear to be continuous periods of rainfall in the time series will instead be read with time gaps
+            in between them.
+        WARNING 10: crest elevation is below downstream invert for regulator Link xxx.
+            The height of the opening on an orifice, weir, or outlet is below the invert elevation of its downstream
+            node. Users should check to see if the regulator's offset height or the downstream node's invert
+            elevation is in error.
+        WARNING 11: non-matching attributes in Control Rule xxx.
+            The premise of a control is comparing two different types of attributes to one another (for example,
+            conduit flow and junction water depth).
+        """
+        t = self.raw_parts.get('Version+Title', None)
+        if t:
+            di = dict()
+            for line in t.split('\n'):
+                line = line.strip()
+                if line.startswith('WARNING'):
+
+                    if ('WARNING 06' in line) or ('WARNING 07' in line):
+                        di[line] = True
+                    else:
+                        *message, object_label = line.split()
+                        message = ' '.join(message)
+                        if message in di:
+                            di[message].append(object_label)
+                        else:
+                            di[message] = [object_label]
+            return di
 
 
 def read_rpt_file(report_filename):
