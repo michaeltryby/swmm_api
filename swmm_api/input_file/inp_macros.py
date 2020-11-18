@@ -527,7 +527,7 @@ def add_coordinates_to_vertices(inp):
 
     for label, link in links.items():
         inner_vertices = list()
-        if label in VERTICES:
+        if label in inp[VERTICES]:
             inner_vertices = inp[VERTICES][label].vertices
 
         yield label, [inp[COORDINATES][link.FromNode].point] + inner_vertices + [inp[COORDINATES][link.ToNode].point]
@@ -537,9 +537,11 @@ def update_vertices(inp):
     links = links_dict(inp)
     coords = inp[COORDINATES]
     for l in links.values():  # type: Conduit # or Weir or Orifice or Pump or Outlet
-        v = list()
-        if l.Name in VERTICES:
-            v = inp[VERTICES][l.Name].vertices
+        if l.Name not in inp[VERTICES]:
+            object_type = inp[VERTICES]._section_object
+            inp[VERTICES].append(object_type(l.Name, vertices=list()))
+
+        v = inp[VERTICES][l.Name].vertices
         inp[VERTICES][l.Name].vertices = [coords[l.FromNode].point] + v + [coords[l.ToNode].point]
     return inp
 
@@ -548,7 +550,7 @@ def reduce_vertices(inp):
     links = links_dict(inp)
 
     for l in links.values():  # type: Conduit # or Weir or Orifice or Pump or Outlet
-        if l.Name in VERTICES:
+        if l.Name in inp[VERTICES]:
             v = inp[VERTICES][l.Name].vertices
             p = inp[COORDINATES][l.FromNode].point
             if _vec2d_dist(p, v[0]) < 0.25:

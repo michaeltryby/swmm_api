@@ -329,8 +329,8 @@ class Report:
 
     def get_errors(self):
         t = self.raw_parts.get('Version+Title', None)
+        di = dict()
         if t:
-            di = dict()
             for line in t.split('\n'):
                 line = line.strip()
                 if line.startswith('ERROR'):
@@ -339,7 +339,7 @@ class Report:
                         di[label].append(txt)
                     else:
                         di[label] = [txt]
-            return di
+        return di
 
     def get_warnings(self):
         """
@@ -382,8 +382,8 @@ class Report:
             conduit flow and junction water depth).
         """
         t = self.raw_parts.get('Version+Title', None)
+        di = dict()
         if t:
-            di = dict()
             for line in t.split('\n'):
                 line = line.strip()
                 if line.startswith('WARNING'):
@@ -397,7 +397,7 @@ class Report:
                             di[message].append(object_label)
                         else:
                             di[message] = [object_label]
-            return di
+        return di
 
 
 def read_rpt_file(report_filename):

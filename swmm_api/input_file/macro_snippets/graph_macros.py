@@ -2,7 +2,8 @@ import networkx as nx
 from networkx import node_connected_component
 
 from ..inp_macros import (filter_nodes, filter_links, filter_subcatchments, reduce_curves,
-                          reduce_raingages, remove_empty_sections, )
+                          reduce_raingages, remove_empty_sections, links_dict)
+from ..inp_sections import Conduit
 from ..inp_sections.labels import CONDUITS, WEIRS, PUMPS, ORIFICES, OUTLETS
 
 
@@ -16,14 +17,8 @@ def inp_to_graph(inp):
 
     """
     g = nx.Graph()
-    for edge_kind in [CONDUITS,
-                      WEIRS,
-                      PUMPS,
-                      ORIFICES,
-                      OUTLETS]:
-        if edge_kind in inp:
-            for e in inp[edge_kind].values():
-                g.add_edge(e.FromNode, e.ToNode)
+    for link in links_dict(inp).values():  # type: Conduit
+        g.add_edge(link.FromNode, link.ToNode)
     return g
 
 
