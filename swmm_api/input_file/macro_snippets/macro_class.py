@@ -63,18 +63,18 @@ class InpMacros(InpData):
     def write(self, fast=True):
         write_inp_file(self, self.filename, fast=fast)
 
-    @classmethod
-    def from_pickle(cls, fn):
-        new = cls()
-        pkl_file = open(fn, 'rb')
-        new._data = pickle.load(pkl_file)
-        pkl_file.close()
-        return new
-
-    def to_pickle(self, fn):
-        output = open(fn, 'wb')
-        pickle.dump(self._data, output)
-        output.close()
+    # @classmethod
+    # def from_pickle(cls, fn):
+    #     new = cls()
+    #     pkl_file = open(fn, 'rb')
+    #     new._data = pickle.load(pkl_file)
+    #     pkl_file.close()
+    #     return new
+    #
+    # def to_pickle(self, fn):
+    #     output = open(fn, 'wb')
+    #     pickle.dump(self._data, output)
+    #     output.close()
 
     # ------------------------------------------------------------------------------------------------------------------
     def execute_swmm(self, rpt_dir=None, out_dir=None, init_print=False):
@@ -212,13 +212,13 @@ class InpMacros(InpData):
     def add_links_to_report(self, new_links):
         self.add_obj_to_report('LINKS', new_links)
 
-    def add_timeseries_file(self, fn):  # TODO
-        if 'Files' not in self[sec.TIMESERIES]:
-            self[sec.TIMESERIES]['Files'] = DataFrame(columns=['Type', 'Fname'])
-
-        self[sec.TIMESERIES]['Files'] = self[sec.TIMESERIES]['Files'].append(
-            Series({'Fname': '"' + fn + '.dat"'}, name=path.basename(fn)))
-        self[sec.TIMESERIES]['Files']['Type'] = 'FILE'
+    # def add_timeseries_file(self, fn):  # TODO
+    #     if 'Files' not in self[sec.TIMESERIES]:
+    #         self[sec.TIMESERIES]['Files'] = DataFrame(columns=['Type', 'Fname'])
+    #
+    #     self[sec.TIMESERIES]['Files'] = self[sec.TIMESERIES]['Files'].append(
+    #         Series({'Fname': '"' + fn + '.dat"'}, name=path.basename(fn)))
+    #     self[sec.TIMESERIES]['Files']['Type'] = 'FILE'
 
     def reduce_curves(self):
         reduce_curves(self)

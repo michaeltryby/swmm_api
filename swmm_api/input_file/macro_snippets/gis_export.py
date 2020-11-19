@@ -1,9 +1,9 @@
-from mp.helpers.check_time import Timer
-from swmm_api import read_inp_file
-from ..inp_sections.labels import *
-from ..inp_sections.map_geodata import VerticesGeo, CoordinateGeo, PolygonGeo
-from ..inp_macros import update_vertices
 from geopandas import GeoDataFrame
+
+from ..inp_macros import update_vertices
+from ..inp_reader import read_inp_file
+from ..inp_sections import labels as s
+from ..inp_sections.map_geodata import VerticesGeo, CoordinateGeo, PolygonGeo
 
 """
 {'AeronavFAA': 'r',
@@ -26,71 +26,72 @@ from geopandas import GeoDataFrame
  'SEGY': 'r',
  'SUA': 'r',
  'TopoJSON': 'r'}
+ 
+# end = '.json'
+# end = '.shp'
+# end = '.gpkg'
 """
 
 
-def convert_inp_to_geo_package(inp_fn, gpkg_fn=None, driver='GeoJSON'):
+def convert_inp_to_geo_package(inp_fn, gpkg_fn=None, driver='GPKG', label_sep='.'):
+    """
+
+    Args:
+        inp_fn (str):
+        gpkg_fn (str):
+        driver (str):
+        label_sep (str): separator for attribute label between section header and object attribute.
+            I.e. "JUNCTIONS.Elevation" with label_sep='.'
+    """
     if gpkg_fn is None:
         gpkg_fn = inp_fn.replace('.inp', '.gpkg')
 
-    end = '.gpkg'
-    end = '.shp'
-    end = '.json.zip'
+    todo_sections = ['read_inp_file', s.JUNCTIONS, s.STORAGE, s.OUTFALLS, s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS,
+                     s.SUBCATCHMENTS]
+    print(*todo_sections, sep=' | ')
 
-    gpkg_fn = gpkg_fn.replace('.gpkg', '')
-
-    todo_sections = ['read_inp_file', JUNCTIONS, STORAGE, OUTFALLS, CONDUITS, WEIRS, OUTLETS, ORIFICES, PUMPS, SUBCATCHMENTS]
-    # print(*todo_sections, sep=' | ')
-
-    inp = read_inp_file(inp_fn,
-                        custom_converter={VERTICES: VerticesGeo,
-                                          COORDINATES: CoordinateGeo,
-                                          POLYGONS: PolygonGeo})
+    inp = read_inp_file(inp_fn, custom_converter={s.VERTICES: VerticesGeo,
+                                                  s.COORDINATES: CoordinateGeo,
+                                                  s.POLYGONS: PolygonGeo})
     update_vertices(inp)
 
-    # print(f'{"done":^{len("read_inp_file")}s}', end=' | ')
+    print(f'{"done":^{len("read_inp_file")}s}', end=' | ')
 
-    sep='.'
-
-    for sec in [JUNCTIONS, STORAGE, OUTFALLS]:
+    for sec in [s.JUNCTIONS, s.STORAGE, s.OUTFALLS]:
         if sec in inp:
-            with Timer(sec):
-                df = inp[sec].frame.rename(columns=lambda c: f'{sec}{sep}{c}')
+            df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}')
 
-                if sec == STORAGE:
-                    df[f'{STORAGE}{sep}Curve'] = df[f'{STORAGE}{sep}Curve'].astype(str)
+            if sec == s.STORAGE:
+                df[f'{s.STORAGE}{label_sep}Curve'] = df[f'{s.STORAGE}{label_sep}Curve'].astype(str)
 
-                for sub_sec in [DWF, INFLOWS]:
-                    if sub_sec in inp:
-                        x = inp[sub_sec].frame.unstack(1)
-                        x.columns = [{sep}.join([sub_sec, c[1] , c[0]]) for c in x.columns]
-                        df = df.join(x)
-                df = df.join(inp[COORDINATES].geo_series)
-            with Timer(sec + ' to_file'):
-                # GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
-                GeoDataFrame(df).to_file(gpkg_fn + '_' + sec + end, driver=driver)
-        # print(f'{"done":^{len(sec)}s}', end=' | ')
+            for sub_sec in [s.DWF, s.INFLOWS]:
+                if sub_sec in inp:
+                    x = inp[sub_sec].frame.unstack(1)
+                    x.columns = [{label_sep}.join([sub_sec, c[1], c[0]]) for c in x.columns]
+                    df = df.join(x)
+            df = df.join(inp[s.COORDINATES].geo_series)
+            GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
+        print(f'{"done":^{len(sec)}s}', end=' | ')
 
-    for sec in [CONDUITS, WEIRS, OUTLETS, ORIFICES, PUMPS]:
+    for sec in [s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS]:
         if sec in inp:
-            with Timer(sec):
-                df = inp[sec].frame.rename(columns=lambda c: f'{sec}{sep}{c}').join(inp[XSECTIONS].frame.rename(columns=lambda c: f'{XSECTIONS}{sep}{c}'))
+            df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}').join(
+                inp[s.XSECTIONS].frame.rename(columns=lambda c: f'{s.XSECTIONS}{label_sep}{c}'))
 
-                if sec == OUTLETS:
-                    df[f'{OUTLETS}{sep}Curve'] = df[f'{OUTLETS}{sep}Curve'].astype(str)
+            if sec == s.OUTLETS:
+                df[f'{s.OUTLETS}{label_sep}Curve'] = df[f'{s.OUTLETS}{label_sep}Curve'].astype(str)
 
-                if LOSSES in inp:
-                    df = df.join(inp[LOSSES].frame.rename(columns=lambda c: f'{LOSSES}{sep}{c}'))
-                df = df.join(inp[VERTICES].geo_series)
-            with Timer(sec + ' to_file'):
-                # GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
-                GeoDataFrame(df).to_file(gpkg_fn + '_' + sec + end, driver=driver)
+            if s.LOSSES in inp:
+                df = df.join(inp[s.LOSSES].frame.rename(columns=lambda c: f'{s.LOSSES}{label_sep}{c}'))
+            df = df.join(inp[s.VERTICES].geo_series)
+            GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
 
-        # print(f'{"done":^{len(sec)}s}', end=' | ')
+        print(f'{"done":^{len(sec)}s}', end=' | ')
 
-    if SUBCATCHMENTS in inp:
-        with Timer(SUBCATCHMENTS):
-            GeoDataFrame(inp[SUBCATCHMENTS].frame.rename(columns=lambda c: f'{SUBCATCHMENTS}{sep}{c}').join(inp[SUBAREAS].frame.rename(columns=lambda c: f'{SUBAREAS}{sep}{c}')).join(inp[INFILTRATION].frame.rename(columns=lambda c: f'{INFILTRATION}{sep}{c}')).join(
-                inp[POLYGONS].geo_series)).to_file(gpkg_fn + '_' + SUBCATCHMENTS + end, driver=driver)#, layer=SUBCATCHMENTS)
+    if s.SUBCATCHMENTS in inp:
+        GeoDataFrame(inp[s.SUBCATCHMENTS].frame.rename(columns=lambda c: f'{s.SUBCATCHMENTS}{label_sep}{c}').join(
+            inp[s.SUBAREAS].frame.rename(columns=lambda c: f'{s.SUBAREAS}{label_sep}{c}')).join(
+            inp[s.INFILTRATION].frame.rename(columns=lambda c: f'{s.INFILTRATION}{label_sep}{c}')).join(
+            inp[s.POLYGONS].geo_series)).to_file(gpkg_fn, driver=driver, layer=s.SUBCATCHMENTS)
 
-    # print(f'{"done":^{len(SUBCATCHMENTS)}s}')
+    print(f'{"done":^{len(s.SUBCATCHMENTS)}s}')

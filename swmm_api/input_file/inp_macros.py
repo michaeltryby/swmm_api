@@ -1,5 +1,6 @@
 from collections import ChainMap
 from os import path, mkdir, listdir
+from statistics import mean
 
 import numpy as np
 
@@ -24,6 +25,8 @@ def section_from_frame(df, section_class):
     """
     create a inp-file section from an pandas DataFrame
 
+    will only work for specific sections ie. JUNCTIONS where every row is the same and no special __init__ is needed!
+
     Args:
         df (pandas.DataFrame): data
         section_class (BaseSectionObject):
@@ -37,6 +40,7 @@ def section_from_frame(df, section_class):
     # return cls.from_lines([line.split() for line in dataframe_to_inp_string(df).split('\n')], section_class)
 
 
+########################################################################################################################
 def split_inp_to_files(inp_fn, convert_sections=[], **kwargs):
     """
     spit an inp-file into the sections and write per section one file
@@ -81,6 +85,7 @@ def read_split_inp_file(inp_fn):
     return inp
 
 
+########################################################################################################################
 def combined_subcatchment_frame(inp):
     """
     combine all information of the subcatchment data-frames
@@ -92,6 +97,15 @@ def combined_subcatchment_frame(inp):
         pandas.DataFrame: combined subcatchment data
     """
     return inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
+
+
+########################################################################################################################
+def nodes_dict(inp):
+    nodes = ChainMap()
+    for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
+        if section in inp:
+            nodes.maps.append(inp[section])
+    return nodes
 
 
 def find_node(inp, node_label):
@@ -108,14 +122,6 @@ def find_node(inp, node_label):
     nodes = nodes_dict(inp)
     if node_label in nodes:
         return nodes[node_label]
-
-
-def nodes_dict(inp):
-    nodes = ChainMap()
-    for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
-        if section in inp:
-            nodes.maps.append(inp[section])
-    return nodes
 
 
 def links_dict(inp):
@@ -142,6 +148,7 @@ def find_link(inp, label):
         return links[label]
 
 
+########################################################################################################################
 def calc_slope(inp, link):
     """
     calculate the slop of a link
@@ -153,7 +160,67 @@ def calc_slope(inp, link):
     Returns:
         float: slop of the link
     """
-    return (find_node(inp, link.FromNode).Elevation - find_node(inp, link.ToNode).Elevation) / link.Length
+    nodes = nodes_dict(inp)
+    return (nodes[link.FromNode].Elevation - nodes[link.ToNode].Elevation) / link.Length
+
+
+def rel_diff(a, b):
+    return abs(a - b) / mean([a + b])
+
+"""PCSWMM Simplify network tool 
+Criteria
+
+The criteria is a list of attributes and a given tolerance for each. Attribute criteria can be toggled on or off 
+by checking the box next to the attribute. The attribute criteria are as follows:
+
+    Cross-section shapes must match exactly
+    Diameter values match within a specified percent tolerance
+    Roughness values match within a specified percent tolerance
+    Slope values match within a specified tolerance
+    Transects must match exactly
+    Shape curves must match exactly
+
+Join preference
+
+Select a preference for joining two conduits. The preference is used when two conduits are available for 
+connecting on the upstream and downstream nodes. Choose the priority for the connection to be any one of the 
+following:
+
+    shorter conduit
+    longer conduit
+    closest slope
+    upstream conduit
+    downstream conduit
+"""
+
+
+def conduits_are_equal(inp, link0, link1, diff_roughness=0.01, diff_slope=0.01, diff_height=0.01):
+    all_checks_out = True
+
+    # Roughness values match within a specified percent tolerance
+    all_checks_out &= rel_diff(link0.Roughness, link1.Roughness) < diff_roughness
+
+    # Slope values match within a specified tolerance
+    all_checks_out &= rel_diff(calc_slope(inp, link0), calc_slope(inp, link1)) < diff_slope
+
+    xs0 = inp[sec.XSECTIONS][link0.Name]  # type: CrossSection
+    xs1 = inp[sec.XSECTIONS][link1.Name]  # type: CrossSection
+
+    # Diameter values match within a specified percent tolerance (1 %)
+    all_checks_out &= rel_diff(xs0.Geom1, xs1.Geom1) < diff_height
+
+    # Cross-section shapes must match exactly
+    all_checks_out &= xs0.Shape == xs1.Shape
+
+    # Shape curves must match exactly
+    if xs0.Shape == CrossSection.SHAPES.CUSTOM:
+        all_checks_out &= xs0.Curve == xs1.Curve
+
+    # Transects must match exactly
+    elif xs0.Shape == CrossSection.SHAPES.IRREGULAR:
+        all_checks_out &= xs0.Tsect == xs1.Tsect
+
+    return all_checks_out
 
 
 def delete_node(inp, node):
@@ -230,8 +297,8 @@ def combine_conduits(inp, c1, c2, keep_first=True):
         raise EnvironmentError('Links not connected')
 
     inp[sec.VERTICES][c_new.Name] = v_new
-    inp[sec.CONDUITS].append(c_new)
-    inp[sec.XSECTIONS].append(xs_new)
+    inp[sec.CONDUITS].add_obj(c_new)
+    inp[sec.XSECTIONS].add_obj(xs_new)
     return inp
 
 
@@ -249,9 +316,9 @@ def dissolve_node(inp, node):
     if isinstance(node, str):
         node = find_node(inp, node)
     # create new section with only
-    c1 = inp[sec.CONDUITS].filter_keys([node.Name], 'ToNode')
+    c1 = inp[sec.CONDUITS].slice_section([node.Name], 'ToNode')
     if c1:
-        c2 = inp[sec.CONDUITS].filter_keys([node.Name], 'FromNode')
+        c2 = inp[sec.CONDUITS].slice_section([node.Name], 'FromNode')
         inp = combine_conduits(inp, c1, c2)
     else:
         inp = delete_node(node.Name)
@@ -290,7 +357,8 @@ def conduit_iter_over_inp(inp, start, end=None):
 
 def junction_to_storage(inp, label, *args, **kwargs):
     """
-    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to :class:`~swmm_api.input_file.inp_sections.node.Storage`
+    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to
+    :class:`~swmm_api.input_file.inp_sections.node.Storage`
     and add it to the STORAGE section
 
     Args:
@@ -302,13 +370,14 @@ def junction_to_storage(inp, label, *args, **kwargs):
     j = inp[sec.JUNCTIONS].pop(label)  # type: Junction
     if sec.STORAGE not in inp:
         inp[sec.STORAGE] = InpSection(Storage)
-    inp[sec.STORAGE].append(Storage(Name=label, Elevation=j.Elevation, MaxDepth=j.MaxDepth,
+    inp[sec.STORAGE].add_obj(Storage(Name=label, Elevation=j.Elevation, MaxDepth=j.MaxDepth,
                                     InitDepth=j.InitDepth, Apond=j.Aponded, *args, **kwargs))
 
 
 def junction_to_outfall(inp, label, *args, **kwargs):
     """
-    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to :class:`~swmm_api.input_file.inp_sections.node.Outfall`
+    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to
+    :class:`~swmm_api.input_file.inp_sections.node.Outfall`
     and add it to the OUTFALLS section
 
     Args:
@@ -320,7 +389,7 @@ def junction_to_outfall(inp, label, *args, **kwargs):
     j = inp[sec.JUNCTIONS].pop(label)  # type: Junction
     if sec.OUTFALLS not in inp:
         inp[sec.OUTFALLS] = Outfall.create_section()
-    inp[sec.OUTFALLS].append(Outfall(Name=label, Elevation=j.Elevation, *args, **kwargs))
+    inp[sec.OUTFALLS].add_obj(Outfall(Name=label, Elevation=j.Elevation, *args, **kwargs))
 
 
 def rename_node(label, new_label):
@@ -365,9 +434,11 @@ def reduce_curves(inp):
     used_curves = set()
     for section in [sec.STORAGE, sec.OUTLETS, sec.PUMPS, sec.XSECTIONS]:
         if section in inp:
-            used_curves |= {inp[section][name].Curve for name in inp[section] if
-                            isinstance(inp[section][name].Curve, str)}
-    inp[sec.CURVES] = inp[sec.CURVES].filter_keys(used_curves)
+            for name in inp[section]:
+                if isinstance(inp[section][name].Curve, str):
+                    used_curves.add(inp[section][name].Curve)
+
+    inp[sec.CURVES] = inp[sec.CURVES].slice_section(used_curves)
     return inp
 
 
@@ -382,10 +453,13 @@ def simplify_curves(curve_section, dist=0.001):
     Returns:
         InpSection[Curve]: new section
     """
-    new = Curve.create_section()
-    for label, curve in curve_section.items():
-        new[label] = Curve(curve.Name, curve.Type, points=ramer_douglas(curve_section[label].points, dist=dist))
-    return new
+    # new = Curve.create_section()
+    # for label, curve in curve_section.items():
+    #     new[label] = Curve(curve.Name, curve.Type, points=ramer_douglas(curve_section[label].points, dist=dist))
+    # return new
+    for curve in curve_section.values():  # type: Curve
+        curve.points = ramer_douglas(curve.points, dist=dist)
+    return curve_section
 
 
 def reduce_raingages(inp):
@@ -401,7 +475,7 @@ def reduce_raingages(inp):
     if sec.SUBCATCHMENTS not in inp or sec.RAINGAGES not in inp:
         return inp
     needed_raingages = {inp[sec.SUBCATCHMENTS][s].RainGage for s in inp[sec.SUBCATCHMENTS]}
-    inp[sec.RAINGAGES] = inp[sec.RAINGAGES].filter_keys(needed_raingages)
+    inp[sec.RAINGAGES] = inp[sec.RAINGAGES].slice_section(needed_raingages)
     return inp
 
 
@@ -421,16 +495,16 @@ def filter_nodes(inp, final_nodes):
                     sec.STORAGE,
                     sec.COORDINATES]:  # ignoring dividers
         if section in inp:
-            inp[section] = inp[section].filter_keys(final_nodes)
+            inp[section] = inp[section].slice_section(final_nodes)
 
     # __________________________________________
     for section in [sec.INFLOWS, sec.DWF]:
         if section in inp:
-            inp[section] = inp[section].filter_keys(final_nodes, by=IDENTIFIERS.Node)
+            inp[section] = inp[section].slice_section(final_nodes, by=IDENTIFIERS.Node)
 
     # __________________________________________
     if sec.TAGS in inp:
-        inp[sec.TAGS] = inp[sec.TAGS].filter_keys(final_nodes, which=TagsSection.TYPES.Node)
+        inp[sec.TAGS] = inp[sec.TAGS].slice_section(final_nodes, which=TagsSection.TYPES.Node)
 
     # __________________________________________
     inp = remove_empty_sections(inp)
@@ -456,17 +530,17 @@ def filter_links(inp, final_nodes):
                     sec.WEIRS,
                     sec.OUTLETS]:
         if section in inp:
-            inp[section] = inp[section].filter_keys(final_nodes, by=['FromNode', 'ToNode'])
+            inp[section] = inp[section].slice_section(final_nodes, by=['FromNode', 'ToNode'])
             final_links |= set(inp[section].keys())
 
     # __________________________________________
     for section in [sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
         if section in inp:
-            inp[section] = inp[section].filter_keys(final_links)
+            inp[section] = inp[section].slice_section(final_links)
 
     # __________________________________________
     if sec.TAGS in inp:
-        inp[sec.TAGS] = inp[sec.TAGS].filter_keys(final_links, which=TagsSection.TYPES.Link)
+        inp[sec.TAGS] = inp[sec.TAGS].slice_section(final_links, which=TagsSection.TYPES.Link)
 
     # __________________________________________
     inp = remove_empty_sections(inp)
@@ -488,18 +562,18 @@ def filter_subcatchments(inp, final_nodes):
     if sec.SUBCATCHMENTS in inp:
         sub_orig = inp[sec.SUBCATCHMENTS].copy()
         # all with an outlet to final_nodes
-        inp[sec.SUBCATCHMENTS] = inp[sec.SUBCATCHMENTS].filter_keys(final_nodes, by='Outlet')
+        inp[sec.SUBCATCHMENTS] = inp[sec.SUBCATCHMENTS].slice_section(final_nodes, by='Outlet')
         # all with an outlet to an subcatchment
-        inp[sec.SUBCATCHMENTS].update(sub_orig.filter_keys(inp[sec.SUBCATCHMENTS].keys(), by='Outlet'))
+        inp[sec.SUBCATCHMENTS].update(sub_orig.slice_section(inp[sec.SUBCATCHMENTS].keys(), by='Outlet'))
 
         # __________________________________________
         for section in [sec.SUBAREAS, sec.INFILTRATION, sec.POLYGONS]:
             if section in inp:
-                inp[section] = inp[section].filter_keys(inp[sec.SUBCATCHMENTS])
+                inp[section] = inp[section].slice_section(inp[sec.SUBCATCHMENTS])
 
         # __________________________________________
         if sec.TAGS in inp:
-            inp[sec.TAGS] = inp[sec.TAGS].filter_keys(inp[sec.SUBCATCHMENTS], which=TagsSection.TYPES.Subcatch)
+            inp[sec.TAGS] = inp[sec.TAGS].slice_section(inp[sec.SUBCATCHMENTS], which=TagsSection.TYPES.Subcatch)
 
     else:
         for section in [sec.SUBAREAS, sec.INFILTRATION, sec.POLYGONS]:
@@ -539,26 +613,39 @@ def update_vertices(inp):
     for l in links.values():  # type: Conduit # or Weir or Orifice or Pump or Outlet
         if l.Name not in inp[VERTICES]:
             object_type = inp[VERTICES]._section_object
-            inp[VERTICES].append(object_type(l.Name, vertices=list()))
+            inp[VERTICES].add_obj(object_type(l.Name, vertices=list()))
 
         v = inp[VERTICES][l.Name].vertices
         inp[VERTICES][l.Name].vertices = [coords[l.FromNode].point] + v + [coords[l.ToNode].point]
     return inp
 
 
-def reduce_vertices(inp):
+def reduce_vertices(inp, node_range=0.25):
+    """
+    remove first and last vertices to keep only inner vertices (SWMM standard)
+
+    important if data originally from GIS and export to SWMM
+
+    Args:
+        inp (InpData):
+        node_range (float): minimal distance in m from the first and last vertices to the end nodes
+
+    Returns:
+        InpData:
+    """
     links = links_dict(inp)
 
     for l in links.values():  # type: Conduit # or Weir or Orifice or Pump or Outlet
         if l.Name in inp[VERTICES]:
             v = inp[VERTICES][l.Name].vertices
             p = inp[COORDINATES][l.FromNode].point
-            if _vec2d_dist(p, v[0]) < 0.25:
+            if _vec2d_dist(p, v[0]) < node_range:
                 v = v[1:]
 
-            p = inp[COORDINATES][l.ToNode].point
-            if _vec2d_dist(p, v[-1]) < 0.25:
-                v = v[:-1]
+            if v:
+                p = inp[COORDINATES][l.ToNode].point
+                if _vec2d_dist(p, v[-1]) < node_range:
+                    v = v[:-1]
 
             inp[VERTICES][l.Name].vertices = v
     return inp
@@ -571,3 +658,18 @@ def update_inp(inp, inp_new):
         else:
             inp[sec].update(inp_new[sec])
     return inp
+
+
+def check_for_nodes(inp):
+    links = links_dict(inp)  # type: dict[str, Conduit]
+    nodes = nodes_dict(inp)  # type: dict[str, Junction]
+    for link in links.values():
+        if link.FromNode not in nodes:
+            print(link.FromNode)
+        if link.ToNode not in nodes:
+            print(link.ToNode)
+
+
+def short_status(inp):
+    for section in inp:
+        print(f'{section}: {len(inp[section])}')

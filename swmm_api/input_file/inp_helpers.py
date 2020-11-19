@@ -227,12 +227,33 @@ class InpSection(CustomDict):
 
         Args:
             item (BaseSectionObject | list[BaseSectionObject]): new objects
+
+        Warnings:
+            DeprecationWarning: to be removed !
         """
         if isinstance(item, (list, tuple)):
-            for i in item:
-                self.append(i)
+            self.add_multiple(item)
         else:
-            self[item.get(self._identifier)] = item
+            self.add_obj(item)
+
+    def add_multiple(self, items):
+        """
+        add objects to section
+
+        Args:
+            items (list[BaseSectionObject]): new objects
+        """
+        for obj in items:
+            self.add_obj(obj)
+
+    def add_obj(self, obj):
+        """
+        add object to section
+
+        Args:
+            obj (BaseSectionObject): new objects
+        """
+        self[obj.get(self._identifier)] = obj
 
     @classmethod
     def from_inp_lines(cls, lines, section_class):
@@ -306,10 +327,25 @@ class InpSection(CustomDict):
         Returns:
             pandas.DataFrame: section as table
         """
+        return self.get_dataframe(set_index=True)
+
+    def get_dataframe(self, set_index=True):
+        """convert section to a pandas data-frame
+
+       This property is used for debugging purposes and data analysis of the input data of the swmm model.
+
+       Returns:
+           pandas.DataFrame: section as table
+       """
         if not self:  # if empty
             return DataFrame()
+        df = DataFrame([i.to_dict_() for i in self.values()])
+        if set_index:
+            df = df.set_index(self._identifier)
+        return df
 
-        return DataFrame([i.to_dict_() for i in self.values()]).set_index(self._identifier)
+    def create_new_empty(self):
+        return type(self)(self._section_object)
 
     def copy(self):
         """
@@ -318,7 +354,7 @@ class InpSection(CustomDict):
         Returns:
             InpSection: copy of the section
         """
-        new = type(self)(self._section_object)
+        new = self.create_new_empty()
         # ΔTime: 18.678 s
         # new._data = deepcopy(self._data)
         # ΔTime: 2.943 s
@@ -334,15 +370,39 @@ class InpSection(CustomDict):
             by (str | list[str] |tuple[str]): attribute name of the section object to filter by
 
         Returns:
+            tuple[BaseSectionObject] | list[BaseSectionObject]: filtered objects
+        """
+
+        # working with pandas makes it x10 faster
+        if by is None:
+            filtered_keys = set(self.keys()).intersection(set(keys))
+
+        elif isinstance(by, (list, set, tuple)):
+            f = self.get_dataframe(set_index=False)
+            filtered_keys = f[f[by].isin(keys).all(axis=1)].set_index(self._identifier).index
+            # filtered_keys = (k for k in self if any(map(lambda b: self[k][b] in keys, by)))
+
+        else:
+            # filtered_keys = filter(lambda k: self[k][by] in keys, self)
+            # filtered_keys = (k for k in self if self[k][by] in keys)
+            f = self.get_dataframe(set_index=False)
+            filtered_keys = f[f[by].isin(keys)].set_index(self._identifier).index
+
+        return (self[k] for k in filtered_keys)
+
+    def slice_section(self, keys, by=None):
+        """
+        filter parts of the section with keys (identifier strings or attribute string)
+
+        Args:
+            keys (list | set): list of names to filter by (ether the identifier or the attribute of "by")
+            by (str | list[str] |tuple[str]): attribute name of the section object to filter by
+
+        Returns:
             InpSection: new filtered section
         """
-        new = type(self)(self._section_object)
-        if by is None:
-            new._data = {k: self[k] for k in set(self.keys()).intersection(keys)}
-        elif isinstance(by, (list, set, tuple)):
-            new._data = {k: self[k] for k in self.keys() if all(map(lambda b: self[k][b] in keys, by))}
-        else:
-            new._data = {k: self[k] for k in self.keys() if self[k][by] == keys}
+        new = self.create_new_empty()
+        new.add_multiple(self.filter_keys(keys, by=by))
         return new
 
 
@@ -452,7 +512,7 @@ class BaseSectionObject:
         return type(self)(**vars(self).copy())
 
     @classmethod
-    def create_section(cls, lines=None):
+    def create_section(cls, lines=None) -> InpSection:
         """
         create an object for ``.inp``-file sections with objects
 
@@ -463,7 +523,7 @@ class BaseSectionObject:
         else:
             sec = cls._section_class(cls)
             for obj in cls._convert_lines(lines):
-                sec.append(obj)
+                sec.add_obj(obj)
             return sec
 
     @classmethod

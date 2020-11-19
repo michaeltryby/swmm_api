@@ -532,7 +532,7 @@ class TagsSection(InpSectionGeneric):
                                                                                                             tag)
         return f
 
-    def filter_keys(self, keys, which):
+    def slice_section(self, keys, which):
         """which=one of TagsSection.Types"""
         new = type(self)({k: v for k, v in self.items() if k != which})
         if which in self:

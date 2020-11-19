@@ -2,7 +2,7 @@ import networkx as nx
 from networkx import node_connected_component
 
 from ..inp_macros import (filter_nodes, filter_links, filter_subcatchments, reduce_curves,
-                          reduce_raingages, remove_empty_sections, links_dict)
+                          reduce_raingages, remove_empty_sections, links_dict, nodes_dict, )
 from ..inp_sections import Conduit
 from ..inp_sections.labels import CONDUITS, WEIRS, PUMPS, ORIFICES, OUTLETS
 
@@ -16,9 +16,11 @@ def inp_to_graph(inp):
     Returns:
 
     """
-    g = nx.Graph()
+    # g = nx.Graph()
+    g = nx.DiGraph()
     for link in links_dict(inp).values():  # type: Conduit
-        g.add_edge(link.FromNode, link.ToNode)
+        g.add_node(link.FromNode)
+        g.add_edge(link.FromNode, link.ToNode, label=link.Name)
     return g
 
 
@@ -34,6 +36,24 @@ def get_path(g, start, end):
 
     """
     return list(nx.all_simple_paths(g, start, end))[0]
+
+
+def next_links(g, node):
+    for i in g.out_edges(node):
+        yield g.get_edge_data(*i)['label']
+
+
+def next_nodes(g, node):
+    return g.successors(node)
+
+
+def previous_links(g, node):
+    for i in g.in_edges(node):
+        yield g.get_edge_data(*i)['label']
+
+
+def previous_nodes(g, node):
+    return g.predecessors(node)
 
 
 def split_network(inp, keep_node, split_at_node=None, keep_split_node=True):
