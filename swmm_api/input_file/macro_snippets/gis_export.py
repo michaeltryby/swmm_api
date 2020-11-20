@@ -67,7 +67,7 @@ def convert_inp_to_geo_package(inp_fn, gpkg_fn=None, driver='GPKG', label_sep='.
             for sub_sec in [s.DWF, s.INFLOWS]:
                 if sub_sec in inp:
                     x = inp[sub_sec].frame.unstack(1)
-                    x.columns = [{label_sep}.join([sub_sec, c[1], c[0]]) for c in x.columns]
+                    x.columns = [f'{label_sep}'.join([sub_sec, c[1], c[0]]) for c in x.columns]
                     df = df.join(x)
             df = df.join(inp[s.COORDINATES].geo_series)
             GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)

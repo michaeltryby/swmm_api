@@ -93,6 +93,10 @@ class CustomDict:
     def __bool__(self):
         return bool(self._data)
 
+    @property
+    def id(self):
+        return id(self)
+
 
 ########################################################################################################################
 class InpData(CustomDict):
@@ -131,6 +135,17 @@ class InpData(CustomDict):
         """
         return self._data.__getitem__(key)
         # return super()._data.__getitem__(self, key)
+
+    def update(self, d=None, **kwargs):
+        for sec in d:
+            if sec not in self:
+                self[sec] = d[sec]
+            else:
+                if isinstance(self[sec], str):
+                    pass
+                else:
+                    self[sec].update(d[sec])
+        return self
 
     # def __getattr__(self, item):
     #     return self._data[item]
@@ -189,6 +204,9 @@ class InpSectionGeneric(dict):
         """
         return type(self)(dict.copy(self))
 
+    @property
+    def id(self):
+        return id(self)
 
 ########################################################################################################################
 class InpSection(CustomDict):
@@ -543,6 +561,9 @@ class BaseSectionObject:
         for line in lines:
             yield cls.from_inp_line(*line)
 
+    @property
+    def id(self):
+        return id(self)
 
 ########################################################################################################################
 def dataframe_to_inp_string(df):

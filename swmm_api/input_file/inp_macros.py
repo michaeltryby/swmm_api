@@ -236,18 +236,15 @@ def delete_node(inp, node):
     """
     # print('DELETE (node): ', node)
     if isinstance(node, str):
-        n = find_node(inp, node)
-    else:
-        n = node
-        node = n.Name
+        node = find_node(inp, node)
 
     for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE, sec.COORDINATES]:
-        if (section in inp) and (node in inp[section]):
-            inp[section].pop(node)
+        if (section in inp) and (node.Name in inp[section]):
+            inp[section].pop(node.Name)
 
     # delete connected links
-    for link in inp[sec.CONDUITS].keys().copy():
-        if (inp[sec.CONDUITS][link].ToNode == node) or (inp[sec.CONDUITS][link].FromNode == node):
+    for link in list(inp[sec.CONDUITS].keys()):
+        if (inp[sec.CONDUITS][link].ToNode == node.Name) or (inp[sec.CONDUITS][link].FromNode == node.Name):
             # print('DELETE (link): ', link)
             inp[sec.CONDUITS].pop(link)
             inp[sec.XSECTIONS].pop(link)
@@ -274,31 +271,37 @@ def combine_conduits(inp, c1, c2, keep_first=True):
     if isinstance(c2, str):
         c2 = inp[sec.CONDUITS][c2]
 
-    c_new = c2.copy()  # type: Conduit
-    c_new.Length += c1.Length
-
-    # vertices + Coord of middle node
-    v_new = inp[sec.VERTICES][c1.Name].vertices + inp[sec.VERTICES][c2.Name].vertices
-
-    # Loss
-    if sec.LOSSES in inp and c_new.Name in inp[sec.LOSSES]:
-        pass
-
-    xs_new = inp[sec.XSECTIONS][c2.Name]
+    if keep_first:
+        c_new = c1  # type: Conduit
+    else:
+        c_new = c2  # type: Conduit
 
     if c1.FromNode == c2.ToNode:
+        common_node = c1.FromNode
         c_new.ToNode = c1.ToNode
-        inp = delete_node(inp, c2.ToNode)
 
     elif c1.ToNode == c2.FromNode:
+        common_node = c1.ToNode
         c_new.FromNode = c1.FromNode
-        inp = delete_node(inp, c2.FromNode)
+
     else:
         raise EnvironmentError('Links not connected')
 
-    inp[sec.VERTICES][c_new.Name] = v_new
-    inp[sec.CONDUITS].add_obj(c_new)
-    inp[sec.XSECTIONS].add_obj(xs_new)
+    c_new.Length = c1.Length + c2.Length
+
+    # vertices + Coord of middle node
+    if sec.VERTICES in inp and c_new.Name in inp[sec.VERTICES]:
+        inner_point = list()
+        if sec.COORDINATES in inp and common_node in inp[sec.COORDINATES]:
+            inner_point = [inp[sec.COORDINATES][common_node].point]
+        inp[sec.VERTICES][c_new.Name].vertices = inp[sec.VERTICES][c1.Name].vertices + inner_point + inp[sec.VERTICES][c2.Name].vertices
+
+    # Loss
+    if sec.LOSSES in inp and c_new.Name in inp[sec.LOSSES]:
+        print(f'combine_conduits {c1.Name} and {c2.Name}. BUT WHAT TO DO WITH LOSSES?')
+        pass
+
+    inp = delete_node(inp, common_node)
     return inp
 
 
@@ -511,7 +514,7 @@ def filter_nodes(inp, final_nodes):
     return inp
 
 
-def filter_links(inp, final_nodes):
+def filter_links_within_nodes(inp, final_nodes):
     """
     filter links by nodes in the network
 
@@ -522,7 +525,6 @@ def filter_links(inp, final_nodes):
     Returns:
         InpData: new inp-file data
     """
-    # __________________________________________
     final_links = set()
     for section in [sec.CONDUITS,
                     sec.PUMPS,
@@ -534,6 +536,39 @@ def filter_links(inp, final_nodes):
             final_links |= set(inp[section].keys())
 
     # __________________________________________
+    inp = filter_link_components(inp, final_links)
+    # __________________________________________
+    inp = remove_empty_sections(inp)
+    return inp
+
+
+def filter_links(inp, final_links):
+    """
+    filter links by nodes in the network
+
+    Args:
+        inp (InpData): inp-file data
+        final_nodes (list | set):
+
+    Returns:
+        InpData: new inp-file data
+    """
+    for section in [sec.CONDUITS,
+                    sec.PUMPS,
+                    sec.ORIFICES,
+                    sec.WEIRS,
+                    sec.OUTLETS]:
+        if section in inp:
+            inp[section] = inp[section].slice_section(final_links)
+
+    # __________________________________________
+    inp = filter_link_components(inp, final_links)
+    # __________________________________________
+    inp = remove_empty_sections(inp)
+    return inp
+
+
+def filter_link_components(inp, final_links):
     for section in [sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
         if section in inp:
             inp[section] = inp[section].slice_section(final_links)
@@ -544,7 +579,6 @@ def filter_links(inp, final_nodes):
 
     # __________________________________________
     inp = remove_empty_sections(inp)
-
     return inp
 
 
@@ -648,15 +682,6 @@ def reduce_vertices(inp, node_range=0.25):
                     v = v[:-1]
 
             inp[VERTICES][l.Name].vertices = v
-    return inp
-
-
-def update_inp(inp, inp_new):
-    for sec in inp_new:
-        if sec not in inp:
-            inp[sec] = inp_new[sec]
-        else:
-            inp[sec].update(inp_new[sec])
     return inp
 
 
