@@ -2,5 +2,5 @@ swmmtoolbox
 numpy
 pandas
 tqdm
-#networkx
+networkx
 #fastparquet

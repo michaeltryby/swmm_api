@@ -50,6 +50,7 @@ def coordinates_to_geopandas(section):
 def geopandas_to_coordinates(data: GeoSeries) -> InpSection:
     return Coordinate.create_section(zip(data.index, data.x, data.y))
 
+
 def geopandas_to_vertices(data: GeoSeries) -> InpSection:
     # geometry mit MultiLineString deswegen v[0] mit ersten und einzigen linestring zu verwenden
     s = Vertices.create_section()

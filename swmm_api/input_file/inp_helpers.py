@@ -525,7 +525,7 @@ class BaseSectionObject:
         copy object
 
         Returns:
-            BaseSectionObject: copy of the object
+            BaseSectionObject or Child: copy of the object
         """
         return type(self)(**vars(self).copy())
 
