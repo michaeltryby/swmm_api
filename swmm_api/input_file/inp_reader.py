@@ -1,7 +1,7 @@
 import re
 from inspect import isclass, isfunction
 
-from .inp_helpers import InpSection, InpData
+from .inp_helpers import InpSection, InpData, inp_sep
 from .inp_sections.types import SECTION_TYPES, GUI_SECTIONS
 
 
@@ -35,7 +35,7 @@ def convert_section(head, lines, converter):
         else:
             raise NotImplemented()
     else:
-        return lines
+        return lines.replace(inp_sep, '').strip()
 
 
 def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_converter=None,

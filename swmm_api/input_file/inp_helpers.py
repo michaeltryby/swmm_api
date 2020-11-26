@@ -7,6 +7,8 @@ from .type_converter import type2str
 
 SWMM_VERSION = '5.1.015'
 
+inp_sep = ';;' + "_"*100
+
 
 ########################################################################################################################
 class CustomDict:
@@ -136,6 +138,10 @@ class InpData(CustomDict):
         return self._data.__getitem__(key)
         # return super()._data.__getitem__(self, key)
 
+    def __delitem__(self, key):
+        exec(f'del self.{key}')
+        self._data.__delitem__(key)
+
     def update(self, d=None, **kwargs):
         for sec in d:
             if sec not in self:
@@ -207,6 +213,7 @@ class InpSectionGeneric(dict):
     @property
     def id(self):
         return id(self)
+
 
 ########################################################################################################################
 class InpSection(CustomDict):
@@ -385,7 +392,7 @@ class InpSection(CustomDict):
 
         Args:
             keys (list | set): list of names to filter by (ether the identifier or the attribute of "by")
-            by (str | list[str] |tuple[str]): attribute name of the section object to filter by
+            by (str | list[str] | tuple[str]): attribute name of the section object to filter by
 
         Returns:
             tuple[BaseSectionObject] | list[BaseSectionObject]: filtered objects
@@ -414,7 +421,7 @@ class InpSection(CustomDict):
 
         Args:
             keys (list | set): list of names to filter by (ether the identifier or the attribute of "by")
-            by (str | list[str] |tuple[str]): attribute name of the section object to filter by
+            by (str | list[str] | tuple[str]): attribute name of the section object to filter by
 
         Returns:
             InpSection: new filtered section
@@ -564,6 +571,7 @@ class BaseSectionObject:
     @property
     def id(self):
         return id(self)
+
 
 ########################################################################################################################
 def dataframe_to_inp_string(df):

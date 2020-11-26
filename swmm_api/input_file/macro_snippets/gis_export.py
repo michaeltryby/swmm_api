@@ -1,9 +1,10 @@
 from geopandas import GeoDataFrame
 
-from ..inp_macros import update_vertices
+from ..inp_macros import update_vertices, filter_nodes, filter_links
 from ..inp_reader import read_inp_file
 from ..inp_sections import labels as s
-from ..inp_sections.map_geodata import VerticesGeo, CoordinateGeo, PolygonGeo
+from ..inp_sections.map_geodata import (VerticesGeo, CoordinateGeo, PolygonGeo, InpSectionGeo,
+                                        convert_section_to_geosection, )
 
 """
 {'AeronavFAA': 'r',
@@ -46,16 +47,24 @@ def convert_inp_to_geo_package(inp_fn, gpkg_fn=None, driver='GPKG', label_sep='.
     if gpkg_fn is None:
         gpkg_fn = inp_fn.replace('.inp', '.gpkg')
 
-    todo_sections = ['read_inp_file', s.JUNCTIONS, s.STORAGE, s.OUTFALLS, s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS,
-                     s.SUBCATCHMENTS]
-    print(*todo_sections, sep=' | ')
-
     inp = read_inp_file(inp_fn, custom_converter={s.VERTICES: VerticesGeo,
                                                   s.COORDINATES: CoordinateGeo,
                                                   s.POLYGONS: PolygonGeo})
-    update_vertices(inp)
 
-    print(f'{"done":^{len("read_inp_file")}s}', end=' | ')
+    write_geo_package(inp, gpkg_fn, driver=driver, label_sep=label_sep)
+
+
+def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
+
+    todo_sections = [s.JUNCTIONS, s.STORAGE, s.OUTFALLS, s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS,
+                     s.SUBCATCHMENTS]
+    print(*todo_sections, sep=' | ')
+
+    for sec in [s.VERTICES, s.COORDINATES, s.POLYGONS]:
+        if (sec in inp) and not isinstance(inp[sec], InpSectionGeo):
+            inp[sec] = convert_section_to_geosection(inp[sec])
+
+    update_vertices(inp)
 
     for sec in [s.JUNCTIONS, s.STORAGE, s.OUTFALLS]:
         if sec in inp:
@@ -95,3 +104,13 @@ def convert_inp_to_geo_package(inp_fn, gpkg_fn=None, driver='GPKG', label_sep='.
             inp[s.POLYGONS].geo_series)).to_file(gpkg_fn, driver=driver, layer=s.SUBCATCHMENTS)
 
     print(f'{"done":^{len(s.SUBCATCHMENTS)}s}')
+
+
+def problems_to_gis(inp, gpkg_fn, nodes=None, links=None, **kwargs):
+    if nodes is not None:
+        inp = filter_nodes(inp, nodes)
+
+    if links is not None:
+        inp = filter_links(inp, links)
+
+    write_geo_package(inp, gpkg_fn, **kwargs)

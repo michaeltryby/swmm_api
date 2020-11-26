@@ -44,88 +44,75 @@ class CrossSection(BaseSectionObject):
     _identifier =IDENTIFIERS.Link
 
     class SHAPES:
-        IRREGULAR = 'IRREGULAR'
-        CUSTOM = 'CUSTOM'
+        IRREGULAR = 'IRREGULAR'  # TransectCoordinates (Natural Channel)
+        CUSTOM = 'CUSTOM'  # Full Height, ShapeCurveCoordinates
 
-        CIRCULAR = 'CIRCULAR'
-        FORCE_MAIN = 'FORCE_MAIN'
-        FILLED_CIRCULAR = 'FILLED_CIRCULAR'
-        RECT_CLOSED = 'RECT_CLOSED'
-        RECT_OPEN = 'RECT_OPEN'
-        TRAPEZOIDAL = 'TRAPEZOIDAL'
-        TRIANGULAR = 'TRIANGULAR'
-        HORIZ_ELLIPSE = 'HORIZ_ELLIPSE'
-        VERT_ELLIPSE = 'VERT_ELLIPSE'
-        ARCH = 'ARCH'
-        PARABOLIC = 'PARABOLIC'
-        POWER = 'POWER'
-        RECT_TRIANGULAR = 'RECT_TRIANGULAR'
-        RECT_ROUND = 'RECT_ROUND'
-        MODBASKETHANDLE = 'MODBASKETHANDLE'
-        EGG = 'EGG'
-        HORSESHOE = 'HORSESHOE'
-        GOTHIC = 'GOTHIC'
-        CATENARY = 'CATENARY'
-        SEMIELLIPTICAL = 'SEMIELLIPTICAL'
-        BASKETHANDLE = 'BASKETHANDLE'
-        SEMICIRCULAR = 'SEMICIRCULAR'
+        CIRCULAR = 'CIRCULAR'  # Full Height = Diameter
+        FORCE_MAIN = 'FORCE_MAIN'  # Full Height = Diameter, Roughness
+        FILLED_CIRCULAR = 'FILLED_CIRCULAR'  # Full Height = Diameter, Filled Depth
+        RECT_CLOSED = 'RECT_CLOSED'  # Rectangular: Full Height, Top Width
+        RECT_OPEN = 'RECT_OPEN'  # Rectangular: Full Height, Top Width
+        TRAPEZOIDAL = 'TRAPEZOIDAL'  # Full Height, Base Width, Side Slopes
+        TRIANGULAR = 'TRIANGULAR'  # Full Height, Top Width
+        HORIZ_ELLIPSE = 'HORIZ_ELLIPSE'  # Full Height, Max. Width
+        VERT_ELLIPSE = 'VERT_ELLIPSE'  # Full Height, Max. Width
+        ARCH = 'ARCH'  # Size Code or Full Height, Max. Width
+        PARABOLIC = 'PARABOLIC'  # Full Height, Top Width
+        POWER = 'POWER'  # Full Height, Top Width, Exponent
+        RECT_TRIANGULAR = 'RECT_TRIANGULAR'  # Full Height, Top Width, Triangle Height
+        RECT_ROUND = 'RECT_ROUND'  # Full Height, Top Width, Bottom Radius
+        MODBASKETHANDLE = 'MODBASKETHANDLE'  # Full Height, Bottom Width, Top Radius
+        EGG = 'EGG'  # Full Height
+        HORSESHOE = 'HORSESHOE'  # Full Height Gothic Full Height
+        GOTHIC = 'GOTHIC'  # Full Height
+        CATENARY = 'CATENARY'  # Full Height
+        SEMIELLIPTICAL = 'SEMIELLIPTICAL'  # Full Height
+        BASKETHANDLE = 'BASKETHANDLE'  # Full Height
+        SEMICIRCULAR = 'SEMICIRCULAR'  # Full Height
 
-    def __init__(self, Link, **kwargs):
+    def __init__(self, Link, Shape, Geom1=0, Geom2=0, Geom3=0, Geom4=0, Barrels=1, Culvert=NaN, Tsect=None, Curve=None):
+        # in SWMM C-code function "link_readXsectParams"
         self.Link = str(Link)
-        self.Shape = None
+        self.Shape = Shape
+
         self.Geom1 = NaN
-        self.Curve = NaN
         self.Tsect = NaN
-        self.Geom2 = 0  # 0
-        self.Geom3 = 0  # 0
-        self.Geom4 = 0  # 0
-        self.Barrels = NaN  # 1
-        self.Culvert = NaN
-        # according to the c code 6 arguments are needed to not raise an error / non sense but you have to
 
-    @classmethod
-    def from_inp_line(cls, Link, Shape, *line):
-        if Shape == cls.SHAPES.IRREGULAR:
-            return CrossSectionIrregular(Link, *line)
-        elif Shape == cls.SHAPES.CUSTOM:
-            return CrossSectionCustom(Link, *line)
+        self.Geom2 = NaN
+        self.Curve = NaN
+
+        if Shape == self.SHAPES.IRREGULAR:
+            if Tsect is None:
+                Tsect = Geom1
+            self.Tsect = str(Tsect)
+        elif Shape == self.SHAPES.CUSTOM:
+            if Curve is None:
+                Curve = Geom2
+            self.Curve = str(Curve)
+            self.Geom1 = float(Geom1)
         else:
-            return CrossSectionShape(Link, Shape, *line)
+            self.Geom1 = float(Geom1)
+            self.Geom2 = float(Geom2)
 
-
-class CrossSectionShape(CrossSection):
-    def __init__(self, Link, Shape, Geom1, Geom2=0, Geom3=0, Geom4=0, Barrels=1, Culvert=NaN, **kwargs):
-        CrossSection.__init__(self, Link, **kwargs)
-        self.Shape = str(Shape)
-        self.Geom1 = float(Geom1)
-        self.Geom2 = float(Geom2)
         self.Geom3 = float(Geom3)
         self.Geom4 = float(Geom4)
         self.Barrels = int(Barrels)
-        self.Culvert = Culvert
-
-
-class CrossSectionIrregular(CrossSection):
-    """An ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect object."""
-    def __init__(self, Link, Tsect, *args, **kwargs):
-        CrossSection.__init__(self, Link, **kwargs)
-        self.Shape = CrossSection.SHAPES.IRREGULAR
-        self.Tsect = str(Tsect)
-        self.Geom1 = NaN
-
-
-class CrossSectionCustom(CrossSection):
-    """The ``CUSTOM`` shape is a closed conduit whose width versus height is described by a user-supplied Shape Curve."""
-    def __init__(self, Link, Geom1, Curve, Geom3=0, Geom4=0, Barrels=1, **kwargs):
-        CrossSection.__init__(self, Link, **kwargs)
-        self.Shape = CrossSection.SHAPES.CUSTOM
-        self.Geom1 = float(Geom1)
-        self.Curve = str(Curve)
-        self.Geom2 = NaN
-        self.Geom3 = float(Geom3)
-        self.Geom4 = float(Geom4)
+        # according to the c code 6 arguments are needed to not raise an error / non sense but you have to
         if Barrels != 1 or not isinstance(Barrels, str) and ~isnan(Barrels):
             self.Barrels = int(Barrels)
+        self.Culvert = Culvert
+
+    @classmethod
+    def Irregular(cls, Link, Tsect):
+        """An ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect
+        object."""
+        return cls(Link, CrossSection.SHAPES.IRREGULAR, Tsect)
+
+    @classmethod
+    def Custom(cls, Link, Geom1, Curve):
+        """The ``CUSTOM`` shape is a closed conduit whose width versus height is described by a user-supplied Shape
+        Curve."""
+        return cls(Link, CrossSection.SHAPES.CUSTOM, Geom1, Curve)
 
 
 class Loss(BaseSectionObject):

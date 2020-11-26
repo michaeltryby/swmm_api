@@ -287,6 +287,9 @@ class Orifice(BaseSectionObject):
 
             Name Node1 Node2 Type Offset Cd (Flap Orate)
 
+    PCSWMM-Format:
+        ``Name   From Node   To Node   Type   Offset   Qcoeff   Gated   CloseTime``
+
     Remarks:
         The geometry of an orifice’s opening must be described in the [``XSECTIONS``] section.
         The only allowable shapes are CIRCULAR and RECT_CLOSED (closed rectangular).

@@ -1,4 +1,4 @@
-from .inp_helpers import InpSection, InpSectionGeneric
+from .inp_helpers import InpSection, InpSectionGeneric, InpData, inp_sep
 from .inp_sections.labels import *
 
 sections_order = [TITLE,
@@ -59,7 +59,7 @@ def section_to_string(section, fast=True):
 
     # ----------------------
     if isinstance(section, str):  # Title
-        f += section
+        f += section.replace(inp_sep, '').strip()
 
     # ----------------------
     # elif isinstance(section, list):  # V0.1
@@ -93,7 +93,7 @@ def section_to_string(section, fast=True):
     return f
 
 
-def inp_to_string(inp, fast=True):
+def inp_to_string(inp: InpData, fast=True):
     """
     create the string of a new ``.inp``-file
 
@@ -105,19 +105,21 @@ def inp_to_string(inp, fast=True):
         str: string of input file text
     """
     f = ''
+    sep = f'\n{inp_sep}\n[{{}}]\n'
+    # sep = f'\n[{{}}]  ;;{"_" * 100}\n'
     for head in sorted(inp.keys(), key=_sort_by):
-        f += '\n' + ';;' + '_' * 100 + '\n' + '[{}]\n'.format(head)
+        f += sep.format(head)
         section_data = inp[head]
         f += section_to_string(section_data, fast=fast)
     return f
 
 
-def write_inp_file(inp, filename, fast=True):
+def write_inp_file(inp: InpData, filename, fast=True):
     """
     create/write a new ``.inp``-file
 
     Args:
-        inp (swmm_api.input_file.inp_helpers.InpData): dict-like ``.inp``-file data with several sections
+        inp (InpData): dict-like ``.inp``-file data with several sections
         filename (str): path/filename of created ``.inp``-file
         fast (bool): don't use any formatting else format as table
     """

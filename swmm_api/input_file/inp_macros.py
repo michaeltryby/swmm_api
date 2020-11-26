@@ -103,6 +103,17 @@ def combined_subcatchment_frame(inp: InpData):
 
 ########################################################################################################################
 def nodes_dict(inp: InpData):
+    """
+    get a dict of all nodes
+
+    the objects are referenced, so you can use it to modify too.
+
+    Args:
+        inp (InpData): inp-file data
+
+    Returns:
+        dict[str, Junction or Storage or Outfall]: dict of {labels: objects}
+    """
     nodes: ChainMap[str, Junction] = ChainMap()
     for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
         if section in inp:
@@ -127,6 +138,17 @@ def find_node(inp: InpData, node_label):
 
 
 def links_dict(inp: InpData):  # or Weir or Orifice or Pump or Outlet
+    """
+    get a dict of all links
+
+    the objects are referenced, so you can use it to modify too.
+
+    Args:
+        inp (InpData): inp-file data
+
+    Returns:
+        dict[str, Conduit or Weir or Orifice or Pump or Outlet]: dict of {labels: objects}
+    """
     links: ChainMap[str, Conduit] = ChainMap()
     for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
         if section in inp:
@@ -173,6 +195,14 @@ def rel_diff(a, b):
     return abs(a - b) / m
 
 
+def rel_slope_diff(inp: InpData, l0, l1):
+    nodes = nodes_dict(inp)
+    slope_res = (nodes[l0.FromNode].Elevation + l0.InOffset
+                 - (nodes[l1.ToNode].Elevation + l1.OutOffset)
+                 ) / (l0.Length + l1.Length)
+    return rel_diff(calc_slope(inp, l0), slope_res)
+
+
 """PCSWMM Simplify network tool 
 Criteria
 
@@ -199,20 +229,20 @@ following:
     downstream conduit
 """
 
-from mp.helpers.check_time import timeit
-
 
 def conduits_are_equal(inp: InpData, link0, link1, diff_roughness=0.1, diff_slope=0.1, diff_height=0.1):
     all_checks_out = True
 
     # Roughness values match within a specified percent tolerance
-    all_checks_out &= rel_diff(link0.Roughness, link1.Roughness) < diff_roughness
+    if diff_roughness is not None:
+        all_checks_out &= rel_diff(link0.Roughness, link1.Roughness) < diff_roughness
 
     xs0 = inp[sec.XSECTIONS][link0.Name]  # type: CrossSection
     xs1 = inp[sec.XSECTIONS][link1.Name]  # type: CrossSection
 
     # Diameter values match within a specified percent tolerance (1 %)
-    all_checks_out &= rel_diff(xs0.Geom1, xs1.Geom1) < diff_height
+    if diff_height is not None:
+        all_checks_out &= rel_diff(xs0.Geom1, xs1.Geom1) < diff_height
 
     # Cross-section shapes must match exactly
     all_checks_out &= xs0.Shape == xs1.Shape
@@ -226,14 +256,15 @@ def conduits_are_equal(inp: InpData, link0, link1, diff_roughness=0.1, diff_slop
         all_checks_out &= xs0.Tsect == xs1.Tsect
 
     # Slope values match within a specified tolerance
-    rel_slope_diff = rel_diff(calc_slope(inp, link0), calc_slope(inp, link1))
+    if diff_slope is not None:
+        rel_slope_diff = rel_diff(calc_slope(inp, link0), calc_slope(inp, link1))
 
-    # if rel_slope_diff < 0:
-    #     nodes = nodes_dict(inp)
-    #     print(nodes[link0.FromNode].Elevation, link0.InOffset, nodes[link0.ToNode].Elevation, link0.OutOffset)
-    #     print(nodes[link1.FromNode].Elevation, link1.InOffset, nodes[link1.ToNode].Elevation, link1.OutOffset)
-    #     print('rel_slope_diff < 0', link0, link1)
-    all_checks_out &= rel_slope_diff < diff_slope
+        # if rel_slope_diff < 0:
+        #     nodes = nodes_dict(inp)
+        #     print(nodes[link0.FromNode].Elevation, link0.InOffset, nodes[link0.ToNode].Elevation, link0.OutOffset)
+        #     print(nodes[link1.FromNode].Elevation, link1.InOffset, nodes[link1.ToNode].Elevation, link1.OutOffset)
+        #     print('rel_slope_diff < 0', link0, link1)
+        all_checks_out &= rel_slope_diff < diff_slope
 
     return all_checks_out
 
@@ -245,6 +276,7 @@ def delete_node(inp: InpData, node_label, graph: DiGraph=None):
     Args:
         inp (InpData): inp data
         node_label (str): label of node to delete
+        graph (DiGraph): networkx graph of model
 
     Returns:
         InpData: inp data
@@ -255,10 +287,14 @@ def delete_node(inp: InpData, node_label, graph: DiGraph=None):
 
     # AND delete connected links
     if graph is not None:
-        links = list(next_links(graph, node_label)) + list(previous_links(graph, node_label))  # type: List[str]
-        graph.remove_node(node_label)
+        if node_label in graph:
+            links = next_links_labels(graph, node_label) + previous_links_labels(graph, node_label)  # type: List[str]
+            graph.remove_node(node_label)
+        else:
+            links = list()
     else:
-        links = list(inp[sec.CONDUITS].filter_keys([node_label], by='FromNode')) + list(inp[sec.CONDUITS].filter_keys([node_label], by='ToNode'))  # type: List[Conduit]
+        links = list(inp[sec.CONDUITS].filter_keys([node_label], by='FromNode')) + \
+                list(inp[sec.CONDUITS].filter_keys([node_label], by='ToNode'))  # type: List[Conduit]
         links = [l.Name for l in links]  # type: List[str]
 
     for link in links:
@@ -270,6 +306,16 @@ def delete_link(inp: InpData, link):
     for s in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS, sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
         if (s in inp) and (link in inp[s]):
             inp[s].pop(link)
+
+
+def combine_vertices(inp, label1, label2):
+    common_node = links_dict(inp)[label1].ToNode
+    if sec.VERTICES in inp and label1 in inp[sec.VERTICES]:
+        new_vertices = inp[sec.VERTICES][label1].vertices
+        if sec.COORDINATES in inp and common_node in inp[sec.COORDINATES]:
+            new_vertices += [inp[sec.COORDINATES][common_node].point]
+        new_vertices += inp[sec.VERTICES][label2].vertices
+        inp[sec.VERTICES][label1].vertices = new_vertices
 
 
 def combine_conduits(inp, c1, c2, graph: DiGraph=None):
@@ -311,24 +357,70 @@ def combine_conduits(inp, c1, c2, graph: DiGraph=None):
     if graph:
         graph.add_edge(c_new.FromNode, c_new.ToNode, label=c_new.Name)
 
-    c_new.Length = c1.Length + c2.Length
+    c_new.Length = round(c1.Length + c2.Length,1)
 
     # vertices + Coord of middle node
-    if sec.VERTICES in inp and c_new.Name in inp[sec.VERTICES]:
-        new_vertices = inp[sec.VERTICES][c_first.Name].vertices
-        if sec.COORDINATES in inp and common_node in inp[sec.COORDINATES]:
-            new_vertices += [inp[sec.COORDINATES][common_node].point]
-        new_vertices += inp[sec.VERTICES][c_second.Name].vertices
-        inp[sec.VERTICES][c_new.Name].vertices = new_vertices
+    combine_vertices(inp, c_first.Name, c_second.Name)
 
     # Loss
-    if sec.LOSSES in inp and c_new.Name in inp[sec.LOSSES]:
+    if (sec.LOSSES in inp) and (c_new.Name in inp[sec.LOSSES]):
         print(f'combine_conduits {c1.Name} and {c2.Name}. BUT WHAT TO DO WITH LOSSES?')
         pass
 
     # offsets
     c_new.InOffset = c_first.InOffset
     c_new.OutOffset = c_second.OutOffset
+
+    inp = delete_node(inp, common_node, graph=graph)
+    return inp
+
+
+def combine_conduits_keep_slope(inp, c1, c2, graph: DiGraph=None):
+    nodes = nodes_dict(inp)
+    new_out_offset = - calc_slope(inp, c1) * c2.Length\
+                     + c1.OutOffset \
+                     + nodes[c1.ToNode].Elevation \
+                     - nodes[c2.ToNode].Elevation
+    combine_conduits(inp, c1, c2, graph=graph)
+    c1.OutOffset = round(new_out_offset, 2)
+
+
+def dissolve_conduit(inp, c: Conduit, graph: DiGraph=None):
+    """
+    combine the two conduits to one
+
+    Args:
+        inp (InpData): inp data
+        c1 (str | Conduit): conduit 1 to combine
+        c2 (str | Conduit): conduit 2 to combine
+        keep_first (bool): keep first (of conduit 1) cross-section; else use second (of conduit 2)
+
+    Returns:
+        InpData: inp data
+    """
+    common_node = c.FromNode
+    for c_old in list(previous_links(inp, common_node, g=graph)):
+        if graph:
+            graph.remove_edge(c_old.FromNode, c_old.ToNode)
+
+        c_new = c_old  # type: Conduit
+
+        # vertices + Coord of middle node
+        combine_vertices(inp, c_new.Name, c.Name)
+
+        c_new.ToNode = c.ToNode
+        # -------------------------
+        if graph:
+            graph.add_edge(c_new.FromNode, c_new.ToNode, label=c_new.Name)
+
+        # Loss
+        if sec.LOSSES in inp and c_new.Name in inp[sec.LOSSES]:
+            print(f'dissolve_conduit {c.Name} in {c_new.Name}. BUT WHAT TO DO WITH LOSSES?')
+
+        if isinstance(c_new, Conduit):
+            c_new.Length = round(c.Length + c_new.Length, 1)
+            # offsets
+            c_new.OutOffset = c.OutOffset
 
     inp = delete_node(inp, common_node, graph=graph)
     return inp
@@ -405,8 +497,8 @@ def conduit_iter_over_inp(inp, start, end):
 
 def junction_to_storage(inp, label, *args, **kwargs):
     """
-    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to
-    :class:`~swmm_api.input_file.inp_sections.node.Storage`
+    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to :class:`~swmm_api.input_file.inp_sections.node.Storage`
+
     and add it to the STORAGE section
 
     Args:
@@ -424,8 +516,8 @@ def junction_to_storage(inp, label, *args, **kwargs):
 
 def junction_to_outfall(inp, label, *args, **kwargs):
     """
-    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to
-    :class:`~swmm_api.input_file.inp_sections.node.Outfall`
+    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to :class:`~swmm_api.input_file.inp_sections.node.Outfall`
+
     and add it to the OUTFALLS section
 
     Args:
@@ -438,6 +530,31 @@ def junction_to_outfall(inp, label, *args, **kwargs):
     if sec.OUTFALLS not in inp:
         inp[sec.OUTFALLS] = Outfall.create_section()
     inp[sec.OUTFALLS].add_obj(Outfall(Name=label, Elevation=j.Elevation, *args, **kwargs))
+
+
+def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0):
+    """
+    convert :class:`~swmm_api.input_file.inp_sections.link.Conduit` to :class:`~swmm_api.input_file.inp_sections.link.Orifice`
+
+    and add it to the ORIFICES section
+
+    Args:
+        inp (InpData): inp-file data
+        label (str): label of the conduit
+        Type (str): orientation of orifice: either SIDE or BOTTOM.
+        Offset (float): amount that a Side Orifice’s bottom or the position of a Bottom Orifice is offset above
+            the invert of inlet node (ft or m, expressed as either a depth or as an elevation,
+            depending on the LINK_OFFSETS option setting).
+        Qcoeff (float): discharge coefficient (unitless).
+        FlapGate (bool): YES if flap gate present to prevent reverse flow, NO if not (default is NO).
+        Orate (int): time in decimal hours to open a fully closed orifice (or close a fully open one).
+                        Use 0 if the orifice can open/close instantaneously.
+    """
+    c = inp[sec.CONDUITS].pop(label)  # type: Conduit
+    if sec.ORIFICES not in inp:
+        inp[sec.ORIFICES] = Orifice.create_section()
+    inp[sec.ORIFICES].add_obj(Orifice(Name=label, FromNode=c.FromNode, ToNode=c.ToNode,
+                                      Type=Type, Offset=Offset, Qcoeff=Qcoeff, FlapGate=FlapGate, Orate=Orate))
 
 
 def rename_node(label, new_label):
@@ -736,14 +853,15 @@ def short_status(inp):
 
 
 ########################################################################################################################
-def inp_to_graph(inp):
+def inp_to_graph(inp: InpData) -> DiGraph:
     """
+    create a network of the model with the networkx package
 
     Args:
-        inp ():
+        inp (InpData): inp-file data
 
     Returns:
-
+        networkx.DiGraph: networkx graph of the model
     """
     # g = nx.Graph()
     g = DiGraph()
@@ -758,44 +876,88 @@ def get_path(g, start, end):
     return list(all_simple_paths(g, start, end))[0]
 
 
-def next_links(g, node):
+def next_links(inp, node, g=None):
+    if g is None:
+        g = inp_to_graph(inp)
+    links = links_dict(inp)
     for i in g.out_edges(node):
-        yield g.get_edge_data(*i)['label']
+        yield links[g.get_edge_data(*i)['label']]
+
+
+def next_links_labels(g, node):
+    labels = []
+    for i in g.out_edges(node):
+        labels.append(g.get_edge_data(*i)['label'])
+    return labels
 
 
 def next_nodes(g, node):
-    return g.successors(node)
+    return list(g.successors(node))
 
 
-def previous_links(g, node):
+def previous_links(inp, node, g=None):
+    if g is None:
+        g = inp_to_graph(inp)
+    links = links_dict(inp)
     for i in g.in_edges(node):
-        yield g.get_edge_data(*i)['label']
+        yield links[g.get_edge_data(*i)['label']]
+
+
+def previous_links_labels(g, node):
+    labels = []
+    for i in g.in_edges(node):
+        labels.append(g.get_edge_data(*i)['label'])
+    return labels
 
 
 def previous_nodes(g, node):
-    return g.predecessors(node)
+    return list(g.predecessors(node))
+
+
+def links_connected(inp, node, g=None):
+    if g is None:
+        g = inp_to_graph(inp)
+    links = links_dict(inp)
+    next_ = []
+    for i in g.out_edges(node):
+        next_.append(links[g.get_edge_data(*i)['label']])
+    previous_ = []
+    for i in g.in_edges(node):
+        previous_.append(links[g.get_edge_data(*i)['label']])
+    return previous_, next_
+
+
+def number_in_out(g, node):
+    return len(g.predecessors(node)), len(g.successors(node))
 
 
 ########################################################################################################################
-def split_network(inp, keep_node, split_at_node=None, keep_split_node=True):
+def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, graph=None):
     """
+    split model network at the ``split_at_node``-node and keep the part with the ``keep_node``-node.
+
+    If you don't want to keep the ``split_at_node``-node toggle ``keep_split_node`` to False
+
+    Set ``graph`` if a network-graph already exists (is faster).
 
     Args:
-        inp ():
-        keep_node ():
-        split_at_node ():
-        keep_split_node ():
+        inp (InpData): inp-file data
+        keep_node (str): label of a node in the part you want to keep
+        split_at_node (str): if you want to split the network, define the label of the node where you want to split it.
+        keep_split_node (bool): if you want to keep the ``split_at_node`` node.
+        graph (networkx.DiGraph): networkx graph of the model
 
     Returns:
-
+        InpData: filtered inp-file data
     """
-    g = inp_to_graph(inp)
+    if graph is None:
+        graph = inp_to_graph(inp)
 
     if split_at_node is not None:
-        g.remove_node(split_at_node)
-    sub = subgraph(g, node_connected_component(g, keep_node))
+        graph.remove_node(split_at_node)
+    sub = subgraph(graph, node_connected_component(graph, keep_node))
 
-    print(f'Reduced Network from {len(g.nodes)} nodes to {len(sub.nodes)} nodes.')
+    print(f'Reduced Network from {len(graph.nodes)} nodes to {len(sub.nodes)} nodes.')
 
     final_nodes = list(sub.nodes)
     if split_at_node is not None and keep_split_node:

@@ -2,7 +2,7 @@ from .generic_section import (OptionSection, EvaporationSection, TemperatureSect
                               MapSection, )
 
 from .link import Conduit, Pump, Orifice, Weir, Outlet
-from .link_component import CrossSectionShape, CrossSection, CrossSectionCustom, CrossSectionIrregular, Loss, Vertices
+from .link_component import CrossSection, Loss, Vertices
 
 from .node import Junction, Storage, Outfall
 from .node_component import DryWeatherFlow, Inflow, Coordinate

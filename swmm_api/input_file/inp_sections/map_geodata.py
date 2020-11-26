@@ -1,7 +1,5 @@
-import numpy as np
 import shapely.geometry as sh
 from geopandas import GeoSeries
-from pandas import DataFrame
 
 from . import Conduit, Vertices, Coordinate, Polygon
 from .labels import CONDUITS, VERTICES, COORDINATES
@@ -43,19 +41,30 @@ class PolygonGeo(Polygon):
         return sh.Polygon(self.polygon)
 
 
+def convert_section_to_geosection(section: InpSection) -> InpSectionGeo:
+    di = {Coordinate: CoordinateGeo,
+          Vertices: VerticesGeo,
+          Polygon: PolygonGeo}
+    old_type = section._section_object
+    new_type = di[old_type]
+    new = new_type.create_section()
+    new._data = {k: new_type(**vars(section[k])) for k in section}
+    return new
+
+
 def coordinates_to_geopandas(section):
     return GeoSeries({l: sh.Point(c.point) for l, c in section.items()}, crs="EPSG:32633")
 
 
-def geopandas_to_coordinates(data: GeoSeries) -> InpSection:
-    return Coordinate.create_section(zip(data.index, data.x, data.y))
+def geopandas_to_coordinates(data: GeoSeries) -> InpSectionGeo:
+    return CoordinateGeo.create_section(zip(data.index, data.x, data.y))
 
 
-def geopandas_to_vertices(data: GeoSeries) -> InpSection:
+def geopandas_to_vertices(data: GeoSeries) -> InpSectionGeo:
     # geometry mit MultiLineString deswegen v[0] mit ersten und einzigen linestring zu verwenden
-    s = Vertices.create_section()
+    s = VerticesGeo.create_section()
     # s.update({i: Vertices(i, v) for i, v in zip(data.index, map(lambda i: list(i.coords), data.values))})
-    s.update({i: Vertices(i, list(v.coords)) for i, v in data.to_dict().items()})
+    s.add_multiple(s._section_object(i, list(v.coords)) for i, v in data.to_dict().items())
     return s
 
 
