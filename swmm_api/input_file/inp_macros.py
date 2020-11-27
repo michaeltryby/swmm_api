@@ -374,8 +374,8 @@ def combine_conduits(inp, c1, c2, graph: DiGraph=None):
         print(f'combine_conduits {c1.Name} and {c2.Name}. BUT WHAT TO DO WITH LOSSES?')
         pass
 
-    inp = delete_node(inp, common_node, graph=graph)
-    return inp
+    delete_node(inp, common_node, graph=graph)
+    return c_new
 
 
 def combine_conduits_keep_slope(inp, c1, c2, graph: DiGraph=None):
@@ -384,8 +384,9 @@ def combine_conduits_keep_slope(inp, c1, c2, graph: DiGraph=None):
                      + c1.OutOffset \
                      + nodes[c1.ToNode].Elevation \
                      - nodes[c2.ToNode].Elevation
-    combine_conduits(inp, c1, c2, graph=graph)
+    c1 = combine_conduits(inp, c1, c2, graph=graph)
     c1.OutOffset = round(new_out_offset, 2)
+    return c1
 
 
 def dissolve_conduit(inp, c: Conduit, graph: DiGraph=None):
@@ -426,7 +427,6 @@ def dissolve_conduit(inp, c: Conduit, graph: DiGraph=None):
             c_new.OutOffset = c.OutOffset
 
     inp = delete_node(inp, common_node, graph=graph)
-    return inp
 
 
 # def dissolve_node(inp, node):
