@@ -83,17 +83,47 @@ Each section has a specific type, which can be seen under:
     Control
     Curve
     Timeseries
+    Tag
 
 
 Generic Sections
 ^^^^^^^^^^^^^^^^
 
+.. currentmodule:: swmm_api.input_file.inp_sections.generic_section
+
+.. rubric:: Overview
+
+.. autosummary::
+    OptionSection
+    ReportSection
+    EvaporationSection
+    TemperatureSection
+    MapSection
+    TagsSection
+
 .. automodule:: swmm_api.input_file.inp_sections.generic_section
     :members:
     :no-undoc-members:
 
+
 Node Sections
 ^^^^^^^^^^^^^
+
+.. currentmodule:: swmm_api.input_file.inp_sections.node
+
+.. rubric:: Overview
+
+.. autosummary::
+    Junction
+    Storage
+    Outfall
+
+.. currentmodule:: swmm_api.input_file.inp_sections.node_component
+
+.. autosummary::
+    DryWeatherFlow
+    Inflow
+    Coordinate
 
 .. automodule:: swmm_api.input_file.inp_sections.node
     :members:
@@ -106,6 +136,24 @@ Node Sections
 Link Sections
 ^^^^^^^^^^^^^
 
+.. currentmodule:: swmm_api.input_file.inp_sections.link
+
+.. rubric:: Overview
+
+.. autosummary::
+    Conduit
+    Weir
+    Outlet
+    Orifice
+    Pump
+
+.. currentmodule:: swmm_api.input_file.inp_sections.link_component
+
+.. autosummary::
+    CrossSection
+    Loss
+    Vertices
+
 .. automodule:: swmm_api.input_file.inp_sections.link
     :members:
     :no-undoc-members:
@@ -117,6 +165,20 @@ Link Sections
 Subcatchment Sections
 ^^^^^^^^^^^^^^^^^^^^^
 
+.. currentmodule:: swmm_api.input_file.inp_sections.subcatch
+
+.. rubric:: Overview
+
+.. autosummary::
+    SubCatchment
+    SubArea
+    Infiltration
+    InfiltrationHorton
+    InfiltrationGreenAmpt
+    InfiltrationCurveNumber
+    Polygon
+    Loading
+
 .. automodule:: swmm_api.input_file.inp_sections.subcatch
     :members:
     :no-undoc-members:
@@ -124,6 +186,21 @@ Subcatchment Sections
 
 Other Object-based Sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. currentmodule:: swmm_api.input_file.inp_sections.others
+
+.. rubric:: Overview
+
+.. autosummary::
+    RainGage
+    Symbol
+    Pattern
+    Pollutant
+    Transect
+    Control
+    Curve
+    Timeseries
+    Tag
 
 .. automodule:: swmm_api.input_file.inp_sections.others
     :members:

@@ -206,5 +206,6 @@ intersphinx_mapping = {'https://docs.python.org/3/': None,
                        # 'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
                        # 'matplotlib': ('http://matplotlib.sourceforge.net/', None),
                        # 'sympy': ('https://docs.sympy.org/latest/', None),
-                       'sympy': ('https://docs.sympy.org/latest/', 'https://docs.sympy.org/latest/objects.inv')
+                       'sympy': ('https://docs.sympy.org/latest/', 'https://docs.sympy.org/latest/objects.inv'),
+                       'networkx': ('https://networkx.org/documentation/stable/', 'https://networkx.org/documentation/stable/objects.inv')
                        }

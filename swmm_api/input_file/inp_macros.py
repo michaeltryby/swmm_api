@@ -347,6 +347,11 @@ def combine_conduits(inp, c1, c2, graph: DiGraph=None):
         c_second = c2.copy()  # type: Conduit
     else:
         raise EnvironmentError('Links not connected')
+
+    # -------------------------
+    # vertices + Coord of middle node
+    combine_vertices(inp, c_first.Name, c_second.Name)
+
     # -------------------------
     c_new = c1  # type: Conduit
     # -------------------------
@@ -357,19 +362,17 @@ def combine_conduits(inp, c1, c2, graph: DiGraph=None):
     if graph:
         graph.add_edge(c_new.FromNode, c_new.ToNode, label=c_new.Name)
 
-    c_new.Length = round(c1.Length + c2.Length,1)
+    if isinstance(c_new, Conduit):
+        c_new.Length = round(c1.Length + c2.Length, 1)
 
-    # vertices + Coord of middle node
-    combine_vertices(inp, c_first.Name, c_second.Name)
+        # offsets
+        c_new.InOffset = c_first.InOffset
+        c_new.OutOffset = c_second.OutOffset
 
     # Loss
     if (sec.LOSSES in inp) and (c_new.Name in inp[sec.LOSSES]):
         print(f'combine_conduits {c1.Name} and {c2.Name}. BUT WHAT TO DO WITH LOSSES?')
         pass
-
-    # offsets
-    c_new.InOffset = c_first.InOffset
-    c_new.OutOffset = c_second.OutOffset
 
     inp = delete_node(inp, common_node, graph=graph)
     return inp
@@ -983,3 +986,13 @@ def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, grap
     inp = reduce_raingages(inp)
     inp = remove_empty_sections(inp)
     return inp
+
+
+def get_network_forks(inp):
+    # pd.DataFrame.from_dict(forks, orient='index')
+    g = inp_to_graph(inp)
+    nodes = nodes_dict(inp)
+    forks = dict()
+    for n in nodes:
+        forks[n] = number_in_out(g, n)
+    return forks
