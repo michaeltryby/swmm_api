@@ -151,7 +151,7 @@ class InpData(CustomDict):
                     pass
                 else:
                     self[sec].update(d[sec])
-        return self
+        # return self
 
     # def __getattr__(self, item):
     #     return self._data[item]

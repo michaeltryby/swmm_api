@@ -7,3 +7,5 @@ class IDENTIFIERS:
     Link = 'Link'
 
     Gage = 'Gage'
+
+    Constituent = 'Constituent'

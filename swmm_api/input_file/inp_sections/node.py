@@ -76,8 +76,11 @@ class Junction(BaseSectionObject):
 
             Name Elev (Ymax Y0 Ysur Apond)
 
-    Format-PC-SWMM:
-        ``Name  Elevation MaxDepth InitDepth SurDepth Aponded``
+    Format-PCSWMM:
+        ``Name  InvertElev  MaxDepth  InitDepth  SurchargeDepth  PondedArea``
+
+    Format-SWMM-GUI:
+        ``Name  Elevation  MaxDepth  InitDepth  SurDepth  Aponded``
 
     Remarks:
         If Ymax is 0 then SWMM sets the maximum depth equal to the distance
@@ -132,7 +135,10 @@ class Storage(BaseSectionObject):
             Name Elev Ymax Y0 FUNCTIONAL A1 A2 A0 (Apond Fevap Psi Ksat IMD)
 
     Format-PCSWMM:
-        ``Name Elev. MaxDepth InitDepth Shape Curve-Name/Params N/A Fevap Psi Ksat IMD``
+        ``Name Elev MaxDepth InitDepth Shape CurveName/Params N/A Fevap Psi Ksat IMD``
+
+    Format-SWMM-GUI:
+        ``Name  InvertElev  MaxDepth  InitDepth  StorageCurve  CurveParams  EvapFrac  InfiltrationParameters``
 
     Remarks:
         A1, A2, and A0 are used in the following expression that relates surface area (ft2 or m2) to water depth
@@ -301,7 +307,10 @@ class Outfall(BaseSectionObject):
             Name Elev TIMESERIES Tseries (Gated) (RouteTo)
 
     Formats-PCSWMM:
-        ``Name Elevation Type Data Gated Route-To``
+        ``Name  InvertElev  OutfallType  Stage/Table/TimeSeries  TideGate RouteTo``
+
+    Format-SWMM-GUI:
+        ``Name Elevation Type StageData Gated RouteTo``
 
     Args:
         Name (str): name assigned to outfall node.

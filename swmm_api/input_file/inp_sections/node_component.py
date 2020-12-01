@@ -16,6 +16,12 @@ class DryWeatherFlow(BaseSectionObject):
 
             Node Type Base (Pat1 Pat2 Pat3 Pat4)
 
+    Formats-PCSWMM:
+        ``Node Parameter AverageValue TimePatterns``
+
+    Formats-SWMM-GUI:
+        ``Node Constituent Baseline Patterns``
+
     Remarks:
         Pat1, Pat2, etc.
             names of up to four time patterns appearing in the [``PATTERNS``] section.
@@ -27,32 +33,39 @@ class DryWeatherFlow(BaseSectionObject):
 
     Args:
         Node (str): name of node where dry weather flow enters.
-        kind (str): keyword ``FLOW`` for flow or pollutant name for quality constituent. ``Type``
+        Constituent (str): keyword ``FLOW`` for flow or pollutant name for quality constituent. ``Type``
         Base (float): average baseline value for corresponding constituent (flow or concentration units).
         pattern1 (str, Optional): i.e.: monthly-pattern ``Pat1``
         pattern2 (str, Optional): i.e.: daily-pattern ``Pat2``
         pattern3 (str, Optional): i.e.: hourly-pattern
         pattern4 (str, Optional): i.e.: weekend-hourly-pattern
-
-    Attributes:
-        kind (str): keyword ``FLOW`` for flow or pollutant name for quality constituent. ``Type``
-        Base (float): average baseline value for corresponding constituent (flow or concentration units).
-        pattern1 (str, Optional): i.e.: monthly-pattern ``Pat1``
-        pattern2 (str, Optional): i.e.: daily-pattern ``Pat2``
-        pattern3 (str, Optional): i.e.: hourly-pattern
     """
-    _identifier = [IDENTIFIERS.Node, 'kind']
+    _identifier = [IDENTIFIERS.Node, IDENTIFIERS.Constituent]
 
-    def __init__(self, Node, kind, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN, *patternx):
-        self.Node = str(Node)
-        """str: name of node where dry weather flow enters."""
-        self.kind = kind
-        self.Base = Base
-        self.pattern1 = pattern1
-        self.pattern2 = pattern2
-        self.pattern3 = pattern3
-        self.pattern4 = pattern4
-        """str, Optional: i.e. weekend-hourly-pattern"""
+    class TYPES:
+        FLOW = 'FLOW'
+
+    def __init__(self, Node, Constituent, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN, *patternx):
+        self.Node: str = str(Node)
+        """name of node where dry weather flow enters."""
+
+        self.Constituent: str = Constituent
+        """keyword ``FLOW`` for flow or pollutant name for quality constituent. ``Type``"""
+
+        self.Base: float = Base
+        """average baseline value for corresponding constituent (flow or concentration units)."""
+
+        self.pattern1: str = pattern1
+        """i.e.: monthly-pattern ``Pat1``"""
+
+        self.pattern2: str = pattern2
+        """i.e.: daily-pattern ``Pat2``"""
+
+        self.pattern3: str = pattern3
+        """i.e.: hourly-pattern"""
+
+        self.pattern4: str = pattern4
+        """i.e. weekend-hourly-pattern"""
 
 
 class Inflow(BaseSectionObject):
@@ -69,6 +82,9 @@ class Inflow(BaseSectionObject):
             Node Pollut Tseries  (Type (Mfactor Sfactor Base Pat))
 
     Formats-PCSWMM:
+        ``Node Parameter TimeSeries ParamType UnitsFactor ScaleFactor BaselineValue BaselinePattern``
+
+    Formats-SWMM-GUI:
         ``Node Constituent TimeSeries Type Mfactor Sfactor Baseline Pattern``
 
     Remarks:
@@ -111,10 +127,12 @@ class Inflow(BaseSectionObject):
         Baseline (float): constant baseline value added to the time series value (default is 0.0). ``Base``
         Pattern (str): name of optional time pattern in [PATTERNS] section used to adjust the baseline value on a periodic basis. ``Pat``
     """
-    _identifier = [IDENTIFIERS.Node, 'Constituent']
+    _identifier = [IDENTIFIERS.Node, IDENTIFIERS.Constituent]
 
     class TYPES:
         FLOW = 'FLOW'
+        CONCEN = 'CONCEN'
+        MASS = 'MASS'
 
     def __init__(self, Node, Constituent, TimeSeries=None, Type=TYPES.FLOW, Mfactor=1.0, Sfactor=1.0, Baseline=0.,
                  Pattern=NaN):

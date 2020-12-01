@@ -130,6 +130,9 @@ class Loss(BaseSectionObject):
     Format-PCSWMM:
         ``Link Inlet Outlet Average FlapGate SeepageRate``
 
+    Formats-SWMM-GUI:
+        ``Link  Kentry  Kexit  Kavg  FlapGate  Seepage``
+
     Remarks:
         Minor losses are only computed for the Dynamic Wave flow routing option (see
         [OPTIONS] section). They are computed as Kv 2 /2g where K = minor loss coefficient, v

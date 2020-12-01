@@ -18,6 +18,9 @@ class Conduit(BaseSectionObject):
             Name  Node1  Node2  Length  N  Z1  Z2  (Q0  Qmax)
 
     Format-PCSWMM:
+        ``Name InletNode OutletNode Length ManningN InletOffset OutletOffset InitFlow MaxFlow``
+
+    Format-SWMM-GUI:
         ``Name FromNode ToNode Length Roughness InOffset OutOffset InitFlow MaxFlow``
 
     Remarks:
@@ -77,7 +80,10 @@ class Weir(BaseSectionObject):
 
             Name Node1 Node2 Type CrestHt Cd (Gated EC Cd2 Sur (Width Surface))
 
-    PC-SWMM Format:
+    Format-PCSWMM:
+        ``Name InletNode OutletNode WeirType CrestHeight DischCoeff FlapGate EndCon EndCoeff Surcharge RoadWidth RoadSurf``
+
+    Format-SWMM-GUI:
         ``Name FromNode ToNode Type CrestHt Qcoeff Gated EndCon EndCoeff Surcharge RoadWidth RoadSurf``
 
     Remarks:
@@ -177,9 +183,9 @@ class Outlet(BaseSectionObject):
     Section: [**OUTLETS**]
 
     Purpose:
-        Identifies each outlet flow control device of the drainage system. These devices are
-        used to model outflows from storage units or flow diversions that have a user-defined
-        relation between flow rate and water depth.
+        Identifies each outlet flow control device of the drainage system.
+        These devices are used to model outflows from storage units or flow diversions
+        that have a user-defined relation between flow rate and water depth.
 
     Formats:
         ::
@@ -189,8 +195,11 @@ class Outlet(BaseSectionObject):
             Name Node1 Node2 Offset FUNCTIONAL/DEPTH C1 C2 (Gated)
             Name Node1 Node2 Offset FUNCTIONAL/HEAD C1 C2 (Gated)
 
-    PC-SWMM-Format:
-        ``Name Inlet-Node Outlet-Node Outflow-Height Outlet-Type Qcoeff/QTable Qexpon Flap-Gate``
+    Format-PCSWMM:
+        ``Name InletNode OutletNode OutflowHeight OutletType Qcoeff/QTable Qexpon FlapGate``
+
+    Format-SWMM-GUI:
+        ``Name FromNode ToNode Offset Type QTable/Qcoeff Qexpon Gated``
 
     Args:
         Name (str): name assigned to outlet link.
@@ -287,8 +296,11 @@ class Orifice(BaseSectionObject):
 
             Name Node1 Node2 Type Offset Cd (Flap Orate)
 
-    PCSWMM-Format:
-        ``Name   From Node   To Node   Type   Offset   Qcoeff   Gated   CloseTime``
+    Format-PCSWMM:
+        ``Name  InletNode  OutletNode  OrificeType  CrestHeight  DischCoeff  FlapGate  Open/CloseTime``
+
+    Format-SWMM-GUI:
+        ``Name  FromNode  ToNode  Type  Offset  Qcoeff  Gated  CloseTime``
 
     Remarks:
         The geometry of an orifice’s opening must be described in the [``XSECTIONS``] section.
@@ -350,7 +362,10 @@ class Pump(BaseSectionObject):
             Name Node1 Node2 Pcurve (Status Startup Shutoff)
 
     Format-PCSWMM:
-        ``Name  Inlet-Node  Outlet-Node  Pump-Curve  Init.-Status  Startup-Depth  Shutoff-Depth``
+        ``Name  InletNode  OutletNode  PumpCurve  InitStatus  StartupDepth  ShutoffDepth``
+
+    Format-SWMM-GUI:
+        ``Name  FromNode  ToNode  PumpCurve  Status  Sartup  Shutoff``
 
     Args:
         Name (str): name assigned to pump link.

@@ -269,7 +269,7 @@ def conduits_are_equal(inp: InpData, link0, link1, diff_roughness=0.1, diff_slop
     return all_checks_out
 
 
-def delete_node(inp: InpData, node_label, graph: DiGraph=None):
+def delete_node(inp: InpData, node_label, graph: DiGraph=None, alt_node=None):
     """
     delete node in inp data
 
@@ -299,7 +299,41 @@ def delete_node(inp: InpData, node_label, graph: DiGraph=None):
 
     for link in links:
         delete_link(inp, link)
+
+    if alt_node is not None:
+        move_flows(inp, node_label, alt_node)
+
     return inp
+
+
+def move_flows(inp, from_node, to_node):
+    for section in (sec.INFLOWS, sec.DWF):
+        if section not in inp:
+            continue
+        for t in inp[section].get_dataframe(set_index=False).Constituent.unique():
+            index_old = (from_node, t)
+            if index_old in inp[section]:
+                index_new = (to_node, t)
+
+                if section == sec.DWF:
+                    old = inp[section].pop(index_old)
+                    if index_new in inp[section]:
+                        new = inp[section][index_new]
+                        new.Base += old.Base
+
+                        # if not all([old[p] == new[p] for p in ['pattern1', 'pattern2', 'pattern3', 'pattern4']]):
+                        #     print(f'WARNING: move_flows  from "{from_node}" to "{to_node}". DWF patterns don\'t match!')
+
+                    else:
+                        inp[section][index_new] = old
+                        inp[section][index_new].Node = to_node
+
+                elif index_new in inp[section]:
+                    print(f'WARNING: move_flows  from "{from_node}" to "{to_node}". Already Exists!')
+
+                else:
+                    inp[section][index_new] = inp[section].pop(index_old)
+                    inp[section][index_new].Node = to_node
 
 
 def delete_link(inp: InpData, link):
@@ -374,7 +408,7 @@ def combine_conduits(inp, c1, c2, graph: DiGraph=None):
         print(f'combine_conduits {c1.Name} and {c2.Name}. BUT WHAT TO DO WITH LOSSES?')
         pass
 
-    delete_node(inp, common_node, graph=graph)
+    delete_node(inp, common_node, graph=graph, alt_node=c_new.FromNode)
     return c_new
 
 
@@ -426,7 +460,7 @@ def dissolve_conduit(inp, c: Conduit, graph: DiGraph=None):
             # offsets
             c_new.OutOffset = c.OutOffset
 
-    inp = delete_node(inp, common_node, graph=graph)
+    delete_node(inp, common_node, graph=graph, alt_node=c.ToNode)
 
 
 # def dissolve_node(inp, node):
