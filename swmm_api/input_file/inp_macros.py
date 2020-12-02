@@ -306,11 +306,13 @@ def delete_node(inp: InpData, node_label, graph: DiGraph=None, alt_node=None):
     return inp
 
 
-def move_flows(inp, from_node, to_node):
+def move_flows(inp, from_node, to_node, only_Constituent=None):
     for section in (sec.INFLOWS, sec.DWF):
         if section not in inp:
             continue
-        for t in inp[section].get_dataframe(set_index=False).Constituent.unique():
+        if only_Constituent is None:
+            only_Constituent = [DryWeatherFlow.TYPES.FLOW]
+        for t in only_Constituent:
             index_old = (from_node, t)
             if index_old in inp[section]:
                 index_new = (to_node, t)
