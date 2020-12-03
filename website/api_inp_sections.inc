@@ -22,7 +22,6 @@ Each section has a specific type, which can be seen under:
     ReportSection
     EvaporationSection
     TemperatureSection
-    TagsSection
     MapSection
 
 .. currentmodule:: swmm_api.input_file.inp_sections.node
@@ -99,7 +98,6 @@ Generic Sections
     EvaporationSection
     TemperatureSection
     MapSection
-    TagsSection
 
 .. automodule:: swmm_api.input_file.inp_sections.generic_section
     :members:

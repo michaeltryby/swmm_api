@@ -708,7 +708,7 @@ def filter_nodes(inp, final_nodes):
 
     # __________________________________________
     if sec.TAGS in inp:
-        inp[sec.TAGS] = inp[sec.TAGS].slice_section(final_nodes, which=TagsSection.TYPES.Node)
+        inp[sec.TAGS] = inp[sec.TAGS].slice_section(((Tag.TYPES.Node, k) for k in final_nodes))
 
     # __________________________________________
     inp = remove_empty_sections(inp)
@@ -776,7 +776,7 @@ def filter_link_components(inp, final_links):
 
     # __________________________________________
     if sec.TAGS in inp:
-        inp[sec.TAGS] = inp[sec.TAGS].slice_section(final_links, which=TagsSection.TYPES.Link)
+        inp[sec.TAGS] = inp[sec.TAGS].slice_section(((Tag.TYPES.Link, k) for k in final_links))
 
     # __________________________________________
     inp = remove_empty_sections(inp)
@@ -808,15 +808,15 @@ def filter_subcatchments(inp, final_nodes):
 
         # __________________________________________
         if sec.TAGS in inp:
-            inp[sec.TAGS] = inp[sec.TAGS].slice_section(inp[sec.SUBCATCHMENTS], which=TagsSection.TYPES.Subcatch)
+            inp[sec.TAGS] = inp[sec.TAGS].slice_section(((Tag.TYPES.Subcatch, k) for k in inp[sec.SUBCATCHMENTS]))
 
     else:
         for section in [sec.SUBAREAS, sec.INFILTRATION, sec.POLYGONS]:
             if section in inp:
                 del inp[section]
 
-        if sec.TAGS in inp and TagsSection.TYPES.Subcatch in inp[sec.TAGS]:
-            del inp[sec.TAGS][TagsSection.TYPES.Subcatch]
+        if sec.TAGS in inp:
+            inp[sec.TAGS] = inp[sec.TAGS].slice_section([Tag.TYPES.Node, Tag.TYPES.Link], by='kind')
 
     # __________________________________________
     inp = remove_empty_sections(inp)

@@ -9,9 +9,6 @@ SECTION_TYPES = {
     TEMPERATURE: TemperatureSection,
     REPORT: ReportSection,
     # -----
-    # something different
-    TAGS: TagsSection,
-    # -----
     # GUI data
     COORDINATES: Coordinate,
     VERTICES: Vertices,
@@ -49,6 +46,7 @@ SECTION_TYPES = {
     CONTROLS: Control,
     CURVES: Curve,
     TIMESERIES: Timeseries,
+    TAGS: Tag,
 }
 """objects or section class for a section in the inp-file"""
 

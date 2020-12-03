@@ -217,7 +217,7 @@ class Storage(BaseSectionObject):
         FUNCTIONAL = 'FUNCTIONAL'
 
     def __init__(self, Name: str, Elevation: float, MaxDepth: float, InitDepth: float, Type: str, *args, Curve=None,
-                 Apond: float=0, Fevap: float=0, Psi: float=NaN, Ksat: float=NaN, IMD: float=NaN):
+                 Apond: float = 0, Fevap: float=0, Psi: float=NaN, Ksat: float=NaN, IMD: float=NaN):
         self.Name = str(Name)
         self.Elevation = float(Elevation)
         self.MaxDepth = float(MaxDepth)
@@ -307,10 +307,10 @@ class Outfall(BaseSectionObject):
             Name Elev TIMESERIES Tseries (Gated) (RouteTo)
 
     Formats-PCSWMM:
-        ``Name  InvertElev  OutfallType  Stage/Table/TimeSeries  TideGate RouteTo``
+        ``Name  InvertElev  OutfallType  Stage/Table/TimeSeries  TideGate  RouteTo``
 
     Format-SWMM-GUI:
-        ``Name Elevation Type StageData Gated RouteTo``
+        ``Name  Elevation  Type  StageData  Gated  RouteTo``
 
     Args:
         Name (str): name assigned to outfall node.
@@ -324,7 +324,7 @@ class Outfall(BaseSectionObject):
             - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies with time.  for ``TIMESERIES``-Type
 
         FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
-        RouteTo (str, Optional): optional name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
+        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
 
     Attributes:
         Name (str): name assigned to outfall node.
@@ -337,7 +337,7 @@ class Outfall(BaseSectionObject):
             - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies with time.  for ``TIMESERIES``-Type
 
         FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
-        RouteTo (str, Optional): optional name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
+        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
     """
     _identifier = IDENTIFIERS.Name
 
@@ -352,6 +352,7 @@ class Outfall(BaseSectionObject):
         self.Name = str(Name)
         self.Elevation = float(Elevation)
         self.Type = Type
+        self.Data = NaN
 
         if args:
             if Type in [Outfall.TYPES.FIXED,
@@ -375,7 +376,6 @@ class Outfall(BaseSectionObject):
             RouteTo (str): optional name of a subcatchment that receives the outfall's discharge.
                            The default is not to route the outfall’s discharge.
         """
-        self.Data = NaN
         self.FlapGate = to_bool(Gated)
         self.RouteTo = RouteTo
 

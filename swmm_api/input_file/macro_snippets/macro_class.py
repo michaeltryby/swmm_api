@@ -174,11 +174,6 @@ class InpMacros(InpData):
         self[sec.OPTIONS]['DRY_STEP'] = new_step
 
     def activate_report(self, input=False, continuity=True, flowstats=True, controls=False):
-        # r = self[S.REPORT]  # type: ReportSection
-        # r.INPUT = input
-        # r.CONTINUITY = continuity
-        # r.FLOWSTATS = flowstats
-        # r.CONTROLS = controls
         self[sec.REPORT]['INPUT'] = input
         self[sec.REPORT]['CONTINUITY'] = continuity
         self[sec.REPORT]['FLOWSTATS'] = flowstats

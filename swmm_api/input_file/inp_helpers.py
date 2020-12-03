@@ -31,28 +31,6 @@ class CustomDict:
 
     def __setitem__(self, key, item):
         self._data.__setitem__(key, item)
-        # TODO: 3x slower
-        # try except is even slower
-        # for debugging
-
-        # try:
-        #     exec(f'self.{key} = item')
-        # except (SyntaxError, AttributeError):
-        #     pass
-
-        # key_ = key
-        # if isinstance(key_, tuple):
-        #     key_ = '_'.join(key)
-        # else:
-        #     key = f'"{key}"'
-        #
-        # # if key_[0].isdigit():
-        # #     pre = 'z__'
-        # # else:
-        # #     pre = ''
-        #
-        # key_ = key_.replace("-", "_").replace(".", "_")
-        # exec(f'self.{"z__" * key_[0].isdigit()}{key_} = self[{key}]')
 
     def __delitem__(self, key):
         self._data.__delitem__(key)
@@ -100,8 +78,27 @@ class CustomDict:
         return id(self)
 
 
+class CustomDictWithAttributes(CustomDict):
+    def __setitem__(self, key, item):
+        super().__setitem__(key, item)
+        exec(f'self.{key} = self["{key}"]')
+
+    def __delitem__(self, key):
+        exec(f'del self.{key}')
+        super().__delitem__(key)
+
+    def copy(self):
+        new = type(self)()
+        for key in self:
+            if getattr(self[key], 'copy', False):
+                new[key] = self[key].copy()
+            else:
+                new[key] = self[key]
+        return new
+
+
 ########################################################################################################################
-class InpData(CustomDict):
+class InpData(CustomDictWithAttributes):
     """
     overall class for an input file
 
@@ -109,39 +106,6 @@ class InpData(CustomDict):
 
     just used for the copy function and to identify ``.inp``-file data
     """
-    def copy(self):
-        """
-        get a copy of the ``.inp``-file data
-
-        Returns:
-            InpData: a copy of the ``.inp``-file data
-        """
-        new = type(self)()
-        for key in self:
-            if isinstance(self[key], str):
-                new[key] = self[key]
-            else:
-                new[key] = self[key].copy()
-            exec(f'new.{key} = new["{key}"]')
-        return new
-
-    def __setitem__(self, key, item):
-        self._data.__setitem__(key, item)
-        exec(f'self.{key} = self["{key}"]')
-
-    def __getitem__(self, key):
-        """
-
-        Returns:
-            InpSection | InpSectionGeneric:
-        """
-        return self._data.__getitem__(key)
-        # return super()._data.__getitem__(self, key)
-
-    def __delitem__(self, key):
-        exec(f'del self.{key}')
-        self._data.__delitem__(key)
-
     def update(self, d=None, **kwargs):
         for sec in d:
             if sec not in self:
@@ -151,23 +115,15 @@ class InpData(CustomDict):
                     pass
                 else:
                     self[sec].update(d[sec])
-        # return self
-
-    # def __getattr__(self, item):
-    #     return self._data[item]
-    #
-    # def __setattr__(self, key, value):
-    #     self[key] = value
 
 
 ########################################################################################################################
-class InpSectionGeneric(dict):
+class InpSectionGeneric(CustomDictWithAttributes):
     """
     abstract class for ``.inp``-file sections without objects
 
     :term:`dict-like <mapping>`"
     """
-
     @classmethod
     def from_inp_lines(cls, lines):
         """
@@ -200,15 +156,6 @@ class InpSectionGeneric(dict):
             f += '{key}{value}'.format(key=sub.ljust(max_len),
                                        value=type2str(self[sub]) + '\n')
         return f
-
-    def copy(self):
-        """
-        get a copy of the ``.inp``-file data
-
-        Returns:
-            InpData: a copy of the ``.inp``-file data
-        """
-        return type(self)(dict.copy(self))
 
     @property
     def id(self):

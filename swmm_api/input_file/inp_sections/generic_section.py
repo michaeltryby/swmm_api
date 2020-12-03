@@ -156,9 +156,9 @@ class ReportSection(InpSectionGeneric):
                 value = infer_type(line)
 
             if key in [cls.KEYS.SUBCATCHMENTS,
-                         cls.KEYS.NODES,
-                         cls.KEYS.LINKS,
-                         cls.KEYS.LID]:
+                       cls.KEYS.NODES,
+                       cls.KEYS.LINKS,
+                       cls.KEYS.LID]:
                 if isinstance(value, str) and (value.upper() == 'ALL'):
                     pass
                 elif value is None:
@@ -491,50 +491,50 @@ class MapSection(InpSectionGeneric):
         return data
 
 
-class TagsSection(InpSectionGeneric):
-    """Section: [**TAGS**]"""
-    class TYPES:
-        Node = IDENTIFIERS.Node
-        Subcatch = IDENTIFIERS.Subcatch
-        Link = IDENTIFIERS.Link
-
-    @classmethod
-    def from_inp_lines(cls, lines):
-        data = cls()
-        for kind, name, tag in line_iter(lines):
-            if kind not in data:
-                data[kind] = dict()
-            data[kind][name] = tag
-        return data
-
-    @staticmethod
-    def lines_to_frame(lines):
-        # TAGS AS DATAFRAME
-        return DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
-
-    @property
-    def to_pandas(self):
-        # MAKE TAGS TO SERIES
-        tags_df = dict()
-        for type_ in self:
-            tags_df[type_] = DataFrame.from_dict(self[type_], orient='index')
-        return tags_df
-
-    def to_inp_lines(self, fast=False):
-        if not self:  # if empty
-            return '; NO data'
-        f = ''
-        max_len_type = len(max(self.keys(), key=len)) + 2
-        for type_, tags in self.items():
-            max_len_name = len(max(tags.keys(), key=len)) + 2
-            for name, tag in tags.items():
-                f += '{{:<{len1}}} {{:<{len2}}} {{}}\n'.format(len1=max_len_type, len2=max_len_name).format(type_, name,
-                                                                                                            tag)
-        return f
-
-    def slice_section(self, keys, which):
-        """which=one of TagsSection.Types"""
-        new = type(self)({k: v for k, v in self.items() if k != which})
-        if which in self:
-            new[which] = {k: self[which][k] for k in set(self[which].keys()).intersection(keys)}
-        return new
+# class TagsSection(InpSectionGeneric):
+#     """Section: [**TAGS**]"""
+#     class TYPES:
+#         Node = IDENTIFIERS.Node
+#         Subcatch = IDENTIFIERS.Subcatch
+#         Link = IDENTIFIERS.Link
+#
+#     @classmethod
+#     def from_inp_lines(cls, lines):
+#         data = cls()
+#         for kind, name, tag in line_iter(lines):
+#             if kind not in data:
+#                 data[kind] = dict()
+#             data[kind][name] = tag
+#         return data
+#
+#     @staticmethod
+#     def lines_to_frame(lines):
+#         # TAGS AS DATAFRAME
+#         return DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
+#
+#     @property
+#     def to_pandas(self):
+#         # MAKE TAGS TO SERIES
+#         tags_df = dict()
+#         for type_ in self:
+#             tags_df[type_] = DataFrame.from_dict(self[type_], orient='index')
+#         return tags_df
+#
+#     def to_inp_lines(self, fast=False):
+#         if not self:  # if empty
+#             return '; NO data'
+#         f = ''
+#         max_len_type = len(max(self.keys(), key=len)) + 2
+#         for type_, tags in self.items():
+#             max_len_name = len(max(tags.keys(), key=len)) + 2
+#             for name, tag in tags.items():
+#                 f += '{{:<{len1}}} {{:<{len2}}} {{}}\n'.format(len1=max_len_type, len2=max_len_name).format(type_, name,
+#                                                                                                             tag)
+#         return f
+#
+#     def slice_section(self, keys, which):
+#         """which=one of TagsSection.Types"""
+#         new = type(self)({k: v for k, v in self.items() if k != which})
+#         if which in self:
+#             new[which] = {k: self[which][k] for k in set(self[which].keys()).intersection(keys)}
+#         return new

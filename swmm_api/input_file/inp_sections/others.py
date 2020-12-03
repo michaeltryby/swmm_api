@@ -776,7 +776,7 @@ class Timeseries(BaseSectionObject):
     Args:
         Name (str): name assigned to time series.
     """
-    _identifier =IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.Name
     _table_inp_export = False
 
     class TYPES:
@@ -892,7 +892,7 @@ class TimeseriesData(Timeseries):
 
 class Tag(BaseSectionObject):
     """Section: [**TAGS**]"""
-    _identifier = ('kind', IDENTIFIERS.Name)
+    _identifier = ['kind', IDENTIFIERS.Name]
 
     class TYPES:
         Node = IDENTIFIERS.Node
