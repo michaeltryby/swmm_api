@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib import patches
 from shapely import geometry as shp
 
-from .graph_macros import inp_to_graph, get_path
-from ..inp_macros import find_link, update_vertices
+from ..inp_macros import find_link, update_vertices, inp_to_graph, get_path
 from ..inp_sections import Outfall, Polygon, SubCatchment
 from ..inp_sections.labels import *
 
