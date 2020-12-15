@@ -19,7 +19,7 @@ class SWMMRunError(UserWarning):
     pass
 
 
-def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False, create_out=True):
+def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False, create_out=True, swmm_path=None):
     """
     run a simulation with an EPA-SWMM input-file
     default working directory is input-file directory
@@ -53,22 +53,25 @@ def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False, create_out=True
     else:
         out = ''
 
-    # -----------------------
-    # UNIX
-    cl_script = 'swmm5'
+    if swmm_path is None:
+        # -----------------------
+        # UNIX
+        cl_script = 'swmm5'
 
-    # WINDOWS
-    if _platform.startswith("win"):
-        cl_script = None
-        # script_path = '???/swmm5.exe'
-        for program_files in ['Program Files (x86)', 'Program Files']:
-            for version in ['5.1.015', '5.1.014', '5.1.013']:
-                script_path = path.join('C:\\', program_files, 'EPA SWMM {}'.format(version), 'swmm5.exe')
-                if path.isfile(script_path):
-                    cl_script = '"{}"'.format(script_path)
+        # WINDOWS
+        if _platform.startswith("win"):
+            cl_script = None
+            # script_path = '???/swmm5.exe'
+            for program_files in ['Program Files (x86)', 'Program Files']:
+                for version in ['5.1.015', '5.1.014', '5.1.013']:
+                    script_path = path.join('C:\\', program_files, 'EPA SWMM {}'.format(version), 'swmm5.exe')
+                    if path.isfile(script_path):
+                        cl_script = '"{}"'.format(script_path)
+                        break
+                if cl_script is not None:
                     break
-            if cl_script is not None:
-                break
+    else:
+        cl_script = swmm_path
 
     cmd = '{} "{}" "{}" "{}"'.format(cl_script, inp, rpt, out)
 
