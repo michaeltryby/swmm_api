@@ -11,7 +11,7 @@ from .inp_reader import read_inp_file, convert_section
 from .inp_sections import *
 from .inp_sections import labels as sec
 from .inp_sections.identifiers import IDENTIFIERS
-from .inp_sections.labels import VERTICES, COORDINATES
+from .inp_sections.labels import VERTICES, COORDINATES, XSECTIONS
 from .inp_sections.types import SECTION_TYPES
 from .inp_writer import section_to_string
 from .macro_snippets.curve_simplification import ramer_douglas, _vec2d_dist
@@ -185,7 +185,8 @@ def calc_slope(inp: InpData, link):
         float: slop of the link
     """
     nodes = nodes_dict(inp)
-    return (nodes[link.FromNode].Elevation + link.InOffset - (nodes[link.ToNode].Elevation + link.OutOffset)) / link.Length
+    return (nodes[link.FromNode].Elevation + link.InOffset - (
+            nodes[link.ToNode].Elevation + link.OutOffset)) / link.Length
 
 
 def rel_diff(a, b):
@@ -269,7 +270,7 @@ def conduits_are_equal(inp: InpData, link0, link1, diff_roughness=0.1, diff_slop
     return all_checks_out
 
 
-def delete_node(inp: InpData, node_label, graph: DiGraph=None, alt_node=None):
+def delete_node(inp: InpData, node_label, graph: DiGraph = None, alt_node=None):
     """
     delete node in inp data
 
@@ -293,8 +294,11 @@ def delete_node(inp: InpData, node_label, graph: DiGraph=None, alt_node=None):
         else:
             links = list()
     else:
-        links = list(inp[sec.CONDUITS].filter_keys([node_label], by='FromNode')) + \
-                list(inp[sec.CONDUITS].filter_keys([node_label], by='ToNode'))  # type: List[Conduit]
+        links = list()
+        for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
+            if section in inp:
+                links += list(inp[section].filter_keys([node_label], by='FromNode')) + \
+                         list(inp[section].filter_keys([node_label], by='ToNode'))  # type: List[Conduit]
         links = [l.Name for l in links]  # type: List[str]
 
     for link in links:
@@ -324,7 +328,8 @@ def move_flows(inp, from_node, to_node, only_Constituent=None):
                         new.Base += old.Base
 
                         # if not all([old[p] == new[p] for p in ['pattern1', 'pattern2', 'pattern3', 'pattern4']]):
-                        #     print(f'WARNING: move_flows  from "{from_node}" to "{to_node}". DWF patterns don\'t match!')
+                        #     print(f'WARNING: move_flows  from "{from_node}" to "{to_node}". DWF patterns don\'t
+                        #     match!')
 
                     else:
                         inp[section][index_new] = old
@@ -354,7 +359,7 @@ def combine_vertices(inp, label1, label2):
         inp[sec.VERTICES][label1].vertices = new_vertices
 
 
-def combine_conduits(inp, c1, c2, graph: DiGraph=None):
+def combine_conduits(inp, c1, c2, graph: DiGraph = None):
     """
     combine the two conduits to one
 
@@ -414,9 +419,9 @@ def combine_conduits(inp, c1, c2, graph: DiGraph=None):
     return c_new
 
 
-def combine_conduits_keep_slope(inp, c1, c2, graph: DiGraph=None):
+def combine_conduits_keep_slope(inp, c1, c2, graph: DiGraph = None):
     nodes = nodes_dict(inp)
-    new_out_offset = - calc_slope(inp, c1) * c2.Length\
+    new_out_offset = - calc_slope(inp, c1) * c2.Length \
                      + c1.OutOffset \
                      + nodes[c1.ToNode].Elevation \
                      - nodes[c2.ToNode].Elevation
@@ -425,7 +430,7 @@ def combine_conduits_keep_slope(inp, c1, c2, graph: DiGraph=None):
     return c1
 
 
-def dissolve_conduit(inp, c: Conduit, graph: DiGraph=None):
+def dissolve_conduit(inp, c: Conduit, graph: DiGraph = None):
     """
     combine the two conduits to one
 
@@ -520,23 +525,24 @@ def conduit_iter_over_inp(inp, start, end):
     #         # Todo: abzweigungen ...
     #         node = list(next_nodes(g, node))[0]
 
-        # while True:
-        #     found = False
-        #     for i, c in inp[sec.CONDUITS].items():
-        #         if c.FromNode == node:
-        #             conduit = c
-        #
-        #             node = conduit.ToNode
-        #             yield conduit
-        #             found = True
-        #             break
-        #     if not found or (node is not None and (node == end)):
-        #         break
+    # while True:
+    #     found = False
+    #     for i, c in inp[sec.CONDUITS].items():
+    #         if c.FromNode == node:
+    #             conduit = c
+    #
+    #             node = conduit.ToNode
+    #             yield conduit
+    #             found = True
+    #             break
+    #     if not found or (node is not None and (node == end)):
+    #         break
 
 
 def junction_to_storage(inp, label, *args, **kwargs):
     """
-    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to :class:`~swmm_api.input_file.inp_sections.node.Storage`
+    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to
+    :class:`~swmm_api.input_file.inp_sections.node.Storage`
 
     and add it to the STORAGE section
 
@@ -555,7 +561,8 @@ def junction_to_storage(inp, label, *args, **kwargs):
 
 def junction_to_outfall(inp, label, *args, **kwargs):
     """
-    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to :class:`~swmm_api.input_file.inp_sections.node.Outfall`
+    convert :class:`~swmm_api.input_file.inp_sections.node.Junction` to
+    :class:`~swmm_api.input_file.inp_sections.node.Outfall`
 
     and add it to the OUTFALLS section
 
@@ -573,7 +580,8 @@ def junction_to_outfall(inp, label, *args, **kwargs):
 
 def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0):
     """
-    convert :class:`~swmm_api.input_file.inp_sections.link.Conduit` to :class:`~swmm_api.input_file.inp_sections.link.Orifice`
+    convert :class:`~swmm_api.input_file.inp_sections.link.Conduit` to
+    :class:`~swmm_api.input_file.inp_sections.link.Orifice`
 
     and add it to the ORIFICES section
 
@@ -596,14 +604,25 @@ def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0
                                       Type=Type, Offset=Offset, Qcoeff=Qcoeff, FlapGate=FlapGate, Orate=Orate))
 
 
-def rename_node(label, new_label):
-    # TODO !!
-    pass
+def rename_node(inp, old_label, new_label):
+    for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE, sec.COORDINATES]:
+        if (section in inp) and (old_label in inp[section]):
+            inp[section][new_label] = inp[section].pop(old_label)
+            if hasattr(inp[section][new_label], 'Name'):
+                inp[section][new_label].Name = new_label
+            else:
+                inp[section][new_label].Node = new_label
 
 
-def rename_link(label, new_label):
-    # TODO !!
-    pass
+def rename_link(inp, old_label, new_label):
+    for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS, sec.XSECTIONS, sec.LOSSES,
+                    sec.VERTICES]:
+        if (section in inp) and (old_label in inp[section]):
+            inp[section][new_label] = inp[section].pop(old_label)
+            if hasattr(inp[section][new_label], 'Name'):
+                inp[section][new_label].Name = new_label
+            else:
+                inp[section][new_label].Link = new_label
 
 
 def remove_empty_sections(inp):
@@ -915,6 +934,16 @@ def get_path(g, start, end):
     return list(all_simple_paths(g, start, end))[0]
 
 
+def get_path_subgraph(base, start, end):
+    if isinstance(base, InpData):
+        g = inp_to_graph(base)
+    else:
+        g = base
+    sub_list = get_path(g, start=start, end=end)
+    sub_graph = subgraph(g, sub_list)
+    return sub_list, sub_graph
+
+
 def next_links(inp, node, g=None):
     if g is None:
         g = inp_to_graph(inp)
@@ -1032,3 +1061,14 @@ def get_network_forks(inp):
     for n in nodes:
         forks[n] = number_in_out(g, n)
     return forks
+
+
+def increase_max_node_depth(inp, node_label):
+    # swmm raises maximum node depth to surrounding xsection height
+    previous_, next_ = links_connected(inp, node_label)
+    node = nodes_dict(inp)[node_label]
+    max_height = node.MaxDepth
+    for link in previous_ + next_:
+        max_height = max((max_height, inp[XSECTIONS][link.Name].Geom1))
+    print(f'MaxDepth increased for node "{node_label}" from {node.MaxDepth} to {max_height}')
+    node.MaxDepth = max_height

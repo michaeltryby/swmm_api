@@ -44,6 +44,10 @@ def infer_swmm_path():
     return swmm_path
 
 
+def get_result_filenames(inp_fn):
+    return inp_fn.replace('.inp', '.rpt'), inp_fn.replace('.inp', '.out')
+
+
 def get_swmm_command_line_auto(inp, rpt_dir=None, out_dir=None, create_out=True, swmm_path=None):
     base_filename = path.basename(inp).replace('.inp', '')
     inp_dir = path.dirname(inp)
@@ -70,7 +74,7 @@ def get_swmm_command_line_auto(inp, rpt_dir=None, out_dir=None, create_out=True,
     return get_swmm_command_line(swmm_path, inp, rpt, out)
 
 
-def run_swmm_stdout(command_line, sep='_'*100):
+def run_swmm_stdout(command_line, sep='_' * 100):
     print(sep)
     print(command_line)
     subprocess.run(command_line)
@@ -140,8 +144,4 @@ def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False, create_out=True
     # -------------------------
     check_swmm_errors(rpt, stdout)
 
-    return inp, rpt, out
-
-
-if __name__ == '__main__':
-    pass
+    return rpt, out

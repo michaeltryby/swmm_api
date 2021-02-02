@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 from matplotlib import patches
-from shapely import geometry as shp
+from networkx import subgraph
 
-from ..inp_macros import find_link, update_vertices, inp_to_graph, get_path
+from ..inp_macros import (find_link, update_vertices, inp_to_graph, get_path, links_connected, links_dict, nodes_dict,
+                          get_path_subgraph, )
 from ..inp_sections import Outfall, Polygon, SubCatchment
 from ..inp_sections.labels import *
 
@@ -44,6 +45,7 @@ def plot_map(inp):  # TODO
             # x, y = zip(*poly.polygon)
             ax.add_patch(patches.Polygon(poly.polygon, closed=True, fill=False, hatch='/'))
             # ax.plot(x, y, 'r-')
+            from shapely import geometry as shp
             center = shp.Polygon(poly.polygon).centroid
 
             ax.scatter(x=center.x, y=center.y, marker='s', c='k', zorder=999)
@@ -78,15 +80,15 @@ class COLS:
     GROUND_ELEV = 'GOK'  # rim elevation
     STATION = 'x'
     WATER = 'water'
-    NODE_STATION = 'node'
+    # NODE_STATION = 'node'
 
 
+from mp.helpers import timeit
+
+
+@timeit
 def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
-    g = inp_to_graph(inp)
-    sub_list = get_path(g, start=start_node, end=end_node)
-
-    following_conduit = {conduit.FromNode: conduit for _, conduit in inp[CONDUITS].items()}
-    prior_conduit = {conduit.ToNode: conduit for _, conduit in inp[CONDUITS].items()}
+    sub_list, sub_graph = get_path_subgraph(inp, start=start_node, end=end_node)
 
     keys = [COLS.STATION,
             COLS.INVERT_ELEV,
@@ -100,29 +102,32 @@ def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
         for k, v in zip(keys, args):
             res[k].append(v)
 
-    nodes_dict = dict()
-    for s in [JUNCTIONS, OUTFALLS, STORAGE]:
-        if s in inp:
-            nodes_dict.update(inp[s])
+    nodes = nodes_dict(inp)
 
     # ---------------
-    node_station = dict()
+    # node_station = dict()
 
     # ---------------
-    dx = 0
-    x = 0
+    # dx = 0
+    # x = 0
     profile_height = 0
+
+    # ---------------
+    nodes_depth = None
+    if out is not None:
+        nodes_depth = out.get_part('node', sub_list, 'Depth_above_invert').mean().to_dict()
+
     for node in sub_list:
 
         # ---------------
-        node_station[node] = x
+        # node_station[node] = x
 
         # ---------------
-        n = nodes_dict[node]
+        n = nodes[node]
         sok = n.Elevation
 
-        if zero_node is not None and (zero_node == node):
-            dx = x
+        # if zero_node is not None and (zero_node == node):
+        #     dx = x
 
         gok = sok
         if isinstance(n, Outfall):
@@ -131,32 +136,62 @@ def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
             gok += n.MaxDepth
 
         if out is not None:
-            water = sok + out.get_part('node', node, 'Depth_above_invert').mean()
+            water = sok + nodes_depth[node]
         else:
             water = None
 
         # ------------------
-        if node in prior_conduit:
-            profile_height = inp[XSECTIONS][prior_conduit[node].Name].Geom1
-            sok0 = sok + inp[CONDUITS][prior_conduit[node].Name].OutOffset
-            buk = profile_height + sok0
-            _update_res(x, sok0, buk, gok, water)
+        prior_conduit, following_conduit = links_connected(inp, node, sub_graph)
+
+        if prior_conduit:
+            prior_conduit = prior_conduit[0]
+            profile_height = inp[XSECTIONS][prior_conduit.Name].Geom1
+            sok_ = sok + prior_conduit.OutOffset
+            buk = profile_height + sok_
+            _update_res(x, sok_, buk, gok, water)
 
         # ------------------
-        if node in following_conduit:
-            profile_height = inp[XSECTIONS][following_conduit[node].Name].Geom1
-            sok1 = sok + inp[CONDUITS][following_conduit[node].Name].InOffset
-            buk = profile_height + sok1
-            _update_res(x, sok1, buk, gok, water)
+        if following_conduit:
+            following_conduit = following_conduit[0]
+            profile_height = inp[XSECTIONS][following_conduit.Name].Geom1
+            sok_ = sok + following_conduit.InOffset
+            buk = profile_height + sok_
+            _update_res(x, sok_, buk, gok, water)
 
-            x += following_conduit[node].Length
+            # x += following_conduit.Length
 
     # ------------------------------------
-    res[COLS.STATION] = [i - dx for i in res[COLS.STATION]]
+    # res[COLS.STATION] = [i - dx for i in res[COLS.STATION]]
 
     # ---------------
-    res[COLS.NODE_STATION] = {node: i - dx for node, i in node_station.items()}
+    # res[COLS.NODE_STATION] = {node: i - dx for node, i in node_station.items()}
     return res
+
+
+def iter_over_inp(inp, start_node, end_node):
+    sub_list, sub_graph = get_path_subgraph(inp, start=start_node, end=end_node)
+    links = links_dict(inp)
+
+    x = 0
+    for node in sub_list:
+        yield node, x
+        # ------------------
+        out_edges = list(sub_graph.out_edges(node))
+        if out_edges:
+            following_conduit = links[sub_graph.get_edge_data(*out_edges[0])['label']]
+            x += following_conduit.Length
+
+
+@timeit
+def get_node_station(inp, start_node, end_node, zero_node=None):
+    stations = dict(iter_over_inp(inp, start_node, end_node))
+    if zero_node:
+        return set_zero_node(stations, zero_node)
+    return stations
+
+
+def set_zero_node(stations, zero_node):
+    return {node: stations[node] - stations[zero_node] for node in stations}
 
 
 def plot_longitudinal(inp, start_node, end_node, out=None, ax=None, zero_node=None):

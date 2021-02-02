@@ -348,17 +348,19 @@ class InpSection(CustomDict):
         # working with pandas makes it x10 faster
         if by is None:
             filtered_keys = set(self.keys()).intersection(set(keys))
-
-        elif isinstance(by, (list, set, tuple)):
-            f = self.get_dataframe(set_index=False)
-            filtered_keys = f[f[by].isin(keys).all(axis=1)].set_index(self._identifier).index
-            # filtered_keys = (k for k in self if any(map(lambda b: self[k][b] in keys, by)))
-
         else:
-            # filtered_keys = filter(lambda k: self[k][by] in keys, self)
-            # filtered_keys = (k for k in self if self[k][by] in keys)
             f = self.get_dataframe(set_index=False)
-            filtered_keys = f[f[by].isin(keys)].set_index(self._identifier).index
+            if f.empty:
+                return tuple()
+
+            if isinstance(by, (list, set, tuple)):
+                filtered_keys = f[f[by].isin(keys).all(axis=1)].set_index(self._identifier).index
+                # filtered_keys = (k for k in self if any(map(lambda b: self[k][b] in keys, by)))
+
+            else:
+                # filtered_keys = filter(lambda k: self[k][by] in keys, self)
+                # filtered_keys = (k for k in self if self[k][by] in keys)
+                filtered_keys = f[f[by].isin(keys)].set_index(self._identifier).index
 
         return (self[k] for k in filtered_keys)
 

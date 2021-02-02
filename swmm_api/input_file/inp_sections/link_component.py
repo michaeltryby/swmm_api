@@ -161,6 +161,11 @@ class Loss(BaseSectionObject):
     """
     _identifier =IDENTIFIERS.Link
 
+    class TYPES:
+        INLET = 'Inlet'
+        OUTLET = 'Outlet'
+        AVERAGE = 'Average'
+
     def __init__(self, Link, Inlet=0, Outlet=0, Average=0, FlapGate=False, SeepageRate=0):
         self.Link = str(Link)
         self.Inlet = float(Inlet)

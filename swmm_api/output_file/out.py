@@ -14,6 +14,46 @@ from swmmtoolbox.swmmtoolbox import SwmmExtract
 from . import parquet
 
 
+class VARIABLES:
+    class KIND:
+        SUBCATCHMENT = "subcatchment"
+        NODE = "node"
+        LINK = "link"
+        SYSTEM = "system"
+
+    class NODE:
+        DEPTH_ABOVE_INVERT = 'Depth_above_invert'
+        HYDRAULIC_HEAD = 'Hydraulic_head'
+        VOLUME_STORED_PONDED = 'Volume_stored_ponded'
+        LATERAL_INFLOW = 'Lateral_inflow'
+        TOTAL_INFLOW = 'Total_inflow'
+        FLOW_LOST_FLOODING = 'Flow_lost_flooding'
+
+    class LINK:
+        FLOW_RATE = 'Flow_rate'
+        FLOW_DEPTH = 'Flow_depth'
+        FLOW_VELOCITY = 'Flow_velocity'
+        FROUDE_NUMBER = 'Froude_number'
+        CAPACITY = 'Capacity'
+
+    class SYSTEM:
+        AIR_TEMPERATURE = 'Air_temperature'
+        RAINFALL = 'Rainfall'
+        SNOW_DEPTH = 'Snow_depth'
+        EVAPORATION_INFILTRATION = 'Evaporation_infiltration'
+        RUNOFF = 'Runoff'
+        DRY_WEATHER_INFLOW = 'Dry_weather_inflow'
+        GROUNDWATER_INFLOW = 'Groundwater_inflow'
+        RDII_INFLOW = 'RDII_inflow'
+        USER_DIRECT_INFLOW = 'User_direct_inflow'
+        TOTAL_LATERAL_INFLOW = 'Total_lateral_inflow'
+        FLOW_LOST_TO_FLOODING = 'Flow_lost_to_flooding'
+        FLOW_LEAVING_OUTFALLS = 'Flow_leaving_outfalls'
+        VOLUME_STORED_WATER = 'Volume_stored_water'
+        EVAPORATION_RATE = 'Evaporation_rate'
+        POTENTIAL_PET = 'Potential_PET'
+
+
 class SwmmOutHandler:
     """
     read the binary .out-file of EPA-SWMM
@@ -292,7 +332,9 @@ class SwmmOutHandler:
                         values[label] = list()
                     _, value = self._extract.get_swmm_results(*args, i)
                     values[label].append(value)
-            return DataFrame.from_dict(values).set_index(self.index)
+            df = DataFrame.from_dict(values).set_index(self.index)
+            df.columns = self._columns(df.columns, drop_useless=True)
+            return df
 
         # -------------------------------------------------------------
         else:
@@ -317,6 +359,7 @@ class SwmmOutHandler:
         Returns:
             dict: str(final column name) -> tuple(type-index, object-label, variable-index)
         """
+
         def _checker(i, user):
             if user is None:
                 return False

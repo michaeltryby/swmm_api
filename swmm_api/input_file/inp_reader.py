@@ -39,7 +39,7 @@ def convert_section(head, lines, converter):
 
 
 def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_converter=None,
-                  ignore_gui_sections=True):
+                  ignore_gui_sections=True, txt=None):
     """
     read ``.inp``-file and convert the sections in pythonic objects
 
@@ -70,8 +70,9 @@ def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_
         converter = {h: converter[h] for h in converter if h in convert_sections}
 
     # __________________________________
-    with open(filename, 'r', encoding='iso-8859-1') as inp_file:
-        txt = inp_file.read()
+    if txt is None:
+        with open(filename, 'r', encoding='iso-8859-1') as inp_file:
+            txt = inp_file.read()
 
     # __________________________________
     headers = [h.upper() for h in re.findall(r"\[(\w+)\]", txt)]

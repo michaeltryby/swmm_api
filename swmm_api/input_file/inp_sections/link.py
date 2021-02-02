@@ -55,7 +55,7 @@ class Conduit(BaseSectionObject):
     """
     _identifier =IDENTIFIERS.Name
 
-    def __init__(self, Name, FromNode, ToNode, Length, Roughness, InOffset, OutOffset, InitFlow=0, MaxFlow=NaN):
+    def __init__(self, Name, FromNode, ToNode, Length, Roughness, InOffset=0, OutOffset=0, InitFlow=0, MaxFlow=NaN):
         self.Name = str(Name)
         self.FromNode = str(FromNode)
         self.ToNode = str(ToNode)
