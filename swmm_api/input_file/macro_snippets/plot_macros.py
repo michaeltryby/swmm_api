@@ -1,9 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import patches
-from networkx import subgraph
 
-from ..inp_macros import (find_link, update_vertices, inp_to_graph, get_path, links_connected, links_dict, nodes_dict,
-                          get_path_subgraph, )
+from ..inp_macros import update_vertices, links_connected, links_dict, nodes_dict, get_path_subgraph
 from ..inp_sections import Outfall, Polygon, SubCatchment
 from ..inp_sections.labels import *
 
@@ -62,13 +60,15 @@ def plot_map(inp):  # TODO
         OUTFALLS: {'marker': '^', 'color': 'r'},
 
     }
-    ax.scatter(x=coords.x, y=coords.y, marker=node_style[JUNCTIONS]['marker'], c=node_style[JUNCTIONS]['color'], edgecolors='k', zorder=999)
+    ax.scatter(x=coords.x, y=coords.y, marker=node_style[JUNCTIONS]['marker'], c=node_style[JUNCTIONS]['color'],
+               edgecolors='k', zorder=999)
 
     for section in [STORAGE, OUTFALLS]:
         if section in inp:
             is_in_sec = coords.index.isin(inp[section].keys())
             ax.scatter(x=coords[is_in_sec].x, y=coords[is_in_sec].y,
-                       marker=node_style[section]['marker'], c=node_style[section]['color'], edgecolors='k', zorder=9999)
+                       marker=node_style[section]['marker'], c=node_style[section]['color'], edgecolors='k',
+                       zorder=9999)
 
     fig.tight_layout()
     return fig, ax
@@ -83,18 +83,10 @@ class COLS:
     # NODE_STATION = 'node'
 
 
-from mp.helpers import timeit
-
-
-@timeit
 def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
     sub_list, sub_graph = get_path_subgraph(inp, start=start_node, end=end_node)
 
-    keys = [COLS.STATION,
-            COLS.INVERT_ELEV,
-            COLS.CROWN_ELEV,
-            COLS.GROUND_ELEV,
-            COLS.WATER]
+    keys = [COLS.STATION, COLS.INVERT_ELEV, COLS.CROWN_ELEV, COLS.GROUND_ELEV, COLS.WATER]
 
     res = {k: list() for k in keys}
 
@@ -102,44 +94,31 @@ def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
         for k, v in zip(keys, args):
             res[k].append(v)
 
+    # ---------------
     nodes = nodes_dict(inp)
-
     # ---------------
-    # node_station = dict()
-
-    # ---------------
-    # dx = 0
-    # x = 0
     profile_height = 0
-
     # ---------------
     nodes_depth = None
     if out is not None:
         nodes_depth = out.get_part('node', sub_list, 'Depth_above_invert').mean().to_dict()
-
-    for node in sub_list:
-
-        # ---------------
-        # node_station[node] = x
-
-        # ---------------
+    # ---------------
+    stations_ = list(iter_over_inp_(inp, sub_list, sub_graph))
+    stations = dict(stations_)
+    for node, x in stations_:
         n = nodes[node]
         sok = n.Elevation
-
-        # if zero_node is not None and (zero_node == node):
-        #     dx = x
-
+        # ---------------
         gok = sok
         if isinstance(n, Outfall):
             gok += profile_height
         else:
             gok += n.MaxDepth
-
+        # ---------------
         if out is not None:
             water = sok + nodes_depth[node]
         else:
             water = None
-
         # ------------------
         prior_conduit, following_conduit = links_connected(inp, node, sub_graph)
 
@@ -148,28 +127,34 @@ def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
             profile_height = inp[XSECTIONS][prior_conduit.Name].Geom1
             sok_ = sok + prior_conduit.OutOffset
             buk = profile_height + sok_
-            _update_res(x, sok_, buk, gok, water)
+            _update_res(x - stations[zero_node], sok_, buk, gok, water)
 
-        # ------------------
         if following_conduit:
             following_conduit = following_conduit[0]
             profile_height = inp[XSECTIONS][following_conduit.Name].Geom1
             sok_ = sok + following_conduit.InOffset
             buk = profile_height + sok_
-            _update_res(x, sok_, buk, gok, water)
+            _update_res(x - stations[zero_node], sok_, buk, gok, water)
 
-            # x += following_conduit.Length
-
-    # ------------------------------------
-    # res[COLS.STATION] = [i - dx for i in res[COLS.STATION]]
-
-    # ---------------
-    # res[COLS.NODE_STATION] = {node: i - dx for node, i in node_station.items()}
     return res
 
 
-def iter_over_inp(inp, start_node, end_node):
-    sub_list, sub_graph = get_path_subgraph(inp, start=start_node, end=end_node)
+def get_water_level(inp, start_node, end_node, out, zero_node=None, absolute=True):
+    nodes_depth = out.get_part('node', None, 'Depth_above_invert').mean().to_dict()
+    nodes = nodes_dict(inp)
+    x_list = list()
+    water_level_list = list()
+    stations_ = list(iter_over_inp(inp, start_node, end_node))
+    stations = dict(stations_)
+    for node, x in stations_:
+        x_list.append(x - stations.get(zero_node, 0))
+        sok = nodes[node].Elevation
+        water_level_list.append(sok + nodes_depth[node])
+
+    return {COLS.WATER: water_level_list, COLS.STATION: x_list}
+
+
+def iter_over_inp_(inp, sub_list, sub_graph):
     links = links_dict(inp)
 
     x = 0
@@ -182,7 +167,11 @@ def iter_over_inp(inp, start_node, end_node):
             x += following_conduit.Length
 
 
-@timeit
+def iter_over_inp(inp, start_node, end_node):
+    sub_list, sub_graph = get_path_subgraph(inp, start=start_node, end=end_node)
+    return iter_over_inp_(inp, sub_list, sub_graph)
+
+
 def get_node_station(inp, start_node, end_node, zero_node=None):
     stations = dict(iter_over_inp(inp, start_node, end_node))
     if zero_node:

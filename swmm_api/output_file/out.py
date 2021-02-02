@@ -74,6 +74,12 @@ class SwmmOutHandler:
         self._index = None
         self._number_columns = None
 
+    def __repr__(self):
+        return f'SwmmOutHandler(file="{self.filename}")'
+
+    # def __str__(self):
+    #     return f'SwmmOutHandler({self.filename})'
+
     def __enter__(self):
         return self
 
