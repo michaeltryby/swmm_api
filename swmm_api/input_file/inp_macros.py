@@ -1,4 +1,5 @@
 from collections import ChainMap
+from math import ceil
 from os import path, mkdir, listdir
 
 import numpy as np
@@ -349,6 +350,96 @@ def delete_link(inp: InpData, link):
             inp[s].pop(link)
 
 
+def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
+    # mode = [cut_point (GUI), intervals (n), length (l)]
+    nodes = nodes_dict(inp)
+    if isinstance(conduit, str):
+        conduit = inp[sec.CONDUITS][conduit]  # type: Conduit
+
+    dx = 0
+    n_new_nodes = 0
+    if intervals:
+        dx = conduit.Length / intervals
+        n_new_nodes = intervals - 1
+    elif length:
+        dx = length
+        n_new_nodes = ceil(conduit.Length / length - 1)
+
+    from_node = nodes[conduit.FromNode]
+    to_node = nodes[conduit.ToNode]
+
+    from_node_coord = inp[sec.COORDINATES][from_node.Name]
+    to_node_coord = inp[sec.COORDINATES][to_node.Name]
+
+    loss = None
+    if (sec.LOSSES in inp) and (conduit.Name in inp[sec.LOSSES]):
+        loss = inp[sec.LOSSES][conduit.Name]  # type: Loss
+
+    new_nodes = list()
+    new_links = list()
+
+    x = dx
+    last_node = from_node
+    for new_node_i in range(n_new_nodes + 1):
+        if x >= conduit.Length:
+            node = to_node
+        else:
+            node = Junction(Name=f'{from_node.Name}_{to_node.Name}_{chr(new_node_i+97)}',
+                            Elevation=np.interp(x, [0, conduit.Length], [from_node.Elevation, to_node.Elevation]),
+                            MaxDepth=np.interp(x, [0, conduit.Length], [from_node.MaxDepth, to_node.MaxDepth]),
+                            InitDepth=np.interp(x, [0, conduit.Length], [from_node.InitDepth, to_node.InitDepth]),
+                            SurDepth=np.interp(x, [0, conduit.Length], [from_node.SurDepth, to_node.SurDepth]),
+                            Aponded=float(np.mean([from_node.Aponded, to_node.Aponded])),
+                            )
+            new_nodes.append(node)
+            inp[sec.JUNCTIONS].add_obj(node)
+
+            # TODO: COORDINATES based on vertices
+            inp[sec.COORDINATES].add_obj(Coordinate(node.Name,
+                                                    x=np.interp(x, [0, conduit.Length], [from_node_coord.x, to_node_coord.x]),
+                                                    y=np.interp(x, [0, conduit.Length], [from_node_coord.y, to_node_coord.y])))
+
+        link = Conduit(Name=f'{conduit.Name}_{chr(new_node_i+97)}',
+                       FromNode=last_node.Name,
+                       ToNode=node.Name,
+                       Length=dx,
+                       Roughness=conduit.Roughness,
+                       InOffset=0 if new_node_i != 0 else conduit.InOffset,
+                       OutOffset=0 if new_node_i != (n_new_nodes - 1) else conduit.OutOffset,
+                       InitFlow=conduit.InitFlow,
+                       MaxFlow=conduit.MaxFlow)
+        new_links.append(link)
+        inp[sec.CONDUITS].add_obj(link)
+
+        xs = inp[sec.XSECTIONS][conduit.Name].copy()
+        xs.Link = link.Name
+        inp[sec.XSECTIONS].add_obj(xs)
+
+        if loss:
+            inlet = loss.Inlet if loss.Inlet and (new_node_i == 0) else 0
+            outlet = loss.Outlet if loss.Outlet and (new_node_i == n_new_nodes - 1) else 0
+            average = loss.Average / (n_new_nodes + 1)
+            flap_gate = loss.FlapGate
+
+            if any([inlet, outlet, average, flap_gate]):
+                inp[sec.LOSSES].add_obj(Loss(link.Name, inlet, outlet, average, flap_gate))
+
+        # TODO: VERTICES
+
+        if node is to_node:
+            break
+        last_node = node
+        x += dx
+
+    # if conduit.Name in inp[sec.VERTICES]:
+    #     pass
+    # else:
+    #     # interpolate coordinates
+    #     pass
+
+    delete_link(inp, conduit.Name)
+
+
 def combine_vertices(inp, label1, label2):
     common_node = links_dict(inp)[label1].ToNode
     if sec.VERTICES in inp and label1 in inp[sec.VERTICES]:
@@ -413,6 +504,7 @@ def combine_conduits(inp, c1, c2, graph: DiGraph = None):
     # Loss
     if (sec.LOSSES in inp) and (c_new.Name in inp[sec.LOSSES]):
         print(f'combine_conduits {c1.Name} and {c2.Name}. BUT WHAT TO DO WITH LOSSES?')
+        # add losses
         pass
 
     delete_node(inp, common_node, graph=graph, alt_node=c_new.FromNode)
@@ -891,7 +983,10 @@ def reduce_vertices(inp, node_range=0.25):
                 if _vec2d_dist(p, v[-1]) < node_range:
                     v = v[:-1]
 
-            inp[VERTICES][l.Name].vertices = v
+            if v:
+                inp[VERTICES][l.Name].vertices = v
+            else:
+                del inp[VERTICES][l.Name]
     return inp
 
 

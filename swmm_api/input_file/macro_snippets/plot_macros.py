@@ -146,9 +146,11 @@ def get_water_level(inp, start_node, end_node, out, zero_node=None, absolute=Tru
     water_level_list = list()
     stations_ = list(iter_over_inp(inp, start_node, end_node))
     stations = dict(stations_)
+    sok = 0
     for node, x in stations_:
         x_list.append(x - stations.get(zero_node, 0))
-        sok = nodes[node].Elevation
+        if absolute:
+            sok = nodes[node].Elevation
         water_level_list.append(sok + nodes_depth[node])
 
     return {COLS.WATER: water_level_list, COLS.STATION: x_list}
