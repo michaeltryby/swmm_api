@@ -441,20 +441,28 @@ class Transect(BaseSectionObject):
                     last.add_station_elevation(station, elevation)
         yield last
 
-    def to_inp_line(self):
+    def to_inp_line(self, break_every=1):
+        """
+        Args:
+            break_every: break every x-th GR station, default: after every station
+        """
         s = '{} {} {} {}\n'.format(self.KEYS.NC, self.roughness_left, self.roughness_right, self.roughness_channel)
         s += '{} {} {} {} {} 0 0 0 {} {} {}\n'.format(self.KEYS.X1, self.Name, self.get_number_stations(),
                                                       self.bank_station_left, self.bank_station_right,
                                                       self.modifier_meander, self.modifier_stations,
                                                       self.modifier_elevations,)
-        s += self.KEYS.GR
-        i = 0
-        for x, y in self.station_elevations:
-            s += ' {} {}'.format(x, y)
-            i += 1
-            if i == 5:
-                i = 0
-                s += '\n' + self.KEYS.GR
+        if break_every == 1:
+            for x, y in self.station_elevations:
+                s += '{} {} {}\n'.format(self.KEYS.GR, x, y)
+        else:
+            s += self.KEYS.GR
+            i = 0
+            for x, y in self.station_elevations:
+                s += ' {} {}'.format(x, y)
+                i += 1
+                if i == break_every:
+                    i = 0
+                    s += '\n' + self.KEYS.GR
 
         if s.endswith(self.KEYS.GR):
             s = s[:-3]

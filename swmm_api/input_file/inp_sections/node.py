@@ -156,6 +156,11 @@ class Storage(BaseSectionObject):
         Ksat.
         Otherwise seepage rate will vary with storage depth.
 
+    From C-Code:
+        //  Format of input line is:
+        //     nodeID  elev  maxDepth  initDepth  FUNCTIONAL a1 a2 a0 surDepth fEvap (infil) //(5.1.013)
+        //     nodeID  elev  maxDepth  initDepth  TABULAR    curveID  surDepth fEvap (infil) //
+
     Args:
         Name (str): name assigned to storage node.
         Elevation (float): invert elevation (ft or m). ``Elev``
@@ -237,7 +242,7 @@ class Storage(BaseSectionObject):
             self.Curve = Curve
             self._optional_args(Apond, Fevap, Psi, Ksat, IMD)
 
-    def _functional_init(self, A1, A2, A0, Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
+    def _functional_init(self, A1, A2, A0, *args, **kwargs):
         """
         for storage type ``'FUNCTIONAL'``
 
@@ -248,14 +253,11 @@ class Storage(BaseSectionObject):
 
             Apond (float): this parameter has been deprecated – use 0.
             Fevap (float): fraction of potential evaporation from surface realized (default is 0).
-            Psi (float): soil suction head (inches or mm).
-            Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
-            IMD (float): soil initial moisture deficit (fraction).
         """
         self.Curve = infer_type([A1, A2, A0])
-        self._optional_args(Apond, Fevap, Psi, Ksat, IMD)
+        self._optional_args(*args, **kwargs)
 
-    def _tabular_init(self, Curve, Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
+    def _tabular_init(self, Curve, *args, **kwargs):
         """
         for storage type ``'TABULAR'``
 
@@ -264,26 +266,31 @@ class Storage(BaseSectionObject):
                 as a function of depth (ft or m) for TABULAR geometry.
             Apond (float): this parameter has been deprecated – use 0.
             Fevap (float): fraction of potential evaporation from surface realized (default is 0).
-            Psi (float): soil suction head (inches or mm).
-            Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
-            IMD (float): soil initial moisture deficit (fraction).
         """
         self.Curve = Curve
-        self._optional_args(Apond, Fevap, Psi, Ksat, IMD)
+        self._optional_args(*args, **kwargs)
 
-    def _optional_args(self, Apond=0, Fevap=0, Psi=NaN, Ksat=NaN, IMD=NaN):
+    def _optional_args(self, Apond=0, Fevap=0, *exfiltration_args, **exfiltration_kwargs):
         """
         for the optional arguemts
 
         Args:
             Apond (float): this parameter has been deprecated – use 0.
             Fevap (float): fraction of potential evaporation from surface realized (default is 0).
+        """
+        self.Apond = float(Apond)
+        self.Fevap = float(Fevap)
+        self._exfiltration_args(*exfiltration_args, **exfiltration_kwargs)
+
+    def _exfiltration_args(self, Psi=NaN, Ksat=NaN, IMD=NaN):
+        """
+        for the optional arguemts
+
+        Args:
             Psi (float): soil suction head (inches or mm).
             Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
             IMD (float): soil initial moisture deficit (fraction).
         """
-        self.Apond = float(Apond)
-        self.Fevap = float(Fevap)
         self.Psi = float(Psi)
         self.Ksat = float(Ksat)
         self.IMD = float(IMD)
