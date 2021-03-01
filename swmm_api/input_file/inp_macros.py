@@ -1167,3 +1167,24 @@ def increase_max_node_depth(inp, node_label):
         max_height = max((max_height, inp[XSECTIONS][link.Name].Geom1))
     print(f'MaxDepth increased for node "{node_label}" from {node.MaxDepth} to {max_height}')
     node.MaxDepth = max_height
+
+
+def set_times(inp, start, end, head=None, tail=None):
+    if head is None:
+        sim_start = start
+    else:
+        sim_start = start - head
+
+    if tail is None:
+        end = end
+    else:
+        end = end + tail
+
+    report_start = start
+    inp[sec.OPTIONS]['START_DATE'] = sim_start.date()
+    inp[sec.OPTIONS]['START_TIME'] = sim_start.time()
+    inp[sec.OPTIONS]['REPORT_START_DATE'] = report_start.date()
+    inp[sec.OPTIONS]['REPORT_START_TIME'] = report_start.time()
+    inp[sec.OPTIONS]['END_DATE'] = end.date()
+    inp[sec.OPTIONS]['END_TIME'] = end.time()
+    return inp

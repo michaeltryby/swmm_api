@@ -538,7 +538,7 @@ def dataframe_to_inp_string(df):
     if df.empty:
         return ';; NO data'
 
-    c = df.copy()
+    c = df.sort_index().copy()
     if c.columns.name is None:
         c.columns.name = comment_sign
     else:

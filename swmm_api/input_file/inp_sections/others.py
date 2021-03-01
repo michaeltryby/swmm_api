@@ -897,6 +897,10 @@ class TimeseriesData(Timeseries):
             f += '{} {} {}\n'.format(self.Name, datetime, value)
         return f
 
+    @classmethod
+    def from_pandas(cls, series):
+        return cls(series.name, list(zip(series.index.strftime('%m/%d/%Y %H:%M'), series.round(1).to_list())))
+
 
 class Tag(BaseSectionObject):
     """Section: [**TAGS**]"""

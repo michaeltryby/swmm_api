@@ -178,7 +178,7 @@ class Infiltration(BaseSectionObject):
         Subcatch (str): subcatchment name. ``Subcat``
     """
     _identifier =IDENTIFIERS.Subcatch
-    _table_inp_export = False
+    # _table_inp_export = False
 
     def __init__(self, Subcatch):
         self.Subcatch = str(Subcatch)
