@@ -717,6 +717,46 @@ def rename_link(inp, old_label, new_label):
                 inp[section][new_label].Link = new_label
 
 
+def rename_timeseries(inp, old_label, new_label):
+    if old_label in inp[sec.TIMESERIES]:
+        obj = inp[sec.TIMESERIES].pop(old_label)
+        obj.Name = new_label
+        inp[sec.TIMESERIES].add_obj(obj)
+
+    key = EvaporationSection.KEYS.TIMESERIES  # TemperatureSection.KEYS.TIMESERIES, ...
+
+    if sec.RAINGAGES in inp:
+        f = inp[sec.RAINGAGES].frame
+        filtered_table = f[(f['Source'] == key) & (f['Timeseries'] == old_label)]
+        if not filtered_table.empty:
+            for i in filtered_table.index:
+                inp[sec.RAINGAGES][i].Timeseries = new_label
+
+    if sec.EVAPORATION in inp:
+        if key in inp[sec.EVAPORATION]:
+            if inp[sec.EVAPORATION][key] == old_label:
+                inp[sec.EVAPORATION][key] = new_label
+
+    if sec.TEMPERATURE in inp:
+        if key in inp[sec.TEMPERATURE]:
+            if inp[sec.TEMPERATURE][key] == old_label:
+                inp[sec.TEMPERATURE][key] = new_label
+
+    if sec.OUTFALLS in inp:
+        f = inp[sec.OUTFALLS].frame
+        filtered_table = f[(f['Type'] == key) & (f['Data'] == old_label)]
+        if not filtered_table.empty:
+            for i in filtered_table.index:
+                inp[sec.OUTFALLS][i].Data = new_label
+
+    if sec.INFLOWS in inp:
+        f = inp[sec.INFLOWS].frame
+        filtered_table = f[f['TimeSeries'] == old_label]
+        if not filtered_table.empty:
+            for i in filtered_table.index:
+                inp[sec.INFLOWS][i].TimeSeries = new_label
+
+
 def remove_empty_sections(inp):
     """
     remove empty inp-file data sections
@@ -1118,6 +1158,9 @@ def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, grap
 
     if split_at_node is not None:
         graph.remove_node(split_at_node)
+
+    if isinstance(graph, DiGraph):
+        graph = graph.to_undirected()
     sub = subgraph(graph, node_connected_component(graph, keep_node))
 
     print(f'Reduced Network from {len(graph.nodes)} nodes to {len(sub.nodes)} nodes.')
@@ -1131,7 +1174,7 @@ def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, grap
     inp = filter_nodes(inp, final_nodes)
 
     # __________________________________________
-    inp = filter_links(inp, final_nodes)
+    inp = filter_links_within_nodes(inp, final_nodes)
 
     # __________________________________________
     inp = filter_subcatchments(inp, final_nodes)

@@ -114,7 +114,7 @@ def inp_to_string(inp: InpData, fast=True):
     return f
 
 
-def write_inp_file(inp: InpData, filename, fast=True):
+def write_inp_file(inp: InpData, filename, fast=True, encoding='iso-8859-1'):
     """
     create/write a new ``.inp``-file
 
@@ -123,5 +123,5 @@ def write_inp_file(inp: InpData, filename, fast=True):
         filename (str): path/filename of created ``.inp``-file
         fast (bool): don't use any formatting else format as table
     """
-    with open(filename, 'w') as f:
+    with open(filename, 'w', encoding=encoding) as f:
         f.write(inp_to_string(inp, fast=fast))

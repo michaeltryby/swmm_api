@@ -10,7 +10,7 @@ class SubCatchment(BaseSectionObject):
     Section: [**SUBCATCHMENTS**]
 
     Purpose:
-        Identifies each subcatchment within the study area. Subcatchments are land area
+        Identifies each sub-catchment within the study area. Subcatchments are land area
         units which generate runoff from rainfall.
 
     Format:

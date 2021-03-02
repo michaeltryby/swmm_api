@@ -49,7 +49,7 @@ class RainGage(BaseSectionObject):
         Station (str): name of recording station used in the rain file. ``Sta``
         Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
     """
-    _identifier =IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.Name
 
     class FORMATS:
         INTENSITY = 'INTENSITY'
