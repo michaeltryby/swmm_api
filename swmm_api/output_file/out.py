@@ -9,7 +9,7 @@ from os import remove
 
 from numpy import dtype, fromfile
 from pandas import date_range, DataFrame, MultiIndex, Series
-from swmmtoolbox.swmmtoolbox import SwmmExtract
+from .swmmtoolbox import SwmmExtract
 
 from . import parquet
 
@@ -75,7 +75,7 @@ class SwmmOutHandler:
         self._number_columns = None
 
     def __repr__(self):
-        return f'SwmmOutHandler(file="{self.filename}")'
+        return f'SwmmOutHandler("{self.filename}")'
 
     # def __str__(self):
     #     return f'SwmmOutHandler({self.filename})'

@@ -169,7 +169,7 @@ def _continuity_part_to_dict(raw):
     df.columns = ['_'.join(str(c) for c in col).strip() for col in df.columns.values]
 
     df.index.name = None
-    df.index = df.index.str.replace('.', '').str.strip()
+    df.index = df.index.str.replace('.', '', regex=False).str.strip()
 
     res = df.to_dict(orient='index')
     res['Continuity Error (%)'] = res['Continuity Error (%)']['Volume_hectare-m']
@@ -187,3 +187,9 @@ def _continuity_part_to_dict(raw):
 
 # def get_item_in_line(line, item):
 #     return float([v.strip() for v in line.split()][item])
+
+class VARS:
+    class CONTINUITY:
+        VOL_HM3 = 'Volume_hectare-m'
+        VOL_1e6L = 'Volume_10^6 ltr'
+        DEPTH_MM = 'Depth_mm'

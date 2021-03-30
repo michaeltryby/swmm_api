@@ -29,7 +29,8 @@ class Report:
         """
         self.raw_parts = dict()
         self.converted_parts = dict()
-        self._report_to_dict(filename)
+        self._filename = filename
+        self._report_to_dict()
 
         # ________________
         # TODO
@@ -55,7 +56,10 @@ class Report:
         self._flow_classification_summary = None
         self._conduit_surcharge_summary = None
 
-    def _report_to_dict(self, fn):
+    def __repr__(self):
+        return f'SWMM Report File("{self._filename}")'
+
+    def _report_to_dict(self):
         """
         convert the report file into a dictionary depending of the different parts
 
@@ -65,7 +69,7 @@ class Report:
         Returns:
             dict: dictionary of parts of the report file
         """
-        with open(fn, 'r') as file:
+        with open(self._filename, 'r') as file:
             lines = file.readlines()
 
         self.raw_parts['Simulation Infos'] = ''.join(lines[-3:])
