@@ -1,5 +1,7 @@
 # from: https://timcera.bitbucket.io/swmmtoolbox/docsrc/index.html
 # copied to reduce dependencies
+# copyright (c) Author Tim Cera with BSD License
+
 import copy
 import datetime
 import struct

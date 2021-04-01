@@ -40,6 +40,10 @@ ts = inp[TIMESERIES]['regenseries'].frame  # type: pandas.Series
 ```
 see [examples/inp_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/inp_file_reader.ipynb)
 
+see [examples/inp_file_structure.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/inp_file_structure.ipynb)
+
+see [examples/inp_file_macros.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/inp_file_macros.ipynb)
+
 ## Write the manipulated INP-File
 ```python
 from swmm_api import write_inp_file
