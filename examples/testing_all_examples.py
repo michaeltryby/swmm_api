@@ -3,6 +3,8 @@ from shutil import rmtree
 
 from tqdm import tqdm
 
+import swmm_api.input_file.inp_sections as s
+
 from swmm_api import read_inp_file, write_inp_file, swmm5_run
 
 """if no error occur pretty much everything works (or more test cases are needed)"""
@@ -21,6 +23,8 @@ for folder in process_bar:
     for fn in listdir(folder):
         if '.inp' in fn:
             inp = read_inp_file(path.join(folder, fn), ignore_gui_sections=False)
+            print(fn, '\n', inp.keys())
+            continue
             inp_fn = path.join(temp_dir, 'temp.inp')
             write_inp_file(inp, inp_fn)
 

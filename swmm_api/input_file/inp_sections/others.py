@@ -915,3 +915,197 @@ class Tag(BaseSectionObject):
         self.kind = kind
         self.Name = Name
         self.tag = tag
+
+
+class Hydrograph(BaseSectionObject):
+    """
+    Section: [**HYDROGRAPHS**]
+
+    Purpose:
+        Specifies the shapes of the triangular unit hydrographs that determine the amount of
+        rainfall-dependent infiltration/inflow (RDII) entering the drainage system.
+
+    Formats:
+        ::
+
+            Name Raingage
+            Name Month SHORT/MEDIUM/LONG R T K (Dmax Drec D0)
+
+    Remarks:
+        Name
+            name assigned to a unit hydrograph group.
+        Raingage
+            name of the rain gage used by the unit hydrograph group.
+        Month
+            month of the year (e.g., JAN, FEB, etc. or ALL for all months).
+        R
+            response ratio for the unit hydrograph.
+        T
+            time to peak (hours) for the unit hydrograph.
+        K
+            recession limb ratio for the unit hydrograph.
+        Dmax
+            maximum initial abstraction depth available (in rain depth units).
+        Drec
+            initial abstraction recovery rate (in rain depth units per day)
+        D0
+            initial abstraction depth already filled at the start of the simulation (in rain depth units).
+
+        For each group of unit hydrographs, use one line to specify its rain gage followed by
+        as many lines as are needed to define each unit hydrograph used by the group
+        throughout the year. Three separate unit hydrographs, that represent the short-term,
+        medium-term, and long-term RDII responses, can be defined for each month (or all
+        months taken together). Months not listed are assumed to have no RDII.
+
+        The response ratio (R) is the fraction of a unit of rainfall depth that becomes RDII.
+        The sum of the ratios for a set of three hydrographs does not have to equal 1.0.
+
+        The recession limb ratio (K) is the ratio of the duration of the hydrograph’s recession
+        limb to the time to peak (T) making the hydrograph time base equal to T*(1+K) hours.
+        The area under each unit hydrograph is 1 inch (or mm).
+
+        The optional initial abstraction parameters determine how much rainfall is lost at the
+        start of a storm to interception and depression storage. If not supplied then the
+        default is no initial abstraction.
+
+    Examples:
+
+        ::
+
+            ; All three unit hydrographs in this group have the same shapes except those in July,
+            ; which have only a short- and medium-term response and a different shape.
+            UH101 RG1
+            UH101 ALL SHORT 0.033 1.0 2.0
+            UH101 ALL MEDIUM 0.300 3.0 2.0
+            UH101 ALL LONG 0.033 10.0 2.0
+            UH101 JUL SHORT 0.033 0.5 2.0
+            UH101 JUL MEDIUM 0.011 2.0 2.0
+
+    Args:
+        Name (str): name assigned to time series.
+    """
+    _identifier = IDENTIFIERS.Name
+    _table_inp_export = False
+
+    class TYPES:
+        SHORT = 'SHORT'
+        MEDIUM = 'MEDIUM'
+        LONG = 'LONG'
+
+    class MONTHS:
+        JAN = 'JAN'
+        FEB = 'FEB'
+        MAR = 'MAR'
+        APR = 'APR'
+        MAI = 'MAI'
+        JUN = 'JUN'
+        JUL = 'JUL'
+        AUG = 'AUG'
+        SEP = 'SEP'
+        OCT = 'OCT'
+        NOV = 'NOV'
+        DEC = 'DEC'
+
+        ALL = 'ALL'
+
+        _possible = [JAN, FEB, MAR, APR, MAI, JUN, JUL, AUG, SEP, OCT, NOV, DEC, ALL]
+
+    def __init__(self, Name):
+        self.Name = str(Name)
+
+    @classmethod
+    def _convert_lines(cls, lines):
+        data = list()
+        # TODO not ready !!!!
+        last = None
+
+        for name, *line in lines:
+            # ---------------------------------
+            if line[0].upper() == cls.TYPES.FILE:
+                yield TimeseriesFile(name, ' '.join(line[1:]))
+                last = name
+
+            # ---------------------------------
+            else:
+                if name != last:
+                    if last is not None:
+                        yield TimeseriesData(last, data)
+                    data = list()
+                    last = name
+
+                # -------------
+                iterator = iter(line)
+                for part in iterator:
+                    if '/' in part:
+                        date = part
+                        time = next(iterator)
+                        i = ' '.join([date, time])
+
+                    else:
+                        i = part
+
+                    v = float(next(iterator))
+                    data.append([i, v])
+
+        # last
+        if line[0].upper() != cls.TYPES.FILE:
+            yield TimeseriesData(last, data)
+
+
+class HydrographRainGage(Hydrograph):
+    """
+    Section: [**HYDROGRAPHS**]
+
+    Purpose:
+        Specifies the shapes of the triangular unit hydrographs that determine the amount of
+        rainfall-dependent infiltration/inflow (RDII) entering the drainage system.
+
+    Formats:
+        ::
+
+            Name Raingage
+
+    Args:
+        Name (str): name assigned to a unit hydrograph group.
+        rain_gage (str): name of the rain gage used by the unit hydrograph group.
+    """
+    def __init__(self, Name, rain_gage):
+        Hydrograph.__init__(self, Name)
+        self.rain_gage = rain_gage
+
+
+class HydrographMonth(Hydrograph):
+    """
+    Section: [**HYDROGRAPHS**]
+
+    Purpose:
+        Specifies the shapes of the triangular unit hydrographs that determine the amount of
+        rainfall-dependent infiltration/inflow (RDII) entering the drainage system.
+
+    Formats:
+        ::
+
+            Name Month SHORT/MEDIUM/LONG R T K (Dmax Drec D0)
+
+    Args:
+        Name (str): name assigned to a unit hydrograph group.
+        month (str):
+        response (str):
+        response_ratio (str):
+        time_to_peak (str):
+        recession_limb_ratio (str):
+        depth_max (str):
+        depth_recovery (str):
+        depth_init (str):
+    """
+    def __init__(self, Name, month, response, response_ratio, time_to_peak, recession_limb_ratio, 
+                 depth_max=NaN, depth_recovery=NaN, depth_init=NaN):
+        Hydrograph.__init__(self, Name)
+        self.month = month
+        self.response = response
+        self.response_ratio = response_ratio
+        self.time_to_peak = time_to_peak
+        self.recession_limb_ratio = recession_limb_ratio
+        self.depth_max = depth_max
+        self.depth_recovery = depth_recovery
+        self.depth_init = depth_init

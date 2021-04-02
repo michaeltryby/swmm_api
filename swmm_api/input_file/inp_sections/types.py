@@ -8,6 +8,9 @@ SECTION_TYPES = {
     EVAPORATION: EvaporationSection,
     TEMPERATURE: TemperatureSection,
     REPORT: ReportSection,
+    FILES: FilesSection,
+    BACKDROP: BackdropSection,
+    ADJUSTMENTS: AdjustmentsSection,
     # -----
     # GUI data
     COORDINATES: Coordinate,

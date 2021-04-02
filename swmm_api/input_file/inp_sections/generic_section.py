@@ -81,6 +81,7 @@ class OptionSection(InpSectionGeneric):
     def from_inp_lines(cls, lines):
         data = cls()
         for key, *line in line_iter(lines):
+            key = key.upper()
             assert len(line) == 1
             data[key] = infer_type(line[0])
         return data
@@ -144,6 +145,7 @@ class ReportSection(InpSectionGeneric):
     def from_inp_lines(cls, lines):
         data = cls()
         for key, *line in line_iter(lines):
+            key = key.upper()
             if len(line) == 1:
                 value = infer_type(line[0])
 
@@ -258,12 +260,6 @@ class EvaporationSection(InpSectionGeneric):
 
         DRY_ONLY determines if evaporation only occurs during periods with no precipitation.
         The default is NO.
-
-    Args:
-        lines (list): section lines from input file
-
-    Returns:
-        dict: evaporation_options
     """
 
     class KEYS:
@@ -275,10 +271,22 @@ class EvaporationSection(InpSectionGeneric):
         RECOVERY = 'RECOVERY'
         DRY_ONLY = 'DRY_ONLY'
 
+        _possible = [CONSTANT, MONTHLY, TIMESERIES, TEMPERATURE, FILE, RECOVERY, DRY_ONLY]
+
     @classmethod
     def from_inp_lines(cls, lines):
+        """
+        read ``.inp``-file lines and create an section object
+
+        Args:
+            lines (str | list[list[str]]): lines in the section of the ``.inp``-file
+
+        Returns:
+            InpSectionGeneric: object of the Evaporation-section
+        """
         data = cls()
         for key, *line in line_iter(lines):
+            key = key.upper()
             if len(line) == 1:
                 value = line[0]
 
@@ -385,16 +393,31 @@ class TemperatureSection(InpSectionGeneric):
     class KEYS:
         TIMESERIES = 'TIMESERIES'
         FILE = 'FILE'
-        WINDSPEED_MONTHLY = 'WINDSPEED MONTHLY'
-        WINDSPEED_FILE = 'WINDSPEED FILE'
+
+        _WINDSPEED = 'WINDSPEED'
+        WINDSPEED_MONTHLY = _WINDSPEED + ' MONTHLY'
+        WINDSPEED_FILE = _WINDSPEED + ' FILE'
+
         SNOWMELT = 'SNOWMELT'
-        ADC_IMPERVIOUS = 'ADC IMPERVIOUS'
-        ADC_PERVIOUS = 'ADC PERVIOUS'
+
+        _ADC = 'ADC'
+        ADC_IMPERVIOUS = _ADC + ' IMPERVIOUS'
+        ADC_PERVIOUS = _ADC + ' PERVIOUS'
 
     @classmethod
     def from_inp_lines(cls, lines):
+        """
+        read ``.inp``-file lines and create an section object
+
+        Args:
+            lines (str | list[list[str]]): lines in the section of the ``.inp``-file
+
+        Returns:
+            InpSectionGeneric: object of the Temperature-section
+        """
         data = cls()
         for key, *line in line_iter(lines):
+            key = key.upper()
             n_options = len(line)
 
             if key == cls.KEYS.TIMESERIES:
@@ -407,7 +430,7 @@ class TemperatureSection(InpSectionGeneric):
                 else:
                     value = line
 
-            elif cls.KEYS.WINDSPEED_FILE.startswith(key):
+            elif key == cls.KEYS._WINDSPEED:
                 key += ' ' + line.pop(0)
                 if key == cls.KEYS.WINDSPEED_FILE:
                     assert n_options == 1
@@ -422,7 +445,7 @@ class TemperatureSection(InpSectionGeneric):
                 assert n_options == 6
                 value = line
 
-            elif cls.KEYS.ADC_IMPERVIOUS.startswith(key):
+            elif key == cls.KEYS._ADC:
                 key += ' ' + line.pop(0)
                 assert n_options == 11
                 value = line
@@ -430,7 +453,7 @@ class TemperatureSection(InpSectionGeneric):
                     raise NotImplementedError()
 
             else:
-                value = line
+                raise NotImplementedError()
 
             data[key] = value
 
@@ -478,63 +501,197 @@ class MapSection(InpSectionGeneric):
 
     @classmethod
     def from_inp_lines(cls, lines):
-        data = cls()
-        for name, *line in line_iter(lines):
-            name = name.upper()
-            if name == cls.KEYS.DIMENSIONS:
-                data[name] = [float(i) for i in line]
+        """
+        read ``.inp``-file lines and create an section object
 
-            elif name == cls.KEYS.UNITS:
-                data[name] = line[0]
+        Args:
+            lines (str | list[list[str]]): lines in the section of the ``.inp``-file
+
+        Returns:
+            InpSectionGeneric: object of the Map-section
+        """
+        data = cls()
+        for key, *line in line_iter(lines):
+            key = key.upper()
+            if key == cls.KEYS.DIMENSIONS:
+                data[key] = [float(i) for i in line]
+
+            elif key == cls.KEYS.UNITS:
+                data[key] = line[0]
             else:
                 raise NotImplementedError()
         return data
 
 
-# class TagsSection(InpSectionGeneric):
-#     """Section: [**TAGS**]"""
-#     class TYPES:
-#         Node = IDENTIFIERS.Node
-#         Subcatch = IDENTIFIERS.Subcatch
-#         Link = IDENTIFIERS.Link
-#
-#     @classmethod
-#     def from_inp_lines(cls, lines):
-#         data = cls()
-#         for kind, name, tag in line_iter(lines):
-#             if kind not in data:
-#                 data[kind] = dict()
-#             data[kind][name] = tag
-#         return data
-#
-#     @staticmethod
-#     def lines_to_frame(lines):
-#         # TAGS AS DATAFRAME
-#         return DataFrame.from_records(lines, columns=['type', 'name', 'tags'])
-#
-#     @property
-#     def to_pandas(self):
-#         # MAKE TAGS TO SERIES
-#         tags_df = dict()
-#         for type_ in self:
-#             tags_df[type_] = DataFrame.from_dict(self[type_], orient='index')
-#         return tags_df
-#
-#     def to_inp_lines(self, fast=False):
-#         if not self:  # if empty
-#             return '; NO data'
-#         f = ''
-#         max_len_type = len(max(self.keys(), key=len)) + 2
-#         for type_, tags in self.items():
-#             max_len_name = len(max(tags.keys(), key=len)) + 2
-#             for name, tag in tags.items():
-#                 f += '{{:<{len1}}} {{:<{len2}}} {{}}\n'.format(len1=max_len_type, len2=max_len_name).format(type_, name,
-#                                                                                                             tag)
-#         return f
-#
-#     def slice_section(self, keys, which):
-#         """which=one of TagsSection.Types"""
-#         new = type(self)({k: v for k, v in self.items() if k != which})
-#         if which in self:
-#             new[which] = {k: self[which][k] for k in set(self[which].keys()).intersection(keys)}
-#         return new
+class FilesSection(InpSectionGeneric):
+    """
+    Section: [**FILES**]
+
+    Purpose:
+        Identifies optional interface files used or saved by a run.
+
+    Format:
+        ::
+
+            USE / SAVE RAINFALL Fname
+            USE / SAVE RUNOFF Fname
+            USE / SAVE HOTSTART Fname
+            USE / SAVE RDII Fname
+            USE INFLOWS Fname
+            SAVE OUTFLOWS Fname
+
+    Remarks:
+        Fname
+            is the name of an interface file.
+
+        Refer to Section 11.7 Interface Files for a description of interface files. Rainfall, Runoff, and
+        RDII files can either be used or saved in a run, but not both. A run can both use and save a Hot
+        Start file (with different names).
+    """
+
+    class KEYS:
+        USE = 'USE'
+        SAVE = 'SAVE'
+
+        _use_or_save = [USE, SAVE]
+
+        RAINFALL = 'RAINFALL'
+        RUNOFF = 'RUNOFF'
+        HOTSTART = 'HOTSTART'
+        RDII = 'RDII'
+        INFLOWS = 'INFLOWS'
+        OUTFLOWS = 'OUTFLOWS'
+
+        _possible = [RAINFALL, RUNOFF, HOTSTART, RDII, INFLOWS, OUTFLOWS]
+
+    @classmethod
+    def from_inp_lines(cls, lines):
+        """
+        read ``.inp``-file lines and create an section object
+
+        Args:
+            lines (str | list[list[str]]): lines in the section of the ``.inp``-file
+
+        Returns:
+            InpSectionGeneric: object of the Files-section
+        """
+        data = cls()
+        for use_save, kind, *fn in line_iter(lines):
+            use_save = use_save.upper()
+            kind = kind.upper()
+            assert use_save in cls.KEYS._use_or_save
+            assert kind in cls.KEYS._possible
+            data[f'{use_save} {kind}'] = ' '.join(fn)
+        return data
+
+
+class AdjustmentsSection(InpSectionGeneric):
+    """
+    Section: [**ADJUSTMENTS**]
+
+    Purpose:
+        Specifies optional monthly adjustments to be made to temperature, evaporation rate,
+        rainfall intensity and hydraulic conductivity in each time period of a simulation.
+
+    Format:
+        ::
+
+            TEMPERATURE  t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11 t12
+            EVAPORATION  e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12
+            RAINFALL     r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 r11 r12
+            CONDUCTIVITY c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12
+
+    Remarks:
+        t1..t12
+            adjustments to temperature in January, February, etc., as plus or minus degrees F (degrees C).
+        e1..e12
+            adjustments to evaporation rate in January, February, etc., as plus or minus in/day (mm/day).
+        r1..r12
+            multipliers applied to precipitation rate in January, February, etc.
+        c1..c12
+            multipliers applied to soil hydraulic conductivity in January, February, etc. used in either Horton or Green-Ampt infiltration.
+
+        The same adjustment is applied for each time period within a given month and is repeated for that
+        month in each subsequent year being simulated.
+    """
+
+    class KEYS:
+        TEMPERATURE = 'TEMPERATURE'
+        EVAPORATION = 'EVAPORATION'
+        RAINFALL = 'RAINFALL'
+        CONDUCTIVITY = 'CONDUCTIVITY'
+
+        _possible = [TEMPERATURE, EVAPORATION, RAINFALL, CONDUCTIVITY]
+
+    @classmethod
+    def from_inp_lines(cls, lines):
+        """
+        read ``.inp``-file lines and create an section object
+
+        Args:
+            lines (str | list[list[str]]): lines in the section of the ``.inp``-file
+
+        Returns:
+            InpSectionGeneric: object of the Adjustments-section
+        """
+        data = cls()
+        for key, *factors in line_iter(lines):
+            key = key.upper()
+            assert len(factors) == 13
+            assert key in cls.KEYS._possible
+            data[key] = [float(i) for i in line]
+        return data
+
+
+class BackdropSection(InpSectionGeneric):
+    """
+    Section: [**BACKDROP**]
+
+    Purpose:
+        Specifies file name and coordinates of map’s backdrop image.
+
+    Format:
+        ::
+
+            TFILE        Fname
+            DIMENSIONS   X1 Y1 X2 Y2
+
+    Remarks:
+        Fname
+            name of file containing backdrop image
+        X1
+            lower-left X coordinate of backdrop image
+        Y1
+            lower-left Y coordinate of backdrop image
+        X2
+            upper-right X coordinate of backdrop image
+        Y2
+            upper-right Y coordinate of backdrop image
+    """
+
+    class KEYS:
+        FILE = 'FILE'
+        DIMENSIONS = 'DIMENSIONS'
+
+    @classmethod
+    def from_inp_lines(cls, lines):
+        """
+        read ``.inp``-file lines and create an section object
+
+        Args:
+            lines (str | list[list[str]]): lines in the section of the ``.inp``-file
+
+        Returns:
+            InpSectionGeneric: object of the Backdrop-section
+        """
+        data = cls()
+        for key, *line in line_iter(lines):
+            key = key.upper()
+            if key == cls.KEYS.FILE:
+                data[key] = ' '.join(line)
+            elif key == cls.KEYS.DIMENSIONS:
+                assert len(line) == 4
+                data[key] = [float(i) for i in line]
+            else:
+                raise NotImplementedError()
+        return data
