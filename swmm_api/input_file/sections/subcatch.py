@@ -1,8 +1,8 @@
 from numpy import NaN
 from pandas import DataFrame
 
-from ..inp_helpers import BaseSectionObject, SWMM_VERSION
-from .identifiers import IDENTIFIERS
+from ..helpers import BaseSectionObject, SWMM_VERSION
+from ._identifiers import IDENTIFIERS
 
 
 class SubCatchment(BaseSectionObject):
@@ -30,7 +30,8 @@ class SubCatchment(BaseSectionObject):
         Width (float): characteristic width of subcatchment (ft or meters).
         Slope (float): subcatchment slope (percent).
         CurbLen (float): total curb length (any length units). Use 0 if not applicable. ``Clength``
-        SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow accumulation and melting over the subcatchment. ``Spack``
+        SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow
+        accumulation and melting over the subcatchment. ``Spack``
 
     Attributes:
         Name (str): name assigned to subcatchment.
@@ -41,9 +42,10 @@ class SubCatchment(BaseSectionObject):
         Width (float): characteristic width of subcatchment (ft or meters).
         Slope (float): subcatchment slope (percent).
         CurbLen (float): total curb length (any length units). Use 0 if not applicable. ``Clength``
-        SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow accumulation and melting over the subcatchment. ``Spack``
+        SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow
+        accumulation and melting over the subcatchment. ``Spack``
     """
-    _identifier =IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.Name
 
     def __init__(self, Name, RainGage, Outlet, Area, Imperv, Width, Slope, CurbLen=0, SnowPack=NaN):
         self.Name = str(Name)
@@ -104,7 +106,7 @@ class SubArea(BaseSectionObject):
 
         PctRouted (float): percent of runoff routed from one type of area to another (default = 100). ``%Routed``
     """
-    _identifier =IDENTIFIERS.Subcatch
+    _identifier = IDENTIFIERS.Subcatch
 
     class RoutToOption:
         __class__ = 'RoutTo Option'
@@ -112,7 +114,8 @@ class SubArea(BaseSectionObject):
         PERVIOUS = 'PERVIOUS'
         OUTLET = 'OUTLET'
 
-    def __init__(self, Subcatch, N_Imperv, N_Perv, S_Imperv, S_Perv, PctZero, RouteTo=RoutToOption.OUTLET, PctRouted=100):
+    def __init__(self, Subcatch, N_Imperv, N_Perv, S_Imperv, S_Perv, PctZero, RouteTo=RoutToOption.OUTLET,
+                 PctRouted=100):
         self.Subcatch = str(Subcatch)
         self.N_Imperv = float(N_Imperv)
         self.N_Perv = float(N_Perv)
@@ -177,7 +180,8 @@ class Infiltration(BaseSectionObject):
     Attributes:
         Subcatch (str): subcatchment name. ``Subcat``
     """
-    _identifier =IDENTIFIERS.Subcatch
+    _identifier = IDENTIFIERS.Subcatch
+
     # _table_inp_export = False
 
     def __init__(self, Subcatch):
@@ -256,6 +260,7 @@ class InfiltrationHorton(Infiltration):
         DryTime (float): time it takes for fully saturated soil to dry (days).
         MaxInf (float): maximum infiltration volume possible (0 if not applicable) (in or mm).
     """
+
     def __init__(self, Subcatch, MaxRate, MinRate, Decay, DryTime, MaxInf, kind=None):
         Infiltration.__init__(self, Subcatch)
         self.MaxRate = float(MaxRate)
@@ -293,6 +298,7 @@ class InfiltrationGreenAmpt(Infiltration):
         Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
         IMD (float): initial soil moisture deficit (volume of voids / total volume).
     """
+
     def __init__(self, Subcatch, Psi, Ksat, IMD, kind=None):
         Infiltration.__init__(self, Subcatch)
         self.Psi = float(Psi)
@@ -330,6 +336,7 @@ class InfiltrationCurveNumber(Infiltration):
             (This property has been deprecated and is no longer used.)
         DryTime (float): time it takes for fully saturated soil to dry (days).
     """
+
     def __init__(self, Subcatch, CurveNo, Ksat, DryTime, kind=None):
         Infiltration.__init__(self, Subcatch)
         self.CurveNo = CurveNo
@@ -366,10 +373,10 @@ class Polygon(BaseSectionObject):
             - Xcoord: horizontal coordinate of vertex
             - Ycoord: vertical coordinate of vertex
     """
-    _identifier =IDENTIFIERS.Subcatch
+    _identifier = IDENTIFIERS.Subcatch
     _table_inp_export = False
 
-    def __init__(self, Subcatch,  polygon):
+    def __init__(self, Subcatch, polygon):
         self.Subcatch = str(Subcatch)
         self.polygon = polygon
 
@@ -440,40 +447,242 @@ class Loading(BaseSectionObject):
             - InitBuildup: initial buildup of pollutant (lbs/acre or kg/hectare).
 
     """
-    _identifier =IDENTIFIERS.Subcatch
+    _identifier = IDENTIFIERS.Subcatch
     _table_inp_export = False
 
-    def __init__(self, Subcatch,  pollutant_buildup):
+    def __init__(self, Subcatch, pollutant_buildup_dict=None):
         self.Subcatch = str(Subcatch)
-        self.pollutant_buildup = pollutant_buildup
+        self.pollutant_buildup_dict = dict()
+        if pollutant_buildup_dict:
+            self.pollutant_buildup_dict = pollutant_buildup_dict
+
+    def _add_buildup(self, pollutant, buildup):
+        self.pollutant_buildup_dict[pollutant] = buildup
 
     @classmethod
     def _convert_lines(cls, lines):
         last = None
-        pollutant_buildup = list()
         for Subcatch, *line in lines:
-            if Subcatch != last:
-                # new curve line
-                if last is not None:
-                    # first return previous curve
-                    yield cls(last, pollutant_buildup)
-                # reset variables
-                pollutant_buildup = list()
-                last = Subcatch
 
-            # points in current line
+            if last is None:
+                # first line of section
+                last = cls(Subcatch)
+
+            elif last.Subcatch != Subcatch:
+                # new Coverage
+                yield last
+                last = cls(Subcatch)
+
+            # Coverage definitions
             remains = iter(line)
             for pollutant in remains:
                 buildup = next(remains)
-                pollutant_buildup.append([pollutant, buildup])
+                last._add_buildup(pollutant, buildup)
 
         # last
         if last is not None:
-            yield cls(last, pollutant_buildup)
+            yield last
 
     @property
     def frame(self):
-        return DataFrame.from_records(self.pollutant_buildup, columns=['pollutant', 'initial buildup'])
+        return DataFrame.from_dict(self.pollutant_buildup_dict, columns=['pollutant', 'initial buildup'])
 
     def to_inp_line(self):
-        return '\n'.join(['{}  {} {}'.format(self.Subcatch, p, b) for p, b in self.pollutant_buildup])
+        return '\n'.join(['{}  {} {}'.format(self.Subcatch, p, b) for p, b in self.pollutant_buildup_dict.items()])
+
+
+class Coverage(BaseSectionObject):
+    """
+    Section: [**COVERAGES**]
+
+    Purpose:
+        Specifies the percentage of a subcatchment’s area that is covered by each category of land use.
+
+    Format:
+        ::
+
+            Subcat Landuse Percent Landuse Percent . . .
+
+    Args:
+        Subcatch (str):
+            subcatchment name.
+
+        land_use_dict (dict):
+            key: Landuse (str): land use name.
+            value: Percent (float): percent of subcatchment area.
+
+    Remarks:
+        More than one pair of land use - percentage values can be entered per line. If more
+        than one line is needed, then the subcatchment name must still be entered first on
+        the succeeding lines.
+
+        If a land use does not pertain to a subcatchment, then it does not have to be entered.
+
+        If no land uses are associated with a subcatchment then no contaminants will appear
+        in the runoff from the subcatchment.
+    """
+    _identifier = IDENTIFIERS.Subcatch
+
+    def __init__(self, Subcatch, land_use_dict=None):
+        self.Subcatch = str(Subcatch)
+        self.land_use_dict = dict()
+        if land_use_dict:
+            self.land_use_dict = land_use_dict
+
+    def _add_land_use(self, land_use, percent):
+        self.land_use_dict[land_use] = percent
+
+    @classmethod
+    def _convert_lines(cls, lines):
+        last = None
+        for Subcatch, *line in lines:
+
+            if last is None:
+                # first line of section
+                last = cls(Subcatch)
+
+            elif last.Subcatch != Subcatch:
+                # new Coverage
+                yield last
+                last = cls(Subcatch)
+
+            # Coverage definitions
+            remains = iter(line)
+            for land_use in remains:
+                percent = next(remains)
+                last._add_land_use(land_use, percent)
+
+        # last
+        if last is not None:
+            yield last
+
+    @property
+    def frame(self):
+        return DataFrame.from_dict(self.land_use_dict, columns=['land_use', 'percent'])
+
+    def to_inp_line(self):
+        return '\n'.join(['{}  {} {}'.format(self.Subcatch, p, b) for p, b in self.land_use_dict.items()])
+
+
+class GroundwaterFlow(BaseSectionObject):
+    """
+    Section: [**GWF**]
+
+    Purpose:
+        Defines custom groundwater flow equations for specific subcatchments.
+
+    Format:
+        ::
+
+            Subcat LATERAL/DEEP Expr
+
+    Args:
+        Subcatch (str): subcatchment name.
+        expression (str): math formula expressing the rate of groundwater flow (in cfs per acre or cms per hectare for lateral flow or in/hr or mm/hr for deep flow) as a function of the following variables:
+
+            - ``Hgw`` (for height of the groundwater table)
+            - ``Hsw`` (for height of the surface water)
+            - ``Hcb`` (for height of the channel bottom)
+            - ``Hgs`` (for height of ground surface) where all heights are relative to the aquifer bottom and have units of either feet or meters;
+            - ``Ks`` (for saturated hydraulic conductivity in in/hr or mm/hr)
+            - ``K`` (for unsaturated hydraulic conductivity in in/hr or mm/hr)
+            - ``Theta`` (for moisture content of unsaturated zone)
+            - ``Phi`` (for aquifer soil porosity)
+            - ``Fi`` (for infiltration rate from the ground surface in in/hr or mm/hr)
+            - ``Fu`` (for percolation rate from the upper unsaturated zone in in/hr or mm/hr)
+            - ``A`` (for subcatchment area in acres or hectares)
+
+    Remarks:
+        Use ``LATERAL`` to designate an expression for lateral groundwater flow (to a node of
+        the conveyance network) and ``DEEP`` for vertical loss to deep groundwater.
+
+        See the [``TREATMENT``] section for a list of built-in math functions that can be used in
+        ``Expr``. In particular, the ``STEP(x)`` function is 1 when ``x > 0`` and is 0 otherwise.
+
+    Examples:
+        ::
+
+            ;Two-stage linear reservoir for lateral flow
+            Subcatch1 LATERAL 0.001*Hgw + 0.05*(Hgw–5)*STEP(Hgw–5)
+
+            ;Constant seepage rate to deep aquifer
+            Subactch1 DEEP 0.002
+    """
+    _identifier = [IDENTIFIERS.Subcatch, 'kind']
+
+    class TYPES:
+        LATERAL = 'LATERAL'
+        DEEP = 'DEEP'
+
+    def __init__(self, Subcatch, kind, expression, *expression_):
+        self.Subcatch = str(Subcatch)
+        self.kind = kind
+        self.expression = expression + ' '.join(expression_)
+
+
+class Groundwater(BaseSectionObject):
+    """
+    Section: [**GROUNDWATER**]
+
+    Purpose:
+        Supplies parameters that determine the rate of groundwater flow between the aquifer
+        underneath a subcatchment and a node of the conveyance system.
+
+    Format:
+        ::
+
+            Subcat Aquifer Node Esurf A1 B1 A2 B2 A3 Dsw (Egwt Ebot Egw Umc)
+
+    Args:
+        Subcat (float): subcatchment name.
+        Aquifer (float): name of groundwater aquifer underneath the subcatchment.
+        Node (float): name of node in conveyance system exchanging groundwater with aquifer.
+        Esurf (float): surface elevation of subcatchment (ft or m).
+        A1 (float): groundwater flow coefficient (see below).
+        B1 (float): groundwater flow exponent (see below).
+        A2 (float): surface water flow coefficient (see below).
+        B2 (float): surface water flow exponent (see below).
+        A3 (float): surface water – groundwater interaction coefficient (see below).
+        Dsw (float): fixed depth of surface water at receiving node (ft or m)
+                    (set to zero if surface water depth will vary as computed by flow routing).
+        Egwt (float): threshold groundwater table elevation which must be reached before any flow occurs (ft or m).
+                    Leave blank (or enter \\*) to use the elevation of the receiving node's invert.
+        Ebot (float): elevation of the bottom of the aquifer (ft or m).
+        Egw (float): groundwater table elevation at the start of the simulation (ft or m).
+        Umc (float): unsaturated zone moisture content at start of simulation (volumetric fraction).
+
+
+    Remarks:
+        The following optional parameters can be used to override the values supplied for the subcatchment’s aquifer:
+            - Ebot
+            - Egw
+            - Umc
+
+        The flow coefficients are used in the following equation that determines the lateral groundwater
+        flow rate based on groundwater and surface water elevations:
+
+            Q_L = A1 * (H_gw – H_cb ) ^ B1 – A2 * (H_sw – H_cb ) ^ B2 + A3 * H_gw * H_sw
+
+        where:
+            - Q_L = lateral groundwater flow (cfs per acre or cms per hectare),
+            - H_gw = height of saturated zone above bottom of aquifer (ft or m),
+            - H_sw = height of surface water at receiving node above aquifer bottom (ft or m),
+            - H_cb = height of channel bottom above aquifer bottom (ft or m).
+    """
+    _identifier = [IDENTIFIERS.Subcatch, 'Aquifer', IDENTIFIERS.Node]
+
+    def __init__(self, Subcatch, Aquifer, Node, Esurf, A1, B1, A2, B2, A3, Dsw, Egwt=NaN, Ebot=NaN, Egw=NaN, Umc=NaN):
+        self.Subcatch = str(Subcatch)
+        self.Aquifer = str(Aquifer)
+        self.Node = str(Node)
+        self.Esurf = float(Esurf)
+        self.A1 = float(A1)
+        self.B1 = float(B1)
+        self.A2 = float(A2)
+        self.B2 = float(B2)
+        self.A3 = float(A3)
+        self.Dsw = float(Dsw)
+        self.Egwt = Egwt
+        self.Ebot = Ebot
+        self.Egw = Egw
+        self.Umc = Umc

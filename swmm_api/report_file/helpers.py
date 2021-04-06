@@ -172,7 +172,7 @@ def _continuity_part_to_dict(raw):
     df.index = df.index.str.replace('.', '', regex=False).str.strip()
 
     res = df.to_dict(orient='index')
-    res['Continuity Error (%)'] = res['Continuity Error (%)']['Volume_hectare-m']
+    res['Continuity Error (%)'] = list(res['Continuity Error (%)'].values())[0]
 
     # res = dict()
     # for line in p.split('\n'):
@@ -188,8 +188,38 @@ def _continuity_part_to_dict(raw):
 # def get_item_in_line(line, item):
 #     return float([v.strip() for v in line.split()][item])
 
+class UNIT:
+    _METRIC_FLOWS = ['CMS', 'LPS', 'MLD']
+    _IMPERIAL_FLOWS = ['CFS', 'GPM', 'MGD']
+
+    def __init__(self, flow_unit):
+        self.FLOW = flow_unit
+        if flow_unit in self._METRIC_FLOWS:
+            self.VOL1 = 'hectare-m'
+            self.VOL2 = 'ltr'
+            self.DEPTH1 = 'mm'  # hydrological
+            self.DEPTH2 = 'Meters'  # hydraulic
+            self.MASS = 'kg'
+            self.LENGTH = 'm'
+        else:
+            self.VOL1 = 'acre-feet'
+            self.VOL2 = 'gal'
+            self.DEPTH1 = 'inches'  # hydrological
+            self.DEPTH2 = 'Feet'  # hydraulic
+            self.MASS = 'lbs'
+            self.LENGTH = 'ft'
+
+        self.VOL3 = self.LENGTH + '3'
+        self.VELO = self.LENGTH + '/sec'
+
+
 class VARS:
     class CONTINUITY:
         VOL_HM3 = 'Volume_hectare-m'
         VOL_1e6L = 'Volume_10^6 ltr'
         DEPTH_MM = 'Depth_mm'
+
+    class CONTINUITY_imp:
+        VOL_HM3 = 'Volume_acre-feet'
+        VOL_1e6L = 'Volume_10^6 gal'
+        DEPTH_MM = 'Depth_inches'

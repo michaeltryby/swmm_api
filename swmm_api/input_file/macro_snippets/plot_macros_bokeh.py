@@ -3,10 +3,9 @@ import matplotlib.pyplot as plt
 from matplotlib import patches
 from shapely import geometry as shp
 
-from .graph_macros import inp_to_graph, get_path
-from ..inp_macros import find_link
-from ..inp_sections import Outfall, Polygon, SubCatchment
-from ..inp_sections.labels import *
+from ..macros import find_link
+from ..sections import Outfall, Polygon, SubCatchment
+from swmm_api.input_file.section_labels import *
 
 
 def plot_map(inp):  # TODO

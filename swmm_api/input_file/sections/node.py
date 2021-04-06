@@ -2,9 +2,9 @@ from typing import Union
 
 from numpy import NaN
 
-from .identifiers import IDENTIFIERS
-from ..inp_helpers import BaseSectionObject
-from ..type_converter import to_bool, infer_type
+from ._identifiers import IDENTIFIERS
+from ..helpers import BaseSectionObject
+from .._type_converter import to_bool, infer_type
 
 # NEU in python 3.7
 # from dataclasses import dataclass

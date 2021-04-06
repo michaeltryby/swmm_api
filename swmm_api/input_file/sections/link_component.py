@@ -1,9 +1,9 @@
 from numpy import NaN, isnan
 from pandas import DataFrame
 
-from .identifiers import IDENTIFIERS
-from ..inp_helpers import BaseSectionObject
-from ..type_converter import to_bool
+from ._identifiers import IDENTIFIERS
+from ..helpers import BaseSectionObject
+from .._type_converter import to_bool
 
 
 class CrossSection(BaseSectionObject):

@@ -1,26 +1,23 @@
-import pickle
 from _warnings import warn
 from os import path, remove
 
-from pandas import to_datetime, DataFrame, Series
+from pandas import to_datetime
 
-from ..inp_helpers import InpData
-from ..inp_macros import (reduce_curves, reduce_raingages, combined_subcatchment_frame, find_node,
-                          find_link, calc_slope, delete_node, combine_conduits,
-                          conduit_iter_over_inp, junction_to_outfall, junction_to_storage, )
-from ..inp_reader import read_inp_file
-from ..inp_sections import labels as sec
-from ..inp_sections.types import SECTION_TYPES
-from ..inp_writer import write_inp_file, inp_to_string
-from ..type_converter import offset2delta
+from ..macros import (reduce_curves, reduce_raingages, combined_subcatchment_frame, find_node,
+                      find_link, calc_slope, delete_node, combine_conduits,
+                      conduit_iter_over_inp, junction_to_outfall, junction_to_storage, )
+from ... import read_inp_file, write_inp_file
+from swmm_api.input_file.section_types import SECTION_TYPES
+from .. import inp_to_string, SwmmInput, section_labels as sec
+from .._type_converter import offset2delta
 from ...output_file import parquet
 from ...output_file.out import read_out_file
 from ...run import swmm5_run
 
 
-class InpMacros(InpData):
+class InpMacros(SwmmInput):
     def __init__(self):
-        InpData.__init__(self, {})
+        SwmmInput.__init__(self, {})
         self.filename = None
         self.basename = None
         self.dirname = None
@@ -51,7 +48,7 @@ class InpMacros(InpData):
 
     def read_file(self, **kwargs):
         data = read_inp_file(self.filename, **kwargs)
-        InpData.__init__(self, data)
+        SwmmInput.__init__(self, data)
 
     @classmethod
     def from_file(cls, filename, **kwargs):
@@ -92,7 +89,7 @@ class InpMacros(InpData):
 
     def __getitem__(self, section):
         self.check_section(section)
-        return InpData.__getitem__(self, section)
+        return SwmmInput.__getitem__(self, section)
 
     # ------------------------------------------------------------------------------------------------------------------
     @property

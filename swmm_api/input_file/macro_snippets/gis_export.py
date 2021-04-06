@@ -1,10 +1,10 @@
 from geopandas import GeoDataFrame
 
-from ..inp_macros import update_vertices, filter_nodes, filter_links
-from ..inp_reader import read_inp_file
-from ..inp_sections import labels as s
-from ..inp_sections.map_geodata import (VerticesGeo, CoordinateGeo, PolygonGeo, InpSectionGeo,
-                                        convert_section_to_geosection, )
+from ..macros import update_vertices, filter_nodes, filter_links
+from ... import read_inp_file
+from .. import section_labels as s
+from ..sections.map_geodata import (VerticesGeo, CoordinateGeo, PolygonGeo, InpSectionGeo,
+                                    convert_section_to_geosection, )
 
 """
 {'AeronavFAA': 'r',

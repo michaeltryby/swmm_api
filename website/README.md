@@ -23,12 +23,15 @@ This package is based on the command line SWMM syntax. ([see Appendix D in the S
 pip install swmm-api
 ```
 
-## Read the INP-File
+## Read, manipulate and write the INP-File
+
+### Read the INP-File
+
 ```python
-from swmm_api.input_file.inp_sections.labels import TIMESERIES
+from swmm_api.input_file.section_labels import TIMESERIES
 from swmm_api import read_inp_file
-from swmm_api.input_file.inp_helpers import InpSection
-inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])   # type: swmm_api.input_file.inp_helpers.InpData
+
+inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])  # type: swmm_api.input_file.inp_helpers.InpData
 
 # convert_sections limits the convertions during the reading of the file to the following section
 # remove "convert_sections" to convert all sections 
@@ -38,13 +41,28 @@ inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])   # type: sw
 sec_timeseries = inp[TIMESERIES]  # type: InpSection
 ts = inp[TIMESERIES]['regenseries'].frame  # type: pandas.Series
 ```
+
+### Manipulate the INP-File
+
+```python
+from swmm_api import read_inp_file
+from swmm_api.input_file.section_labels import JUNCTIONS
+inp = read_inp_file('inputfile.inp')  # type: swmm_api.input_file.inp_helpers.InpData
+inp[JUNCTIONS]['J01'].Elevation = 210
+```
+
+### Write the manipulated INP-File
+```python
+inp.write_file('new_inputfile.inp')
+```
+
 see [examples/inp_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/inp_file_reader.ipynb)
 
-## Write the manipulated INP-File
-```python
-from swmm_api import write_inp_file
-write_inp_file(inp, 'new_inputfile.inp')
-```
+see [examples/inp_file_structure.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/inp_file_structure.ipynb)
+
+see [examples/inp_file_macros.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/inp_file_macros.ipynb)
+
+
 
 
 ## Run SWMM

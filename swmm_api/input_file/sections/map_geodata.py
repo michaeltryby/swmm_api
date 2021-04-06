@@ -2,8 +2,8 @@ import shapely.geometry as sh
 from geopandas import GeoSeries
 
 from . import Conduit, Vertices, Coordinate, Polygon
-from .labels import CONDUITS, VERTICES, COORDINATES
-from ..inp_helpers import InpSection
+from ..section_labels import CONDUITS, VERTICES, COORDINATES
+from ..helpers import InpSection
 
 """
 TESTING:

@@ -9,3 +9,7 @@ class IDENTIFIERS:
     Gage = 'Gage'
 
     Constituent = 'Constituent'
+
+    Pollutant = 'pollutant'
+
+    Landuse = 'landuse'

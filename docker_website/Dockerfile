@@ -13,9 +13,9 @@ RUN apt install pandoc -y
 RUN pip3 install \
     numpy \
     pandas \
+    matplotlib \
     networkx \
     tqdm \
-    swmmtoolbox \
     fastparquet \
     sphinx \
     nbsphinx \

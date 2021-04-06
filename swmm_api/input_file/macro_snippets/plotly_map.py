@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..inp_sections.labels import *
+from swmm_api.input_file.section_labels import *
 
 
 def append_na(x, every=3):

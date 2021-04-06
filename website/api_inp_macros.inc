@@ -1,7 +1,7 @@
 Input File Manipulation-Macros
 ------------------------------
 
-.. currentmodule:: swmm_api.input_file.inp_macros
+.. currentmodule:: swmm_api.input_file.macros
 
 .. rubric:: Overview
 
@@ -16,16 +16,23 @@ Input File Manipulation-Macros
     find_link
     calc_slope
     rel_diff
+    rel_slope_diff
     conduits_are_equal
     delete_node
+    move_flows
     delete_link
+    split_conduit
+    combine_vertices
     combine_conduits
+    combine_conduits_keep_slope
+    dissolve_conduit
     conduit_iter_over_inp
     junction_to_storage
     junction_to_outfall
     conduit_to_orifice
     rename_node
     rename_link
+    rename_timeseries
     remove_empty_sections
     reduce_curves
     simplify_curves
@@ -42,6 +49,7 @@ Input File Manipulation-Macros
     short_status
     inp_to_graph
     get_path
+    get_path_subgraph
     next_links
     next_links_labels
     next_nodes
@@ -49,8 +57,13 @@ Input File Manipulation-Macros
     previous_links_labels
     previous_nodes
     links_connected
+    number_in_out
     split_network
+    get_network_forks
+    increase_max_node_depth
+    set_times
 
-.. automodule:: swmm_api.input_file.inp_macros
+.. automodule:: swmm_api.input_file.macros
     :members:
     :no-undoc-members:
+

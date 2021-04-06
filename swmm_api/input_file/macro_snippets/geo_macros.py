@@ -1,7 +1,7 @@
 from pyproj import Transformer
 
-from swmm_api.input_file.inp_sections import Vertices, Coordinate
-from swmm_api.input_file.inp_sections.labels import COORDINATES, VERTICES
+from swmm_api.input_file.sections import Vertices, Coordinate
+from swmm_api.input_file.section_labels import COORDINATES, VERTICES
 
 
 def transform_coordinates(inp, from_proj='epsg:31256', to_proj='epsg:32633'):

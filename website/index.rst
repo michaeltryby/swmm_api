@@ -36,6 +36,7 @@ This is an unofficial EPA-SWMM programm interface for python to read, manipulate
 
    examples/inp_file_reader
    examples/inp_file_macros
+   examples/inp_file_structure
    examples/rpt_file_reader
    examples/out_file_reader
 

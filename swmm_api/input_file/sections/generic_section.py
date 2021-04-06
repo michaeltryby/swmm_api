@@ -1,8 +1,5 @@
-from pandas import DataFrame
-
-from .identifiers import IDENTIFIERS
-from ..type_converter import infer_type, type2str
-from ..inp_helpers import InpSectionGeneric
+from .._type_converter import infer_type, type2str
+from ..helpers import InpSectionGeneric, CustomDict
 
 
 def line_iter(lines):
@@ -77,6 +74,7 @@ class OptionSection(InpSectionGeneric):
     Returns:
         dict: options
     """
+
     @classmethod
     def from_inp_lines(cls, lines):
         data = cls()
@@ -489,6 +487,7 @@ class MapSection(InpSectionGeneric):
         upper_right_y (float): upper-right Y coordinate ``Y2``
         units (str): one of FEET / METERS / DEGREES / NONE see :py:attr:`~MapSection.UNITS`
     """
+
     class KEYS:
         DIMENSIONS = 'DIMENSIONS'
         UNITS = 'UNITS'
@@ -564,6 +563,12 @@ class FilesSection(InpSectionGeneric):
 
         _possible = [RAINFALL, RUNOFF, HOTSTART, RDII, INFLOWS, OUTFLOWS]
 
+    def __setitem__(self, key, item):
+        CustomDict.__setitem__(self, key, item)
+
+    def __delitem__(self, key):
+        CustomDict.__delitem__(self, key)
+
     @classmethod
     def from_inp_lines(cls, lines):
         """
@@ -583,6 +588,8 @@ class FilesSection(InpSectionGeneric):
             assert kind in cls.KEYS._possible
             data[f'{use_save} {kind}'] = ' '.join(fn)
         return data
+
+
 
 
 class AdjustmentsSection(InpSectionGeneric):
@@ -609,7 +616,8 @@ class AdjustmentsSection(InpSectionGeneric):
         r1..r12
             multipliers applied to precipitation rate in January, February, etc.
         c1..c12
-            multipliers applied to soil hydraulic conductivity in January, February, etc. used in either Horton or Green-Ampt infiltration.
+            multipliers applied to soil hydraulic conductivity in January, February, etc. used in either Horton or
+            Green-Ampt infiltration.
 
         The same adjustment is applied for each time period within a given month and is repeated for that
         month in each subsequent year being simulated.
@@ -637,9 +645,9 @@ class AdjustmentsSection(InpSectionGeneric):
         data = cls()
         for key, *factors in line_iter(lines):
             key = key.upper()
-            assert len(factors) == 13
+            assert len(factors) == 12
             assert key in cls.KEYS._possible
-            data[key] = [float(i) for i in line]
+            data[key] = [float(i) for i in factors]
         return data
 
 
@@ -672,6 +680,9 @@ class BackdropSection(InpSectionGeneric):
     class KEYS:
         FILE = 'FILE'
         DIMENSIONS = 'DIMENSIONS'
+        UNITS = 'UNITS'  # not in documentation
+        OFFSET = 'OFFSET'  # not in documentation
+        SCALING = 'SCALING'  # not in documentation
 
     @classmethod
     def from_inp_lines(cls, lines):
@@ -692,6 +703,9 @@ class BackdropSection(InpSectionGeneric):
             elif key == cls.KEYS.DIMENSIONS:
                 assert len(line) == 4
                 data[key] = [float(i) for i in line]
+            elif key in [cls.KEYS.UNITS, cls.KEYS.OFFSET, cls.KEYS.SCALING]:
+                # unknown behavior not in documentation
+                data[key] = ' '.join(line)
             else:
                 raise NotImplementedError()
         return data

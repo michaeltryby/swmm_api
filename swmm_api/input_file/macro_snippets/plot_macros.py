@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 from matplotlib import patches
 
-from ..inp_macros import update_vertices, links_connected, links_dict, nodes_dict, get_path_subgraph
-from ..inp_sections import Outfall, Polygon, SubCatchment
-from ..inp_sections.labels import *
+from ..macros import update_vertices, links_connected, links_dict, nodes_dict, get_path_subgraph
+from ..sections import Outfall, Polygon, SubCatchment
+from ..section_labels import *
 
 
 def plot_map(inp):  # TODO
@@ -85,6 +85,9 @@ class COLS:
 
 def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
     sub_list, sub_graph = get_path_subgraph(inp, start=start_node, end=end_node)
+
+    if zero_node is None:
+        zero_node = start_node
 
     keys = [COLS.STATION, COLS.INVERT_ELEV, COLS.CROWN_ELEV, COLS.GROUND_ELEV, COLS.WATER]
 

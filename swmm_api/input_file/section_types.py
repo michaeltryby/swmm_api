@@ -1,5 +1,5 @@
-from .labels import *
-from swmm_api.input_file.inp_sections import *
+from .section_labels import *
+from .sections import *
 
 """objects or section class for a section in the inp-file"""
 SECTION_TYPES = {
@@ -18,6 +18,7 @@ SECTION_TYPES = {
     POLYGONS: Polygon,
     SYMBOLS: Symbol,
     MAP: MapSection,
+    LABELS: Label,
     # -----
     # custom section objects
     CONDUITS: Conduit,
@@ -36,12 +37,19 @@ SECTION_TYPES = {
 
     DWF: DryWeatherFlow,
     INFLOWS: Inflow,
+    RDII: RainfallDependentInfiltrationInflow,
+    TREATMENT: Treatment,
     # -----
     SUBCATCHMENTS: SubCatchment,
     SUBAREAS: SubArea,
     INFILTRATION: Infiltration,
 
     LOADINGS: Loading,
+    WASHOFF: WashOff,
+    BUILDUP: BuildUp,
+    COVERAGES: Coverage,
+    GWF: GroundwaterFlow,
+    GROUNDWATER: Groundwater,
     # -----
     RAINGAGES: RainGage,
     PATTERNS: Pattern,
@@ -50,6 +58,12 @@ SECTION_TYPES = {
     CURVES: Curve,
     TIMESERIES: Timeseries,
     TAGS: Tag,
+    HYDROGRAPHS: Hydrograph,
+    LANDUSES: LandUse,
+    AQUIFERS: Aquifer,
+    # -----
+    LID_CONTROLS: LIDControl,
+    LID_USAGE: LIDUsage,
 }
 """objects or section class for a section in the inp-file"""
 

@@ -1,4 +1,4 @@
-from swmm_api.input_file.inp_sections import Curve
+from swmm_api.input_file.sections import Curve
 import matplotlib.pyplot as plt
 from numpy import ceil, append, arange, array, concatenate
 

@@ -2,18 +2,18 @@ Input File Sections
 -------------------
 
 Import from
-`swmm_api.input_file.inp_sections.labels <https://gitlab.com/markuspichler/swmm_api/-/blob/master/swmm_api/input_file/inp_sections/labels.py>`_
+`swmm_api.input_file.sections.labels <https://gitlab.com/markuspichler/swmm_api/-/blob/master/swmm_api/input_file/section_labels.py>`_
 all section headers, so you don't have to write every string for your own and save some typo error handling.
 
 .. code-block:: python
 
-    from swmm_api.input_file.inp_sections import labels
+    from swmm_api.input_file import section_labels
 
 Each section has a specific type, which can be seen under:
-`swmm_api.input_file.inp_sections.types <https://gitlab.com/markuspichler/swmm_api/-/blob/master/swmm_api/input_file/inp_sections/types.py>`_
+`swmm_api.input_file.sections.types <https://gitlab.com/markuspichler/swmm_api/-/blob/master/swmm_api/input_file/section_types.py>`_
 
 
-.. currentmodule:: swmm_api.input_file.inp_sections.generic_section
+.. currentmodule:: swmm_api.input_file.sections.generic_section
 
 .. rubric:: Generic Sections
 
@@ -23,8 +23,11 @@ Each section has a specific type, which can be seen under:
     EvaporationSection
     TemperatureSection
     MapSection
+    FilesSection
+    AdjustmentsSection
+    BackdropSection
 
-.. currentmodule:: swmm_api.input_file.inp_sections.node
+.. currentmodule:: swmm_api.input_file.sections.node
 
 .. rubric:: Node Sections
 
@@ -33,14 +36,16 @@ Each section has a specific type, which can be seen under:
     Storage
     Outfall
 
-.. currentmodule:: swmm_api.input_file.inp_sections.node_component
+.. currentmodule:: swmm_api.input_file.sections.node_component
 
 .. autosummary::
     DryWeatherFlow
     Inflow
     Coordinate
+    RainfallDependentInfiltrationInflow
+    Treatment
 
-.. currentmodule:: swmm_api.input_file.inp_sections.link
+.. currentmodule:: swmm_api.input_file.sections.link
 
 .. rubric:: Link Sections
 
@@ -51,14 +56,14 @@ Each section has a specific type, which can be seen under:
     Orifice
     Pump
 
-.. currentmodule:: swmm_api.input_file.inp_sections.link_component
+.. currentmodule:: swmm_api.input_file.sections.link_component
 
 .. autosummary::
     CrossSection
     Loss
     Vertices
 
-.. currentmodule:: swmm_api.input_file.inp_sections.subcatch
+.. currentmodule:: swmm_api.input_file.sections.subcatch
 
 .. rubric:: Subcatchment Sections
 
@@ -68,8 +73,11 @@ Each section has a specific type, which can be seen under:
     Infiltration
     Polygon
     Loading
+    Coverage
+    GroundwaterFlow
+    Groundwater
 
-.. currentmodule:: swmm_api.input_file.inp_sections.others
+.. currentmodule:: swmm_api.input_file.sections.others
 
 .. rubric:: Other Object-based Sections
 
@@ -82,13 +90,22 @@ Each section has a specific type, which can be seen under:
     Control
     Curve
     Timeseries
+    TimeseriesFile
+    TimeseriesData
     Tag
+    Label
+    Hydrograph
+    LandUse
+    WashOff
+    BuildUp
+    SnowPack
+    Aquifer
 
 
 Generic Sections
 ^^^^^^^^^^^^^^^^
 
-.. currentmodule:: swmm_api.input_file.inp_sections.generic_section
+.. currentmodule:: swmm_api.input_file.sections.generic_section
 
 .. rubric:: Overview
 
@@ -98,8 +115,11 @@ Generic Sections
     EvaporationSection
     TemperatureSection
     MapSection
+    FilesSection
+    AdjustmentsSection
+    BackdropSection
 
-.. automodule:: swmm_api.input_file.inp_sections.generic_section
+.. automodule:: swmm_api.input_file.sections.generic_section
     :members:
     :no-undoc-members:
 
@@ -107,7 +127,7 @@ Generic Sections
 Node Sections
 ^^^^^^^^^^^^^
 
-.. currentmodule:: swmm_api.input_file.inp_sections.node
+.. currentmodule:: swmm_api.input_file.sections.node
 
 .. rubric:: Overview
 
@@ -116,25 +136,27 @@ Node Sections
     Storage
     Outfall
 
-.. currentmodule:: swmm_api.input_file.inp_sections.node_component
+.. currentmodule:: swmm_api.input_file.sections.node_component
 
 .. autosummary::
     DryWeatherFlow
     Inflow
     Coordinate
+    RainfallDependentInfiltrationInflow
+    Treatment
 
-.. automodule:: swmm_api.input_file.inp_sections.node
+.. automodule:: swmm_api.input_file.sections.node
     :members:
     :no-undoc-members:
 
-.. automodule:: swmm_api.input_file.inp_sections.node_component
+.. automodule:: swmm_api.input_file.sections.node_component
     :members:
     :no-undoc-members:
 
 Link Sections
 ^^^^^^^^^^^^^
 
-.. currentmodule:: swmm_api.input_file.inp_sections.link
+.. currentmodule:: swmm_api.input_file.sections.link
 
 .. rubric:: Overview
 
@@ -145,25 +167,25 @@ Link Sections
     Orifice
     Pump
 
-.. currentmodule:: swmm_api.input_file.inp_sections.link_component
+.. currentmodule:: swmm_api.input_file.sections.link_component
 
 .. autosummary::
     CrossSection
     Loss
     Vertices
 
-.. automodule:: swmm_api.input_file.inp_sections.link
+.. automodule:: swmm_api.input_file.sections.link
     :members:
     :no-undoc-members:
 
-.. automodule:: swmm_api.input_file.inp_sections.link_component
+.. automodule:: swmm_api.input_file.sections.link_component
     :members:
     :no-undoc-members:
 
 Subcatchment Sections
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. currentmodule:: swmm_api.input_file.inp_sections.subcatch
+.. currentmodule:: swmm_api.input_file.sections.subcatch
 
 .. rubric:: Overview
 
@@ -176,8 +198,11 @@ Subcatchment Sections
     InfiltrationCurveNumber
     Polygon
     Loading
+    Coverage
+    GroundwaterFlow
+    Groundwater
 
-.. automodule:: swmm_api.input_file.inp_sections.subcatch
+.. automodule:: swmm_api.input_file.sections.subcatch
     :members:
     :no-undoc-members:
 
@@ -185,7 +210,7 @@ Subcatchment Sections
 Other Object-based Sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. currentmodule:: swmm_api.input_file.inp_sections.others
+.. currentmodule:: swmm_api.input_file.sections.others
 
 .. rubric:: Overview
 
@@ -198,8 +223,17 @@ Other Object-based Sections
     Control
     Curve
     Timeseries
+    TimeseriesFile
+    TimeseriesData
     Tag
+    Label
+    Hydrograph
+    LandUse
+    WashOff
+    BuildUp
+    SnowPack
+    Aquifer
 
-.. automodule:: swmm_api.input_file.inp_sections.others
+.. automodule:: swmm_api.input_file.sections.others
     :members:
     :no-undoc-members:

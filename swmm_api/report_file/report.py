@@ -8,7 +8,7 @@ __license__ = "MIT"
 from pandas import to_datetime
 from pandas._libs.tslibs.timedeltas import Timedelta
 
-from .helpers import _get_title_of_part, _remove_lines, _part_to_frame, _continuity_part_to_dict
+from .helpers import _get_title_of_part, _remove_lines, _part_to_frame, _continuity_part_to_dict, UNIT
 
 """
 not ready to use
@@ -18,7 +18,7 @@ reading generated report (*.rpt) files
 """
 
 
-class Report:
+class SwmmReport:
     def __init__(self, filename):
         """
         create Report instance to read an .rpt-file
@@ -57,7 +57,15 @@ class Report:
         self._conduit_surcharge_summary = None
 
     def __repr__(self):
-        return f'SWMM Report File("{self._filename}")'
+        return f'SwmmReport(file="{self._filename}")'
+
+    @property
+    def flow_unit(self):
+        return self.analysis_options['Flow Units']
+
+    @property
+    def UNIT(self):
+        return UNIT(self.flow_unit)
 
     def _report_to_dict(self):
         """
@@ -405,4 +413,4 @@ class Report:
 
 
 def read_rpt_file(report_filename):
-    return Report(report_filename)
+    return SwmmReport(report_filename)

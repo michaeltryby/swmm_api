@@ -1,6 +1,6 @@
 API for the Report File Reader
 ==============================
 
-.. autoclass:: swmm_api.report_file.report.Report
+.. automodule:: swmm_api.report_file.report
     :members:
     :no-undoc-members:

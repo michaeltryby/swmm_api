@@ -3,18 +3,16 @@ from math import ceil
 from os import path, mkdir, listdir
 
 import numpy as np
-from networkx import DiGraph, all_simple_paths, subgraph, node_connected_component, shortest_path
+from networkx import DiGraph, all_simple_paths, subgraph, node_connected_component
 from statistics import mean
-from typing import Dict, List, Any
+from typing import List
 
-from .inp_helpers import InpData, InpSection
-from .inp_reader import read_inp_file, convert_section
-from .inp_sections import *
-from .inp_sections import labels as sec
-from .inp_sections.identifiers import IDENTIFIERS
-from .inp_sections.labels import VERTICES, COORDINATES, XSECTIONS
-from .inp_sections.types import SECTION_TYPES
-from .inp_writer import section_to_string
+from .helpers import InpSection, convert_section, section_to_string
+from . import SwmmInput, section_labels as sec
+from .sections import *
+from .sections._identifiers import IDENTIFIERS
+from swmm_api.input_file.section_labels import VERTICES, COORDINATES, XSECTIONS
+from swmm_api.input_file.section_types import SECTION_TYPES
 from .macro_snippets.curve_simplification import ramer_douglas, _vec2d_dist
 
 """
@@ -63,7 +61,7 @@ def split_inp_to_files(inp_fn, convert_sections=[], **kwargs):
     """
     parent = inp_fn.replace('.inp', '')
     mkdir(parent)
-    inp = read_inp_file(inp_fn, convert_sections=convert_sections, **kwargs)
+    inp = SwmmInput.read_file(inp_fn, convert_sections=convert_sections, **kwargs)
     for s in inp.keys():
         with open(path.join(parent, s + '.txt'), 'w') as f:
             f.write(section_to_string(inp[s], fast=False))
@@ -77,9 +75,9 @@ def read_split_inp_file(inp_fn):
         inp_fn (str): path of the directory of the split inp-file
 
     Returns:
-        InpData: inp-file data
+        SwmmInput: inp-file data
     """
-    inp = InpData()
+    inp = SwmmInput()
     for header_file in listdir(inp_fn):
         header = header_file.replace('.txt', '')
         with open(path.join(inp_fn, header_file), 'r') as f:
@@ -89,12 +87,12 @@ def read_split_inp_file(inp_fn):
 
 
 ########################################################################################################################
-def combined_subcatchment_frame(inp: InpData):
+def combined_subcatchment_frame(inp: SwmmInput):
     """
     combine all information of the subcatchment data-frames
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
 
     Returns:
         pandas.DataFrame: combined subcatchment data
@@ -103,14 +101,14 @@ def combined_subcatchment_frame(inp: InpData):
 
 
 ########################################################################################################################
-def nodes_dict(inp: InpData):
+def nodes_dict(inp: SwmmInput):
     """
     get a dict of all nodes
 
     the objects are referenced, so you can use it to modify too.
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
 
     Returns:
         dict[str, Junction or Storage or Outfall]: dict of {labels: objects}
@@ -122,12 +120,12 @@ def nodes_dict(inp: InpData):
     return nodes
 
 
-def find_node(inp: InpData, node_label):
+def find_node(inp: SwmmInput, node_label):
     """
     find node in inp-file data
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
         node_label (str): node Name/label
 
     Returns:
@@ -138,14 +136,14 @@ def find_node(inp: InpData, node_label):
         return nodes[node_label]
 
 
-def links_dict(inp: InpData):  # or Weir or Orifice or Pump or Outlet
+def links_dict(inp: SwmmInput):  # or Weir or Orifice or Pump or Outlet
     """
     get a dict of all links
 
     the objects are referenced, so you can use it to modify too.
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
 
     Returns:
         dict[str, Conduit or Weir or Orifice or Pump or Outlet]: dict of {labels: objects}
@@ -157,12 +155,12 @@ def links_dict(inp: InpData):  # or Weir or Orifice or Pump or Outlet
     return links
 
 
-def find_link(inp: InpData, label):
+def find_link(inp: SwmmInput, label):
     """
     find link in inp-file data
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
         label (str): link Name/label
 
     Returns:
@@ -174,12 +172,12 @@ def find_link(inp: InpData, label):
 
 
 ########################################################################################################################
-def calc_slope(inp: InpData, link):
+def calc_slope(inp: SwmmInput, link):
     """
     calculate the slop of a link
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
         link (Conduit | Weir | Outlet | Orifice | Pump): link
 
     Returns:
@@ -197,7 +195,7 @@ def rel_diff(a, b):
     return abs(a - b) / m
 
 
-def rel_slope_diff(inp: InpData, l0, l1):
+def rel_slope_diff(inp: SwmmInput, l0, l1):
     nodes = nodes_dict(inp)
     slope_res = (nodes[l0.FromNode].Elevation + l0.InOffset
                  - (nodes[l1.ToNode].Elevation + l1.OutOffset)
@@ -232,7 +230,7 @@ following:
 """
 
 
-def conduits_are_equal(inp: InpData, link0, link1, diff_roughness=0.1, diff_slope=0.1, diff_height=0.1):
+def conduits_are_equal(inp: SwmmInput, link0, link1, diff_roughness=0.1, diff_slope=0.1, diff_height=0.1):
     all_checks_out = True
 
     # Roughness values match within a specified percent tolerance
@@ -271,17 +269,17 @@ def conduits_are_equal(inp: InpData, link0, link1, diff_roughness=0.1, diff_slop
     return all_checks_out
 
 
-def delete_node(inp: InpData, node_label, graph: DiGraph = None, alt_node=None):
+def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None):
     """
     delete node in inp data
 
     Args:
-        inp (InpData): inp data
+        inp (SwmmInput): inp data
         node_label (str): label of node to delete
         graph (DiGraph): networkx graph of model
 
     Returns:
-        InpData: inp data
+        SwmmInput: inp data
     """
     for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE, sec.COORDINATES]:
         if (section in inp) and (node_label in inp[section]):
@@ -344,7 +342,7 @@ def move_flows(inp, from_node, to_node, only_Constituent=None):
                     inp[section][index_new].Node = to_node
 
 
-def delete_link(inp: InpData, link):
+def delete_link(inp: SwmmInput, link):
     for s in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS, sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
         if (s in inp) and (link in inp[s]):
             inp[s].pop(link)
@@ -455,13 +453,13 @@ def combine_conduits(inp, c1, c2, graph: DiGraph = None):
     combine the two conduits to one
 
     Args:
-        inp (InpData): inp data
+        inp (SwmmInput): inp data
         c1 (str | Conduit): conduit 1 to combine
         c2 (str | Conduit): conduit 2 to combine
         keep_first (bool): keep first (of conduit 1) cross-section; else use second (of conduit 2)
 
     Returns:
-        InpData: inp data
+        SwmmInput: inp data
     """
     if isinstance(c1, str):
         c1 = inp[sec.CONDUITS][c1]
@@ -527,13 +525,13 @@ def dissolve_conduit(inp, c: Conduit, graph: DiGraph = None):
     combine the two conduits to one
 
     Args:
-        inp (InpData): inp data
+        inp (SwmmInput): inp data
         c1 (str | Conduit): conduit 1 to combine
         c2 (str | Conduit): conduit 2 to combine
         keep_first (bool): keep first (of conduit 1) cross-section; else use second (of conduit 2)
 
     Returns:
-        InpData: inp data
+        SwmmInput: inp data
     """
     common_node = c.FromNode
     for c_old in list(previous_links(inp, common_node, g=graph)):
@@ -593,7 +591,7 @@ def conduit_iter_over_inp(inp, start, end):
     doesn't look backwards if split node
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
         start (str): start node label
         end (str): end node label
 
@@ -639,14 +637,14 @@ def junction_to_storage(inp, label, *args, **kwargs):
     and add it to the STORAGE section
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
         label (str): label of the junction
         *args: argument of the :class:`~swmm_api.input_file.inp_sections.node.Storage`-class
         **kwargs: keyword arguments of the :class:`~swmm_api.input_file.inp_sections.node.Storage`-class
     """
     j = inp[sec.JUNCTIONS].pop(label)  # type: Junction
     if sec.STORAGE not in inp:
-        inp[sec.STORAGE] = InpSection(Storage)
+        inp[sec.STORAGE] = Storage.create_section()
     inp[sec.STORAGE].add_obj(Storage(Name=label, Elevation=j.Elevation, MaxDepth=j.MaxDepth,
                                      InitDepth=j.InitDepth, Apond=j.Aponded, *args, **kwargs))
 
@@ -659,7 +657,7 @@ def junction_to_outfall(inp, label, *args, **kwargs):
     and add it to the OUTFALLS section
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
         label (str): label of the junction
         *args: argument of the :class:`~swmm_api.input_file.inp_sections.node.Outfall`-class
         **kwargs: keyword arguments of the :class:`~swmm_api.input_file.inp_sections.node.Outfall`-class
@@ -678,7 +676,7 @@ def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0
     and add it to the ORIFICES section
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
         label (str): label of the conduit
         Type (str): orientation of orifice: either SIDE or BOTTOM.
         Offset (float): amount that a Side Orifice’s bottom or the position of a Bottom Orifice is offset above
@@ -762,12 +760,12 @@ def remove_empty_sections(inp):
     remove empty inp-file data sections
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
 
     Returns:
-        InpData: cleaned inp-file data
+        SwmmInput: cleaned inp-file data
     """
-    new_inp = InpData()
+    new_inp = SwmmInput()
     for section in inp:
         if inp[section]:
             new_inp[section] = inp[section]
@@ -779,10 +777,10 @@ def reduce_curves(inp):
     get used CURVES from [STORAGE, OUTLETS, PUMPS and XSECTIONS] and keep only used curves in the section
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
 
     Returns:
-        InpData: inp-file data with filtered CURVES section
+        SwmmInput: inp-file data with filtered CURVES section
     """
     if sec.CURVES not in inp:
         return inp
@@ -822,10 +820,10 @@ def reduce_raingages(inp):
     get used RAINGAGES from SUBCATCHMENTS and keep only used raingages in the section
 
     Args:
-        inp (InpData):  inp-file data
+        inp (SwmmInput):  inp-file data
 
     Returns:
-        InpData: inp-file data with filtered RAINGAGES section
+        SwmmInput: inp-file data with filtered RAINGAGES section
     """
     if sec.SUBCATCHMENTS not in inp or sec.RAINGAGES not in inp:
         return inp
@@ -839,11 +837,11 @@ def filter_nodes(inp, final_nodes):
      filter nodes in the network
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
         final_nodes (list | set):
 
     Returns:
-        InpData: new inp-file data
+        SwmmInput: new inp-file data
     """
     for section in [sec.JUNCTIONS,
                     sec.OUTFALLS,
@@ -871,11 +869,11 @@ def filter_links_within_nodes(inp, final_nodes):
     filter links by nodes in the network
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
         final_nodes (list | set):
 
     Returns:
-        InpData: new inp-file data
+        SwmmInput: new inp-file data
     """
     final_links = set()
     for section in [sec.CONDUITS,
@@ -899,11 +897,11 @@ def filter_links(inp, final_links):
     filter links by nodes in the network
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
         final_nodes (list | set):
 
     Returns:
-        InpData: new inp-file data
+        SwmmInput: new inp-file data
     """
     for section in [sec.CONDUITS,
                     sec.PUMPS,
@@ -939,11 +937,11 @@ def filter_subcatchments(inp, final_nodes):
     filter subcatchments by nodes in the network
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
         final_nodes (list | set):
 
     Returns:
-        InpData: new inp-file data
+        SwmmInput: new inp-file data
     """
     if sec.SUBCATCHMENTS in inp:
         sub_orig = inp[sec.SUBCATCHMENTS].copy()
@@ -1003,11 +1001,11 @@ def reduce_vertices(inp, node_range=0.25):
     important if data originally from GIS and export to SWMM
 
     Args:
-        inp (InpData):
+        inp (SwmmInput):
         node_range (float): minimal distance in m from the first and last vertices to the end nodes
 
     Returns:
-        InpData:
+        SwmmInput:
     """
     links = links_dict(inp)
 
@@ -1046,12 +1044,12 @@ def short_status(inp):
 
 
 ########################################################################################################################
-def inp_to_graph(inp: InpData) -> DiGraph:
+def inp_to_graph(inp: SwmmInput) -> DiGraph:
     """
     create a network of the model with the networkx package
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
 
     Returns:
         networkx.DiGraph: networkx graph of the model
@@ -1070,7 +1068,7 @@ def get_path(g, start, end):
 
 
 def get_path_subgraph(base, start, end):
-    if isinstance(base, InpData):
+    if isinstance(base, SwmmInput):
         g = inp_to_graph(base)
     else:
         g = base
@@ -1144,14 +1142,14 @@ def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, grap
     Set ``graph`` if a network-graph already exists (is faster).
 
     Args:
-        inp (InpData): inp-file data
+        inp (SwmmInput): inp-file data
         keep_node (str): label of a node in the part you want to keep
         split_at_node (str): if you want to split the network, define the label of the node where you want to split it.
         keep_split_node (bool): if you want to keep the ``split_at_node`` node.
         graph (networkx.DiGraph): networkx graph of the model
 
     Returns:
-        InpData: filtered inp-file data
+        SwmmInput: filtered inp-file data
     """
     if graph is None:
         graph = inp_to_graph(inp)

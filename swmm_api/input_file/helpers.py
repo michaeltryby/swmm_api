@@ -1,13 +1,14 @@
+from inspect import isfunction, isclass
 from numpy import isnan
 from pandas import DataFrame
 from tqdm import tqdm
 import re
-
-from .type_converter import type2str
+from .section_labels import *
+from ._type_converter import type2str
 
 SWMM_VERSION = '5.1.015'
 
-inp_sep = ';;' + "_"*100
+inp_sep = ';;' + "_" * 100
 
 
 ########################################################################################################################
@@ -98,32 +99,13 @@ class CustomDictWithAttributes(CustomDict):
 
 
 ########################################################################################################################
-class InpData(CustomDictWithAttributes):
-    """
-    overall class for an input file
-
-    child class of dict
-
-    just used for the copy function and to identify ``.inp``-file data
-    """
-    def update(self, d=None, **kwargs):
-        for sec in d:
-            if sec not in self:
-                self[sec] = d[sec]
-            else:
-                if isinstance(self[sec], str):
-                    pass
-                else:
-                    self[sec].update(d[sec])
-
-
-########################################################################################################################
 class InpSectionGeneric(CustomDictWithAttributes):
     """
     abstract class for ``.inp``-file sections without objects
 
     :term:`dict-like <mapping>`"
     """
+
     @classmethod
     def from_inp_lines(cls, lines):
         """
@@ -167,6 +149,7 @@ class InpSection(CustomDict):
     """
     class for ``.inp``-file sections with objects (i.e. nodes, links, subcatchments, raingages, ...)
     """
+
     def __init__(self, section_object):
         """
         create an object for ``.inp``-file sections with objects (i.e. nodes, links, subcatchments, raingages, ...)
@@ -380,6 +363,14 @@ class InpSection(CustomDict):
         return new
 
 
+def split_line_with_quotes(line):
+    if isinstance(line, (list, tuple)):
+        line = ' '.join(line)
+    if '"' not in line:
+        return line.split()
+    return re.findall(r'("[^"]*"|[^" ]+)', line)
+
+
 ########################################################################################################################
 class BaseSectionObject:
     """
@@ -454,14 +445,15 @@ class BaseSectionObject:
             str: SWMM .inp file compatible string
         """
         di = self.to_dict_()
-        s = ''
-        if isinstance(self._identifier, list):
-            s += ' '.join([str(di.pop(i)) for i in self._identifier])
-        else:
-            s += str(di.pop(self._identifier))
+        # s = ''
+        # if isinstance(self._identifier, list):
+        #     s += ' '.join([str(di.pop(i)) for i in self._identifier])
+        # else:
+        #     s += str(di.pop(self._identifier))
 
-        s += ' ' + ' '.join([type2str(i) for i in di.values()])
-        return s
+        # s += ' ' + ' '.join([type2str(i) for i in di.values()])
+        # return s
+        return ' '.join([type2str(i) for i in di.values()])
 
     @classmethod
     def from_inp_line(cls, *line):
@@ -561,3 +553,128 @@ def dataframe_to_inp_string(df):
                                           max_rows=999999,
                                           max_cols=999999,
                                           max_colwidth=999999)
+
+
+########################################################################################################################
+def convert_section(head, lines, converter):
+    """
+    convert section string to a section object
+
+    Args:
+        head (str): header of the section
+        lines (str): lines in the section
+        converter (dict): dict of converters assigned to header {header: converter]
+
+    Returns:
+        str | InpSection | InpSectionGeneric: converted section
+    """
+    if head in converter:
+        section_ = converter[head]
+
+        if isfunction(section_):  # section_ ... converter function
+            return section_(lines)
+
+        elif isclass(section_):  # section_ ... type/class
+            if hasattr(section_, 'from_inp_lines'):
+                # section has multiple options over multiple lines
+                return section_.from_inp_lines(lines)
+                # REPORT, TIMESERIES, CURVES, TAGS
+            else:
+                # each line is a object OR each object has multiple lines
+                return InpSection.from_inp_lines(lines, section_)
+
+        else:
+            raise NotImplemented()
+    else:
+        return lines.replace(inp_sep, '').strip()
+
+
+########################################################################################################################
+def _sort_by(key):
+    sections_order = [TITLE,
+                      OPTIONS,
+                      REPORT,
+                      EVAPORATION,
+                      TEMPERATURE,
+
+                      JUNCTIONS,
+                      OUTFALLS,
+                      STORAGE,
+                      DWF,
+                      INFLOWS,
+
+                      CONDUITS,
+                      WEIRS,
+                      ORIFICES,
+                      OUTLETS,
+
+                      LOSSES,
+                      XSECTIONS,
+                      TRANSECTS,
+
+                      CURVES,
+                      TIMESERIES,
+                      RAINGAGES,
+                      PATTERNS,
+
+                      SUBCATCHMENTS,
+                      SUBAREAS,
+                      INFILTRATION,
+
+                      POLLUTANTS,
+                      LOADINGS,
+                      ]
+    if key in sections_order:
+        return sections_order.index(key)
+    else:
+        return len(sections_order)
+
+
+def section_to_string(section, fast=True):
+    """
+    create a string of a section in an ``.inp``-file
+
+    Args:
+        section (InpSection | InpSectionGeneric):
+            section of an ``.inp``-file
+        fast (bool): don't use any formatting else format as table
+
+    Returns:
+        str: string of the ``.inp``-file section
+    """
+    f = ''
+
+    # ----------------------
+    if isinstance(section, str):  # Title
+        f += section.replace(inp_sep, '').strip()
+
+    # ----------------------
+    # elif isinstance(section, list):  # V0.1
+    #     for line in section:
+    #         f += type2str(line) + '\n'
+    #
+    # # ----------------------
+    # elif isinstance(section, dict):  # V0.2
+    #     max_len = len(max(section.keys(), key=len)) + 2
+    #     for sub in section:
+    #         f += '{key}{value}'.format(key=sub.ljust(max_len),
+    #                                    value=type2str(section[sub]) + '\n')
+    #
+    # ----------------------
+    # elif isinstance(section, (DataFrame, Series)):  # V0.3
+    #     if section.empty:
+    #         f += ';; NO data'
+    #
+    #     if isinstance(section, DataFrame):
+    #         f += dataframe_to_inp_string(section)
+    #
+    #     elif isinstance(section, Series):
+    #         f += section.apply(type2str).to_string()
+
+    # ----------------------
+    elif isinstance(section, (InpSection, InpSectionGeneric)):  # V0.4
+        f += section.to_inp_lines(fast=fast)
+
+    # ----------------------
+    f += '\n'
+    return f

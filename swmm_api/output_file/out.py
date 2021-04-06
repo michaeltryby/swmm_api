@@ -54,7 +54,7 @@ class VARIABLES:
         POTENTIAL_PET = 'Potential_PET'
 
 
-class SwmmOutHandler:
+class SwmmOut:
     """
     read the binary .out-file of EPA-SWMM
 
@@ -75,7 +75,7 @@ class SwmmOutHandler:
         self._number_columns = None
 
     def __repr__(self):
-        return f'SwmmOutHandler("{self.filename}")'
+        return f'SwmmOut(file="{self.filename}")'
 
     # def __str__(self):
     #     return f'SwmmOutHandler({self.filename})'
@@ -425,9 +425,9 @@ def read_out_file(out_filename):
     combined the reader of swmmtoolbox with the functionality of pandas
 
     Returns:
-        SwmmOutHandler: class to extract data fromm the ``.out``-file
+        SwmmOut: class to extract data fromm the ``.out``-file
     """
-    return SwmmOutHandler(out_filename)
+    return SwmmOut(out_filename)
 
 
 def out2frame(out_file):
@@ -443,5 +443,5 @@ def out2frame(out_file):
     Returns:
         pandas.DataFrame:
     """
-    out = SwmmOutHandler(out_file)
+    out = SwmmOut(out_file)
     return out.to_frame()
