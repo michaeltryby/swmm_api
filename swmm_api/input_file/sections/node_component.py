@@ -52,7 +52,7 @@ class DryWeatherFlow(BaseSectionObject):
         self.Constituent: str = Constituent
         """keyword ``FLOW`` for flow or pollutant name for quality constituent. ``Type``"""
 
-        self.Base: float = Base
+        self.Base: float = float(Base)
         """average baseline value for corresponding constituent (flow or concentration units)."""
 
         self.pattern1: str = pattern1
