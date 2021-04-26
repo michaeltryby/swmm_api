@@ -101,6 +101,14 @@ Each section has a specific type, which can be seen under:
     SnowPack
     Aquifer
 
+.. currentmodule:: swmm_api.input_file.sections.lid
+
+.. rubric:: LID Sections
+
+.. autosummary::
+    LIDControl
+    LIDUsage
+
 
 Generic Sections
 ^^^^^^^^^^^^^^^^
@@ -235,5 +243,20 @@ Other Object-based Sections
     Aquifer
 
 .. automodule:: swmm_api.input_file.sections.others
+    :members:
+    :no-undoc-members:
+
+LID Sections
+^^^^^^^^^^^^
+
+.. currentmodule:: swmm_api.input_file.sections.lid
+
+.. rubric:: Overview
+
+.. autosummary::
+    LIDControl
+    LIDUsage
+
+.. automodule:: swmm_api.input_file.sections.lid
     :members:
     :no-undoc-members:
