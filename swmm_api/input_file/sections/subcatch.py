@@ -340,8 +340,8 @@ class InfiltrationCurveNumber(Infiltration):
     def __init__(self, Subcatch, CurveNo, Ksat, DryTime, kind=None):
         Infiltration.__init__(self, Subcatch)
         self.CurveNo = CurveNo
-        self.Ksat = Ksat
-        self.DryTime = DryTime
+        self.Ksat = float(Ksat)
+        self.DryTime = float(DryTime)
         self.kind = NaN
 
 
@@ -457,7 +457,7 @@ class Loading(BaseSectionObject):
             self.pollutant_buildup_dict = pollutant_buildup_dict
 
     def _add_buildup(self, pollutant, buildup):
-        self.pollutant_buildup_dict[pollutant] = buildup
+        self.pollutant_buildup_dict[pollutant] = float(buildup)
 
     @classmethod
     def _convert_lines(cls, lines):
@@ -530,7 +530,7 @@ class Coverage(BaseSectionObject):
             self.land_use_dict = land_use_dict
 
     def _add_land_use(self, land_use, percent):
-        self.land_use_dict[land_use] = percent
+        self.land_use_dict[land_use] = float(percent)
 
     @classmethod
     def _convert_lines(cls, lines):

@@ -1118,9 +1118,9 @@ class Hydrograph(BaseSectionObject):
                 Name (str): name assigned to a unit hydrograph group.
                 month (str):
                 response (str):
-                response_ratio (str):
-                time_to_peak (str):
-                recession_limb_ratio (str):
+                response_ratio (float):
+                time_to_peak (float):
+                recession_limb_ratio (float):
                 depth_max (str):
                 depth_recovery (str):
                 depth_init (str):
@@ -1128,9 +1128,9 @@ class Hydrograph(BaseSectionObject):
             self.Name = str(Name)
             self.month = month
             self.response = response
-            self.response_ratio = response_ratio
-            self.time_to_peak = time_to_peak
-            self.recession_limb_ratio = recession_limb_ratio
+            self.response_ratio = float(response_ratio)
+            self.time_to_peak = float(time_to_peak)
+            self.recession_limb_ratio = float(recession_limb_ratio)
             self.depth_max = depth_max
             self.depth_recovery = depth_recovery
             self.depth_init = depth_init

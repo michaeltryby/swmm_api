@@ -135,149 +135,120 @@ class LIDControl(BaseSectionObject):
         def __init__(self, StorHt, VegFrac, Rough, Slope, Xslope):
             """
             Args:
-                StorHt:
-                    when confining walls or berms are present this is the maximum depth to which water can pond above
-                    the
-                    surface of the unit before overflow occurs (in inches or mm). For LIDs that experience overland
-                    flow it
-                    is the height of any surface depression storage. For swales, it is the height of its trapezoidal
-                    cross
-                    section.
-                VegFrac:
-                    fraction of the surface storage volume that is filled with vegetation.
-                Rough:
-                    Manning's n for overland flow over surface soil cover, pavement, roof surface or a vegetative
-                    swale. Use
-                    0 for other types of LIDs.
-                Slope:
-                    slope of a roof surface, pavement surface or vegetative swale (percent). Use 0 for other types of
-                    LIDs.
-                Xslope:
-                    slope (run over rise) of the side walls of a vegetative swale's cross section. Use 0 for other
-                    types of
-                    LIDs.
+                StorHt (float): when confining walls or berms are present this is the maximum depth to which water can
+                    pond above the surface of the unit before overflow occurs (in inches or mm). For LIDs that
+                    experience overland flow it is the height of any surface depression storage.
+                    For swales, it is the height of its trapezoidal cross section.
+                VegFrac (float): fraction of the surface storage volume that is filled with vegetation.
+                Rough (float): Manning's n for overland flow over surface soil cover, pavement, roof surface or a
+                    vegetative swale. Use 0 for other types of LIDs.
+                Slope (float): slope of a roof surface, pavement surface or vegetative swale (percent).
+                    Use 0 for other types of LIDs.
+                Xslope (float): slope (run over rise) of the side walls of a vegetative swale's cross section.
+                    Use 0 for other types of LIDs.
 
             Remarks:
                 If either Rough or Slope values are 0 then any ponded water that exceeds the
                 surface storage depth is assumed to completely overflow the LID control within a
                 single time step.
             """
-            self.StorHt = StorHt
-            self.VegFrac = VegFrac
-            self.Rough = Rough
-            self.Slope = Slope
-            self.Xslope = Xslope
+            self.StorHt = float(StorHt)
+            self.VegFrac = float(VegFrac)
+            self.Rough = float(Rough)
+            self.Slope = float(Slope)
+            self.Xslope = float(Xslope)
 
     class Soil(BaseSectionObject):
         def __init__(self, Thick, Por, FC, WP, Ksat, Kcoeff, Suct):
             """
             Args:
-                Thick:
-                    thickness of the soil layer (inches or mm).
-                Por:
-                    soil porosity (volume of pore space relative to total volume).
-                FC:
-                    soil field capacity (volume of pore water relative to total volume after the
+                Thick (float): thickness of the soil layer (inches or mm).
+                Por (float): soil porosity (volume of pore space relative to total volume).
+                FC (float): soil field capacity (volume of pore water relative to total volume after the
                     soil has been allowed to drain fully).
-                WP soil wilting point (volume of pore water relative to total volume for a well
+                WP (float): soil wilting point (volume of pore water relative to total volume for a well
                     dried soil where only bound water remains).
-                Ksat:
-                    soil’s saturated hydraulic conductivity (in/hr or mm/hr).
-                Kcoeff:
-                    slope of the curve of log(conductivity) versus soil moisture content
+                Ksat (float): soil’s saturated hydraulic conductivity (in/hr or mm/hr).
+                Kcoeff (float): slope of the curve of log(conductivity) versus soil moisture content
                     (dimensionless).
-                Suct:
-                    soil capillary suction (in or mm).
+                Suct (float): soil capillary suction (in or mm).
             """
-            self.Thick = Thick
-            self.Por = Por
-            self.FC = FC
-            self.WP = WP
-            self.Ksat = Ksat
-            self.Kcoeff = Kcoeff
-            self.Suct = Suct
+            self.Thick = float(Thick)
+            self.Por = float(Por)
+            self.FC = float(FC)
+            self.WP = float(WP)
+            self.Ksat = float(Ksat)
+            self.Kcoeff = float(Kcoeff)
+            self.Suct = float(Suct)
 
     class Pavement(BaseSectionObject):
         def __init__(self, Thick, Vratio, FracImp, Perm, clogging_factor, regeneration_interval, regeneration_fraction):
             """
             Args:
-                Thick:
-                    thickness of the pavement layer (inches or mm).
-                Vratio:
-                    void ratio (volume of void space relative to the volume of solids in the
+                Thick (float): thickness of the pavement layer (inches or mm).
+                Vratio (float): void ratio (volume of void space relative to the volume of solids in the
                     pavement for continuous systems or for the fill material used in modular
                     systems). Note that porosity = void ratio / (1 + void ratio).
 
-                FracImp:
-                    ratio of impervious paver material to total area for modular systems; 0 for
+                FracImp (float): ratio of impervious paver material to total area for modular systems; 0 for
                     continuous porous pavement systems.
-                Perm:
-                    permeability of the concrete or asphalt used in continuous systems or
+                Perm (float): permeability of the concrete or asphalt used in continuous systems or
                     hydraulic conductivity of the fill material (gravel or sand) used in modular
                     systems (in/hr or mm/hr).
-                Vclog:
-                    number of pavement layer void volumes of runoff treated it takes to
+                Vclog (float): number of pavement layer void volumes of runoff treated it takes to
                     completely clog the pavement. Use a value of 0 to ignore clogging.
             """
-            self.Thick = Thick
-            self.Vratio = Vratio
-            self.FracImp = FracImp
-            self.Perm = Perm
+            self.Thick = float(Thick)
+            self.Vratio = float(Vratio)
+            self.FracImp = float(FracImp)
+            self.Perm = float(Perm)
             # self.Vclog = Vclog  # acc. to documentation
-            self.clogging_factor = clogging_factor
-            self.regeneration_interval = regeneration_interval
-            self.regeneration_fraction = regeneration_fraction
+            self.clogging_factor = float(clogging_factor)
+            self.regeneration_interval = float(regeneration_interval)
+            self.regeneration_fraction = float(regeneration_fraction)
 
     class Storage(BaseSectionObject):
         def __init__(self, Height, Vratio, Seepage, Vclog):
             """
             Args:
-                Height:
-                    thickness of the storage layer or height of a rain barrel (inches or mm).
-                Vratio:
-                    void ratio (volume of void space relative to the volume of solids in the
+                Height (float): thickness of the storage layer or height of a rain barrel (inches or mm).
+                Vratio (float): void ratio (volume of void space relative to the volume of solids in the
                     layer). Note that porosity = void ratio / (1 + void ratio).
-                Seepage:
-                    the rate at which water seeps from the layer into the underlying native
+                Seepage (float): the rate at which water seeps from the layer into the underlying native
                     soil when first constructed (in/hr or mm/hr). If there is an impermeable
                     floor or liner below the layer then use a value of 0.
-                Vclog:
-                    number of storage layer void volumes of runoff treated it takes to
+                Vclog (int): number of storage layer void volumes of runoff treated it takes to
                     completely clog the layer. Use a value of 0 to ignore clogging.
 
             Remarks:
                 Values for Vratio, Seepage, and Vclog are ignored for rain barrels.
             """
-            self.Height = Height
-            self.Vratio = Vratio
-            self.Seepage = Seepage
-            self.Vclog = Vclog
+            self.Height = float(Height)
+            self.Vratio = float(Vratio)
+            self.Seepage = float(Seepage)
+            self.Vclog = int(Vclog)
 
     class Drain(BaseSectionObject):
         def __init__(self, Coeff, Expon, Offset, Delay, open_level, close_level):
             """
             Args:
-                Coeff:
-                    coefficient C that determines the rate of flow through the drain as a
+                Coeff (float): coefficient C that determines the rate of flow through the drain as a
                     function of height of stored water above the drain bottom. For Rooftop
                     Disconnection it is the maximum flow rate (in inches/hour or mm/hour)
                     that the roof’s gutters and downspouts can handle before overflowing.
-                Expon:
-                    exponent n that determines the rate of flow through the drain as a
+                Expon (float): exponent n that determines the rate of flow through the drain as a
                     function of height of stored water above the drain outlet.
-                Offset:
-                    height of the drain line above the bottom of the storage layer or rain
+                Offset (float): height of the drain line above the bottom of the storage layer or rain
                     barrel (inches or mm).
-                Delay:
-                    number of dry weather hours that must elapse before the drain line in a
+                Delay: number of dry weather hours that must elapse before the drain line in a
                     rain barrel is opened (the line is assumed to be closed once rainfall
                     begins). A value of 0 signifies that the barrel's drain line is always open
                     and drains continuously. This parameter is ignored for other types of
                     LIDs.
             """
-            self.Coeff = Coeff
-            self.Expon = Expon
-            self.Offset = Offset
+            self.Coeff = float(Coeff)
+            self.Expon = float(Expon)
+            self.Offset = float(Offset)
             self.Delay = Delay  # acc. to documentation  / for Rain Barrels only
             self.open_level = open_level  # to in documentation
             self.close_level = close_level  # to in documentation
@@ -286,16 +257,13 @@ class LIDControl(BaseSectionObject):
         def __init__(self, Thick, Vratio, Rough):
             """
             Args:
-                Thick:
-                    thickness of the drainage mat (inches or mm).
-                Vratio:
-                    ratio of void volume to total volume in the mat.
-                Rough:
-                    Manning's n constant used to compute the horizontal flow rate of drained water through the mat.
+                Thick (float): thickness of the drainage mat (inches or mm).
+                Vratio (float): ratio of void volume to total volume in the mat.
+                Rough (float): Manning's n constant used to compute the horizontal flow rate of drained water through the mat.
             """
-            self.Thick = Thick
-            self.Vratio = Vratio
-            self.Rough = Rough
+            self.Thick = float(Thick)
+            self.Vratio = float(Vratio)
+            self.Rough = float(Rough)
 
     _surface_dict = {SURFACE_TYPES.SURFACE: Surface,
                      SURFACE_TYPES.SOIL: Soil,
@@ -324,47 +292,37 @@ class LIDUsage(BaseSectionObject):
             Subcat LID Number Area Width InitSat FromImp ToPerv (RptFile DrainTo)
 
     Args:
-        Subcat:
-            name of the subcatchment using the LID process.
-        LID:
-            name of an LID process defined in the [LID_CONTROLS] section.
-        Number:
-            number of replicate LID units deployed.
-        Area:
-            area of each replicate unit (ft^2 or m^2 ).
-        Width:
-            width of the outflow face of each identical LID unit (in ft or m). This
+        Subcat (str): name of the subcatchment using the LID process.
+        LID (str): name of an LID process defined in the [LID_CONTROLS] section.
+        Number (int): number of replicate LID units deployed.
+        Area (float): area of each replicate unit (ft^2 or m^2 ).
+        Width (float): width of the outflow face of each identical LID unit (in ft or m). This
             parameter applies to roofs, pavement, trenches, and swales that use
             overland flow to convey surface runoff off of the unit. It can be set to 0 for
             other LID processes, such as bio-retention cells, rain gardens, and rain
             barrels that simply spill any excess captured runoff over their berms.
-        InitSat:
-            for bio-retention cells, rain gardens, and green roofs this is the degree to
+        InitSat (float): for bio-retention cells, rain gardens, and green roofs this is the degree to
             which the unit's soil is initially filled with water (0 % saturation
             corresponds to the wilting point moisture content, 100 % saturation has
             the moisture content equal to the porosity). The storage zone beneath
             the soil zone of the cell is assumed to be completely dry. For other types
             of LIDs it corresponds to the degree to which their storage zone is
             initially filled with water
-        FromImp:
-            percent of the impervious portion of the subcatchment’s non-LID area
+        FromImp (float): percent of the impervious portion of the subcatchment’s non-LID area
             whose runoff is treated by the LID practice. (E.g., if rain barrels are used
             to capture roof runoff and roofs represent 60% of the impervious area,
             then the impervious area treated is 60%). If the LID unit treats only direct
             rainfall, such as with a green roof, then this value should be 0. If the LID
             takes up the entire subcatchment then this field is ignored.
-        ToPerv:
-            a value of 1 indicates that the surface and drain flow from the LID unit
+        ToPerv (int): a value of 1 indicates that the surface and drain flow from the LID unit
             should be routed back onto the pervious area of the subcatchment that
             contains it. This would be a common choice to make for rain barrels,
             rooftop disconnection, and possibly green roofs. The default value is 0.
-        RptFile:
-            optional name of a file to which detailed time series results for the LID
+        RptFile (str): optional name of a file to which detailed time series results for the LID
             will be written. Enclose the name in double quotes if it contains spaces
             and include the full path if it is different than the SWMM input file path.
             Use ‘*’ if not applicable and an entry for DrainTo follows
-        DrainTo:
-            optional name of subcatchment or node that receives flow from the unit’s
+        DrainTo (str): optional name of subcatchment or node that receives flow from the unit’s
             drain line, if different from the outlet of the subcatchment that the LID is
             placed in.
 
@@ -394,13 +352,13 @@ class LIDUsage(BaseSectionObject):
     _identifier = [IDENTIFIERS.Subcatch, 'LID']
 
     def __init__(self, Subcatch, LID, Number, Area, Width, InitSat, FromImp, ToPerv, RptFile=NaN, DrainTo=NaN):
-        self.Subcatch = Subcatch
-        self.LID = LID
+        self.Subcatch = str(Subcatch)
+        self.LID = str(LID)
         self.Number = Number
         self.Area = float(Area)
-        self.Width = Width
-        self.InitSat = InitSat
-        self.FromImp = FromImp
-        self.ToPerv = ToPerv
+        self.Width = float(Width)
+        self.InitSat = float(InitSat)
+        self.FromImp = float(FromImp)
+        self.ToPerv = int(ToPerv)
         self.RptFile = RptFile
         self.DrainTo = DrainTo

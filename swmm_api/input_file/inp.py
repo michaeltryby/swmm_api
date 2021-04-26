@@ -1,7 +1,7 @@
 import os
 import re
 
-from .helpers import _sort_by, section_to_string, CustomDictWithAttributes, convert_section, inp_sep
+from .helpers import _sort_by, section_to_string, CustomDictWithAttributes, convert_section, inp_sep, InpSection
 from .section_types import SECTION_TYPES, GUI_SECTIONS
 
 
@@ -13,6 +13,9 @@ class SwmmInput(CustomDictWithAttributes):
 
     just used for the copy function and to identify ``.inp``-file data
     """
+
+    def __getitem__(self, item: str) -> InpSection:
+        return super().__getitem__(item)
 
     def update(self, d=None, **kwargs):
         for sec in d:
@@ -26,7 +29,7 @@ class SwmmInput(CustomDictWithAttributes):
 
     @classmethod
     def read_file(cls, filename, ignore_sections=None, convert_sections=None, custom_converter=None,
-                  ignore_gui_sections=True):
+                  ignore_gui_sections=False):
         """
         read ``.inp``-file and convert the sections in pythonic objects
 

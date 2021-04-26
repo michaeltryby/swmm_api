@@ -83,8 +83,9 @@ class CrossSection(BaseSectionObject):
 
         if Shape == self.SHAPES.IRREGULAR:
             if Tsect is None:
+                # read inp file
                 Tsect = Geom1
-            self.Tsect = str(Tsect)
+            self.Tsect = str(Tsect)  # name of TransectCoordinates
         elif Shape == self.SHAPES.CUSTOM:
             if Curve is None:
                 Curve = Geom2
