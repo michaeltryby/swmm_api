@@ -31,23 +31,27 @@ pip install swmm-api
 from swmm_api.input_file.section_labels import TIMESERIES
 from swmm_api import read_inp_file
 
-inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])  # type: swmm_api.input_file.inp_helpers.InpData
+inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])  # type: swmm_api.SwmmInput
 
 # convert_sections limits the convertions during the reading of the file to the following section
 # remove "convert_sections" to convert all sections 
 # converting sections helps manipulating the inp file
 # unconverted sections will be loaded as the raw string
 
-sec_timeseries = inp[TIMESERIES]  # type: InpSection
+sec_timeseries = inp[TIMESERIES]  # type: swmm_api.input_file.helpers.InpSection
 ts = inp[TIMESERIES]['regenseries'].frame  # type: pandas.Series
 ```
 
 ### Manipulate the INP-File
 
 ```python
-from swmm_api import read_inp_file
+from swmm_api import read_inp_file, SwmmInput
 from swmm_api.input_file.section_labels import JUNCTIONS
-inp = read_inp_file('inputfile.inp')  # type: swmm_api.input_file.inp_helpers.InpData
+
+inp = read_inp_file('inputfile.inp')  # type: swmm_api.SwmmInput
+# or 
+inp = SwmmInput.read_file('inputfile.inp')
+
 inp[JUNCTIONS]['J01'].Elevation = 210
 ```
 
@@ -74,7 +78,7 @@ swmm5_run('new_inputfile.inp')
 ## Read the OUT-File
 ```python
 from swmm_api import read_out_file
-out = read_out_file('new_inputfile.out')   # type: swmm_api.output_file.out.SwmmOutHandler
+out = read_out_file('new_inputfile.out')   # type: swmm_api.SwmmOut
 df = out.to_frame()  # type: pandas.DataFrame
 ```
 see [examples/out_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/out_file_reader.ipynb)
@@ -83,7 +87,7 @@ see [examples/out_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-
 ## Read the RPT-File
 ```python
 from swmm_api import read_rpt_file
-rpt = read_rpt_file('new_inputfile.rpt')  # type: swmm_api.report_file.report.Report
+rpt = read_rpt_file('new_inputfile.rpt')  # type: swmm_api.SwmmReport
 node_flooding_summary = rpt.node_flooding_summary  # type: pandas.DataFrame
 ```
 see [examples/rpt_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/rpt_file_reader.ipynb)
