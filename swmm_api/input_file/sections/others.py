@@ -942,10 +942,12 @@ class Tag(BaseSectionObject):
         Subcatch = IDENTIFIERS.Subcatch
         Link = IDENTIFIERS.Link
 
-    def __init__(self, kind, Name, tag):
+    def __init__(self, kind, Name, tag, *tags):
         self.kind = kind
         self.Name = Name
         self.tag = tag
+        if tags:
+            self.tag += ' ' + ' '.join(tags)
 
 
 class Label(BaseSectionObject):

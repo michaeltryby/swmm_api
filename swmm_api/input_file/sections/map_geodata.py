@@ -67,6 +67,13 @@ def geopandas_to_vertices(data: GeoSeries) -> InpSectionGeo:
     s.add_multiple(s._section_object(i, list(v.coords)) for i, v in data.to_dict().items())
     return s
 
+def geopandas_to_polygons(data: GeoSeries) -> InpSectionGeo:
+    # geometry mit MultiLineString deswegen v[0] mit ersten und einzigen linestring zu verwenden
+    s = PolygonGeo.create_section()
+    # s.update({i: Vertices(i, v) for i, v in zip(data.index, map(lambda i: list(i.coords), data.values))})
+    s.add_multiple(s._section_object(i, list(v.boundary.coords)) for i, v in data.to_dict().items())
+    return s
+
 
 def remove_coordinates_from_vertices(inp):
     new_vertices_section = dict()
