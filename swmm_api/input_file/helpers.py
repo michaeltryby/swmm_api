@@ -210,6 +210,9 @@ class InpSection(CustomDict):
         """
         self[obj.get(self._identifier)] = obj
 
+    def add_inp_lines(self, lines):
+        self.add_multiple(self._section_object._convert_lines(lines))
+
     @classmethod
     def from_inp_lines(cls, lines, section_class):
         """
@@ -488,8 +491,7 @@ class BaseSectionObject:
             return cls._section_class(cls)
         else:
             sec = cls._section_class(cls)
-            for obj in cls._convert_lines(lines):
-                sec.add_obj(obj)
+            sec.add_inp_lines(lines)
             return sec
 
     @classmethod

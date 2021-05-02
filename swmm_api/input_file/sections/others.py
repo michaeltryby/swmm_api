@@ -947,7 +947,7 @@ class Tag(BaseSectionObject):
         self.Name = Name
         self.tag = tag
         if tags:
-            self.tag += ' ' + ' '.join(tags)
+            self.tag += '_' + '_'.join(tags)
 
 
 class Label(BaseSectionObject):
