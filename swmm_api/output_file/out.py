@@ -252,8 +252,8 @@ class SwmmOut:
         Returns:
             pandas.DataFrame | pandas.Series: filtered data
         """
-        if self.number_columns > 1000:
-            return self.get_part_slim(kind, name, var_name)
+        # if self.number_columns > 1000:
+        #     return self.get_part_slim(kind, name, var_name)
 
         data = self.to_numpy()
         if isinstance(kind, str):

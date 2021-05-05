@@ -1,5 +1,17 @@
 # Changelog  
 
+## 0.2.0.2 (Mai 5, 2021)
+
+- added polygon to transform coordinated function
+- added geopandas_to_polygons
+- fixed some documentation errors
+- fixed tag error (spaces in tag)
+- fixed undefined types in some objects
+- added function "add_inp_lines" to add a collection of lines to an existing section
+- set default of "ignore_gui_sections" in "SwmmInput.read_file" to False
+- added "delete_subcatchment" to macros
+- fixed faulty tag filter in filter_nodes/_links/_subcatchments
+
 ## 0.2 (Apr 6, 2021)
 
 ## 0.1a25  (Apr 1, 2021)

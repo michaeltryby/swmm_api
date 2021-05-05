@@ -1,3 +1,4 @@
+from abc import ABC
 from inspect import isfunction, isclass
 from numpy import isnan
 from pandas import DataFrame
@@ -375,7 +376,7 @@ def split_line_with_quotes(line):
 
 
 ########################################################################################################################
-class BaseSectionObject:
+class BaseSectionObject(ABC):
     """
     base class for all section objects to unify operations
 

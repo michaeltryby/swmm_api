@@ -165,7 +165,7 @@ LID1             DRAIN      3          0.5        6          6          1       
 [GROUNDWATER]
 ;;Subcatchment   Aquifer          Node             Esurf  A1     B1     A2     B2     A3     Dsw    Egwt   Ebot   Wgr    Umc   
 ;;-------------- ---------------- ---------------- ------ ------ ------ ------ ------ ------ ------ ------ ------ ------ ------
-S5               1                2                6      0.1    1      0      0      0      0      4     
+S5               1                J2                6      0.1    1      0      0      0      0      4
 
 [SNOWPACKS]
 ;;Name           Surface    Parameters

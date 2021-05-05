@@ -348,6 +348,12 @@ def delete_link(inp: SwmmInput, link):
             inp[s].pop(link)
 
 
+def delete_subcatchment(inp: SwmmInput, subcatchment):
+    for s in [sec.SUBCATCHMENTS, sec.SUBAREAS, sec.INFILTRATION, sec.POLYGONS, sec.LOADINGS, sec.COVERAGES]:
+        if (s in inp) and (subcatchment in inp[s]):
+            inp[s].pop(subcatchment)
+
+
 def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
     # mode = [cut_point (GUI), intervals (n), length (l)]
     nodes = nodes_dict(inp)
@@ -857,7 +863,10 @@ def filter_nodes(inp, final_nodes):
 
     # __________________________________________
     if sec.TAGS in inp:
-        inp[sec.TAGS] = inp[sec.TAGS].slice_section(((Tag.TYPES.Node, k) for k in final_nodes))
+        new = inp[sec.TAGS].create_new_empty()
+        new.add_multiple(inp[sec.TAGS].filter_keys([Tag.TYPES.Subcatch, Tag.TYPES.Link], by='kind'))
+        new.add_multiple(inp[sec.TAGS].filter_keys(((Tag.TYPES.Node, k) for k in final_nodes)))
+        inp[sec.TAGS] = new
 
     # __________________________________________
     inp = remove_empty_sections(inp)
@@ -925,7 +934,11 @@ def filter_link_components(inp, final_links):
 
     # __________________________________________
     if sec.TAGS in inp:
-        inp[sec.TAGS] = inp[sec.TAGS].slice_section(((Tag.TYPES.Link, k) for k in final_links))
+        new = inp[sec.TAGS].create_new_empty()
+        new.add_multiple(inp[sec.TAGS].filter_keys([Tag.TYPES.Subcatch, Tag.TYPES.Node], by='kind'))
+        new.add_multiple(inp[sec.TAGS].filter_keys(((Tag.TYPES.Link, k) for k in final_links)))
+        inp[sec.TAGS] = new
+        # inp[sec.TAGS] = inp[sec.TAGS].slice_section(((Tag.TYPES.Link, k) for k in final_links))
 
     # __________________________________________
     inp = remove_empty_sections(inp)
@@ -957,7 +970,11 @@ def filter_subcatchments(inp, final_nodes):
 
         # __________________________________________
         if sec.TAGS in inp:
-            inp[sec.TAGS] = inp[sec.TAGS].slice_section(((Tag.TYPES.Subcatch, k) for k in inp[sec.SUBCATCHMENTS]))
+            new = inp[sec.TAGS].create_new_empty()
+            new.add_multiple(inp[sec.TAGS].filter_keys([Tag.TYPES.Link, Tag.TYPES.Node], by='kind'))
+            new.add_multiple(inp[sec.TAGS].filter_keys(((Tag.TYPES.Subcatch, k) for k in inp[sec.SUBCATCHMENTS])))
+            inp[sec.TAGS] = new
+            # inp[sec.TAGS] = inp[sec.TAGS].slice_section(((Tag.TYPES.Subcatch, k) for k in inp[sec.SUBCATCHMENTS]))
 
     else:
         for section in [sec.SUBAREAS, sec.INFILTRATION, sec.POLYGONS]:

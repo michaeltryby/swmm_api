@@ -182,7 +182,7 @@ class LIDControl(BaseSectionObject):
             self.Suct = float(Suct)
 
     class Pavement(BaseSectionObject):
-        def __init__(self, Thick, Vratio, FracImp, Perm, clogging_factor, regeneration_interval, regeneration_fraction):
+        def __init__(self, Thick, Vratio, FracImp, Perm, Vclog, regeneration_interval=NaN, regeneration_fraction=NaN):
             """
             Args:
                 Thick (float): thickness of the pavement layer (inches or mm).
@@ -202,8 +202,8 @@ class LIDControl(BaseSectionObject):
             self.Vratio = float(Vratio)
             self.FracImp = float(FracImp)
             self.Perm = float(Perm)
-            # self.Vclog = Vclog  # acc. to documentation
-            self.clogging_factor = float(clogging_factor)
+            self.Vclog = Vclog  # acc. to documentation
+            # self.clogging_factor = float(clogging_factor)
             self.regeneration_interval = float(regeneration_interval)
             self.regeneration_fraction = float(regeneration_fraction)
 
@@ -229,7 +229,7 @@ class LIDControl(BaseSectionObject):
             self.Vclog = int(Vclog)
 
     class Drain(BaseSectionObject):
-        def __init__(self, Coeff, Expon, Offset, Delay, open_level, close_level):
+        def __init__(self, Coeff, Expon, Offset, Delay, open_level=NaN, close_level=NaN):
             """
             Args:
                 Coeff (float): coefficient C that determines the rate of flow through the drain as a
@@ -250,8 +250,8 @@ class LIDControl(BaseSectionObject):
             self.Expon = float(Expon)
             self.Offset = float(Offset)
             self.Delay = Delay  # acc. to documentation  / for Rain Barrels only
-            self.open_level = open_level  # to in documentation
-            self.close_level = close_level  # to in documentation
+            # self.open_level = open_level  # to in documentation
+            # self.close_level = close_level  # to in documentation
 
     class Drainmat(BaseSectionObject):
         def __init__(self, Thick, Vratio, Rough):
