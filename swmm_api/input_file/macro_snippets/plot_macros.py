@@ -32,12 +32,14 @@ def plot_map(inp):  # TODO
     # ax.set_xlim(x_min, x_max)
     # ax.set_ylim(y_min, y_max)
 
+    # ---------------------
     update_vertices(inp)
 
     for link, vertices in inp[VERTICES].items():
         x, y = zip(*vertices.vertices)
         ax.plot(x, y, 'y-')
 
+    # ---------------------
     if POLYGONS in inp:
         for poly in inp[POLYGONS].values():  # type: Polygon
             # x, y = zip(*poly.polygon)
@@ -53,6 +55,7 @@ def plot_map(inp):  # TODO
             outlet_point = inp[COORDINATES][outlet]
             ax.plot([center.x, outlet_point.x], [center.y, outlet_point.y], 'r--')
 
+    # ---------------------
     coords = inp[COORDINATES].frame
     node_style = {
         JUNCTIONS: {'marker': '.', 'color': 'b'},
@@ -60,16 +63,18 @@ def plot_map(inp):  # TODO
         OUTFALLS: {'marker': '^', 'color': 'r'},
 
     }
-    ax.scatter(x=coords.x, y=coords.y, marker=node_style[JUNCTIONS]['marker'], c=node_style[JUNCTIONS]['color'],
+    ax.scatter(x=coords.x, y=coords.y,
+               marker=node_style[JUNCTIONS]['marker'], c=node_style[JUNCTIONS]['color'],
                edgecolors='k', zorder=999)
 
     for section in [STORAGE, OUTFALLS]:
         if section in inp:
             is_in_sec = coords.index.isin(inp[section].keys())
             ax.scatter(x=coords[is_in_sec].x, y=coords[is_in_sec].y,
-                       marker=node_style[section]['marker'], c=node_style[section]['color'], edgecolors='k',
-                       zorder=9999)
+                       marker=node_style[section]['marker'], c=node_style[section]['color'],
+                       edgecolors='k', zorder=9999)
 
+    # ---------------------
     fig.tight_layout()
     return fig, ax
 

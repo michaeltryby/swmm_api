@@ -93,6 +93,8 @@ def type2str(x):
         str:
     """
     if isinstance(x, str):
+        if ' ' in x:
+            return f'"{x}"'
         return x
     elif isinstance(x, list):
         return ' '.join([type2str(i) for i in x])

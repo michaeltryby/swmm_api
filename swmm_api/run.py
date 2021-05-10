@@ -145,3 +145,31 @@ def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False, create_out=True
     check_swmm_errors(rpt, stdout)
 
     return rpt, out
+
+
+def swmm5_run_parallel(inp_fns, processes=4):
+    """
+    run multiple swmm models in parallel
+
+    Args:
+        inp_fns (list): list of SWMM modell filenames (.inp-files)
+        processes (int): number of parallel processes
+    """
+    _run_parallel(inp_fns, swmm5_run, processes=processes)
+
+
+def _run_parallel(variable, func=swmm5_run, processes=4):
+    from tqdm import tqdm
+    from functools import partial
+
+    if 0:
+        for fn_inp in tqdm(inp_fns):
+            func(fn_inp, init_print=True)
+
+    else:
+        from multiprocessing.dummy import Pool
+
+        pool = Pool(processes)
+        for _ in tqdm(pool.imap(partial(func), variable),
+                      total=len(variable)):
+            pass

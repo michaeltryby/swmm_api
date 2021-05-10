@@ -93,6 +93,9 @@ class SwmmOut:
         self.close()
         remove(self.filename)
 
+    def __del__(self):
+        self.close()
+
     @property
     def labels(self):
         """
