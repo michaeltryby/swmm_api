@@ -102,7 +102,7 @@ def _part_to_frame(part):
     # re.split(r"\s\s\s+", line.strip())
     df = pd.DataFrame(line.split() for line in data.split('\n'))
 
-    if df.iloc[:, -1].unique()[0] == 'ltr':
+    if 'ltr' in df.iloc[:, -1].unique():
         del df[df.columns[-1]]
 
     for c, h in enumerate(header):
@@ -112,6 +112,9 @@ def _part_to_frame(part):
     df.columns = header
 
     df = df.set_index(header[0])
+
+    # New error in Version 5.1.015 ????
+    df = df.replace('-nan(ind)', NaN)
 
     for col in df:
         if 'Type' in col:

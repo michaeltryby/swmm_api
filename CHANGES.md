@@ -1,8 +1,12 @@
 # Changelog  
 
-## 0.2.0.2 (Mai 5, 2021)
+## 0.2.0.3 (May 18, 2021)
 
-- added polygon to transform coordinated function
+- fixed errors when `-nan(ind)` in report file
+
+## 0.2.0.2 (May 5, 2021)
+
+- added polygons to transform coordinated function
 - added geopandas_to_polygons
 - fixed some documentation errors
 - fixed tag error (spaces in tag)
