@@ -97,7 +97,12 @@ def combined_subcatchment_frame(inp: SwmmInput):
     Returns:
         pandas.DataFrame: combined subcatchment data
     """
-    return inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
+    df = inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
+    if sec.TAGS in inp:
+        tags = inp[sec.TAGS].frame.xs('Subcatch', axis=0, level=0)
+        if not tags.empty:
+            df = df.join(tags)
+    return df
 
 
 ########################################################################################################################

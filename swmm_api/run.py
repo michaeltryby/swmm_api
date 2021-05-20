@@ -162,9 +162,9 @@ def _run_parallel(variable, func=swmm5_run, processes=4):
     from tqdm import tqdm
     from functools import partial
 
-    if 0:
-        for fn_inp in tqdm(inp_fns):
-            func(fn_inp, init_print=True)
+    if processes == 1:
+        for fn_inp in tqdm(variable):
+            func(fn_inp)
 
     else:
         from multiprocessing.dummy import Pool
