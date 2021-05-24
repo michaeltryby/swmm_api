@@ -883,7 +883,8 @@ class TimeseriesFile(Timeseries):
         self.filename = filename
 
     def to_inp_line(self):
-        return f'{self.Name} {self.kind} "{self.filename}"'
+        fn = self.filename.strip('"')
+        return f'{self.Name} {self.kind} "{fn}"'
 
 
 class TimeseriesData(Timeseries):

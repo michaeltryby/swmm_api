@@ -7,54 +7,17 @@ __license__ = "MIT"
 
 from os import remove
 
+from itertools import product
 from numpy import dtype, fromfile
 from pandas import date_range, DataFrame, MultiIndex, Series
-from .swmmtoolbox import SwmmExtract
+from .extract import SwmmOutExtract, OBJECTS, VARIABLES
 
 from . import parquet
 
-
-class VARIABLES:
-    class KIND:
-        SUBCATCHMENT = "subcatchment"
-        NODE = "node"
-        LINK = "link"
-        SYSTEM = "system"
-
-    class NODE:
-        DEPTH_ABOVE_INVERT = 'Depth_above_invert'
-        HYDRAULIC_HEAD = 'Hydraulic_head'
-        VOLUME_STORED_PONDED = 'Volume_stored_ponded'
-        LATERAL_INFLOW = 'Lateral_inflow'
-        TOTAL_INFLOW = 'Total_inflow'
-        FLOW_LOST_FLOODING = 'Flow_lost_flooding'
-
-    class LINK:
-        FLOW_RATE = 'Flow_rate'
-        FLOW_DEPTH = 'Flow_depth'
-        FLOW_VELOCITY = 'Flow_velocity'
-        FROUDE_NUMBER = 'Froude_number'
-        CAPACITY = 'Capacity'
-
-    class SYSTEM:
-        AIR_TEMPERATURE = 'Air_temperature'
-        RAINFALL = 'Rainfall'
-        SNOW_DEPTH = 'Snow_depth'
-        EVAPORATION_INFILTRATION = 'Evaporation_infiltration'
-        RUNOFF = 'Runoff'
-        DRY_WEATHER_INFLOW = 'Dry_weather_inflow'
-        GROUNDWATER_INFLOW = 'Groundwater_inflow'
-        RDII_INFLOW = 'RDII_inflow'
-        USER_DIRECT_INFLOW = 'User_direct_inflow'
-        TOTAL_LATERAL_INFLOW = 'Total_lateral_inflow'
-        FLOW_LOST_TO_FLOODING = 'Flow_lost_to_flooding'
-        FLOW_LEAVING_OUTFALLS = 'Flow_leaving_outfalls'
-        VOLUME_STORED_WATER = 'Volume_stored_water'
-        EVAPORATION_RATE = 'Evaporation_rate'
-        POTENTIAL_PET = 'Potential_PET'
+from tqdm import tqdm
 
 
-class SwmmOut:
+class SwmmOut(SwmmOutExtract):
     """
     read the binary .out-file of EPA-SWMM
 
@@ -64,21 +27,16 @@ class SwmmOut:
     """
 
     def __init__(self, filename):
-        self.filename = filename
-        self._extract = SwmmExtract(filename)
+        SwmmOutExtract.__init__(self, filename)
 
-        self._labels = None
-        self._variables = None
         self._frame = None
         self._data = None
-        self._index = None
-        self._number_columns = None
+        # the main datetime index for the results
+        self.index = date_range(self.start_date + self.report_interval,
+                                periods=self.n_periods, freq=self.report_interval)
 
     def __repr__(self):
         return f'SwmmOut(file="{self.filename}")'
-
-    # def __str__(self):
-    #     return f'SwmmOutHandler({self.filename})'
 
     def __enter__(self):
         return self
@@ -87,7 +45,7 @@ class SwmmOut:
         self.close()
 
     def close(self):
-        self._extract.fp.close()
+        self.fp.close()
 
     def delete(self):
         self.close()
@@ -96,67 +54,14 @@ class SwmmOut:
     def __del__(self):
         self.close()
 
-    @property
-    def labels(self):
+    def _get_dtypes(self):
         """
-        get the dictionary of the object labels for each object type (link, node, subcatchment)
+        get the dtypes of the data
 
         Returns:
-            dict: object-type: object-labels
+            str: numpy types
         """
-        if self._labels is None:
-            self._labels = {self._extract.itemlist[k]: v for k, v in self._extract.names.items()}
-        return self._labels
-
-    @property
-    def variables(self):
-        """
-        get the dictionary of the object variables for each object type (link, node, subcatchment)
-
-        Returns:
-            dict: object-type: object-variables
-        """
-        if self._variables is None:
-            self._variables = dict()
-            for i, kind in enumerate(self._extract.itemlist):
-                if i in self._extract.varcode:
-                    self._variables[kind] = [self._extract.varcode[i][j] for j in range(len(self._extract.varcode[i]))]
-                else:
-                    self._variables[kind] = list()
-        return self._variables
-
-    @property
-    def index(self):
-        """
-        get the main datetime index for the results
-
-        Returns:
-            pandas.DatetimeIndex: main datetime index of the results
-        """
-        if self._index is None:
-            self._index = date_range(self._extract.startdate, periods=self._extract.swmm_nperiods,
-                                     freq=self._extract.reportinterval)
-        return self._index
-
-    def _get_columns(self):
-        """
-        get the dtypes and column names of the data
-
-        Returns:
-            numpy.dtype: structed numpy types (with names)
-        """
-        types = [('date', 'f8')]
-
-        for kind in self._extract.itemlist:
-            if kind == 'system':
-                labels = [None]
-            else:
-                labels = self.labels[kind]
-            for label in labels:
-                for variable in self.variables[kind]:
-                    types.append(('{}/{}/{}'.format(kind, label, variable), 'f4'))
-
-        return dtype(types)
+        return 'f8' + ',f4' * self.number_columns
 
     @property
     def number_columns(self):
@@ -166,17 +71,14 @@ class SwmmOut:
         Returns:
             int: number of columns of the full results table
         """
-        if self._number_columns is None:
-            n = 0
-            for kind in self._extract.itemlist:
-                if kind == 'system':
-                    labels = [None]
-                else:
-                    labels = self.labels[kind]
+        return sum([len(self.variables[kind]) * len(self.labels[kind]) for kind in OBJECTS.LIST_])
 
-                n += len(self.variables[kind]) * len(labels)
-            self._number_columns = n
-        return self._number_columns
+    @property
+    def columns_raw(self):
+        columns = list()
+        for kind in OBJECTS.LIST_:
+            columns += list(product([kind], self.labels[kind], self.variables[kind]))
+        return columns
 
     def to_numpy(self):
         """
@@ -186,8 +88,10 @@ class SwmmOut:
             numpy.ndarray: all data
         """
         if self._data is None:
-            self._extract.fp.seek(self._extract.startpos, 0)
-            self._data = fromfile(self._extract.fp, dtype=self._get_columns())
+            types = [('datetime', 'f8')]
+            types += list(map(lambda i: ('/'.join(i), 'f4'), self.columns_raw))
+            self.fp.seek(self.pos_start_output, 0)
+            self._data = fromfile(self.fp, dtype=dtype(types))
         return self._data
 
     def to_frame(self):
@@ -201,15 +105,7 @@ class SwmmOut:
             pandas.DataFrame: data
         """
         if self._frame is None:
-            data = self.to_numpy()
-            d = dict()
-            for col in data.dtype.names:
-                if col == 'date':
-                    continue
-                d[col] = data[col]
-            self._frame = DataFrame(d)
-            self._frame.index = self.index
-            self._frame.columns = MultiIndex.from_tuples([col.split('/') for col in self._frame.columns])
+            self._frame = self._to_pandas(self.to_numpy())
         return self._frame
 
     def get_part(self, kind=None, name=None, var_name=None):
@@ -259,6 +155,10 @@ class SwmmOut:
         #     return self.get_part_slim(kind, name, var_name)
 
         data = self.to_numpy()
+
+        # maybe easier ?!?!
+        # c = MultiIndex.from_tuples(self.columns_raw)
+
         if isinstance(kind, str):
             kind = [kind]
 
@@ -279,13 +179,9 @@ class SwmmOut:
             return b
 
         columns = list(filter(filter_name, data.dtype.names))
-
-        df = DataFrame(data[columns])
-
-        df.index = self.index
-        if df.columns.size == 1:
+        df = self._to_pandas(data[columns], drop_useless=True)
+        if len(columns) == 1:
             return df.iloc[:, 0]
-        df.columns = self._columns(columns, drop_useless=True)
         return df
 
     def get_part_slim(self, kind=None, name=None, var_name=None):
@@ -335,11 +231,11 @@ class SwmmOut:
         if not all([kind, name, var_name]):
             parts = self._get_part_args(kind, name, var_name)
             values = dict()
-            for i in range(self._extract.swmm_nperiods):
+            for i in tqdm(range(self.n_periods)):
                 for label, args in parts.items():
                     if i == 0:
                         values[label] = list()
-                    _, value = self._extract.get_swmm_results(*args, i)
+                    value = self.get_swmm_results(*args, i)
                     values[label].append(value)
             df = DataFrame.from_dict(values).set_index(self.index)
             df.columns = self._columns(df.columns, drop_useless=True)
@@ -347,12 +243,12 @@ class SwmmOut:
 
         # -------------------------------------------------------------
         else:
-            index_kind = self._extract.itemlist.index(kind)
+            index_kind = OBJECTS.LIST_.index(kind)
             index_variable = self.variables[kind].index(var_name)
 
             values = []
-            for i in range(self._extract.swmm_nperiods):
-                _, value = self._extract.get_swmm_results(index_kind, name, index_variable, i)
+            for i in tqdm(range(self.n_periods)):
+                value = self.get_swmm_results(index_kind, name, index_variable, i)
                 values.append(value)
 
             return Series(values, index=self.index, name='{}/{}/{}'.format(kind, name, var_name))
@@ -380,18 +276,13 @@ class SwmmOut:
                 return True
 
         parts = dict()
-        for k in self._extract.itemlist:
-            if k == 'system':
-                labels = [None]
-            else:
-                labels = self.labels[k]
-
+        for k in OBJECTS.LIST_:
             if _checker(k, kind):
                 continue
 
-            kind_index = self._extract.itemlist.index(k)
+            kind_index = OBJECTS.LIST_.index(k)
 
-            for l in labels:
+            for l in self.labels[k]:
                 if _checker(l, name):
                     continue
 
@@ -404,11 +295,22 @@ class SwmmOut:
 
     @staticmethod
     def _columns(columns, drop_useless=False):
-        """"""
+        if drop_useless and (columns.size == 1):
+            return [columns[0]]
         c = MultiIndex.from_tuples([col.split('/') for col in columns])
         if drop_useless:
             c = c.droplevel([i for i, l in enumerate(c.levshape) if l == 1])
         return c
+
+    def _to_pandas(self, data, drop_useless=False):
+        # d = dict()
+        # for col in data.dtype.names:
+        #     if col == 'datetime':
+        #         continue
+        #     d[col] = data[col]
+        df = DataFrame(data, index=self.index, dtype=float)
+        df.columns = self._columns(df.columns, drop_useless=drop_useless)
+        return df
 
     def to_parquet(self):
         """
