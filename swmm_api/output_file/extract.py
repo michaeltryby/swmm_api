@@ -251,20 +251,27 @@ class SwmmOutExtract:
         return struct.unpack(fmt, self.fp.read(size))
 
     def _value_offset(self, kind, label, variable, period):
-        itemindex = self.labels[kind].index(str(label))
+        index_kind = OBJECTS.LIST_.index(kind)
+        index_variable = self.variables[kind].index(variable)
+        item_index = self.labels[kind].index(str(label))
+
+        n_vars_subcatch = len(self.variables[OBJECTS.SUBCATCHMENT])
+        n_vars_node = len(self.variables[OBJECTS.NODE])
+        n_vars_link = len(self.variables[OBJECTS.LINK])
+
+        n_subcatch = len(self.labels[OBJECTS.SUBCATCHMENT])
+        n_nodes = len(self.labels[OBJECTS.NODE])
+        n_links = len(self.labels[OBJECTS.LINK])
 
         return (self.pos_start_output + period * self.bytes_per_period
-                + _RECORDSIZE * (2 + variable
-                                 + {0: itemindex * self.n_vars_subcatch,
-                                    1: self.n_subcatch * self.n_vars_subcatch + itemindex * self.n_vars_node,
-                                    2: self.n_subcatch * self.n_vars_subcatch + self.n_nodes * self.n_vars_node +
-                                       itemindex * self.n_vars_link,
-                                    4: self.n_subcatch * self.n_vars_subcatch + self.n_nodes * self.n_vars_node +
-                                       self.n_links * self.n_vars_link
-                                    }[kind]))
+                + _RECORDSIZE * (2 + index_variable
+                                 + {0: item_index * n_vars_subcatch,
+                                    1: n_subcatch * n_vars_subcatch + item_index * n_vars_node,
+                                    2: n_subcatch * n_vars_subcatch + n_nodes * n_vars_node + item_index * n_vars_link,
+                                    4: n_subcatch * n_vars_subcatch + n_nodes * n_vars_node + n_links * n_vars_link
+                                    }[index_kind]))
 
-    def get_swmm_results(self, itemtype, name, variableindex, period):
-        offset = self._value_offset(itemtype, name, variableindex, period)
+    def get_swmm_results(self, kind, label, variable, period):
+        offset = self._value_offset(kind, label, variable, period)
         self.fp.seek(offset, 0)
-        value = struct.unpack("f", self.fp.read(_RECORDSIZE))[0]
-        return value
+        return self._next(dtype='f')

@@ -9,7 +9,7 @@ from os import remove
 
 from itertools import product
 from numpy import dtype, fromfile
-from pandas import date_range, DataFrame, MultiIndex, Series
+from pandas import date_range, DataFrame, MultiIndex
 from .extract import SwmmOutExtract, OBJECTS, VARIABLES
 
 from . import parquet
@@ -31,6 +31,7 @@ class SwmmOut(SwmmOutExtract):
 
         self._frame = None
         self._data = None
+
         # the main datetime index for the results
         self.index = date_range(self.start_date + self.report_interval,
                                 periods=self.n_periods, freq=self.report_interval)
@@ -108,92 +109,17 @@ class SwmmOut(SwmmOutExtract):
             self._frame = self._to_pandas(self.to_numpy())
         return self._frame
 
-    def get_part(self, kind=None, name=None, var_name=None):
+    def get_part(self, kind=None, label=None, variable=None, slim=False):
         """
-        convert specific columns of the data to a pandas-DataFame
-
-        Args:
-            kind (str | list): ["subcatchment", "node", "link", "system"]
-            name (str | list): name of the objekts
-            var_name (str | list): variable names
-
-                * node:
-                    - ``Depth_above_invert``
-                    - ``Hydraulic_head``
-                    - ``Volume_stored_ponded``
-                    - ``Lateral_inflow``
-                    - ``Total_inflow``
-                    - ``Flow_lost_flooding``
-                * link:
-                    - ``Flow_rate``
-                    - ``Flow_depth``
-                    - ``Flow_velocity``
-                    - ``Froude_number``
-                    - ``Capacity``
-                * system:
-                    - ``Air_temperature``
-                    - ``Rainfall``
-                    - ``Snow_depth``
-                    - ``Evaporation_infiltration``
-                    - ``Runoff``
-                    - ``Dry_weather_inflow``
-                    - ``Groundwater_inflow``
-                    - ``RDII_inflow``
-                    - ``User_direct_inflow``
-                    - ``Total_lateral_inflow``
-                    - ``Flow_lost_to_flooding``
-                    - ``Flow_leaving_outfalls``
-                    - ``Volume_stored_water``
-                    - ``Evaporation_rate``
-                    - ``Potential_PET``
-
-
-        Returns:
-            pandas.DataFrame | pandas.Series: filtered data
-        """
-        # if self.number_columns > 1000:
-        #     return self.get_part_slim(kind, name, var_name)
-
-        data = self.to_numpy()
-
-        # maybe easier ?!?!
-        # c = MultiIndex.from_tuples(self.columns_raw)
-
-        if isinstance(kind, str):
-            kind = [kind]
-
-        if isinstance(name, str):
-            name = [name]
-
-        if isinstance(var_name, str):
-            var_name = [var_name]
-
-        def filter_name(n):
-            b = True
-            if isinstance(kind, list):
-                b &= any(n.startswith(i) for i in kind)
-            if isinstance(name, list):
-                b &= any(['/{}/'.format(i) in n for i in name])
-            if isinstance(var_name, list):
-                b &= any(n.endswith(i) for i in var_name)
-            return b
-
-        columns = list(filter(filter_name, data.dtype.names))
-        df = self._to_pandas(data[columns], drop_useless=True)
-        if len(columns) == 1:
-            return df.iloc[:, 0]
-        return df
-
-    def get_part_slim(self, kind=None, name=None, var_name=None):
-        """
-        use this function instead of "get_part" if there are a lot of objects in the out-file.
-
         get specific columns of the data to a pandas-DataFame (or pandas-Series for a single column)
 
+        use this function instead of "get_part" if there are a lot of objects in the out-file.
+
         Args:
             kind (str | list): ["subcatchment", "node", "link", "system"]
-            name (str | list): name of the objekts
-            var_name (str | list): variable names
+            label (str | list): name of the objekts
+            variable (str | list): variable names
+            slim (bool): set to `True` if there are a lot of objects and just few time-steps in the out-file.
 
                 * node:
                     - ``Depth_above_invert``
@@ -225,91 +151,60 @@ class SwmmOut(SwmmOutExtract):
                     - ``Evaporation_rate``
                     - ``Potential_PET``
 
+
         Returns:
             pandas.DataFrame | pandas.Series: filtered data
         """
-        if not all([kind, name, var_name]):
-            parts = self._get_part_args(kind, name, var_name)
-            values = dict()
+        columns = self._filter_part_columns(kind, label, variable)
+        if slim:
+            values = {'/'.join(c): list() for c in columns}
             for i in tqdm(range(self.n_periods)):
-                for label, args in parts.items():
-                    if i == 0:
-                        values[label] = list()
-                    value = self.get_swmm_results(*args, i)
-                    values[label].append(value)
-            df = DataFrame.from_dict(values).set_index(self.index)
-            df.columns = self._columns(df.columns, drop_useless=True)
-            return df
-
-        # -------------------------------------------------------------
+                for args in columns:
+                    values['/'.join(args)].append(self.get_swmm_results(*args, i))
         else:
-            index_kind = OBJECTS.LIST_.index(kind)
-            index_variable = self.variables[kind].index(var_name)
+            values = self.to_numpy()[list(map(lambda c: '/'.join(c), columns))]
 
-            values = []
-            for i in tqdm(range(self.n_periods)):
-                value = self.get_swmm_results(index_kind, name, index_variable, i)
-                values.append(value)
+        return self._to_pandas(values, drop_useless=True)
 
-            return Series(values, index=self.index, name='{}/{}/{}'.format(kind, name, var_name))
+    def _filter_part_columns(self, kind=None, label=None, variable=None):
+        def _filter(i, possibilities):
+            if i is None:
+                return possibilities
+            elif isinstance(i, str):
+                if i in possibilities:
+                    return [i]
+                else:
+                    return []
+            elif isinstance(i, list):
+                return [j for j in i if j in possibilities]
 
-    def _get_part_args(self, kind=None, name=None, var_name=None):
-        """
-
-        Args:
-            kind (str | list): ["subcatchment", "node", "link", "system"]
-            name (str | list): name of the objekts
-            var_name (str | list): variable names
-
-        Returns:
-            dict: str(final column name) -> tuple(type-index, object-label, variable-index)
-        """
-
-        def _checker(i, user):
-            if user is None:
-                return False
-            elif isinstance(user, list) and (i in user):
-                return False
-            elif isinstance(user, str) and (i == user):
-                return False
-            else:
-                return True
-
-        parts = dict()
-        for k in OBJECTS.LIST_:
-            if _checker(k, kind):
-                continue
-
-            kind_index = OBJECTS.LIST_.index(k)
-
-            for l in self.labels[k]:
-                if _checker(l, name):
-                    continue
-
-                for v in self.variables[k]:
-                    if _checker(v, var_name):
-                        continue
-
-                    parts['{}/{}/{}'.format(k, l, v)] = (kind_index, l, self.variables[k].index(v))
-        return parts
-
-    @staticmethod
-    def _columns(columns, drop_useless=False):
-        if drop_useless and (columns.size == 1):
-            return [columns[0]]
-        c = MultiIndex.from_tuples([col.split('/') for col in columns])
-        if drop_useless:
-            c = c.droplevel([i for i, l in enumerate(c.levshape) if l == 1])
-        return c
+        columns = list()
+        for k in _filter(kind, OBJECTS.LIST_):
+            columns += list(product([k], _filter(label, self.labels[k]), _filter(variable, self.variables[k])))
+        return columns
 
     def _to_pandas(self, data, drop_useless=False):
-        # d = dict()
-        # for col in data.dtype.names:
-        #     if col == 'datetime':
-        #         continue
-        #     d[col] = data[col]
-        df = DataFrame(data, index=self.index, dtype=float)
-        df.columns = self._columns(df.columns, drop_useless=drop_useless)
+        if isinstance(data, dict):
+            if not bool(data):
+                return DataFrame()
+            df = DataFrame.from_dict(data).set_index(self.index)
+        else:
+            if data.size == 0:
+                return DataFrame()
+            df = DataFrame(data, index=self.index, dtype=float)
+
+        # --------------------------------
+        if drop_useless and (df.columns.size == 1):
+            df.columns = [df.columns[0]]
+        df.columns = MultiIndex.from_tuples([col.split('/') for col in df.columns])
+        if drop_useless:
+            df.columns = df.columns.droplevel([i for i, l in enumerate(df.columns.levshape) if l == 1])
+
+        # --------------------------------
+        # TODO: ?°!?
+        if len(df.columns) == 1:
+            return df.iloc[:, 0]
+
         return df
 
     def to_parquet(self):
