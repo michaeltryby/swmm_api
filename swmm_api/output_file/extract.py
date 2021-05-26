@@ -10,6 +10,8 @@
 import copy
 import datetime
 import struct
+from tqdm import tqdm
+
 # from collections import OrderedDict as dict
 
 
@@ -92,20 +94,8 @@ _FLOW_UNITS = ['CFS', 'GPM', 'MGD', 'CMS', 'LPS', 'MLD', None]
 _CONCENTRATION_UNITS = ['MG', 'UG', 'COUNTS']
 _MAGIC_NUMBER = 516114522
 _PROPERTY_LABELS = ['type', 'area', 'invert', 'max_depth', 'offset', 'length']
-_PROPERTY_FORMAT = lambda p: {'type': 'i'}.get(p, 'f')
 _NODES_TYPES = ['JUNCTION', 'OUTFALL', 'STORAGE', 'DIVIDER']
 _LINK_TYPES = ['CONDUIT', 'PUMP', 'ORIFICE', 'WEIR', 'OUTLET']
-
-
-def _add_index(l):
-    counts = {}
-    for i, name in enumerate(l):
-         if name in counts:
-             counts[name] += 1
-             l[i] = f"{name}_{counts[name]}"
-         else:
-             counts[name] = 1
-    return l
 
 
 class SwmmExtractValueError(Exception):
@@ -115,6 +105,7 @@ class SwmmExtractValueError(Exception):
 
 class SwmmOutExtract:
     """The class that handles all extraction of data from the out file."""
+
     def __init__(self, filename):
         self.fp = open(filename, "rb")
 
@@ -198,7 +189,7 @@ class SwmmOutExtract:
             for label in self.labels[kind]:
                 self.model_properties[kind][label] = dict()
                 for property_label in property_labels:
-                    value = self._next(dtype=_PROPERTY_FORMAT(property_label))
+                    value = self._next(dtype={'type': 'i'}.get(property_label, 'f'))
                     if property_label == 'type':
                         value = {OBJECTS.NODE: _NODES_TYPES, OBJECTS.LINK: _LINK_TYPES}[kind][value]
                     self.model_properties[kind][label][property_label] = value
@@ -222,12 +213,22 @@ class SwmmOutExtract:
 
     @property
     def filename(self):
+        """
+        path and filename of the .out-file
+
+        Returns:
+            str: path and filename of the .out-file
+        """
         return self.fp.name
 
     @property
     def bytes_per_period(self):
-        # Calculate the bytes for each time period when
-        # reading the computed results
+        """
+        Calculate the bytes for each time period when reading the computed results
+
+        Returns:
+            int: bytes per period
+        """
         if self._bytes_per_period is None:
             self._bytes_per_period = 2  # for the datetime
             for obj in [OBJECTS.SUBCATCHMENT, OBJECTS.NODE, OBJECTS.LINK]:
@@ -238,6 +239,17 @@ class SwmmOutExtract:
         return self._bytes_per_period
 
     def _next(self, n=1, dtype='i', flat=True):
+        """
+        read the next number or string in the binary .out-file
+
+        Args:
+            n (int): number of objects to read
+            dtype (str): type of number to read ['i', 'f', 'd', 's', ...]
+            flat (float): if just one object should be returned
+
+        Returns:
+            (int | float | str): read object
+        """
         size = {'d': 2}.get(dtype, 1)
         if dtype == 's':
             s = self._next_base(f'{n}s', n)[0]
@@ -248,13 +260,31 @@ class SwmmOutExtract:
             return self._next_base(f'{n}{dtype}', n * size * _RECORDSIZE)
 
     def _next_base(self, fmt, size):
+        """
+        read from the binary .out-file
+
+        Args:
+            fmt (str): format of the read object(s)
+            size (int): bytes to read
+
+        Returns:
+            (int | float | str): read object
+        """
         return struct.unpack(fmt, self.fp.read(size))
 
-    def _value_offset(self, kind, label, variable, period):
-        index_kind = OBJECTS.LIST_.index(kind)
-        index_variable = self.variables[kind].index(variable)
-        item_index = self.labels[kind].index(str(label))
+    def get_selective_results(self, columns):
+        """
+        get results of selective columns in .out-file
 
+        this function is due to its iterative reading slow,
+        but has it advantages with out-files with many columns (>1000) and fewer time-steps
+
+        Args:
+            columns (list[tuple]): list of column identifier tuple with [(kind, label, variable), ...]
+
+        Returns:
+            dict[str, list]: dictionary where keys are the column names ('/' as separator) and values are the list of result values
+        """
         n_vars_subcatch = len(self.variables[OBJECTS.SUBCATCHMENT])
         n_vars_node = len(self.variables[OBJECTS.NODE])
         n_vars_link = len(self.variables[OBJECTS.LINK])
@@ -263,15 +293,32 @@ class SwmmOutExtract:
         n_nodes = len(self.labels[OBJECTS.NODE])
         n_links = len(self.labels[OBJECTS.LINK])
 
-        return (self.pos_start_output + period * self.bytes_per_period
-                + _RECORDSIZE * (2 + index_variable
-                                 + {0: item_index * n_vars_subcatch,
-                                    1: n_subcatch * n_vars_subcatch + item_index * n_vars_node,
-                                    2: n_subcatch * n_vars_subcatch + n_nodes * n_vars_node + item_index * n_vars_link,
-                                    4: n_subcatch * n_vars_subcatch + n_nodes * n_vars_node + n_links * n_vars_link
-                                    }[index_kind]))
+        offset_list = list()
+        values = dict()
 
-    def get_swmm_results(self, kind, label, variable, period):
-        offset = self._value_offset(kind, label, variable, period)
-        self.fp.seek(offset, 0)
-        return self._next(dtype='f')
+        for kind, label, variable in columns:
+            values['/'.join([kind, label, variable])] = list()
+            index_kind = OBJECTS.LIST_.index(kind)
+            index_variable = self.variables[kind].index(variable)
+            item_index = self.labels[kind].index(str(label))
+
+            offset_list.append(self.pos_start_output
+                               + _RECORDSIZE * (2 + index_variable
+                                                + {0: (item_index * n_vars_subcatch),
+                                                   1: (n_subcatch * n_vars_subcatch +
+                                                       item_index * n_vars_node),
+                                                   2: (n_subcatch * n_vars_subcatch +
+                                                       n_nodes * n_vars_node +
+                                                       item_index * n_vars_link),
+                                                   4: (n_subcatch * n_vars_subcatch +
+                                                       n_nodes * n_vars_node +
+                                                       n_links * n_vars_link)
+                                                   }[index_kind]))
+
+        for period in tqdm(range(self.n_periods)):
+            period_offset = period * self.bytes_per_period
+            for label, offset in zip(values.keys(), offset_list):
+                self.fp.seek(offset + period_offset, 0)
+                values[label].append(self._next(dtype='f'))
+
+        return values

@@ -14,8 +14,6 @@ from .extract import SwmmOutExtract, OBJECTS, VARIABLES
 
 from . import parquet
 
-from tqdm import tqdm
-
 
 class SwmmOut(SwmmOutExtract):
     """
@@ -107,6 +105,7 @@ class SwmmOut(SwmmOutExtract):
         """
         if self._frame is None:
             self._frame = self._to_pandas(self.to_numpy())
+            del self._frame['datetime']
         return self._frame
 
     def get_part(self, kind=None, label=None, variable=None, slim=False):
@@ -157,16 +156,24 @@ class SwmmOut(SwmmOutExtract):
         """
         columns = self._filter_part_columns(kind, label, variable)
         if slim:
-            values = {'/'.join(c): list() for c in columns}
-            for i in tqdm(range(self.n_periods)):
-                for args in columns:
-                    values['/'.join(args)].append(self.get_swmm_results(*args, i))
+            values = self.get_selective_results(columns)
         else:
-            values = self.to_numpy()[list(map(lambda c: '/'.join(c), columns))]
+            values = self.to_numpy()[list(map('/'.join, columns))]
 
         return self._to_pandas(values, drop_useless=True)
 
     def _filter_part_columns(self, kind=None, label=None, variable=None):
+        """
+        filter which columns should be extracted
+
+        Args:
+            kind (str | list): ["subcatchment", "node", "link", "system"]
+            label (str | list): name of the objekts
+            variable (str | list): variable names
+
+        Returns:
+            list: filtered list of tuple(kind, label, variable)
+        """
         def _filter(i, possibilities):
             if i is None:
                 return possibilities
@@ -184,6 +191,16 @@ class SwmmOut(SwmmOutExtract):
         return columns
 
     def _to_pandas(self, data, drop_useless=False):
+        """
+        convert interim results to pandas DataFrame or Series
+
+        Args:
+            data (dict, numpy.ndarray): timeseries data of swmm out file
+            drop_useless (bool): if single column data should be returned as Series
+
+        Returns:
+            (pandas.DataFrame | pandas.Series): pandas Timerseries of data
+        """
         if isinstance(data, dict):
             if not bool(data):
                 return DataFrame()
@@ -193,23 +210,20 @@ class SwmmOut(SwmmOutExtract):
                 return DataFrame()
             df = DataFrame(data, index=self.index, dtype=float)
 
-        # --------------------------------
-        if drop_useless and (df.columns.size == 1):
-            df.columns = [df.columns[0]]
+        # -----------
+        if df.columns.size == 1:
+            return df.iloc[:, 0]
+        # -----------
         df.columns = MultiIndex.from_tuples([col.split('/') for col in df.columns])
         if drop_useless:
             df.columns = df.columns.droplevel([i for i, l in enumerate(df.columns.levshape) if l == 1])
-
-        # --------------------------------
-        # TODO: ?°!?
-        if len(df.columns) == 1:
-            return df.iloc[:, 0]
 
         return df
 
     def to_parquet(self):
         """
         read the binary .out file from EPA-SWMM and write the data to a parquet file
+
         multi-column-names are separated by a slash ("/")
         read parquet files with parquet.read to get the original column-name-structure
         """
