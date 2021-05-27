@@ -10,6 +10,8 @@
 import copy
 import datetime
 import struct
+from os import remove
+
 from tqdm import tqdm
 
 # from collections import OrderedDict as dict
@@ -107,6 +109,7 @@ class SwmmOutExtract:
     """The class that handles all extraction of data from the out file."""
 
     def __init__(self, filename):
+        self.fp = None
         self.fp = open(filename, "rb")
 
         # ____
@@ -210,6 +213,23 @@ class SwmmOutExtract:
 
     def __repr__(self):
         return f'SwmmOutExtract(file="{self.filename}")'
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
+        if self.fp is not None:
+            self.fp.close()
+
+    def delete(self):
+        self.close()
+        remove(self.filename)
+
+    def __del__(self):
+        self.close()
 
     @property
     def filename(self):

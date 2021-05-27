@@ -83,10 +83,16 @@ class CustomDict:
 class CustomDictWithAttributes(CustomDict):
     def __setitem__(self, key, item):
         super().__setitem__(key, item)
-        exec(f'self.{key} = self["{key}"]')
+        try:
+            exec(f'self.{key} = self["{key}"]')
+        except:
+            pass
 
     def __delitem__(self, key):
-        exec(f'del self.{key}')
+        try:
+            exec(f'del self.{key}')
+        except:
+            pass
         super().__delitem__(key)
 
     def copy(self):

@@ -1,5 +1,10 @@
 # Changelog  
 
+## 0.2.0.4 (May 27, 2021)
+
+- fixed errors when object labels start with a number
+- rewritten out-file-reader
+
 ## 0.2.0.3 (May 18, 2021)
 
 - fixed errors when `-nan(ind)` in report file

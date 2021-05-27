@@ -5,7 +5,6 @@ __email__ = "markus.pichler@tugraz.at"
 __version__ = "0.1"
 __license__ = "MIT"
 
-from os import remove
 
 from itertools import product
 from numpy import dtype, fromfile
@@ -36,22 +35,6 @@ class SwmmOut(SwmmOutExtract):
 
     def __repr__(self):
         return f'SwmmOut(file="{self.filename}")'
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-
-    def close(self):
-        self.fp.close()
-
-    def delete(self):
-        self.close()
-        remove(self.filename)
-
-    def __del__(self):
-        self.close()
 
     def _get_dtypes(self):
         """

@@ -5,6 +5,15 @@ from ..macros import update_vertices, links_connected, links_dict, nodes_dict, g
 from ..sections import Outfall, Polygon, SubCatchment
 from ..section_labels import *
 
+def set_inp_dimensions(inp, ax):
+    map_dim = inp[MAP]['DIMENSIONS']
+    x_min, x_max = map_dim['lower-left X'], map_dim['upper-right X']
+    delta_x = x_max - x_min
+    y_min, y_max = map_dim['lower-left Y'], map_dim['upper-right Y']
+    delta_y = y_max - y_min
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+
 
 def plot_map(inp):  # TODO
     """
@@ -23,15 +32,6 @@ def plot_map(inp):  # TODO
     ax.set_axis_off()
     ax.set_aspect(1.0)
 
-    # map_dim = inp[MAP]['DIMENSIONS']
-    # x_min, x_max = map_dim['lower-left X'], map_dim['upper-right X']
-    # delta_x = x_max - x_min
-    # y_min, y_max = map_dim['lower-left Y'], map_dim['upper-right Y']
-    # delta_y = y_max - y_min
-    # fig.set_size_inches(w=118.0 / 2.51, h=(118.0 * delta_y / delta_x) / 2.51)
-    # ax.set_xlim(x_min, x_max)
-    # ax.set_ylim(y_min, y_max)
-
     # ---------------------
     update_vertices(inp)
 
@@ -40,19 +40,26 @@ def plot_map(inp):  # TODO
         ax.plot(x, y, 'y-')
 
     # ---------------------
+
+    points = dict(inp[COORDINATES])
+    from shapely import geometry as shp
+    points.update({poly.Subcatch: shp.Polygon(poly.polygon).centroid for poly in inp[POLYGONS].values()})
+
     if POLYGONS in inp:
         for poly in inp[POLYGONS].values():  # type: Polygon
-            # x, y = zip(*poly.polygon)
+
+            # ----------------
+            # sub-catchment polygon
             ax.add_patch(patches.Polygon(poly.polygon, closed=True, fill=False, hatch='/'))
-            # ax.plot(x, y, 'r-')
-            from shapely import geometry as shp
-            center = shp.Polygon(poly.polygon).centroid
+
+            # ----------------
+            # center point of sub-catchment
+            center = points[poly.Subcatch]
 
             ax.scatter(x=center.x, y=center.y, marker='s', c='k', zorder=999)
 
             subcatch = inp[SUBCATCHMENTS][poly.Subcatch]  # type: SubCatchment
-            outlet = subcatch.Outlet
-            outlet_point = inp[COORDINATES][outlet]
+            outlet_point = points[subcatch.Outlet]
             ax.plot([center.x, outlet_point.x], [center.y, outlet_point.y], 'r--')
 
     # ---------------------
