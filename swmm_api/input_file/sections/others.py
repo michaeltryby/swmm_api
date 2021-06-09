@@ -947,7 +947,7 @@ class Tag(BaseSectionObject):
         Link = IDENTIFIERS.Link
 
     def __init__(self, kind, Name, tag, *tags):
-        self.kind = kind
+        self.kind = kind.lower().capitalize()
         self.Name = Name
         self.tag = tag
         if tags:

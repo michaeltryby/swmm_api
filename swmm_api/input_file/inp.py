@@ -29,7 +29,7 @@ class SwmmInput(CustomDictWithAttributes):
 
     @classmethod
     def read_file(cls, filename, ignore_sections=None, convert_sections=None, custom_converter=None,
-                  ignore_gui_sections=False):
+                  ignore_gui_sections=False, force_ignore_case=False, encoding='iso-8859-1'):
         """
         read ``.inp``-file and convert the sections in pythonic objects
 
@@ -39,6 +39,8 @@ class SwmmInput(CustomDictWithAttributes):
             convert_sections (list[str]): only convert these sections. Default: convert all
             custom_converter (dict): dictionary of {section: converter/section_type} Default: :py:const:`SECTION_TYPES`
             ignore_gui_sections (bool): don't convert gui/geo sections (ie. for commandline use)
+            force_ignore_case (bool): SWMM is case-insensitive but python is case-sensitive -> set True to ignore case
+                                        all text/labels will be set to uppercase
 
         Returns:
             SwmmInput: dict-like data of the sections in the ``.inp``-file
@@ -61,10 +63,15 @@ class SwmmInput(CustomDictWithAttributes):
 
         # __________________________________
         if os.path.isfile(filename):
-            with open(filename, 'r', encoding='iso-8859-1') as inp_file:
+            with open(filename, 'r', encoding=encoding) as inp_file:
                 txt = inp_file.read()
         else:
             txt = filename
+
+        # __________________________________
+        if force_ignore_case:
+            txt = txt.upper()
+
         # __________________________________
         headers = [h.upper() for h in re.findall(r"\[(\w+)\]", txt)]
         section_text = [h.strip() for h in re.split(r"\[\w+\]", txt)[1:]]
@@ -109,7 +116,7 @@ class SwmmInput(CustomDictWithAttributes):
 
 
 def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_converter=None,
-                  ignore_gui_sections=True):
+                  ignore_gui_sections=True, force_ignore_case=False, encoding='iso-8859-1'):
     """
     read ``.inp``-file and convert the sections in pythonic objects
 
@@ -119,9 +126,11 @@ def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_
         convert_sections (list[str]): only convert these sections. Default: convert all
         custom_converter (dict): dictionary of {section: converter/section_type} Default: :py:const:`SECTION_TYPES`
         ignore_gui_sections (bool): don't convert gui/geo sections (ie. for commandline use)
+        force_ignore_case (bool): SWMM is case-insensitive but python is case-sensitive -> set True to ignore case
 
     Returns:
         SwmmInput: dict-like data of the sections in the ``.inp``-file
     """
     return SwmmInput.read_file(filename, ignore_sections=ignore_sections, convert_sections=convert_sections,
-                               custom_converter=custom_converter, ignore_gui_sections=ignore_gui_sections)
+                               custom_converter=custom_converter, ignore_gui_sections=ignore_gui_sections,
+                               force_ignore_case=force_ignore_case, encoding=encoding)

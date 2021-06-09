@@ -99,9 +99,13 @@ def combined_subcatchment_frame(inp: SwmmInput):
     """
     df = inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
     if sec.TAGS in inp:
-        tags = inp[sec.TAGS].frame.xs('Subcatch', axis=0, level=0)
-        if not tags.empty:
-            df = df.join(tags)
+        df_tags = inp[sec.TAGS].frame
+        if 'Subcatch' in df_tags.index.levels[0]:
+            tags = inp[sec.TAGS].frame.xs('Subcatch', axis=0, level=0)
+            if not tags.empty:
+                df = df.join(tags)
+        else:
+            df[df_tags.columns[0]] = None
     return df
 
 
@@ -1155,7 +1159,7 @@ def number_in_out(g, node):
 
 
 ########################################################################################################################
-def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, graph=None):
+def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, graph=None, init_print=True):
     """
     split model network at the ``split_at_node``-node and keep the part with the ``keep_node``-node.
 
@@ -1183,7 +1187,8 @@ def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, grap
         graph = graph.to_undirected()
     sub = subgraph(graph, node_connected_component(graph, keep_node))
 
-    print(f'Reduced Network from {len(graph.nodes)} nodes to {len(sub.nodes)} nodes.')
+    if init_print:
+        print(f'Reduced Network from {len(graph.nodes)} nodes to {len(sub.nodes)} nodes.')
 
     final_nodes = list(sub.nodes)
     if split_at_node is not None and keep_split_node:
