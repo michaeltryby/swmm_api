@@ -39,6 +39,7 @@ class SwmmInput(CustomDictWithAttributes):
             ignore_gui_sections (bool): don't convert gui/geo sections (ie. for commandline use)
             force_ignore_case (bool): SWMM is case-insensitive but python is case-sensitive -> set True to ignore case
                                         all text/labels will be set to uppercase
+            encoding (str): encoding of the inp text file
 
         Returns:
             SwmmInput: dict-like data of the sections in the ``.inp``-file
@@ -623,6 +624,7 @@ def read_inp_file(filename, ignore_sections=None, convert_sections=None, custom_
         custom_converter (dict): dictionary of {section: converter/section_type} Default: :py:const:`SECTION_TYPES`
         ignore_gui_sections (bool): don't convert gui/geo sections (ie. for commandline use)
         force_ignore_case (bool): SWMM is case-insensitive but python is case-sensitive -> set True to ignore case
+        encoding (str): encoding of the inp text file
 
     Returns:
         SwmmInput: dict-like data of the sections in the ``.inp``-file
