@@ -5,7 +5,16 @@ from ..helpers import BaseSectionObject
 from .._type_converter import to_bool
 
 
-class Conduit(BaseSectionObject):
+class _Link(BaseSectionObject):
+    _identifier = IDENTIFIERS.Name
+
+    def __init__(self, Name, FromNode, ToNode):
+        self.Name = str(Name)
+        self.FromNode = str(FromNode)
+        self.ToNode = str(ToNode)
+
+
+class Conduit(_Link):
     """Section: **[CONDUITS]**
 
     Purpose:
@@ -53,12 +62,8 @@ class Conduit(BaseSectionObject):
         InitFlow (float): flow in conduit at start of simulation (flow units) (default is 0). ``Q0``
         MaxFlow (float): maximum flow allowed in the conduit (flow units) (default is no limit). ``Qmax``
     """
-    _identifier =IDENTIFIERS.Name
-
     def __init__(self, Name, FromNode, ToNode, Length, Roughness, InOffset=0, OutOffset=0, InitFlow=0, MaxFlow=NaN):
-        self.Name = str(Name)
-        self.FromNode = str(FromNode)
-        self.ToNode = str(ToNode)
+        _Link.__init__(self, Name, FromNode, ToNode)
         self.Length = float(Length)
         self.Roughness = float(Roughness)
         self.InOffset = float(InOffset)
@@ -67,7 +72,7 @@ class Conduit(BaseSectionObject):
         self.MaxFlow = float(MaxFlow)
 
 
-class Weir(BaseSectionObject):
+class Weir(_Link):
     """
     Section: [**WEIRS**]
 
@@ -146,8 +151,6 @@ class Weir(BaseSectionObject):
         RoadWidth (float): width of road lanes and shoulders for ``ROADWAY`` weir (ft or m). ``Width``
         RoadSurface (str): type of road surface for ``ROADWAY`` weir: ``PAVED`` or ``GRAVEL``. ``Surface``
     """
-    _identifier =IDENTIFIERS.Name
-
     class TYPES:
         TRANSVERSE = 'TRANSVERSE'
         SIDEFLOW = 'SIDEFLOW'
@@ -162,9 +165,7 @@ class Weir(BaseSectionObject):
     def __init__(self, Name, FromNode, ToNode, Type, CrestHeight, Qcoeff, FlapGate=False, EndContractions=0,
                  EndCoeff=NaN,
                  Surcharge=True, RoadWidth=NaN, RoadSurface=NaN):
-        self.Name = str(Name)
-        self.FromNode = str(FromNode)
-        self.ToNode = str(ToNode)
+        _Link.__init__(self, Name, FromNode, ToNode)
         self.Type = str(Type)
         self.CrestHeight = float(CrestHeight)
         self.Qcoeff = float(Qcoeff)
@@ -178,7 +179,7 @@ class Weir(BaseSectionObject):
         self.RoadSurface = RoadSurface
 
 
-class Outlet(BaseSectionObject):
+class Outlet(_Link):
     """
     Section: [**OUTLETS**]
 
@@ -244,8 +245,6 @@ class Outlet(BaseSectionObject):
 
         Gated (bool): ``YES`` if flap gate present to prevent reverse flow, ``NO`` if not (default is ``NO``).
     """
-    _identifier =IDENTIFIERS.Name
-
     class TYPES:
         TABULAR_DEPTH = 'TABULAR/DEPTH'
         TABULAR_HEAD = 'TABULAR/HEAD'
@@ -253,9 +252,7 @@ class Outlet(BaseSectionObject):
         FUNCTIONAL_HEAD = 'FUNCTIONAL/HEAD'
 
     def __init__(self, Name, FromNode, ToNode, Offset, Type, *args, Curve=None, Gated=False):
-        self.Name = str(Name)
-        self.FromNode = str(FromNode)
-        self.ToNode = str(ToNode)
+        _Link.__init__(self, Name, FromNode, ToNode)
         self.Offset = float(Offset)
         self.Type = str(Type)
 
@@ -282,7 +279,7 @@ class Outlet(BaseSectionObject):
         self.Gated = to_bool(Gated)
 
 
-class Orifice(BaseSectionObject):
+class Orifice(_Link):
     """
     Section: [**ORIFICES**]
 
@@ -332,16 +329,12 @@ class Orifice(BaseSectionObject):
         Orate (int): time in decimal hours to open a fully closed orifice (or close a fully open one).
                         Use 0 if the orifice can open/close instantaneously.
     """
-    _identifier = IDENTIFIERS.Name
-
     class TYPES:
         SIDE = 'SIDE'
         BOTTOM = 'BOTTOM'
 
     def __init__(self, Name, FromNode, ToNode, Type, Offset, Qcoeff, FlapGate=False, Orate=0):
-        self.Name = str(Name)
-        self.FromNode = str(FromNode)
-        self.ToNode = str(ToNode)
+        _Link.__init__(self, Name, FromNode, ToNode)
         self.Type = str(Type)
         self.Offset = float(Offset)
         self.Qcoeff = float(Qcoeff)
@@ -349,7 +342,7 @@ class Orifice(BaseSectionObject):
         self.Orate = int(Orate)
 
 
-class Pump(BaseSectionObject):
+class Pump(_Link):
     """
     Section: [**PUMPS**]
 
@@ -387,16 +380,12 @@ class Pump(BaseSectionObject):
 
     See Section 3.2 for a description of the different types of pumps available.
     """
-    _identifier =IDENTIFIERS.Name
-
     class STATES:
         ON = 'ON'
         OFF = 'OFF'
 
     def __init__(self, Name, FromNode, ToNode, Curve, Status='ON', Startup=0, Shutoff=0):
-        self.Name = str(Name)
-        self.FromNode = str(FromNode)
-        self.ToNode = str(ToNode)
+        _Link.__init__(self, Name, FromNode, ToNode)
         self.Curve = str(Curve)
         self.Status = str(Status)
         self.Startup = float(Startup)

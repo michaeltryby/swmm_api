@@ -171,11 +171,21 @@ class InpSection(CustomDict):
 
     @property
     def objects(self):
+        """
+        all swmm objects in this section
+
+        Returns:
+            dict[str, BaseSectionObject]: dictionary of objects with label as key and the object os value
+        """
         return self._data
 
     @property
     def _identifier(self):
-        # to set the index of the section (key to select an object an index for the dataframe export)
+        """
+        to set the index of the section (key to select an object an index for the dataframe export)
+        Returns:
+            str | tuple: key of the objects label (can be a single or multiple keys)
+        """
         return self._section_object._identifier
 
     @property
@@ -217,8 +227,14 @@ class InpSection(CustomDict):
         """
         self[obj.get(self._identifier)] = obj
 
-    def add_inp_lines(self, lines):
-        self.add_multiple(self._section_object._convert_lines(lines))
+    def add_inp_lines(self, multi_line_args):
+        """
+        creates and adds objects for each line
+
+        Args:
+            multi_line_args (list[list[str]]): lines in the input file section
+        """
+        self.add_multiple(self._section_object._convert_lines(multi_line_args))
 
     @classmethod
     def from_inp_lines(cls, lines, section_class):
@@ -234,30 +250,6 @@ class InpSection(CustomDict):
         Returns:
             InpSection: section of the ``.inp``-file
         """
-
-        def txt_to_lines(content):
-            for line in re.findall(r'^[ \t]*([^;\n]+)[ \t]*;?[^\n]*$', content, flags=re.M):
-                # ;; section comment
-                # ; object comment / either inline(at the end of the line) or before the line
-                # if ';' in line:
-                #     line
-                # line = line.split(';')[0]
-                # line = line.strip()
-                # if line == '':  # ignore empty and comment lines
-                #     continue
-                # else:
-                yield line.split()
-
-        if isinstance(lines, str):
-            if len(lines) > 10000000:
-                n_lines = lines.count('\n') + 1
-                # to create a progressbar in the reading process
-                # only needed with big (> 200 MB) files
-                lines = txt_to_lines(lines)
-                lines = tqdm(lines, desc=section_class.__name__, total=n_lines)
-            else:
-                lines = txt_to_lines(lines)
-
         return section_class.create_section(lines)
 
     def to_inp_lines(self, fast=False):
@@ -310,6 +302,12 @@ class InpSection(CustomDict):
         return df
 
     def create_new_empty(self):
+        """
+        create a new empty section of this kind of section
+
+        Returns:
+            InpSection: new empty section
+        """
         return type(self)(self._section_object)
 
     def copy(self):
@@ -426,6 +424,10 @@ class BaseSectionObject(ABC):
     def __str__(self):
         return self._to_debug_string()
 
+    @property
+    def id(self):
+        return id(self)
+
     def _to_debug_string(self):
         """for debugging purposes
 
@@ -466,17 +468,19 @@ class BaseSectionObject(ABC):
         return ' '.join([type2str(i) for i in di.values()])
 
     @classmethod
-    def from_inp_line(cls, *line):
+    def from_inp_line(cls, *line_args):
         """
         convert line in the ``.inp``-file to the object
 
+        needed if multiple sub-classes of an object are available (i.e. Infiltration)
+
         Args:
-            *line (list[str]): arguments in the line
+            *line_args (list[str]): arguments in the line
 
         Returns:
             BaseSectionObject: object of the ``.inp``-file section
         """
-        return cls(*line)
+        return cls(*line_args)
 
     def copy(self):
         """
@@ -490,37 +494,72 @@ class BaseSectionObject(ABC):
     @classmethod
     def create_section(cls, lines=None) -> InpSection:
         """
-        create an object for ``.inp``-file sections with objects
+        creates a new section for the ``.inp``-file of this object and ads objects described in `lines`
 
-        i.e. nodes, links, subcatchments, raingages, ...
+        Args:
+            lines:
+
+        Returns:
+            InpSection: new section of this object
         """
-        if lines is None:
-            return cls._section_class(cls)
-        else:
-            sec = cls._section_class(cls)
+        sec = cls._section_class(cls)
+        if lines is not None:
+
+            def txt_to_lines(content):
+                """
+                converts text to multiple line arguments
+
+                Args:
+                    content (str): section text
+
+                Returns:
+                    list[list[str]]: lines in the input file section
+                """
+                for line in re.findall(r'^[ \t]*([^;\n]+)[ \t]*;?[^\n]*$', content, flags=re.M):
+                    # ;; section comment
+                    # ; object comment / either inline(at the end of the line) or before the line
+                    # if ';' in line:
+                    #     line
+                    # line = line.split(';')[0]
+                    # line = line.strip()
+                    # if line == '':  # ignore empty and comment lines
+                    #     continue
+                    # else:
+                    yield line.split()
+
+            if isinstance(lines, str):
+                if len(lines) > 10000000:
+                    n_lines = lines.count('\n') + 1
+                    # to create a progressbar in the reading process
+                    # only needed with big (> 200 MB) files
+                    lines = txt_to_lines(lines)
+                    lines = tqdm(lines, desc=cls.__name__, total=n_lines)
+                else:
+                    lines = txt_to_lines(lines)
+
             sec.add_inp_lines(lines)
-            return sec
+        return sec
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def from_inp_lines(cls, lines):
+        return cls.create_section(lines)
+
+    @classmethod
+    def _convert_lines(cls, multi_line_args):
         """
         convert the ``.inp``-file section
 
-        creates an object for each line and yields them
+        creates and yields an object for each line
 
         Args:
-            lines (list[list[str]]): lines in the input file section
+            multi_line_args (list[list[str]]): lines in the input file section
 
         Yields:
             BaseSectionObject: object of the ``.inp``-file section
         """
         # overwrite if each object has multiple lines
-        for line in lines:
-            yield cls.from_inp_line(*line)
-
-    @property
-    def id(self):
-        return id(self)
+        for line_args in multi_line_args:
+            yield cls.from_inp_line(*line_args)
 
 
 ########################################################################################################################
@@ -584,13 +623,15 @@ def convert_section(head, lines, converter):
             return section_(lines)
 
         elif isclass(section_):  # section_ ... type/class
-            if hasattr(section_, 'from_inp_lines'):
-                # section has multiple options over multiple lines
-                return section_.from_inp_lines(lines)
-                # REPORT, TIMESERIES, CURVES, TAGS
-            else:
-                # each line is a object OR each object has multiple lines
-                return InpSection.from_inp_lines(lines, section_)
+            return section_.from_inp_lines(lines)
+            # if hasattr(section_, 'from_inp_lines'):
+            #     # section has multiple options over multiple lines
+            #     return section_.from_inp_lines(lines)
+            #     # REPORT, TIMESERIES, CURVES, TAGS
+            # else:
+            #     # each line is a object OR each object has multiple lines
+            #     # return InpSection.from_inp_lines(lines, section_)
+            #     return section_.create_section(lines)
 
         else:
             raise NotImplemented()

@@ -295,10 +295,10 @@ class Treatment(BaseSectionObject):
         self.function = str(function)
 
     @classmethod
-    def _convert_lines(cls, lines):
-        for name, pollutant, *line in lines:
+    def _convert_lines(cls, multi_line_args):
+        for name, pollutant, *line in multi_line_args:
             result, function = ' '.join(line).split('=')
-            yield cls.from_inp_line(name, pollutant, result, function)
+            yield cls(name, pollutant, result, function)
 
     def to_inp_line(self):
         """

@@ -381,11 +381,11 @@ class Polygon(BaseSectionObject):
         self.polygon = polygon
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def _convert_lines(cls, multi_line_args):
         polygon = list()
         last = None
 
-        for line in lines:
+        for line in multi_line_args:
             Subcatch, x, y = line
             x = float(x)
             y = float(y)
@@ -460,9 +460,9 @@ class Loading(BaseSectionObject):
         self.pollutant_buildup_dict[pollutant] = float(buildup)
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def _convert_lines(cls, multi_line_args):
         last = None
-        for Subcatch, *line in lines:
+        for Subcatch, *line in multi_line_args:
 
             if last is None:
                 # first line of section
@@ -533,9 +533,9 @@ class Coverage(BaseSectionObject):
         self.land_use_dict[land_use] = float(percent)
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def _convert_lines(cls, multi_line_args):
         last = None
-        for Subcatch, *line in lines:
+        for Subcatch, *line in multi_line_args:
 
             if last is None:
                 # first line of section

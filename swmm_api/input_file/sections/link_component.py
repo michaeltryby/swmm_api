@@ -216,11 +216,11 @@ class Vertices(BaseSectionObject):
         self.vertices = vertices
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def _convert_lines(cls, multi_line_args):
         vertices = list()
         last = None
 
-        for line in lines:
+        for line in multi_line_args:
             Link, x, y = line
             x = float(x)
             y = float(y)

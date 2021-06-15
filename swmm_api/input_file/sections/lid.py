@@ -117,10 +117,10 @@ class LIDControl(BaseSectionObject):
             self.layer_dict = surfaces
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def _convert_lines(cls, multi_line_args):
         last = None
 
-        for name, *line in lines:
+        for name, *line in multi_line_args:
             # ---------------------------------
             if line[0].upper() in cls.LID_TYPES._possible:
                 if last is not None:

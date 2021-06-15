@@ -194,9 +194,9 @@ class Pattern(BaseSectionObject):
             self.Factors = list(float(f) for f in factors)
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def _convert_lines(cls, multi_line_args):
         args = list()
-        for line in lines:
+        for line in multi_line_args:
             if line[1] in [cls.TYPES.MONTHLY, cls.TYPES.DAILY,
                            cls.TYPES.HOURLY, cls.TYPES.WEEKEND]:
                 if args:
@@ -443,11 +443,11 @@ class Transect(BaseSectionObject):
         return len(self.station_elevations)
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def _convert_lines(cls, multi_line_args):
         last_roughness = [0, 0, 0]
         last = None
 
-        for line in lines:
+        for line in multi_line_args:
             if line[0] == cls.KEYS.NC:
                 last_roughness = line[1:]
 
@@ -560,11 +560,11 @@ class Control(BaseSectionObject):
         self.priority = int(priority)
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def _convert_lines(cls, multi_line_args):
         args = list()
         is_condition = False
         is_action = False
-        for line in lines:
+        for line in multi_line_args:
             if line[0] == cls.Clauses.RULE:
                 if args:
                     yield cls(*args)
@@ -724,11 +724,11 @@ class Curve(BaseSectionObject):
         self.points = points
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def _convert_lines(cls, multi_line_args):
         last = None
         Type = None
         points = list()
-        for name, *line in lines:
+        for name, *line in multi_line_args:
             remains = iter(line)
 
             if name != last:
@@ -823,11 +823,11 @@ class Timeseries(BaseSectionObject):
         self.Name = str(Name)
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def _convert_lines(cls, multi_line_args):
         data = list()
         last = None
 
-        for name, *line in lines:
+        for name, *line in multi_line_args:
             # ---------------------------------
             if line[0].upper() == cls.TYPES.FILE:
                 yield TimeseriesFile(name, ' '.join(line[1:]))
@@ -1100,10 +1100,10 @@ class Hydrograph(BaseSectionObject):
         self.monthly_definitions = list()
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def _convert_lines(cls, multi_line_args):
         last = None
 
-        for name, *line in lines:
+        for name, *line in multi_line_args:
             # ---------------------------------
             if line[0].upper() not in cls.MONTHS._possible:
                 if last is not None:
@@ -1417,10 +1417,10 @@ class SnowPack(BaseSectionObject):
     #     return cls._surface_dict[kind.upper()](Name, kind, *args, **kwargs)
 
     @classmethod
-    def _convert_lines(cls, lines):
+    def _convert_lines(cls, multi_line_args):
         last = None
 
-        for name, kind, *line in lines:
+        for name, kind, *line in multi_line_args:
             # ---------------------------------
             if last is None:
                 last = cls(name)

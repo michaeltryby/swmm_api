@@ -62,7 +62,15 @@ from .._type_converter import to_bool, infer_type
 #     Aponded: float = 0
 
 
-class Junction(BaseSectionObject):
+class _Node(BaseSectionObject):
+    _identifier = IDENTIFIERS.Name
+
+    def __init__(self, Name, Elevation):
+        self.Name = str(Name)
+        self.Elevation = float(Elevation)
+
+
+class Junction(_Node):
     """
     Section: [**JUNCTIONS**]
 
@@ -109,18 +117,16 @@ class Junction(BaseSectionObject):
                             can sustain under surcharge conditions (ft or m) (default is 0). ``Ysur``
         Aponded (float): area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0). ``Apond``
     """
-    _identifier = IDENTIFIERS.Name
 
     def __init__(self, Name, Elevation, MaxDepth=0, InitDepth=0, SurDepth=0, Aponded=0):
-        self.Name = str(Name)
-        self.Elevation = float(Elevation)
+        _Node.__init__(self, Name, Elevation)
         self.MaxDepth = float(MaxDepth)
         self.InitDepth = float(InitDepth)
         self.SurDepth = float(SurDepth)
         self.Aponded = float(Aponded)
 
 
-class Storage(BaseSectionObject):
+class Storage(_Node):
     """
     Section: [**STORAGE**]
 
@@ -215,7 +221,6 @@ class Storage(BaseSectionObject):
     Psi: float
     Ksat: float
     IMD: float
-    _identifier = IDENTIFIERS.Name
 
     class TYPES:
         TABULAR = 'TABULAR'
@@ -223,8 +228,7 @@ class Storage(BaseSectionObject):
 
     def __init__(self, Name: str, Elevation: float, MaxDepth: float, InitDepth: float, Type: str, *args, Curve=None,
                  Apond: float = 0, Fevap: float=0, Psi: float=NaN, Ksat: float=NaN, IMD: float=NaN):
-        self.Name = str(Name)
-        self.Elevation = float(Elevation)
+        _Node.__init__(self, Name, Elevation)
         self.MaxDepth = float(MaxDepth)
         self.InitDepth = float(InitDepth)
         self.Type = Type
@@ -296,7 +300,7 @@ class Storage(BaseSectionObject):
         self.IMD = float(IMD)
 
 
-class Outfall(BaseSectionObject):
+class Outfall(_Node):
     """
     Section: [**OUTFALLS**]
 
@@ -346,8 +350,6 @@ class Outfall(BaseSectionObject):
         FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
         RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
     """
-    _identifier = IDENTIFIERS.Name
-
     class TYPES:
         FREE = 'FREE'
         NORMAL = 'NORMAL'
@@ -356,8 +358,7 @@ class Outfall(BaseSectionObject):
         TIMESERIES = 'TIMESERIES'
 
     def __init__(self, Name, Elevation, Type, *args, Data=NaN, FlapGate=False, RouteTo=NaN):
-        self.Name = str(Name)
-        self.Elevation = float(Elevation)
+        _Node.__init__(self, Name, Elevation)
         self.Type = Type
         self.Data = NaN
 

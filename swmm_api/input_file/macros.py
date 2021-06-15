@@ -14,6 +14,8 @@ from .sections._identifiers import IDENTIFIERS
 from swmm_api.input_file.section_labels import VERTICES, COORDINATES, XSECTIONS
 from swmm_api.input_file.section_types import SECTION_TYPES
 from .macro_snippets.curve_simplification import ramer_douglas, _vec2d_dist
+from .sections.link import _Link
+from .sections.node import _Node
 
 """
 a collection of macros to manipulate an inp-file
@@ -120,9 +122,9 @@ def nodes_dict(inp: SwmmInput):
         inp (SwmmInput): inp-file data
 
     Returns:
-        dict[str, Junction or Storage or Outfall]: dict of {labels: objects}
+        dict[str, _Node]: dict of {labels: objects}
     """
-    nodes: ChainMap[str, Junction] = ChainMap()
+    nodes: ChainMap[str, _Node] = ChainMap()
     for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
         if section in inp:
             nodes.maps.append(inp[section])
@@ -155,9 +157,9 @@ def links_dict(inp: SwmmInput):  # or Weir or Orifice or Pump or Outlet
         inp (SwmmInput): inp-file data
 
     Returns:
-        dict[str, Conduit or Weir or Orifice or Pump or Outlet]: dict of {labels: objects}
+        dict[str, _Link]: dict of {labels: objects}
     """
-    links: ChainMap[str, Conduit] = ChainMap()
+    links: ChainMap[str, _Link] = ChainMap()
     for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
         if section in inp:
             links.maps.append(inp[section])
