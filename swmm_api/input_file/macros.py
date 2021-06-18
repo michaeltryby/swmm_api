@@ -3,6 +3,7 @@ from math import ceil
 from os import path, mkdir, listdir
 
 import numpy as np
+import pandas as pd
 from networkx import DiGraph, all_simple_paths, subgraph, node_connected_component
 from statistics import mean
 from typing import List
@@ -11,8 +12,8 @@ from .helpers import InpSection, convert_section, section_to_string
 from . import SwmmInput, section_labels as sec
 from .sections import *
 from .sections._identifiers import IDENTIFIERS
-from swmm_api.input_file.section_labels import VERTICES, COORDINATES, XSECTIONS
-from swmm_api.input_file.section_types import SECTION_TYPES
+from .section_labels import VERTICES, COORDINATES, XSECTIONS
+from .section_types import SECTION_TYPES
 from .macro_snippets.curve_simplification import ramer_douglas, _vec2d_dist
 from .sections.link import _Link
 from .sections.node import _Node
@@ -100,15 +101,54 @@ def combined_subcatchment_frame(inp: SwmmInput):
         pandas.DataFrame: combined subcatchment data
     """
     df = inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
+    df = df.join(get_subcatchment_tags(inp))
+    return df
+
+
+def get_tags_frame(inp, part=None):
     if sec.TAGS in inp:
         df_tags = inp[sec.TAGS].frame
-        if 'Subcatch' in df_tags.index.levels[0]:
-            tags = inp[sec.TAGS].frame.xs('Subcatch', axis=0, level=0)
-            if not tags.empty:
-                df = df.join(tags)
-        else:
-            df[df_tags.columns[0]] = None
-    return df
+        if part in df_tags.index.levels[0]:
+            return inp[sec.TAGS].frame.xs(part, axis=0, level=0)
+    return pd.Series(name='tags', dtype=str)
+
+
+def get_node_tags(inp):
+    return get_tags_frame(inp, Tag.TYPES.Node)
+
+
+def get_link_tags(inp):
+    return get_tags_frame(inp, Tag.TYPES.Link)
+
+
+def get_subcatchment_tags(inp):
+    return get_tags_frame(inp, Tag.TYPES.Subcatch)
+
+
+def filter_tags(inp_tags: SwmmInput, inp_objects: SwmmInput=None):
+    """
+
+    Args:
+        inp_tags:
+        inp_objects:
+
+    Returns:
+        InpSection[str, Tag] | dict[str, Tag]:
+    """
+    if inp_objects is None:
+        inp_objects = inp_tags
+
+    from itertools import product
+    nodes = nodes_dict(inp_objects)
+    keys = list(product([Tag.TYPES.Node], list(nodes.keys())))
+
+    links = links_dict(inp_objects)
+    keys += list(product([Tag.TYPES.Link], list(links.keys())))
+
+    if sec.SUBCATCHMENTS in inp_objects:
+        keys += list(product([Tag.TYPES.Subcatch], list(inp_objects.SUBCATCHMENTS.keys())))
+
+    return inp_tags.TAGS.slice_section(keys)
 
 
 ########################################################################################################################
@@ -399,7 +439,7 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
         if x >= conduit.Length:
             node = to_node
         else:
-            node = Junction(Name=f'{from_node.Name}_{to_node.Name}_{chr(new_node_i+97)}',
+            node = Junction(Name=f'{from_node.Name}_{to_node.Name}_{chr(new_node_i + 97)}',
                             Elevation=np.interp(x, [0, conduit.Length], [from_node.Elevation, to_node.Elevation]),
                             MaxDepth=np.interp(x, [0, conduit.Length], [from_node.MaxDepth, to_node.MaxDepth]),
                             InitDepth=np.interp(x, [0, conduit.Length], [from_node.InitDepth, to_node.InitDepth]),
@@ -411,10 +451,12 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
 
             # TODO: COORDINATES based on vertices
             inp[sec.COORDINATES].add_obj(Coordinate(node.Name,
-                                                    x=np.interp(x, [0, conduit.Length], [from_node_coord.x, to_node_coord.x]),
-                                                    y=np.interp(x, [0, conduit.Length], [from_node_coord.y, to_node_coord.y])))
+                                                    x=np.interp(x, [0, conduit.Length],
+                                                                [from_node_coord.x, to_node_coord.x]),
+                                                    y=np.interp(x, [0, conduit.Length],
+                                                                [from_node_coord.y, to_node_coord.y])))
 
-        link = Conduit(Name=f'{conduit.Name}_{chr(new_node_i+97)}',
+        link = Conduit(Name=f'{conduit.Name}_{chr(new_node_i + 97)}',
                        FromNode=last_node.Name,
                        ToNode=node.Name,
                        Length=dx,
@@ -455,14 +497,31 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
     delete_link(inp, conduit.Name)
 
 
-def combine_vertices(inp, label1, label2):
+def combine_vertices(inp: SwmmInput, label1, label2):
+    if sec.COORDINATES not in inp:
+        # if there are not coordinates this function is nonsense
+        return
+
+    if sec.VERTICES not in inp:
+        # we will at least ad the coordinates of the common node
+        inp[sec.VERTICES] = Vertices.create_section()
+
+    new_vertices = list()
+
+    if label1 in inp[sec.VERTICES]:
+        new_vertices += list(inp[sec.VERTICES][label1].vertices)
+
     common_node = links_dict(inp)[label1].ToNode
-    if sec.VERTICES in inp and label1 in inp[sec.VERTICES]:
-        new_vertices = inp[sec.VERTICES][label1].vertices
-        if sec.COORDINATES in inp and common_node in inp[sec.COORDINATES]:
-            new_vertices += [inp[sec.COORDINATES][common_node].point]
-        new_vertices += inp[sec.VERTICES][label2].vertices
+    if common_node in inp[sec.COORDINATES]:
+        new_vertices += [inp[sec.COORDINATES][common_node].point]
+
+    if label2 in inp[sec.VERTICES]:
+        new_vertices += list(inp[sec.VERTICES][label2].vertices)
+
+    if label1 in inp[sec.VERTICES]:
         inp[sec.VERTICES][label1].vertices = new_vertices
+    else:
+        inp[sec.VERTICES].add_obj(Vertices(label1, vertices=new_vertices))
 
 
 def combine_conduits(inp, c1, c2, graph: DiGraph = None):
@@ -528,10 +587,10 @@ def combine_conduits(inp, c1, c2, graph: DiGraph = None):
 
 def combine_conduits_keep_slope(inp, c1, c2, graph: DiGraph = None):
     nodes = nodes_dict(inp)
-    new_out_offset = - calc_slope(inp, c1) * c2.Length \
-                     + c1.OutOffset \
-                     + nodes[c1.ToNode].Elevation \
-                     - nodes[c2.ToNode].Elevation
+    new_out_offset = (- calc_slope(inp, c1) * c2.Length
+                      + c1.OutOffset
+                      + nodes[c1.ToNode].Elevation
+                      - nodes[c2.ToNode].Elevation)
     c1 = combine_conduits(inp, c1, c2, graph=graph)
     c1.OutOffset = round(new_out_offset, 2)
     return c1

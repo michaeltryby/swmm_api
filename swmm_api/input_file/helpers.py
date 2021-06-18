@@ -400,7 +400,7 @@ class BaseSectionObject(ABC):
         return self.to_dict_().get(key)
 
     def set(self, key, value):
-        assert key in self.to_dict_()
+        assert key in self.to_dict_(), f'{key} not a Object attribute | {self}'
         vars(self)[key] = value
 
     def __getitem__(self, key):

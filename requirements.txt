@@ -5,3 +5,4 @@ networkx
 #fastparquet
 matplotlib
 Shapely
+Rtree

@@ -1,6 +1,6 @@
 from geopandas import GeoDataFrame
 
-from ..macros import update_vertices, filter_nodes, filter_links
+from ..macros import update_vertices, filter_nodes, filter_links, get_node_tags, get_link_tags, get_subcatchment_tags
 from ... import read_inp_file
 from .. import section_labels as s
 from ..sections.map_geodata import (VerticesGeo, CoordinateGeo, PolygonGeo, InpSectionGeo,
@@ -66,7 +66,10 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
 
     update_vertices(inp)
 
+    # ---------------------------------
+    nodes_tags = get_node_tags(inp)
     for sec in [s.JUNCTIONS, s.STORAGE, s.OUTFALLS]:
+
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}')
 
@@ -78,10 +81,14 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
                     x = inp[sub_sec].frame.unstack(1)
                     x.columns = [f'{label_sep}'.join([sub_sec, c[1], c[0]]) for c in x.columns]
                     df = df.join(x)
-            df = df.join(inp[s.COORDINATES].geo_series)
+
+            df = df.join(inp[s.COORDINATES].geo_series).join(nodes_tags)
+
             GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
         print(f'{"done":^{len(sec)}s}', end=' | ')
 
+    # ---------------------------------
+    links_tags = get_link_tags(inp)
     for sec in [s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS]:
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}').join(
@@ -92,16 +99,21 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
 
             if s.LOSSES in inp:
                 df = df.join(inp[s.LOSSES].frame.rename(columns=lambda c: f'{s.LOSSES}{label_sep}{c}'))
-            df = df.join(inp[s.VERTICES].geo_series)
+
+            df = df.join(inp[s.VERTICES].geo_series).join(links_tags)
+
             GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
 
         print(f'{"done":^{len(sec)}s}', end=' | ')
 
+    # ---------------------------------
     if s.SUBCATCHMENTS in inp:
-        GeoDataFrame(inp[s.SUBCATCHMENTS].frame.rename(columns=lambda c: f'{s.SUBCATCHMENTS}{label_sep}{c}').join(
+        df = inp[s.SUBCATCHMENTS].frame.rename(columns=lambda c: f'{s.SUBCATCHMENTS}{label_sep}{c}').join(
             inp[s.SUBAREAS].frame.rename(columns=lambda c: f'{s.SUBAREAS}{label_sep}{c}')).join(
             inp[s.INFILTRATION].frame.rename(columns=lambda c: f'{s.INFILTRATION}{label_sep}{c}')).join(
-            inp[s.POLYGONS].geo_series)).to_file(gpkg_fn, driver=driver, layer=s.SUBCATCHMENTS)
+            inp[s.POLYGONS].geo_series).join(get_subcatchment_tags(inp))
+
+        GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=s.SUBCATCHMENTS)
 
     print(f'{"done":^{len(s.SUBCATCHMENTS)}s}')
 
