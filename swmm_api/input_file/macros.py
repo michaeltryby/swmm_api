@@ -4,7 +4,7 @@ from os import path, mkdir, listdir
 
 import numpy as np
 import pandas as pd
-from networkx import DiGraph, all_simple_paths, subgraph, node_connected_component
+from networkx import DiGraph, all_simple_paths, subgraph, node_connected_component, Graph
 from statistics import mean
 from typing import List
 
@@ -770,8 +770,20 @@ def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0
                                       Type=Type, Offset=Offset, Qcoeff=Qcoeff, FlapGate=FlapGate, Orate=Orate))
 
 
-def rename_node(inp, old_label, new_label):
-    for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE, sec.COORDINATES]:
+def subcachtment_nodes_dict(inp: SwmmInput):
+    if sec.SUBCATCHMENTS in inp:
+        di = {n: [] for n in nodes_dict(inp)}
+        for s in inp.SUBCATCHMENTS.items():
+            di[s.Outlet].append(s)
+        return di
+
+
+def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
+    # ToDo: Not Implemented: CONTROLS
+
+    # Nodes and basic node components
+    for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE,
+                    sec.COORDINATES, sec.RDII]:
         if (section in inp) and (old_label in inp[section]):
             inp[section][new_label] = inp[section].pop(old_label)
             if hasattr(inp[section][new_label], 'Name'):
@@ -779,16 +791,71 @@ def rename_node(inp, old_label, new_label):
             else:
                 inp[section][new_label].Node = new_label
 
+    # tags
+    if (sec.TAGS in inp) and ((Tag.TYPES.Node, old_label) in inp.TAGS):
+        inp[sec.TAGS][(Tag.TYPES.Node, new_label)] = inp[sec.TAGS].pop((Tag.TYPES.Node, old_label))
 
-def rename_link(inp, old_label, new_label):
-    for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS, sec.XSECTIONS, sec.LOSSES,
-                    sec.VERTICES]:
+    # subcatchment outlets
+    if sec.SUBCATCHMENTS in inp:
+        for obj in subcachtment_nodes_dict(inp)[old_label]:
+            obj.Outlet = new_label
+        # -------
+        # for obj in inp.SUBCATCHMENTS.filter_keys([old_label], 'Outlet'):  # type: SubCatchment
+        #     obj.Outlet = new_label
+        # -------
+
+    # link: from-node and to-node
+    previous_links, next_links = links_connected(inp, old_label, g=g)
+    for link in previous_links:
+        link.ToNode = new_label
+
+    for link in next_links:
+        link.ToNode = new_label
+
+    # -------
+    # for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
+    #     if section in inp:
+    #         for obj in inp[section].filter_keys([old_label], 'FromNode'):  # type: _Link
+    #             obj.FromNode = new_label
+    #
+    #         for obj in inp[section].filter_keys([old_label], 'ToNode'):  # type: _Link
+    #             obj.ToNode = new_label
+    # -------
+
+    # (dwf-)inflows
+    constituents = [DryWeatherFlow.TYPES.FLOW]
+    if sec.POLLUTANTS in inp:
+        constituents += list(inp.POLLUTANTS.keys())
+
+    for section in [sec.INFLOWS, sec.DWF, sec.TREATMENT]:
+        if section in inp:
+            for constituent in constituents:
+                old_id = (old_label, constituent)
+                if old_id in inp[section]:
+                    inp[section][old_id].Node = new_label
+                    inp[section][(new_label, constituent)] = inp[section].pop(old_id)
+
+            # -------
+            # for obj in inp[section].filter_keys([old_label], 'Node'):  # type: Inflow
+            #     obj.Node = new_label
+            #     inp[section][(new_label, obj[obj._identifier[1]])] = inp[section].pop((old_label, obj[obj._identifier[1]]))
+            # -------
+
+
+def rename_link(inp: SwmmInput, old_label: str, new_label: str):
+    # ToDo: Not Implemented: CONTROLS
+
+    for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS,
+                    sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
         if (section in inp) and (old_label in inp[section]):
             inp[section][new_label] = inp[section].pop(old_label)
             if hasattr(inp[section][new_label], 'Name'):
                 inp[section][new_label].Name = new_label
             else:
                 inp[section][new_label].Link = new_label
+
+    if (sec.TAGS in inp) and ((Tag.TYPES.Link, old_label) in inp.TAGS):
+        inp[sec.TAGS][(Tag.TYPES.Link, new_label)] = inp[sec.TAGS].pop((Tag.TYPES.Link, old_label))
 
 
 def rename_timeseries(inp, old_label, new_label):
@@ -1131,7 +1198,7 @@ def short_status(inp):
 
 
 ########################################################################################################################
-def inp_to_graph(inp: SwmmInput) -> DiGraph:
+def inp_to_graph(inp: SwmmInput) -> Graph:
     """
     create a network of the model with the networkx package
 
@@ -1143,8 +1210,13 @@ def inp_to_graph(inp: SwmmInput) -> DiGraph:
     """
     # g = nx.Graph()
     g = DiGraph()
+    for node in nodes_dict(inp).keys():
+        g.add_node(node)
     for link in links_dict(inp).values():
-        g.add_node(link.FromNode)
+        # if link.FromNode not in g:
+        #     g.add_node(link.FromNode)
+        # if link.ToNode not in g:
+        #     g.add_node(link.ToNode)
         g.add_edge(link.FromNode, link.ToNode, label=link.Name)
     return g
 

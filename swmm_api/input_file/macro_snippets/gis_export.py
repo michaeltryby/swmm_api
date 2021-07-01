@@ -1,3 +1,5 @@
+import time
+
 from geopandas import GeoDataFrame
 
 from ..macros import update_vertices, filter_nodes, filter_links, get_node_tags, get_link_tags, get_subcatchment_tags
@@ -67,9 +69,9 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
     update_vertices(inp)
 
     # ---------------------------------
+    t0 = time.time()
     nodes_tags = get_node_tags(inp)
     for sec in [s.JUNCTIONS, s.STORAGE, s.OUTFALLS]:
-
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}')
 
@@ -85,7 +87,8 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
             df = df.join(inp[s.COORDINATES].geo_series).join(nodes_tags)
 
             GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
-        print(f'{"done":^{len(sec)}s}', end=' | ')
+        print(f'{f"{time.time() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
+        t0 = time.time()
 
     # ---------------------------------
     links_tags = get_link_tags(inp)
@@ -104,7 +107,8 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
 
             GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
 
-        print(f'{"done":^{len(sec)}s}', end=' | ')
+        print(f'{f"{time.time() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
+        t0 = time.time()
 
     # ---------------------------------
     if s.SUBCATCHMENTS in inp:
@@ -115,7 +119,7 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
 
         GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=s.SUBCATCHMENTS)
 
-    print(f'{"done":^{len(s.SUBCATCHMENTS)}s}')
+    print(f'{f"{time.time() - t0:0.1f}s":^{len(s.SUBCATCHMENTS)}s}')
 
 
 def problems_to_gis(inp, gpkg_fn, nodes=None, links=None, **kwargs):
