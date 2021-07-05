@@ -5,8 +5,8 @@ from geopandas import GeoDataFrame
 from ..macros import update_vertices, filter_nodes, filter_links, get_node_tags, get_link_tags, get_subcatchment_tags
 from ... import read_inp_file
 from .. import section_labels as s
-from ..sections.map_geodata import (VerticesGeo, CoordinateGeo, PolygonGeo, InpSectionGeo,
-                                    convert_section_to_geosection, )
+from ..sections.map_geodata import (VerticesGeo, CoordinateGeo, PolygonGeo,
+                                    add_geo_support, InpSectionGeo, convert_section_to_geosection, )
 
 """
 {'AeronavFAA': 'r',
@@ -58,15 +58,12 @@ def convert_inp_to_geo_package(inp_fn, gpkg_fn=None, driver='GPKG', label_sep='.
 
 def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
 
-    todo_sections = [s.JUNCTIONS, s.STORAGE, s.OUTFALLS, s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS,
+    todo_sections = [s.JUNCTIONS, s.STORAGE, s.OUTFALLS,
+                     s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS,
                      s.SUBCATCHMENTS]
     print(*todo_sections, sep=' | ')
 
-    for sec in [s.VERTICES, s.COORDINATES, s.POLYGONS]:
-        if (sec in inp) and not isinstance(inp[sec], InpSectionGeo):
-            inp[sec] = convert_section_to_geosection(inp[sec])
-
-    update_vertices(inp)
+    add_geo_support(inp)
 
     # ---------------------------------
     t0 = time.time()
@@ -92,6 +89,7 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
 
     # ---------------------------------
     links_tags = get_link_tags(inp)
+    update_vertices(inp)
     for sec in [s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS]:
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}').join(
@@ -130,3 +128,56 @@ def problems_to_gis(inp, gpkg_fn, nodes=None, links=None, **kwargs):
         inp = filter_links(inp, links)
 
     write_geo_package(inp, gpkg_fn, **kwargs)
+
+
+def links_geo_data_frame(inp, label_sep='.'):
+    if (s.VERTICES in inp) and not isinstance(inp[s.VERTICES], InpSectionGeo):
+        inp[s.VERTICES] = convert_section_to_geosection(inp[s.VERTICES])
+    links_tags = get_link_tags(inp)
+    update_vertices(inp)
+    res = None
+    for sec in [s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS]:
+        if sec in inp:
+            df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}').join(
+                inp[s.XSECTIONS].frame.rename(columns=lambda c: f'{s.XSECTIONS}{label_sep}{c}'))
+
+            if sec == s.OUTLETS:
+                df[f'{s.OUTLETS}{label_sep}Curve'] = df[f'{s.OUTLETS}{label_sep}Curve'].astype(str)
+
+            if s.LOSSES in inp:
+                df = df.join(inp[s.LOSSES].frame.rename(columns=lambda c: f'{s.LOSSES}{label_sep}{c}'))
+
+            df = df.join(inp[s.VERTICES].geo_series).join(links_tags)
+            if res is None:
+                res = df
+            else:
+                res = res.append(df)
+    return GeoDataFrame(res)
+
+
+def nodes_geo_data_frame(inp, label_sep='.'):
+    if (s.COORDINATES in inp) and not isinstance(inp[s.COORDINATES], InpSectionGeo):
+        inp[s.COORDINATES] = convert_section_to_geosection(inp[s.COORDINATES])
+    nodes_tags = get_node_tags(inp)
+    res = None
+    for sec in [s.JUNCTIONS, s.STORAGE, s.OUTFALLS]:
+        if sec in inp:
+            df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}')
+
+            if sec == s.STORAGE:
+                df[f'{s.STORAGE}{label_sep}Curve'] = df[f'{s.STORAGE}{label_sep}Curve'].astype(str)
+
+            for sub_sec in [s.DWF, s.INFLOWS]:
+                if sub_sec in inp:
+                    x = inp[sub_sec].frame.unstack(1)
+                    x.columns = [f'{label_sep}'.join([sub_sec, c[1], c[0]]) for c in x.columns]
+                    df = df.join(x)
+
+            df = df.join(inp[s.COORDINATES].geo_series).join(nodes_tags)
+
+            if res is None:
+                res = df
+            else:
+                res = res.append(df)
+
+    return GeoDataFrame(res)

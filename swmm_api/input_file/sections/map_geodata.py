@@ -2,19 +2,26 @@ import shapely.geometry as sh
 from geopandas import GeoSeries
 
 from . import Conduit, Vertices, Coordinate, Polygon
-from ..section_labels import CONDUITS, VERTICES, COORDINATES
+from ..section_labels import CONDUITS, VERTICES, COORDINATES, POLYGONS
 from ..helpers import InpSection
-
-"""
-TESTING:
-not ready
-"""
 
 
 class InpSectionGeo(InpSection):
+    def __init__(self, section_object, crs="EPSG:32633"):
+        """
+        create an object for ``.inp``-file sections with objects (i.e. nodes, links, subcatchments, raingages, ...)
+
+        Args:
+            section_object (BaseSectionObject-like): object class which is stored in this section.
+                This information is used to set the index of the section and
+                to decide if the section can be exported (converted to a string) as a table.
+        """
+        InpSection.__init__(self, section_object)
+        self._crs = crs
+
     @property
     def geo_series(self):
-        return GeoSeries({l: i.geo for l, i in self.items()}, crs="EPSG:32633", name='geometry')  # .simplify(0.5)
+        return GeoSeries({l: i.geo for l, i in self.items()}, crs=self._crs, name='geometry')  # .simplify(0.5)
 
 
 class CoordinateGeo(Coordinate):
@@ -52,8 +59,14 @@ def convert_section_to_geosection(section: InpSection) -> InpSectionGeo:
     return new
 
 
-def coordinates_to_geopandas(section):
-    return GeoSeries({l: sh.Point(c.point) for l, c in section.items()}, crs="EPSG:32633")
+def add_geo_support(inp):
+    for sec in [VERTICES, COORDINATES, POLYGONS]:
+        if (sec in inp) and not isinstance(inp[sec], InpSectionGeo):
+            inp[sec] = convert_section_to_geosection(inp[sec])
+
+
+def coordinates_to_geopandas(section, crs="EPSG:32633"):
+    return GeoSeries({l: sh.Point(c.point) for l, c in section.items()}, crs=crs)
 
 
 def geopandas_to_coordinates(data: GeoSeries) -> InpSectionGeo:
@@ -88,42 +101,3 @@ def remove_coordinates_from_vertices(inp):
         new_vertices.append(inp[COORDINATES][conduit.ToNode])
         new_vertices_section[link] = new_vertices
     return new_vertices_section
-
-
-# class CoordinatesSectionGeo(InpSection):
-#     @property
-#     def geo_series(self):
-#         df = self.frame
-#         return GeoSeries(index=df.index,
-#                          crs="EPSG:32633",
-#                          data=[sh.Point(xy) for xy in zip(df['x'], df['y'])])
-#
-#     @classmethod
-#     def from_geopandas(cls, data):
-#         x_name = 'x'
-#         y_name = 'y'
-#         df = DataFrame.from_dict({x_name: data.geometry.x, y_name: data.geometry.y})
-#         a = np.vstack((df.index.values, df.values.T)).T
-#         return CoordinatesSectionGeo.from_inp_lines(a, section_class=Coordinate)
-#
-#
-# class VerticesSectionGeo(InpSection):
-#     @property
-#     def geo_series(self):
-#         geometry = [list(sh.Point(p.values()) for p in points) for points in self.values()]
-#         geometry = [sh.LineString(list(tuple(p.values()) for p in points)) for points in self.values()]
-#         # sometimes ony 1 Point > raises error > LineString needs at least 2 Points
-#         return GeoSeries(index=self.keys(),
-#                          crs="EPSG:32633",
-#                          data=geometry)
-#
-#
-# class PolygonSectionGeo(InpSection):
-#     @property
-#     def geo_series(self):
-#         # geometry = [list(Point(p.values()) for p in points) for points in self.values()]
-#         geometry = [sh.Polygon(list(tuple(p.values()) for p in points)) for points in self.values()]
-#         # sometimes ony 1 Point > raises error > LineString needs at least 2 Points
-#         return GeoSeries(index=self.keys(),
-#                          crs="EPSG:32633",
-#                          data=geometry)

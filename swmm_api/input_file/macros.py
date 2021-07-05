@@ -793,7 +793,9 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
 
     # tags
     if (sec.TAGS in inp) and ((Tag.TYPES.Node, old_label) in inp.TAGS):
-        inp[sec.TAGS][(Tag.TYPES.Node, new_label)] = inp[sec.TAGS].pop((Tag.TYPES.Node, old_label))
+        tag = inp[sec.TAGS].pop((Tag.TYPES.Node, old_label))
+        tag.Name = new_label
+        inp.TAGS.add_obj(tag)
 
     # subcatchment outlets
     if sec.SUBCATCHMENTS in inp:

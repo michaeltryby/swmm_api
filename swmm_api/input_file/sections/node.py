@@ -1,5 +1,3 @@
-from typing import Union
-
 from numpy import NaN
 
 from ._identifiers import IDENTIFIERS
@@ -10,49 +8,6 @@ from .._type_converter import to_bool, infer_type
 # from dataclasses import dataclass
 # @dataclass
 # class Junction2(BaseSectionObject):
-#     """
-#     Section: [**JUNCTIONS**]
-#
-#     Purpose:
-#         Identifies each junction node of the drainage system.
-#         Junctions are points in space where channels and pipes connect together.
-#         For sewer systems they can be either connection fittings or manholes.
-#
-#     Format:
-#         ::
-#
-#             Name Elev (Ymax Y0 Ysur Apond)
-#
-#     Format-PC-SWMM:
-#         ``Name  Elevation MaxDepth InitDepth SurDepth Aponded``
-#
-#     Remarks:
-#         If Ymax is 0 then SWMM sets the maximum depth equal to the distance
-#         from the invert to the top of the highest connecting link.
-#
-#         If the junction is part of a force main section of the system then set Ysur
-#         to the maximum pressure that the system can sustain.
-#
-#         Surface ponding can only occur when Apond is non-zero and the ALLOW_PONDING analysis option is turned on.
-#
-#     Args:
-#         Name (str): name assigned to junction node.
-#         Elevation (float): elevation of junction invert (ft or m). ``Elev``
-#         MaxDepth (float): depth from ground to invert elevation (ft or m) (default is 0). ``Ymax``
-#         InitDepth (float): water depth at start of simulation (ft or m) (default is 0). ``Y0``
-#         SurDepth (float): maximum additional head above ground elevation that manhole junction
-#                             can sustain under surcharge conditions (ft or m) (default is 0). ``Ysur``
-#         Aponded (float): area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0). ``Apond``
-#
-#     Attributes:
-#         Name (str): name assigned to junction node.
-#         Elevation (float): elevation of junction invert (ft or m). ``Elev``
-#         MaxDepth (float): depth from ground to invert elevation (ft or m) (default is 0). ``Ymax``
-#         InitDepth (float): water depth at start of simulation (ft or m) (default is 0). ``Y0``
-#         SurDepth (float): maximum additional head above ground elevation that manhole junction
-#                             can sustain under surcharge conditions (ft or m) (default is 0). ``Ysur``
-#         Aponded (float): area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0). ``Apond``
-#     """
 #     _identifier = IDENTIFIERS.Name
 #     Name: str
 #     Elevation: float
@@ -210,18 +165,6 @@ class Storage(_Node):
         Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
         IMD (float): soil initial moisture deficit (fraction).
     """
-    Name: str
-    Elevation: float
-    MaxDepth: float
-    InitDepth: float
-    Type: str
-    Curve: Union[str, list]
-    Apond: float
-    Fevap: float
-    Psi: float
-    Ksat: float
-    IMD: float
-
     class TYPES:
         TABULAR = 'TABULAR'
         FUNCTIONAL = 'FUNCTIONAL'
