@@ -1,6 +1,7 @@
 from numpy import NaN
 
 from ._identifiers import IDENTIFIERS
+from .._type_converter import convert_string, GIS_FLOAT_FORMAT
 from ..helpers import BaseSectionObject
 
 
@@ -55,16 +56,16 @@ class DryWeatherFlow(BaseSectionObject):
         self.Base: float = float(Base)
         """average baseline value for corresponding constituent (flow or concentration units)."""
 
-        self.pattern1: str = pattern1
+        self.pattern1: str = convert_string(pattern1)
         """i.e.: monthly-pattern ``Pat1``"""
 
-        self.pattern2: str = pattern2
+        self.pattern2: str = convert_string(pattern2)
         """i.e.: daily-pattern ``Pat2``"""
 
-        self.pattern3: str = pattern3
+        self.pattern3: str = convert_string(pattern3)
         """i.e.: hourly-pattern"""
 
-        self.pattern4: str = pattern4
+        self.pattern4: str = convert_string(pattern4)
         """i.e. weekend-hourly-pattern"""
 
 
@@ -195,7 +196,7 @@ class Coordinate(BaseSectionObject):
 
     def to_inp_line(self):
         # separate function to keep accuracy
-        return f'{self.Node} {self.x} {self.y}'
+        return f'{self.Node} {self.x:{GIS_FLOAT_FORMAT}} {self.y:{GIS_FLOAT_FORMAT}}'
 
 
 class RainfallDependentInfiltrationInflow(BaseSectionObject):

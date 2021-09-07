@@ -1,6 +1,7 @@
 from numpy import NaN
 from pandas import DataFrame
 
+from .._type_converter import GIS_FLOAT_FORMAT
 from ..helpers import BaseSectionObject, SWMM_VERSION
 from ._identifiers import IDENTIFIERS
 
@@ -405,7 +406,7 @@ class Polygon(BaseSectionObject):
         return DataFrame.from_records(self.polygon, columns=['x', 'y'])
 
     def to_inp_line(self):
-        return '\n'.join(['{}  {} {}'.format(self.Subcatch, x, y) for x, y in self.polygon])
+        return '\n'.join([f'{self.Subcatch}  {x:{GIS_FLOAT_FORMAT}} {y:{GIS_FLOAT_FORMAT}}' for x, y in self.polygon])
 
 
 class Loading(BaseSectionObject):

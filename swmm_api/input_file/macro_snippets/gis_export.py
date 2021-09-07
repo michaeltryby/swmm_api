@@ -3,7 +3,7 @@ import time
 from geopandas import GeoDataFrame
 
 from ..macros import update_vertices, filter_nodes, filter_links, get_node_tags, get_link_tags, get_subcatchment_tags
-from ... import read_inp_file
+from ..inp import SwmmInput
 from .. import section_labels as s
 from ..sections.map_geodata import (VerticesGeo, CoordinateGeo, PolygonGeo,
                                     add_geo_support, InpSectionGeo, convert_section_to_geosection, )
@@ -49,7 +49,7 @@ def convert_inp_to_geo_package(inp_fn, gpkg_fn=None, driver='GPKG', label_sep='.
     if gpkg_fn is None:
         gpkg_fn = inp_fn.replace('.inp', '.gpkg')
 
-    inp = read_inp_file(inp_fn, custom_converter={s.VERTICES: VerticesGeo,
+    inp = SwmmInput.read_file(inp_fn, custom_converter={s.VERTICES: VerticesGeo,
                                                   s.COORDINATES: CoordinateGeo,
                                                   s.POLYGONS: PolygonGeo})
 

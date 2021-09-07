@@ -118,3 +118,16 @@ def type2str(x):
         return delta2str(x)
     else:
         return str(x)
+
+
+def convert_string(x) -> str:
+    if isna(x):
+        return x
+    x = str(x)
+    if ' ' in x:
+        return f'"{x}"'
+    else:
+        return x.strip('"')
+
+
+GIS_FLOAT_FORMAT = '0.03f'

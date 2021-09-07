@@ -1,14 +1,15 @@
 from _warnings import warn
-from os import path, remove
+# from os import path, remove
+import os
 
 from pandas import to_datetime
 
 from ..macros import (reduce_curves, reduce_raingages, combined_subcatchment_frame, find_node,
                       find_link, calc_slope, delete_node, combine_conduits,
                       conduit_iter_over_inp, junction_to_outfall, junction_to_storage, )
-from ... import read_inp_file, write_inp_file
+from ... import read_inp_file
 from swmm_api.input_file.section_types import SECTION_TYPES
-from .. import inp_to_string, SwmmInput, section_labels as sec
+from .. import SwmmInput, section_labels as sec
 from .._type_converter import offset2delta
 from ...output_file import parquet
 from ...output_file.out import read_out_file
@@ -25,26 +26,26 @@ class InpMacros(SwmmInput):
 
     def set_name(self, name):
         self.filename = name
-        self.basename = '.'.join(path.basename(name).split('.')[:-1])
-        self.dirname = path.dirname(name)
+        self.basename = '.'.join(os.path.basename(name).split('.')[:-1])
+        self.dirname = os.path.dirname(name)
 
     @property
     def report_filename(self):
-        return path.join(self.dirname, self.basename + '.rpt')
+        return os.path.join(self.dirname, self.basename + '.rpt')
 
     @property
     def out_filename(self):
-        return path.join(self.dirname, self.basename + '.out')
+        return os.path.join(self.dirname, self.basename + '.out')
 
     @property
     def parquet_filename(self):
-        return path.join(self.dirname, self.basename + '.parquet')
+        return os.path.join(self.dirname, self.basename + '.parquet')
 
     def __repr__(self):
         return str(self)
 
     def __str__(self):
-        return inp_to_string(self)
+        return self.to_string()
 
     def read_file(self, **kwargs):
         data = read_inp_file(self.filename, **kwargs)
@@ -58,7 +59,7 @@ class InpMacros(SwmmInput):
         return inp
 
     def write(self, fast=True):
-        write_inp_file(self, self.filename, fast=fast)
+        self.write_file(self.filename, fast=fast)
 
     # @classmethod
     # def from_pickle(cls, fn):
@@ -78,10 +79,10 @@ class InpMacros(SwmmInput):
         swmm5_run(self.filename, rpt_dir=rpt_dir, out_dir=out_dir, init_print=init_print)
 
     def delete_report_file(self):
-        remove(self.report_filename)
+        os.remove(self.report_filename)
 
     def delete_inp_file(self):
-        remove(self.filename)
+        os.remove(self.filename)
 
     def run(self, rpt_dir=None, out_dir=None, init_print=False):
         self.execute_swmm(rpt_dir=rpt_dir, out_dir=out_dir, init_print=init_print)
@@ -109,12 +110,12 @@ class InpMacros(SwmmInput):
         # TODO check if file can be deleted
         self._out.close()
         try:
-            remove(self.out_filename)
+            os.remove(self.out_filename)
         except PermissionError as e:
             warn(str(e))
 
     def get_result_frame(self):
-        if not path.isfile(self.parquet_filename):
+        if not os.path.isfile(self.parquet_filename):
             data = self.output_data.to_frame()
             self.convert_out()
             return data

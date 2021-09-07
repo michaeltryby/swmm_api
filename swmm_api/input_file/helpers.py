@@ -252,6 +252,11 @@ class InpSection(CustomDict):
         """
         return section_class.create_section(lines)
 
+    @property
+    def _sorted_values(self):
+        for k in sorted(self.keys()):
+            yield self[k]
+
     def to_inp_lines(self, fast=False):
         """
         convert the section to a multi-line ``.inp``-file conform string
@@ -271,7 +276,7 @@ class InpSection(CustomDict):
             return ';; No Data'
 
         if fast or not self._table_inp_export:
-            return '\n'.join(o.to_inp_line() for o in self.values())
+            return '\n'.join(o.to_inp_line() for o in self._sorted_values)
         else:
             return dataframe_to_inp_string(self.frame)
 
@@ -296,7 +301,7 @@ class InpSection(CustomDict):
        """
         if not self:  # if empty
             return DataFrame()
-        df = DataFrame([i.to_dict_() for i in self.values()])
+        df = DataFrame([i.to_dict_() for i in self._sorted_values])
         if set_index:
             df = df.set_index(self._identifier)
         return df

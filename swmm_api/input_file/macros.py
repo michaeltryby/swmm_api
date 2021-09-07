@@ -1,7 +1,6 @@
 from collections import ChainMap
 from math import ceil
-from os import path, mkdir, listdir
-
+import os
 import numpy as np
 import pandas as pd
 from networkx import DiGraph, all_simple_paths, subgraph, node_connected_component, Graph
@@ -63,10 +62,10 @@ def split_inp_to_files(inp_fn, convert_sections=[], **kwargs):
         ignore_gui_sections (bool): don't convert gui/geo sections (ie. for commandline use)
     """
     parent = inp_fn.replace('.inp', '')
-    mkdir(parent)
+    os.mkdir(parent)
     inp = SwmmInput.read_file(inp_fn, convert_sections=convert_sections, **kwargs)
     for s in inp.keys():
-        with open(path.join(parent, s + '.txt'), 'w') as f:
+        with open(os.path.join(parent, s + '.txt'), 'w') as f:
             f.write(section_to_string(inp[s], fast=False))
 
 
@@ -81,9 +80,9 @@ def read_split_inp_file(inp_fn):
         SwmmInput: inp-file data
     """
     inp = SwmmInput()
-    for header_file in listdir(inp_fn):
+    for header_file in os.listdir(inp_fn):
         header = header_file.replace('.txt', '')
-        with open(path.join(inp_fn, header_file), 'r') as f:
+        with open(os.path.join(inp_fn, header_file), 'r') as f:
             inp[header] = convert_section(header, f.read(), SECTION_TYPES)
 
     return inp
@@ -1290,7 +1289,7 @@ def links_connected(inp, node, g=None):
 
 
 def number_in_out(g, node):
-    return len(g.predecessors(node)), len(g.successors(node))
+    return len(list(g.predecessors(node))), len(list(g.successors(node)))
 
 
 ########################################################################################################################

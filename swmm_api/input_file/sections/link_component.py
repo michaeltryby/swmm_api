@@ -3,7 +3,7 @@ from pandas import DataFrame
 
 from ._identifiers import IDENTIFIERS
 from ..helpers import BaseSectionObject
-from .._type_converter import to_bool
+from .._type_converter import to_bool, GIS_FLOAT_FORMAT
 
 
 class CrossSection(BaseSectionObject):
@@ -236,7 +236,7 @@ class Vertices(BaseSectionObject):
             yield cls(last, vertices)
 
     def to_inp_line(self):
-        return '\n'.join([f'{self.Link}  {x} {y}' for x, y in self.vertices])
+        return '\n'.join([f'{self.Link}  {x:{GIS_FLOAT_FORMAT}} {y:{GIS_FLOAT_FORMAT}}' for x, y in self.vertices])
 
     @property
     def frame(self):

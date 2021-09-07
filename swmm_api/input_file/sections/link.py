@@ -47,7 +47,7 @@ class Conduit(_Link):
         OutOffset (float): offset of downstream end of conduit invert above the invert elevation of its
                           downstream node (ft or m). ``Z2``
         InitFlow (float): flow in conduit at start of simulation (flow units) (default is 0). ``Q0``
-        MaxFlow (float): maximum flow allowed in the conduit (flow units) (default is no limit). ``Qmax``
+        MaxFlow (float): maximum flow allowed in the conduit (flow units) (default is no limit | 0 = no limit). ``Qmax``
 
     Attributes:
         Name (str): name assigned to conduit link.
@@ -60,7 +60,7 @@ class Conduit(_Link):
         OutOffset (float): offset of downstream end of conduit invert above the invert elevation of its
                           downstream node (ft or m). ``Z2``
         InitFlow (float): flow in conduit at start of simulation (flow units) (default is 0). ``Q0``
-        MaxFlow (float): maximum flow allowed in the conduit (flow units) (default is no limit). ``Qmax``
+        MaxFlow (float): maximum flow allowed in the conduit (flow units) (default is no limit | 0 = no limit). ``Qmax``
     """
     def __init__(self, Name, FromNode, ToNode, Length, Roughness, InOffset=0, OutOffset=0, InitFlow=0, MaxFlow=NaN):
         _Link.__init__(self, Name, FromNode, ToNode)
@@ -70,6 +70,8 @@ class Conduit(_Link):
         self.OutOffset = float(OutOffset)
         self.InitFlow = float(InitFlow)
         self.MaxFlow = float(MaxFlow)
+        if self.MaxFlow == 0:
+            self.MaxFlow = NaN
 
 
 class Weir(_Link):

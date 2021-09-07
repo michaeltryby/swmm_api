@@ -6,7 +6,7 @@ __version__ = "0.1"
 __license__ = "MIT"
 
 import subprocess
-from os import path
+import os
 from sys import platform as _platform
 
 
@@ -34,8 +34,8 @@ def infer_swmm_path():
         # script_path = '???/swmm5.exe'
         for program_files in ['Program Files (x86)', 'Program Files']:
             for version in ['5.1.015', '5.1.014', '5.1.013']:
-                script_path = path.join('C:\\', program_files, 'EPA SWMM {}'.format(version), 'swmm5.exe')
-                if path.isfile(script_path):
+                script_path = os.path.join('C:\\', program_files, 'EPA SWMM {}'.format(version), 'swmm5.exe')
+                if os.path.isfile(script_path):
                     swmm_path = script_path
                     break
             if swmm_path is not None:
@@ -49,21 +49,21 @@ def get_result_filenames(inp_fn):
 
 
 def get_swmm_command_line_auto(inp, rpt_dir=None, out_dir=None, create_out=True, swmm_path=None):
-    base_filename = path.basename(inp).replace('.inp', '')
-    inp_dir = path.dirname(inp)
+    base_filename = os.path.basename(inp).replace('.inp', '')
+    inp_dir = os.path.dirname(inp)
 
     # -----------------------
     if rpt_dir is None:
         rpt_dir = inp_dir
 
-    rpt = path.join(rpt_dir, base_filename + '.rpt')
+    rpt = os.path.join(rpt_dir, base_filename + '.rpt')
 
     # -----------------------
     if out_dir is None:
         out_dir = inp_dir
 
     if create_out:
-        out = path.join(out_dir, base_filename + '.out')
+        out = os.path.join(out_dir, base_filename + '.out')
     else:
         out = ''
 
@@ -103,7 +103,7 @@ def check_swmm_errors(rpt, shell_output):
             'OUT': stdout,
         })
 
-    if path.isfile(rpt):
+    if os.path.isfile(rpt):
         with open(rpt, 'r') as f:
             rpt_content = f.read()
         if 'ERROR' in rpt_content:
