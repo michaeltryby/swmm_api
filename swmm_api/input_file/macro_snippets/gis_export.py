@@ -1,6 +1,6 @@
 import time
 
-from geopandas import GeoDataFrame
+from geopandas import GeoDataFrame, GeoSeries
 
 from ..macros import update_vertices, filter_nodes, filter_links, get_node_tags, get_link_tags, get_subcatchment_tags
 from ..inp import SwmmInput
@@ -116,8 +116,30 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
             inp[s.POLYGONS].geo_series).join(get_subcatchment_tags(inp))
 
         GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=s.SUBCATCHMENTS)
+        gs_connector = get_subcatchment_connectors(inp)
+        GeoDataFrame(gs_connector).to_file(gpkg_fn, driver=driver, layer=s.SUBCATCHMENTS + '_connector')
 
     print(f'{f"{time.time() - t0:0.1f}s":^{len(s.SUBCATCHMENTS)}s}')
+
+
+def get_subcatchment_connectors(inp):
+    # centroids = inp[s.POLYGONS].geo_series.centroid
+    # outlets = inp[s.SUBCATCHMENTS].frame.Outlet
+    # junctions = inp[s.COORDINATES].geo_series.reindex(outlets.values)
+    # junctions.index = outlets.index
+    res = dict()
+    from shapely.geometry import LineString
+    for p in inp[s.POLYGONS]:
+        c = inp[s.POLYGONS][p].geo.centroid
+        o = inp[s.SUBCATCHMENTS][p].Outlet
+        if o not in inp[s.COORDINATES]:
+            print(inp[s.SUBCATCHMENTS][p])
+            continue
+        res[p] = LineString([inp[s.COORDINATES][o].point, (c.x, c.y)])
+    gs = GeoSeries(res, crs=inp[s.POLYGONS]._crs)
+    gs.index.name = 'Subcatchment'
+    gs.name = 'geometry'
+    return gs
 
 
 def problems_to_gis(inp, gpkg_fn, nodes=None, links=None, **kwargs):

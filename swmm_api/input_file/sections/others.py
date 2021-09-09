@@ -933,8 +933,21 @@ class TimeseriesData(Timeseries):
         return f
 
     @classmethod
-    def from_pandas(cls, series):
-        return cls(series.name, list(zip(series.index.strftime('%m/%d/%Y %H:%M'), series.to_list())))
+    def from_pandas(cls, series, index_format=None):
+        """
+        convert pandas Series to TimeseriesData object
+
+        Args:
+            series (pandas.Series): timeseries
+            index_format (str): time format of the index i.e. '%m/%d/%Y %H:%M'
+
+        Returns:
+            TimeseriesData: object for inp file
+        """
+        if index_format is not None:
+            return cls(series.name, list(zip(series.index.strftime(index_format), series.to_list())))
+        else:
+            return cls(series.name, list(zip(series.index, series.to_list())))
 
 
 class Tag(BaseSectionObject):
