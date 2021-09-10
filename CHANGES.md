@@ -1,5 +1,11 @@
 # Changelog  
 
+## 0.2.0.5 (Sep 10, 2021)
+- gis export of all nodes, links as separate function
+- added subcatchment connector to gis export
+- added inp write and inp to string to SwmmInput class
+- abstract class for nodes and links
+
 ## 0.2.0.4 (May 27, 2021)
 
 - fixed errors when object labels start with a number
