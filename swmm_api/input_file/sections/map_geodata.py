@@ -87,6 +87,7 @@ def geopandas_to_vertices(data: GeoSeries) -> InpSectionGeo:
 
 
 def convert_polygon_shapely_to_swmm(poly):
+    # only the first two coords / sometimes Z-coords where added, but swmm cant use them
     return [xy[0:2] for xy in list(poly.exterior.coords)]
 
 
