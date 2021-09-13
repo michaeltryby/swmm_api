@@ -21,7 +21,10 @@ class InpSectionGeo(InpSection):
 
     @property
     def geo_series(self):
-        return GeoSeries({l: i.geo for l, i in self.items()}, crs=self._crs, name='geometry')  # .simplify(0.5)
+        return self.get_geo_series(self._crs)
+
+    def get_geo_series(self, crs):
+        return GeoSeries({l: i.geo for l, i in self.items()}, crs=crs, name='geometry')  # .simplify(0.5)
 
 
 ########################################################################################################################
@@ -32,6 +35,10 @@ class CoordinateGeo(Coordinate):
     def geo(self):
         return sh.Point(self.point)
 
+    @classmethod
+    def create_section_from_geoseries(cls, data: GeoSeries) -> InpSectionGeo:
+        return cls.create_section(zip(data.index, data.x, data.y))
+
 
 class VerticesGeo(Vertices):
     _section_class = InpSectionGeo
@@ -39,6 +46,14 @@ class VerticesGeo(Vertices):
     @property
     def geo(self):
         return sh.LineString(self.vertices)
+
+    @classmethod
+    def create_section_from_geoseries(cls, data: GeoSeries) -> InpSectionGeo:
+        # geometry mit MultiLineString deswegen v[0] mit ersten und einzigen linestring zu verwenden
+        s = cls.create_section()
+        # s.update({i: Vertices(i, v) for i, v in zip(data.index, map(lambda i: list(i.coords), data.values))})
+        s.add_multiple(s._section_object(i, list(v.coords)) for i, v in data.to_dict().items())
+        return s
 
 
 class PolygonGeo(Polygon):
@@ -48,6 +63,12 @@ class PolygonGeo(Polygon):
     def geo(self):
         return sh.Polygon(self.polygon)
 
+    @classmethod
+    def create_section_from_geoseries(cls, data: GeoSeries) -> InpSectionGeo:
+        s = cls.create_section()
+        s.add_multiple(s._section_object(i, [xy[0:2] for xy in list(p.coords)]) for i, p in data.exterior.iteritems())
+        return s
+
 
 ########################################################################################################################
 def convert_section_to_geosection(section: InpSection) -> InpSectionGeo:
@@ -56,12 +77,13 @@ def convert_section_to_geosection(section: InpSection) -> InpSectionGeo:
           Polygon: PolygonGeo}
     old_type = section._section_object
     new_type = di[old_type]
+    if old_type == new_type:
+        return section
     new = new_type.create_section()
     new._data = {k: new_type(**vars(section[k])) for k in section}
     return new
 
 
-########################################################################################################################
 def add_geo_support(inp):
     for sec in [VERTICES, COORDINATES, POLYGONS]:
         if (sec in inp) and not isinstance(inp[sec], InpSectionGeo):
@@ -69,35 +91,8 @@ def add_geo_support(inp):
 
 
 ########################################################################################################################
-def coordinates_to_geopandas(section, crs="EPSG:32633"):
-    return GeoSeries({l: sh.Point(c.point) for l, c in section.items()}, crs=crs)
-
-
-########################################################################################################################
-def geopandas_to_coordinates(data: GeoSeries) -> InpSectionGeo:
-    return CoordinateGeo.create_section(zip(data.index, data.x, data.y))
-
-
-def geopandas_to_vertices(data: GeoSeries) -> InpSectionGeo:
-    # geometry mit MultiLineString deswegen v[0] mit ersten und einzigen linestring zu verwenden
-    s = VerticesGeo.create_section()
-    # s.update({i: Vertices(i, v) for i, v in zip(data.index, map(lambda i: list(i.coords), data.values))})
-    s.add_multiple(s._section_object(i, list(v.coords)) for i, v in data.to_dict().items())
-    return s
-
-
-def convert_polygon_shapely_to_swmm(poly):
-    # only the first two coords / sometimes Z-coords where added, but swmm cant use them
-    return [xy[0:2] for xy in list(poly.exterior.coords)]
-
-
-def geopandas_to_polygons(data: GeoSeries) -> InpSectionGeo:
-    # geometry mit MultiLineString deswegen v[0] mit ersten und einzigen linestring zu verwenden
-    s = PolygonGeo.create_section()
-    # s.update({i: Vertices(i, v) for i, v in zip(data.index, map(lambda i: list(i.coords), data.values))})
-    # s.add_multiple(s._section_object(i, list(v.boundary.coords)) for i, v in data.to_dict().items())
-    s.add_multiple(s._section_object(i, convert_polygon_shapely_to_swmm(v)) for i, v in data.to_dict().items())
-    return s
+def section_to_geopandas(section, crs="EPSG:32633"):
+    return convert_section_to_geosection(section).get_geo_series(crs)
 
 
 ########################################################################################################################
