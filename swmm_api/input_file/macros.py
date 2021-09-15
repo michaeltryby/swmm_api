@@ -157,10 +157,11 @@ def get_subcatchment_tags(inp):
 ########################################################################################################################
 def filter_tags(inp_tags: SwmmInput, inp_objects: SwmmInput=None):
     """
+    get tags of one inp data for objects of another inp data and create new section
 
     Args:
-        inp_tags:
-        inp_objects:
+        inp_tags (SwmmInput): inp data where all tags are
+        inp_objects (SwmmInput): inp data of the needed objects
 
     Returns:
         InpSection[str, Tag] | dict[str, Tag]:
@@ -1435,13 +1436,16 @@ def number_in_out(g, node):
 
 def downstream_nodes(graph: DiGraph, node: str) -> list:
     """
+    get all nodes downstream of the node given
+
+    only the direction of links defined in the INP file counts (not the elevation)
 
     Args:
-        graph:
-        node:
+        graph (networkx.DiGraph): network of the inp data
+        node (str): node label
 
     Returns:
-
+        list[str]: list of nodes downstream of the given node
     """
     return _downstream_nodes(graph,  node)
 
@@ -1460,6 +1464,18 @@ def _downstream_nodes(graph: DiGraph, node: str, node_list=None) -> list:
 
 
 def upstream_nodes(graph: DiGraph, node: str) -> list:
+    """
+    get all nodes upstream of the node given
+
+    only the direction of links defined in the INP file counts (not the elevation)
+
+    Args:
+        graph (networkx.DiGraph): network of the inp data
+        node (str): node label
+
+    Returns:
+        list[str]: list of nodes upstream of the given node
+    """
     return _upstream_nodes(graph,  node)
 
 
