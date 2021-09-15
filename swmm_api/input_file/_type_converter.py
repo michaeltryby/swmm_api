@@ -1,7 +1,7 @@
 from datetime import date, time, timedelta
 from pandas import isna, to_datetime, Timedelta, Timestamp, to_timedelta
 from pandas.tseries.frequencies import to_offset
-from numpy import ndarray
+from numpy import ndarray, NaN
 
 
 def to_bool(x):
@@ -119,6 +119,19 @@ def type2str(x):
     else:
         return str(x)
 
+import numpy as np
+
+
+def is_equal(x1, x2, precision=3):
+    if isinstance(x1, float) and np.isnan(x1) and isinstance(x2, float) and np.isnan(x2):
+        return True
+    else:
+        if isinstance(x1, float):
+            x1 = round(x1, precision)
+        if isinstance(x2, float):
+            x2 = round(x2, precision)
+        return x1 == x2
+
 
 def convert_string(x) -> str:
     if isna(x):
@@ -127,7 +140,11 @@ def convert_string(x) -> str:
     if ' ' in x:
         return f'"{x}"'
     else:
-        return x.strip('"')
+        s = x.strip('"')
+        if s == '':
+            return NaN
+        else:
+            return s
 
 
 GIS_FLOAT_FORMAT = '0.03f'

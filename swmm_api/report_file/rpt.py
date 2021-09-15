@@ -339,6 +339,27 @@ class SwmmReport:
 
             return Timedelta(v)
 
+    @staticmethod
+    def _pprint(di):
+        if not di:
+            print('{}')
+            return
+        f = ''
+        max_len = len(max(di.keys(), key=len)) + 5
+        for key, value in di.items():
+            if isinstance(value, (list, tuple, set)):
+                key += f' ({len(value)})'
+            key += ':'
+            if isinstance(value, list) and len(value) > 20:
+                start = 0
+                for end in range(20, len(value), 20):
+                    f += f'{key:<{max_len}}{", ".join(value[start:end])}\",\n'
+                    key = ''
+                    start = end
+            else:
+                f += f'{key:<{max_len}}{value}\n'
+        print(f)
+
     def get_errors(self):
         t = self.raw_parts.get('Version+Title', None)
         di = dict()
@@ -352,6 +373,9 @@ class SwmmReport:
                     else:
                         di[label] = [txt]
         return di
+
+    def print_errors(self):
+        self._pprint(self.get_errors())
 
     def get_warnings(self):
         """
@@ -410,6 +434,9 @@ class SwmmReport:
                         else:
                             di[message] = [object_label]
         return di
+
+    def print_warnings(self):
+        self._pprint(self.get_warnings())
 
 
 def read_rpt_file(report_filename):

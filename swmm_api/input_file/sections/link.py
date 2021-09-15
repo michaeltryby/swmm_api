@@ -332,6 +332,7 @@ class Orifice(_Link):
                         Use 0 if the orifice can open/close instantaneously.
     """
     class TYPES:
+        """orientation of orifice: either SIDE or BOTTOM"""
         SIDE = 'SIDE'
         BOTTOM = 'BOTTOM'
 
@@ -383,6 +384,7 @@ class Pump(_Link):
     See Section 3.2 for a description of the different types of pumps available.
     """
     class STATES:
+        """status at start of simulation (either ON or OFF; default is ON)."""
         ON = 'ON'
         OFF = 'OFF'
 

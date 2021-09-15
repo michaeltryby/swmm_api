@@ -1,5 +1,10 @@
 # Changelog  
 
+## 0.2.0.6 (Sep 15, 2021)
+- better gis export
+- compare inp files
+- macro documentations
+
 ## 0.2.0.5 (Sep 10, 2021)
 - gis export of all nodes, links as separate function
 - added subcatchment connector to gis export

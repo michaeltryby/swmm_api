@@ -36,34 +36,50 @@ from ..sections.map_geodata import (VerticesGeo, CoordinateGeo, PolygonGeo,
 """
 
 
-def convert_inp_to_geo_package(inp_fn, gpkg_fn=None, driver='GPKG', label_sep='.'):
+def convert_inp_to_geo_package(inp_fn, gpkg_fn=None, driver='GPKG', label_sep='.', crs="EPSG:32633"):
     """
+    convert inp file data from an .inp-file to a GIS database
 
     Args:
-        inp_fn (str):
-        gpkg_fn (str):
-        driver (str):
+        inp_fn (str): filename of the SWMM inp file
+        gpkg_fn (str): filename of the new geopackage file
+        driver (str): The OGR format driver used to write the vector file. (see: fiona.supported_drivers)
         label_sep (str): separator for attribute label between section header and object attribute.
             I.e. "JUNCTIONS.Elevation" with label_sep='.'
+        crs (str): Coordinate Reference System of the geometry objects.
+                    Can be anything accepted by pyproj.CRS.from_user_input(),
+                    such as an authority string (eg “EPSG:4326”) or a WKT string.
     """
     if gpkg_fn is None:
         gpkg_fn = inp_fn.replace('.inp', '.gpkg')
 
     inp = SwmmInput.read_file(inp_fn, custom_converter={s.VERTICES: VerticesGeo,
-                                                  s.COORDINATES: CoordinateGeo,
-                                                  s.POLYGONS: PolygonGeo})
+                                                        s.COORDINATES: CoordinateGeo,
+                                                        s.POLYGONS: PolygonGeo})
 
-    write_geo_package(inp, gpkg_fn, driver=driver, label_sep=label_sep)
+    write_geo_package(inp, gpkg_fn, driver=driver, label_sep=label_sep, crs=crs)
 
 
-def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
+def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:32633"):
+    """
+    write the inp file data to a GIS database
 
+    Args:
+        inp (SwmmInput): inp file data
+        gpkg_fn (str): filename of the new geopackage file
+        driver (str): The OGR format driver used to write the vector file. (see: fiona.supported_drivers)
+        label_sep (str): separator for attribute label between section header and object attribute.
+            I.e. "JUNCTIONS.Elevation" with label_sep='.'
+        crs (str): Coordinate Reference System of the geometry objects.
+                    Can be anything accepted by pyproj.CRS.from_user_input(),
+                    such as an authority string (eg “EPSG:4326”) or a WKT string.
+    """
     todo_sections = [s.JUNCTIONS, s.STORAGE, s.OUTFALLS,
                      s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS,
                      s.SUBCATCHMENTS]
     print(*todo_sections, sep=' | ')
 
-    add_geo_support(inp)
+    add_geo_support(inp, crs=crs)
 
     # ---------------------------------
     t0 = time.time()
@@ -123,6 +139,15 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.'):
 
 
 def get_subcatchment_connectors(inp):
+    """
+    create connector line objects between subcatchment outlets and centroids
+
+    Args:
+        inp (SwmmInput): inp file data
+
+    Returns:
+        geopandas.GeoSeries: line objects between subcatchment outlets and centroids
+    """
     # centroids = inp[s.POLYGONS].geo_series.centroid
     # outlets = inp[s.SUBCATCHMENTS].frame.Outlet
     # junctions = inp[s.COORDINATES].geo_series.reindex(outlets.values)
@@ -143,6 +168,16 @@ def get_subcatchment_connectors(inp):
 
 
 def problems_to_gis(inp, gpkg_fn, nodes=None, links=None, **kwargs):
+    """
+    filter inp data by nodes and links and write objects to a gis database
+
+    Args:
+        inp:
+        gpkg_fn:
+        nodes:
+        links:
+        **kwargs:
+    """
     if nodes is not None:
         inp = filter_nodes(inp, nodes)
 
@@ -153,6 +188,17 @@ def problems_to_gis(inp, gpkg_fn, nodes=None, links=None, **kwargs):
 
 
 def links_geo_data_frame(inp, label_sep='.'):
+    """
+    convert link data in inp file to geo-data-frame
+
+    Args:
+        inp (SwmmInput): inp file data
+        label_sep (str): separator for attribute label between section header and object attribute.
+            I.e. "JUNCTIONS.Elevation" with label_sep='.'
+
+    Returns:
+        geopandas.GeoDataFrame: links as geo-data-frame
+    """
     if (s.VERTICES in inp) and not isinstance(inp[s.VERTICES], InpSectionGeo):
         inp[s.VERTICES] = convert_section_to_geosection(inp[s.VERTICES])
     links_tags = get_link_tags(inp)
@@ -178,6 +224,17 @@ def links_geo_data_frame(inp, label_sep='.'):
 
 
 def nodes_geo_data_frame(inp, label_sep='.'):
+    """
+    convert nodes data in inp file to geo-data-frame
+
+    Args:
+        inp (SwmmInput): inp file data
+        label_sep (str): separator for attribute label between section header and object attribute.
+            I.e. "JUNCTIONS.Elevation" with label_sep='.'
+
+    Returns:
+        geopandas.GeoDataFrame: nodes as geo-data-frame
+    """
     if (s.COORDINATES in inp) and not isinstance(inp[s.COORDINATES], InpSectionGeo):
         inp[s.COORDINATES] = convert_section_to_geosection(inp[s.COORDINATES])
     nodes_tags = get_node_tags(inp)

@@ -1,8 +1,13 @@
+# REQUIRED
 numpy
 pandas
 tqdm
+
+# for OPTIONAL functionality
 networkx
-#fastparquet
+fastparquet
 matplotlib
 Shapely
+pyproj
 Rtree
+geopandas

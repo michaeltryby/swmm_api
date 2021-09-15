@@ -19,6 +19,9 @@ class InpSectionGeo(InpSection):
         InpSection.__init__(self, section_object)
         self._crs = crs
 
+    def set_crs(self, crs):
+        self._crs = crs
+
     @property
     def geo_series(self):
         return self.get_geo_series(self._crs)
@@ -71,23 +74,25 @@ class PolygonGeo(Polygon):
 
 
 ########################################################################################################################
-def convert_section_to_geosection(section: InpSection) -> InpSectionGeo:
+def convert_section_to_geosection(section: InpSection, crs="EPSG:32633") -> InpSectionGeo:
     di = {Coordinate: CoordinateGeo,
           Vertices: VerticesGeo,
           Polygon: PolygonGeo}
     old_type = section._section_object
     new_type = di[old_type]
     if old_type == new_type:
+        section.set_crs(crs)
         return section
-    new = new_type.create_section()
+    new = new_type.create_section()  # type: InpSectionGeo
     new._data = {k: new_type(**vars(section[k])) for k in section}
+    new.set_crs(crs)
     return new
 
 
-def add_geo_support(inp):
+def add_geo_support(inp, crs="EPSG:32633"):
     for sec in [VERTICES, COORDINATES, POLYGONS]:
         if (sec in inp) and not isinstance(inp[sec], InpSectionGeo):
-            inp[sec] = convert_section_to_geosection(inp[sec])
+            inp[sec] = convert_section_to_geosection(inp[sec], crs=crs)
 
 
 ########################################################################################################################

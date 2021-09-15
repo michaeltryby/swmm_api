@@ -5,7 +5,7 @@ from pandas import DataFrame
 from tqdm import tqdm
 import re
 from .section_labels import *
-from ._type_converter import type2str
+from ._type_converter import type2str, is_equal
 
 SWMM_VERSION = '5.1.015'
 
@@ -428,6 +428,11 @@ class BaseSectionObject(ABC):
 
     def __str__(self):
         return self._to_debug_string()
+
+    def __eq__(self, other):
+        # TODO: testing!!!
+
+        return isinstance(self, type(other)) and all([is_equal(self[k], other[k]) for k in self.to_dict_().keys()])
 
     @property
     def id(self):

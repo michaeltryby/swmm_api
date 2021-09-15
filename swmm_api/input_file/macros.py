@@ -6,8 +6,10 @@ import pandas as pd
 from networkx import DiGraph, all_simple_paths, subgraph, node_connected_component, Graph
 from statistics import mean
 from typing import List
+from itertools import product
 
-from .helpers import InpSection, convert_section, section_to_string
+from ._type_converter import is_equal
+from .helpers import InpSection, convert_section, section_to_string, BaseSectionObject, _sort_by
 from . import SwmmInput, section_labels as sec
 from .sections import *
 from .sections._identifiers import IDENTIFIERS
@@ -104,7 +106,8 @@ def combined_subcatchment_frame(inp: SwmmInput):
     return df
 
 
-def get_tags_frame(inp, part=None):
+########################################################################################################################
+def _get_tags_frame(inp, part=None):
     if sec.TAGS in inp:
         df_tags = inp[sec.TAGS].frame
         if part in df_tags.index.levels[0]:
@@ -113,17 +116,45 @@ def get_tags_frame(inp, part=None):
 
 
 def get_node_tags(inp):
-    return get_tags_frame(inp, Tag.TYPES.Node)
+    """
+    get node tags as pandas.Series
+
+    Args:
+        inp (SwmmInput): inp data
+
+    Returns:
+        pandas.Series: node tags
+    """
+    return _get_tags_frame(inp, Tag.TYPES.Node)
 
 
 def get_link_tags(inp):
-    return get_tags_frame(inp, Tag.TYPES.Link)
+    """
+    get node link as pandas.Series
+
+    Args:
+        inp (SwmmInput): inp data
+
+    Returns:
+        pandas.Series: link tags
+    """
+    return _get_tags_frame(inp, Tag.TYPES.Link)
 
 
 def get_subcatchment_tags(inp):
-    return get_tags_frame(inp, Tag.TYPES.Subcatch)
+    """
+    get subcatchment tags as pandas.Series
+
+    Args:
+        inp (SwmmInput): inp data
+
+    Returns:
+        pandas.Series: subcatchment tags
+    """
+    return _get_tags_frame(inp, Tag.TYPES.Subcatch)
 
 
+########################################################################################################################
 def filter_tags(inp_tags: SwmmInput, inp_objects: SwmmInput=None):
     """
 
@@ -137,7 +168,6 @@ def filter_tags(inp_tags: SwmmInput, inp_objects: SwmmInput=None):
     if inp_objects is None:
         inp_objects = inp_tags
 
-    from itertools import product
     nodes = nodes_dict(inp_objects)
     keys = list(product([Tag.TYPES.Node], list(nodes.keys())))
 
@@ -222,35 +252,51 @@ def find_link(inp: SwmmInput, label):
 
 
 ########################################################################################################################
-def calc_slope(inp: SwmmInput, link):
+def calc_slope(inp: SwmmInput, conduit):
     """
-    calculate the slop of a link
+    calculate the slop of a conduit
 
     Args:
         inp (SwmmInput): inp-file data
-        link (Conduit | Weir | Outlet | Orifice | Pump): link
+        conduit (Conduit): link
 
     Returns:
         float: slop of the link
     """
     nodes = nodes_dict(inp)
-    return (nodes[link.FromNode].Elevation + link.InOffset - (
-            nodes[link.ToNode].Elevation + link.OutOffset)) / link.Length
+    return (nodes[conduit.FromNode].Elevation + conduit.InOffset - (
+            nodes[conduit.ToNode].Elevation + conduit.OutOffset)) / conduit.Length
 
 
-def rel_diff(a, b):
+def conduit_slopes(inp: SwmmInput):
+    """
+    get the slope of all conduits
+
+    Args:
+        inp (SwmmInput):
+
+    Returns:
+        pandas.Series: slopes
+    """
+    slopes = dict()
+    for conduit in inp.CONDUITS.values():
+        slopes[conduit.Name] = calc_slope(inp, conduit)
+    return pd.Series(slopes)
+
+
+def _rel_diff(a, b):
     m = mean([a + b])
     if m == 0:
         return abs(a - b)
     return abs(a - b) / m
 
 
-def rel_slope_diff(inp: SwmmInput, l0, l1):
+def _rel_slope_diff(inp: SwmmInput, l0, l1):
     nodes = nodes_dict(inp)
     slope_res = (nodes[l0.FromNode].Elevation + l0.InOffset
                  - (nodes[l1.ToNode].Elevation + l1.OutOffset)
                  ) / (l0.Length + l1.Length)
-    return rel_diff(calc_slope(inp, l0), slope_res)
+    return _rel_diff(calc_slope(inp, l0), slope_res)
 
 
 """PCSWMM Simplify network tool 
@@ -281,18 +327,32 @@ following:
 
 
 def conduits_are_equal(inp: SwmmInput, link0, link1, diff_roughness=0.1, diff_slope=0.1, diff_height=0.1):
+    """
+    check if the links (with all there components) are equal
+
+    Args:
+        inp (SwmmInput):
+        link0 (Conduit | Weir | Outlet | Orifice | Pump | _Link): first link
+        link1 (Conduit | Weir | Outlet | Orifice | Pump | _Link): second link
+        diff_roughness (float): difference from which it is considered different.
+        diff_slope (float): difference from which it is considered different.
+        diff_height (float): difference from which it is considered different.
+
+    Returns:
+        bool: if the links are equal
+    """
     all_checks_out = True
 
     # Roughness values match within a specified percent tolerance
     if diff_roughness is not None:
-        all_checks_out &= rel_diff(link0.Roughness, link1.Roughness) < diff_roughness
+        all_checks_out &= _rel_diff(link0.Roughness, link1.Roughness) < diff_roughness
 
     xs0 = inp[sec.XSECTIONS][link0.Name]  # type: CrossSection
     xs1 = inp[sec.XSECTIONS][link1.Name]  # type: CrossSection
 
     # Diameter values match within a specified percent tolerance (1 %)
     if diff_height is not None:
-        all_checks_out &= rel_diff(xs0.Geom1, xs1.Geom1) < diff_height
+        all_checks_out &= _rel_diff(xs0.Geom1, xs1.Geom1) < diff_height
 
     # Cross-section shapes must match exactly
     all_checks_out &= xs0.Shape == xs1.Shape
@@ -307,7 +367,7 @@ def conduits_are_equal(inp: SwmmInput, link0, link1, diff_roughness=0.1, diff_sl
 
     # Slope values match within a specified tolerance
     if diff_slope is not None:
-        rel_slope_diff = rel_diff(calc_slope(inp, link0), calc_slope(inp, link1))
+        rel_slope_diff = _rel_diff(calc_slope(inp, link0), calc_slope(inp, link1))
 
         # if rel_slope_diff < 0:
         #     nodes = nodes_dict(inp)
@@ -323,10 +383,14 @@ def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None
     """
     delete node in inp data
 
+    Notes:
+        works inplace
+
     Args:
         inp (SwmmInput): inp data
         node_label (str): label of node to delete
         graph (DiGraph): networkx graph of model
+        alt_node (str): node label | optional: move flows to this node
 
     Returns:
         SwmmInput: inp data
@@ -359,13 +423,25 @@ def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None
     return inp
 
 
-def move_flows(inp, from_node, to_node, only_Constituent=None):
+def move_flows(inp, from_node, to_node, only_constituent=None):
+    """
+    move flow (INFLOWS or DWF) from one node to another
+
+    Args:
+        inp (SwmmInput): inp data
+        from_node (str): first node label
+        to_node (str): second node label
+        only_constituent (list): only consider this constituent (default: FLOW)
+
+    Notes:
+        works inplace
+    """
     for section in (sec.INFLOWS, sec.DWF):
         if section not in inp:
             continue
-        if only_Constituent is None:
-            only_Constituent = [DryWeatherFlow.TYPES.FLOW]
-        for t in only_Constituent:
+        if only_constituent is None:
+            only_constituent = [DryWeatherFlow.TYPES.FLOW]
+        for t in only_constituent:
             index_old = (from_node, t)
             if index_old in inp[section]:
                 index_new = (to_node, t)
@@ -390,6 +466,8 @@ def move_flows(inp, from_node, to_node, only_Constituent=None):
                 else:
                     inp[section][index_new] = inp[section].pop(index_old)
                     inp[section][index_new].Node = to_node
+            else:
+                print(f'Nothing to move from "{from_node}" [{section}]')
 
 
 def delete_link(inp: SwmmInput, link):
@@ -525,13 +603,15 @@ def combine_vertices(inp: SwmmInput, label1, label2):
 
 def combine_conduits(inp, c1, c2, graph: DiGraph = None):
     """
-    combine the two conduits to one
+    combine the two conduits to one keep attributes of the first (c1)
+
+    works inplace
 
     Args:
         inp (SwmmInput): inp data
         c1 (str | Conduit): conduit 1 to combine
         c2 (str | Conduit): conduit 2 to combine
-        keep_first (bool): keep first (of conduit 1) cross-section; else use second (of conduit 2)
+        graph (networkx.DiGraph): optional, runs faster with graph (inp representation)
 
     Returns:
         SwmmInput: inp data
@@ -770,6 +850,15 @@ def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0
 
 
 def subcachtment_nodes_dict(inp: SwmmInput):
+    """
+    get dict where key=node and value=list of subcatchment connected to the node (set as outlet)
+
+    Args:
+        inp (SwmmInput): inp data
+
+    Returns:
+        dict: dict[node] = list(subcatchments)
+    """
     if sec.SUBCATCHMENTS in inp:
         di = {n: [] for n in nodes_dict(inp)}
         for s in inp.SUBCATCHMENTS.items():
@@ -778,6 +867,19 @@ def subcachtment_nodes_dict(inp: SwmmInput):
 
 
 def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
+    """
+    change node label
+
+    Notes:
+        works inplace
+        CONTROLS Not Implemented!
+
+    Args:
+        inp (SwmmInput): inp data
+        old_label (str): previous node label
+        new_label (str): new node label
+        g (
+    """
     # ToDo: Not Implemented: CONTROLS
 
     # Nodes and basic node components
@@ -844,8 +946,19 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
 
 
 def rename_link(inp: SwmmInput, old_label: str, new_label: str):
-    # ToDo: Not Implemented: CONTROLS
+    """
+    change link label
 
+    Notes:
+        works inplace
+        CONTROLS Not Implemented!
+
+    Args:
+        inp (SwmmInput): inp data
+        old_label (str): previous link label
+        new_label (str): new link label
+    """
+    # ToDo: Not Implemented: CONTROLS
     for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS,
                     sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
         if (section in inp) and (old_label in inp[section]):
@@ -860,6 +973,17 @@ def rename_link(inp: SwmmInput, old_label: str, new_label: str):
 
 
 def rename_timeseries(inp, old_label, new_label):
+    """
+    change timeseries label
+
+    Notes:
+        works inplace
+
+    Args:
+        inp (SwmmInput): inp data
+        old_label (str): previous timeseries label
+        new_label (str): new timeseries label
+    """
     if old_label in inp[sec.TIMESERIES]:
         obj = inp[sec.TIMESERIES].pop(old_label)
         obj.Name = new_label
@@ -1033,7 +1157,7 @@ def filter_links_within_nodes(inp, final_nodes):
             final_links |= set(inp[section].keys())
 
     # __________________________________________
-    inp = filter_link_components(inp, final_links)
+    inp = _filter_link_components(inp, final_links)
     # __________________________________________
     inp = remove_empty_sections(inp)
     return inp
@@ -1059,13 +1183,13 @@ def filter_links(inp, final_links):
             inp[section] = inp[section].slice_section(final_links)
 
     # __________________________________________
-    inp = filter_link_components(inp, final_links)
+    inp = _filter_link_components(inp, final_links)
     # __________________________________________
     inp = remove_empty_sections(inp)
     return inp
 
 
-def filter_link_components(inp, final_links):
+def _filter_link_components(inp, final_links):
     for section in [sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
         if section in inp:
             inp[section] = inp[section].slice_section(final_links)
@@ -1137,6 +1261,20 @@ def group_edit(inp):
 
 
 def update_vertices(inp):
+    """
+    add node coordinates to link vertices (start and end point)
+
+    important for GIS export or GIS operations
+
+    Notes:
+        works inplace
+
+    Args:
+        inp (SwmmInput): inp data
+
+    Returns:
+        SwmmInput: changes inp data
+    """
     links = links_dict(inp)
     coords = inp[COORDINATES]
     for l in links.values():  # type: Conduit # or Weir or Orifice or Pump or Outlet
@@ -1154,6 +1292,9 @@ def reduce_vertices(inp, node_range=0.25):
     remove first and last vertices to keep only inner vertices (SWMM standard)
 
     important if data originally from GIS and export to SWMM
+
+    Notes:
+        works inplace
 
     Args:
         inp (SwmmInput):
@@ -1199,7 +1340,7 @@ def short_status(inp):
 
 
 ########################################################################################################################
-def inp_to_graph(inp: SwmmInput) -> Graph:
+def inp_to_graph(inp: SwmmInput) -> DiGraph:
     """
     create a network of the model with the networkx package
 
@@ -1292,7 +1433,80 @@ def number_in_out(g, node):
     return len(list(g.predecessors(node))), len(list(g.successors(node)))
 
 
+def downstream_nodes(graph: DiGraph, node: str) -> list:
+    """
+
+    Args:
+        graph:
+        node:
+
+    Returns:
+
+    """
+    return _downstream_nodes(graph,  node)
+
+
+def _downstream_nodes(graph: DiGraph, node: str, node_list=None) -> list:
+    if node_list is None:
+        node_list = list()
+    node_list.append(node)
+    next_nodes = list(graph.successors(node))
+    if next_nodes:
+        for n in next_nodes:
+            if n in node_list:
+                continue
+            node_list = _downstream_nodes(graph, n, node_list)
+    return node_list
+
+
+def upstream_nodes(graph: DiGraph, node: str) -> list:
+    return _upstream_nodes(graph,  node)
+
+
+def _upstream_nodes(graph: DiGraph, node: str, node_list=None) -> list:
+    if node_list is None:
+        node_list = list()
+    node_list.append(node)
+    next_nodes = list(graph.predecessors(node))
+    if next_nodes:
+        for n in next_nodes:
+            if n in node_list:
+                continue
+            node_list = _upstream_nodes(graph, n, node_list)
+    return node_list
+
+
 ########################################################################################################################
+def create_sub_inp(inp, nodes):
+    """
+    split model network and only keep nodes.
+
+    Notes:
+        CONTROLS not supported
+
+    Args:
+        inp (SwmmInput): inp-file data
+        nodes (list[str]): list of node labels to keep in inp data
+
+    Returns:
+        SwmmInput: filtered inp-file data
+    """
+    inp = filter_nodes(inp, nodes)
+    inp = filter_links_within_nodes(inp, nodes)
+    inp = filter_subcatchments(inp, nodes)
+
+    # __________________________________________
+    # TODO
+    # if CONTROLS in inp:
+    #     del inp[CONTROLS]
+
+    # __________________________________________
+    inp = reduce_curves(inp)
+    inp = reduce_raingages(inp)
+    inp = remove_empty_sections(inp)
+    return inp
+
+
 def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, graph=None, init_print=True):
     """
     split model network at the ``split_at_node``-node and keep the part with the ``keep_node``-node.
@@ -1300,6 +1514,9 @@ def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, grap
     If you don't want to keep the ``split_at_node``-node toggle ``keep_split_node`` to False
 
     Set ``graph`` if a network-graph already exists (is faster).
+
+    Notes:
+        CONTROLS not supported
 
     Args:
         inp (SwmmInput): inp-file data
@@ -1324,30 +1541,14 @@ def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, grap
     if init_print:
         print(f'Reduced Network from {len(graph.nodes)} nodes to {len(sub.nodes)} nodes.')
 
+    # _______________
     final_nodes = list(sub.nodes)
     if split_at_node is not None and keep_split_node:
         final_nodes.append(split_at_node)
     final_nodes = set(final_nodes)
 
-    # __________________________________________
-    inp = filter_nodes(inp, final_nodes)
-
-    # __________________________________________
-    inp = filter_links_within_nodes(inp, final_nodes)
-
-    # __________________________________________
-    inp = filter_subcatchments(inp, final_nodes)
-
-    # __________________________________________
-    # TODO
-    # if CONTROLS in inp:
-    #     del inp[CONTROLS]
-
-    # __________________________________________
-    inp = reduce_curves(inp)
-    inp = reduce_raingages(inp)
-    inp = remove_empty_sections(inp)
-    return inp
+    # _______________
+    return create_sub_inp(inp, final_nodes)
 
 
 def get_network_forks(inp):
@@ -1372,6 +1573,19 @@ def increase_max_node_depth(inp, node_label):
 
 
 def set_times(inp, start, end, head=None, tail=None):
+    """
+    set start and end time of the inp-file
+
+    Args:
+        inp (SwmmInput): inp data
+        start (datetime.datetime): start time of the simulation and the reporting
+        end (datetime.datetime): end time of the simulation
+        head (datetime.timedelta): brings start time forward
+        tail (datetime.timedelta): brings end time backward
+
+    Returns:
+        SwmmInput: changed inp data
+    """
     if head is None:
         sim_start = start
     else:
@@ -1390,3 +1604,108 @@ def set_times(inp, start, end, head=None, tail=None):
     inp[sec.OPTIONS]['END_DATE'] = end.date()
     inp[sec.OPTIONS]['END_TIME'] = end.time()
     return inp
+
+
+############################################################
+def compare_sections(s1, s2, precision=3):
+    """
+    compare two inp file sections and get the differences as string output
+
+    Args:
+        s1 (InpSection): filename for the first inp file
+        s2 (InpSection): filename for the second inp file
+        precision (int): number of relevant decimal places
+
+    Returns:
+        str: differences of the sections
+    """
+    i1 = set(s1.keys())
+    i2 = set(s2.keys())
+    s_warnings = str()
+    not_in_1 = list()
+    not_in_2 = list()
+    n_equal = 0
+    not_equal = list()
+
+    for key in i1 | i2:
+        if (key in i1) and (key in i2):
+            if s1[key] == s2[key]:
+                n_equal += 1
+            else:
+                try:
+                    if not isinstance(s1[key], BaseSectionObject):
+                        not_equal.append(f'"{key}": {s1[key]} != {s2[key]}')
+                    else:
+                        diff = list()
+                        for param in s1[key].to_dict_():
+                            if not is_equal(s1[key][param], s2[key][param], precision=precision):
+                                diff.append(f'{param}=({s1[key][param]} != {s2[key][param]})')
+                        if diff:
+                            not_equal.append(f'"{key}": ' + ' | '.join(diff))
+                except:
+                    not_equal.append(f'"{key}": can not compare')
+
+        # -----------------------------
+        elif (key in i1) and (key not in i2):
+            not_in_1.append(f'"{key}"')
+        elif (key not in i1) and (key in i2):
+            not_in_2.append(f'"{key}"')
+
+    # -----------------------------
+    if not_equal:
+        s_warnings += 'not equal: \n    ' + '\n    '.join(not_equal) + '\n'
+
+    if not_in_1:
+        s_warnings += f'not in inp1 ({len(not_in_1)}): ' + ' | '.join(not_in_1) + '\n'
+
+    if not_in_2:
+        s_warnings += f'not in inp2 ({len(not_in_2)}): ' + ' | '.join(not_in_2) + '\n'
+
+    # -----------------------------
+    res = ''
+    if s_warnings:
+        res += s_warnings
+    else:
+        res += 'good!\n'
+
+    res += f'{n_equal}/{len(i1 | i2)} objects are equal\n'
+
+    return res
+
+
+def compare_inp_files(fn1, fn2, precision=2):
+    """
+    compare two inp files and get the differences as string output
+
+    Args:
+        fn1 (str): filename for the first inp file
+        fn2 (str): filename for the second inp file
+        precision (int): number of relevant decimal places
+
+    Returns:
+        str: differences of the files
+    """
+    s = f'Comparing \n' \
+        f'   "{fn1}" (=inp1)\n' \
+        f'   to\n' \
+        f'   "{fn2}" (=inp2)\n\n'
+    inp1 = SwmmInput.read_file(fn1)
+    inp2 = SwmmInput.read_file(fn2)
+
+    sections = set(inp1.keys()) | set(inp2.keys())
+
+    for section in sorted(sections, key=_sort_by):
+        if section in [sec.TITLE]:
+            continue
+        s += '\n' + '#' * 100 + f'\n[{section}]\n'
+
+        if (section in inp1) and (section in inp2):
+            s += compare_sections(inp1[section], inp2[section], precision=precision)
+        elif (section not in inp1) and (section in inp2):
+            s += f'only in inp2\n'
+        elif (section in inp1) and (section not in inp2):
+            s += f'only in inp1\n'
+        else:
+            s += f'not in both inps\n'  # should not happen
+
+    return s
