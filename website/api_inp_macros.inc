@@ -1,5 +1,5 @@
-Input File Manipulation-Macros
-------------------------------
+Input File Manipulation - Macros
+--------------------------------
 
 .. currentmodule:: swmm_api.input_file.macros
 

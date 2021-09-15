@@ -311,7 +311,10 @@ class Outfall(_Node):
                         Outfall.TYPES.TIMESERIES]:
                 self._data_init(*args)
             else:
-                self._no_data_init(*args)
+                if len(args) == 3:
+                    self._data_init(*args)
+                else:
+                    self._no_data_init(*args)
         else:
             self.Data = Data
             self.FlapGate = to_bool(FlapGate)

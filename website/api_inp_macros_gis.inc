@@ -1,5 +1,5 @@
-Input File Manipulation-Macros
-------------------------------
+Input File Manipulation - GIS Macros
+------------------------------------
 
 .. currentmodule:: swmm_api.input_file.macro_snippets.gis_export
 
@@ -15,5 +15,18 @@ Input File Manipulation-Macros
 
 
 .. automodule:: swmm_api.input_file.macro_snippets.gis_export
+    :members:
+    :no-undoc-members:
+
+
+.. currentmodule:: swmm_api.input_file.macro_snippets.gis_standard_import
+
+.. rubric:: Overview
+
+.. autosummary::
+    gpkg_to_swmm
+
+
+.. automodule:: swmm_api.input_file.macro_snippets.gis_standard_import
     :members:
     :no-undoc-members:

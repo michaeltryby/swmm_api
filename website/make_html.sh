@@ -8,4 +8,3 @@ cp ../README.md ./README.md
 #ln -s ../README.md ./README.md
 
 make html
-

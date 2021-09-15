@@ -146,8 +146,7 @@ class Inflow(BaseSectionObject):
         MASS = 'MASS'
 
     def __init__(self, Node, Constituent=TYPES.FLOW, TimeSeries=None, Type=TYPES.FLOW, Mfactor=1.0, Sfactor=1.0,
-                 Baseline=0.,
-                 Pattern=NaN):
+                 Baseline=0., Pattern=NaN):
         self.Node = str(Node)
         self.Constituent = str(Constituent)
         self.TimeSeries = TimeSeries
