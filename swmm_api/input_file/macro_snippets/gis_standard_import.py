@@ -16,6 +16,17 @@ from ..sections.map_geodata import CoordinateGeo, VerticesGeo, PolygonGeo
 
 
 def gpkg_to_swmm(fn, label_sep='.'):
+    """
+    import inp data from GIS gpkg file created from the swmm_api.input_file.macro_snippets.gis_export.convert_inp_to_geo_package function
+
+    Args:
+        fn (str): filename to GPKG datebase file
+        label_sep (str):  separator for attribute label between section header and object attribute.
+            I.e. "JUNCTIONS.Elevation" with label_sep='.'
+
+    Returns:
+        SwmmInput: inp data
+    """
     inp = SwmmInput()
 
     SECTION_TYPES.update({s.COORDINATES: CoordinateGeo,
