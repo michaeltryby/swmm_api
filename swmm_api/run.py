@@ -16,11 +16,14 @@ class SWMMRunError(UserWarning):
 
 def get_swmm_command_line(swmm_path, inp, rpt, out):
     cmd = str()
+    cmd2 = list()
     for i in [swmm_path, inp, rpt, out]:
         if ' ' in i:
             cmd += f'"{i}" '
+            cmd2.append(f'"{i}"')
         else:
             cmd += f'{i} '
+            cmd2.appedn("{i}")
     return cmd, inp, rpt, out
 
 
