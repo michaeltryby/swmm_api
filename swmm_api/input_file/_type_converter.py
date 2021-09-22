@@ -1,3 +1,4 @@
+import datetime
 from datetime import date, time, timedelta
 from pandas import isna, to_datetime, Timedelta, Timestamp, to_timedelta
 from pandas.tseries.frequencies import to_offset
@@ -50,6 +51,80 @@ def infer_type(x):
         return to_datetime(x, format='%H:%M').time()
     else:
         return x
+
+
+def str_to_datetime(date=None, time=None):
+    if date:
+        if '-' in date:
+            date = date.replace('-', '/')
+
+        month = date.split('/')[0]
+        if len(month) <= 2:
+            month_format = '%m'
+        elif len(month) == 3:
+            month_format = '%b'
+        else:
+            raise NotImplementedError(date)
+
+        if date.count('/') == 2:
+            date_format2 = '/%d/%Y'
+        else:
+            raise NotImplementedError(date)
+    else:
+        date = ''
+        month_format = ''
+        date_format2 = ''
+
+    if time:
+        if date == '':
+            parts = time.split(':')
+            if len(parts) == 1:
+                return float(parts[0])
+            elif len(parts) == 2:
+                return float(parts[0]) + float(parts[1])/60
+            elif len(parts) == 3:
+                return float(parts[0]) + float(parts[1])/60 + float(parts[2])/60/60
+        else:
+            if time.count(':') == 1:
+                time_format = '%H:%M'
+            elif time.count(':') == 2:
+                time_format = '%H:%M:%S'
+            elif time.count(':') == 0:
+                hours = float(time)
+                h = int(hours)
+                minutes = (hours - h)*60
+                m = int(minutes)
+                s = int((minutes - m)*60)
+                time = f'{h:02d}:{m:02d}:{s:02d}'
+                time_format = '%H:%M:%S'
+            else:
+                raise NotImplementedError(time)
+
+    else:
+        time = ''
+        time_format = ''
+
+    return to_datetime(date + ' ' + time,
+                       format=month_format + date_format2 + ' ' + time_format)
+
+
+def datetime_to_str(dt):
+    if isinstance(dt, float):
+        hours = dt
+        h = int(round(hours, 4))
+        minutes = (hours - h) * 60
+        m = int(round(minutes, 4))
+        t = f'{h:02d}:{m:02d}'
+        second = (minutes - m) * 60
+        s = int(round(second, 4))
+        if s:
+            t += f':{s:02d}'
+        return t
+    elif isinstance(dt, str):
+        return dt
+    elif isinstance(dt, datetime.datetime):
+        return dt.strftime(format='%b/%d/%Y %H:%M:%S')
+
 
 
 def time2delta(t):

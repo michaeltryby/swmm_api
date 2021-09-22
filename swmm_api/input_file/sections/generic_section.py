@@ -586,10 +586,8 @@ class FilesSection(InpSectionGeneric):
             kind = kind.upper()
             assert use_save in cls.KEYS._use_or_save
             assert kind in cls.KEYS._possible
-            data[f'{use_save} {kind}'] = ' '.join(fn)
+            data[f'{use_save} {kind}'] = ' '.join(fn).strip('"')
         return data
-
-
 
 
 class AdjustmentsSection(InpSectionGeneric):

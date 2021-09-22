@@ -2,7 +2,7 @@ from numpy import NaN
 from pandas import DataFrame, Series
 
 from ._identifiers import IDENTIFIERS
-from .._type_converter import infer_type, to_bool
+from .._type_converter import infer_type, to_bool, str_to_datetime, datetime_to_str
 from ..helpers import BaseSectionObject, split_line_with_quotes
 
 
@@ -780,8 +780,8 @@ class Timeseries(BaseSectionObject):
 
     Remarks:
         There are two options for supplying the data for a time series:
-        i.: directly within this input file section as described by the first two formats
-        ii.: through an external data file named with the third format.
+            i.: directly within this input file section as described by the first two formats
+            ii.: through an external data file named with the third format.
 
         When direct data entry is used, multiple date-time-value or time-value entries can
         appear on a line. If more than one line is needed, the table's name must be repeated
@@ -804,7 +804,7 @@ class Timeseries(BaseSectionObject):
 
             ;Rainfall time series with dates specified
             TS1 6-15-2001 7:00 0.1 8:00 0.2 9:00 0.05 10:00 0
-            TS1 6-21-2001 4:00 0.2 5:00 0 14:00 0.1 15:00 0 335
+            TS1 6-21-2001 4:00 0.2 5:00 0 14:00 0.1 15:00 0
 
             ;Inflow hydrograph - time relative to start of simulation
             HY1 0 0 1.25 100 2:30 150 3.0 120 4.5 0
@@ -826,6 +826,7 @@ class Timeseries(BaseSectionObject):
     def _convert_lines(cls, multi_line_args):
         data = list()
         last = None
+        last_date = None
 
         for name, *line in multi_line_args:
             # ---------------------------------
@@ -840,22 +841,31 @@ class Timeseries(BaseSectionObject):
                         yield TimeseriesData(last, data)
                     data = list()
                     last = name
+                    last_date = None
 
                 # -------------
                 iterator = iter(line)
                 for part in iterator:
-                    if '/' in part:
-                        date = part
+                    if ('/' in part) or (('-' in part) and not part.startswith('-')):
+                        # MM-DD-YYYY or MM/DD/YYYY or MMM-DD-YYYY MMM/DD/YYYY
+                        last_date = part
+
+                        # HH:MM or HH:MM:SS or H (as float)
                         time = next(iterator)
-                        i = ' '.join([date, time])
-
                     else:
-                        i = part
+                        # HH:MM or HH:MM:SS or H (as float)
+                        time = part
 
-                    v = float(next(iterator))
-                    data.append([i, v])
+                    if last_date is not None:
+                        index = ' '.join([last_date, time])
+                    else:
+                        index = time
 
-        # last
+                    value = float(next(iterator))
+
+                    data.append([index, value])
+
+        # add last timeseries
         if line[0].upper() != cls.TYPES.FILE:
             yield TimeseriesData(last, data)
 
@@ -914,6 +924,21 @@ class TimeseriesData(Timeseries):
     def __init__(self, Name, data):
         Timeseries.__init__(self, Name)
         self.data = data
+        self._fix_index()
+
+    def _fix_index(self):
+        date_time, values = zip(*self.data)
+        date_time_new = list()
+        last_date = None
+        for dt in date_time:
+            parts = dt.split()
+            if len(parts) == 1:
+                time = parts[0]
+            else:
+                last_date, time = parts
+
+            date_time_new.append(str_to_datetime(last_date, time))
+        self.data = list(zip(date_time_new, values))
 
     @property
     def frame(self):
@@ -928,22 +953,25 @@ class TimeseriesData(Timeseries):
 
     def to_inp_line(self):
         f = ''
-        for datetime, value in self.data:
-            f += '{} {} {}\n'.format(self.Name, datetime, value)
+        for date_time, value in self.data:
+            f += f'{self.Name} {datetime_to_str(date_time)} {value}\n'
         return f
 
     @classmethod
-    def from_pandas(cls, series, index_format=None):
+    def from_pandas(cls, series, index_format=None, label=None):
         """
         convert pandas Series to TimeseriesData object
 
         Args:
             series (pandas.Series): timeseries
             index_format (str): time format of the index i.e. '%m/%d/%Y %H:%M'
+            label (str): optional: label of the series. default: take series.name
 
         Returns:
             TimeseriesData: object for inp file
         """
+        if label is not None:
+            series.name = label
         if index_format is not None:
             return cls(series.name, list(zip(series.index.strftime(index_format), series.to_list())))
         else:
