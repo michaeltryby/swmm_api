@@ -15,15 +15,7 @@ class SWMMRunError(UserWarning):
 
 
 def get_swmm_command_line(swmm_path, inp, rpt, out):
-    cmd = str()
-    cmd2 = list()
-    for i in [swmm_path, inp, rpt, out]:
-        if ' ' in i:
-            cmd += f'"{i}" '
-            cmd2.append(f'"{i}"')
-        else:
-            cmd += f'{i} '
-            cmd2.appedn("{i}")
+    cmd = (swmm_path, inp, rpt, out)
     return cmd, inp, rpt, out
 
 
@@ -80,13 +72,13 @@ def get_swmm_command_line_auto(inp, rpt_dir=None, out_dir=None, create_out=True,
 def run_swmm_stdout(command_line, sep='_' * 100):
     print(sep)
     print(command_line)
-    subprocess.run(command_line.split())
+    subprocess.run(*command_line)
     print(sep)
 
 
 def run_swmm_custom(command_line):
     # shell_output = subprocess.run(command_line, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    shell_output = subprocess.run(command_line.split(), capture_output=True)
+    shell_output = subprocess.run(*command_line, capture_output=True)
     return shell_output
 
 

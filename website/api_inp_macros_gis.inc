@@ -3,7 +3,7 @@ Input File Manipulation - GIS Macros
 
 .. currentmodule:: swmm_api.input_file.macro_snippets.gis_export
 
-.. rubric:: Overview
+.. rubric:: Overview Export
 
 .. autosummary::
     convert_inp_to_geo_package
@@ -21,7 +21,7 @@ Input File Manipulation - GIS Macros
 
 .. currentmodule:: swmm_api.input_file.macro_snippets.gis_standard_import
 
-.. rubric:: Overview
+.. rubric:: Overview Import
 
 .. autosummary::
     gpkg_to_swmm
