@@ -5,8 +5,8 @@ from geopandas import GeoDataFrame, GeoSeries
 from ..macros import update_vertices, filter_nodes, filter_links, get_node_tags, get_link_tags, get_subcatchment_tags
 from ..inp import SwmmInput
 from .. import section_labels as s
-from ..sections.map_geodata import (VerticesGeo, CoordinateGeo, PolygonGeo,
-                                    add_geo_support, InpSectionGeo, convert_section_to_geosection, )
+from ..sections.map_geodata import (add_geo_support, InpSectionGeo, convert_section_to_geosection,
+                                    geo_section_converter, )
 
 """
 {'AeronavFAA': 'r',
@@ -53,9 +53,7 @@ def convert_inp_to_geo_package(inp_fn, gpkg_fn=None, driver='GPKG', label_sep='.
     if gpkg_fn is None:
         gpkg_fn = inp_fn.replace('.inp', '.gpkg')
 
-    inp = SwmmInput.read_file(inp_fn, custom_converter={s.VERTICES: VerticesGeo,
-                                                        s.COORDINATES: CoordinateGeo,
-                                                        s.POLYGONS: PolygonGeo})
+    inp = SwmmInput.read_file(inp_fn, custom_converter=geo_section_converter)
 
     write_geo_package(inp, gpkg_fn, driver=driver, label_sep=label_sep, crs=crs)
 

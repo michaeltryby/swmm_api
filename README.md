@@ -92,4 +92,4 @@ node_flooding_summary = rpt.node_flooding_summary  # type: pandas.DataFrame
 ```
 see [examples/rpt_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/rpt_file_reader.ipynb)
 
-MORE INFORMATIONS COMMING SOON
+MORE INFORMATION COMING SOON

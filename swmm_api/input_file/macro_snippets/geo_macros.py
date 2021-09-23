@@ -10,7 +10,7 @@ def transform_coordinates(inp, from_proj='epsg:31256', to_proj='epsg:32633'):
     # -----------------------------------
     if COORDINATES in inp:
         for node in inp[COORDINATES]:
-            c = inp[COORDINATES][node] # type: Coordinate
+            c = inp[COORDINATES][node]  # type: Coordinate
             c.x, c.y = transformer.transform(c.x, c.y)
 
     if VERTICES in inp:

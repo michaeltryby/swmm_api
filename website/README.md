@@ -91,5 +91,3 @@ rpt = read_rpt_file('new_inputfile.rpt')  # type: swmm_api.SwmmReport
 node_flooding_summary = rpt.node_flooding_summary  # type: pandas.DataFrame
 ```
 see [examples/rpt_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-/blob/master/examples/rpt_file_reader.ipynb)
-
-MORE INFORMATIONS COMMING SOON

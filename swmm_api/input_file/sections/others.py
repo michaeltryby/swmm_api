@@ -1,9 +1,10 @@
 from numpy import NaN
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, Timestamp
 
 from ._identifiers import IDENTIFIERS
 from .._type_converter import infer_type, to_bool, str_to_datetime, datetime_to_str
 from ..helpers import BaseSectionObject, split_line_with_quotes
+from .. import section_labels as s
 
 
 class RainGage(BaseSectionObject):
@@ -50,6 +51,7 @@ class RainGage(BaseSectionObject):
         Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
     """
     _identifier = IDENTIFIERS.Name
+    _section_label = s.RAINGAGES
 
     class FORMATS:
         INTENSITY = 'INTENSITY'
@@ -113,6 +115,7 @@ class Symbol(BaseSectionObject):
         y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
     """
     _identifier = IDENTIFIERS.Gage
+    _section_label = s.SYMBOLS
 
     def __init__(self, Gage, x, y):
         self.Gage = str(Gage)
@@ -177,6 +180,7 @@ class Pattern(BaseSectionObject):
         Factors (list): multiplier values.
     """
     _identifier = IDENTIFIERS.Name
+    _section_label = s.PATTERNS
 
     class TYPES:
         __class__ = 'Patter Types'
@@ -278,6 +282,7 @@ class Pollutant(BaseSectionObject):
         default is 0).
     """
     _identifier = IDENTIFIERS.Name
+    _section_label = s.POLLUTANTS
 
     class UNITS:
         MG_PER_L = 'MG/L'
@@ -390,6 +395,7 @@ class Transect(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
+    _section_label = s.TRANSECTS
 
     class KEYS:
         NC = 'NC'
@@ -543,6 +549,7 @@ class Control(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
+    _section_label = s.CONTROLS
 
     class Clauses:
         __class__ = 'Clauses'
@@ -681,6 +688,7 @@ class Curve(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
+    _section_label = s.CURVES
 
     class TYPES:
         STORAGE = 'STORAGE'
@@ -815,6 +823,7 @@ class Timeseries(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
+    _section_label = s.TIMESERIES
 
     class TYPES:
         FILE = 'FILE'
@@ -927,17 +936,34 @@ class TimeseriesData(Timeseries):
         self._fix_index()
 
     def _fix_index(self):
+        """
+        convert string index to pandas.Timestamp (datetime like) or float
+
+        index format supported by SWMM:
+        - '%m/%d/%Y %H:%M'
+        - '%b/%d/%Y %H:%M'
+        - '%m-%d-%Y %H:%M'
+        - '%b-%d-%Y %H:%M'
+        - '%m/%d/%Y %H:%M:%S'
+        - '%b/%d/%Y %H:%M:%S'
+        - '%m-%d-%Y %H:%M:%S'
+        - '%b-%d-%Y %H:%M:%S'
+        - Hours as float relative to simulation start time
+        """
         date_time, values = zip(*self.data)
         date_time_new = list()
         last_date = None
         for dt in date_time:
-            parts = dt.split()
-            if len(parts) == 1:
-                time = parts[0]
+            if isinstance(dt, Timestamp):
+                date_time_new.append(dt)
             else:
-                last_date, time = parts
+                parts = dt.split()
+                if len(parts) == 1:
+                    time = parts[0]
+                else:
+                    last_date, time = parts
 
-            date_time_new.append(str_to_datetime(last_date, time))
+                date_time_new.append(str_to_datetime(last_date, time))
         self.data = list(zip(date_time_new, values))
 
     @property
@@ -958,29 +984,36 @@ class TimeseriesData(Timeseries):
         return f
 
     @classmethod
-    def from_pandas(cls, series, index_format=None, label=None):
+    def from_pandas(cls, series, label=None):
         """
         convert pandas Series to TimeseriesData object
 
         Args:
-            series (pandas.Series): timeseries
-            index_format (str): time format of the index i.e. '%m/%d/%Y %H:%M'
+            series (pandas.Series): timeseries with DateTimeIndex
+                or index with correct formatted for SWMM:
+                - '%m/%d/%Y %H:%M'
+                - '%b/%d/%Y %H:%M'
+                - '%m-%d-%Y %H:%M'
+                - '%b-%d-%Y %H:%M'
+                - '%m/%d/%Y %H:%M:%S'
+                - '%b/%d/%Y %H:%M:%S'
+                - '%m-%d-%Y %H:%M:%S'
+                - '%b-%d-%Y %H:%M:%S'
+                - Hours as float relative to simulation start time
             label (str): optional: label of the series. default: take series.name
 
         Returns:
             TimeseriesData: object for inp file
         """
-        if label is not None:
-            series.name = label
-        if index_format is not None:
-            return cls(series.name, list(zip(series.index.strftime(index_format), series.to_list())))
-        else:
-            return cls(series.name, list(zip(series.index, series.to_list())))
+        if label is None:
+            label = series.name
+        return cls(label, list(zip(series.index, series.values)))
 
 
 class Tag(BaseSectionObject):
     """Section: [**TAGS**]"""
     _identifier = ['kind', IDENTIFIERS.Name]
+    _section_label = s.TAGS
 
     class TYPES:
         Node = IDENTIFIERS.Node
@@ -1027,6 +1060,7 @@ class Label(BaseSectionObject):
             YES for italic font, NO otherwise.
     """
     _identifier = ['x', 'y', 'label']
+    _section_label = s.LABELS
 
     def __init__(self, x, y, label, anchor=NaN, font=NaN, size=NaN, bold=NaN, italic=NaN):
         self.x = float(x)
@@ -1111,6 +1145,7 @@ class Hydrograph(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
+    _section_label = s.HYDROGRAPHS
 
     class TYPES:
         SHORT = 'SHORT'
@@ -1214,6 +1249,7 @@ class LandUse(BaseSectionObject):
             days since last sweeping at start of the simulation.
     """
     _identifier = IDENTIFIERS.Name
+    _section_label = s.LANDUSES
 
     def __init__(self, Name, sweep_interval=NaN, availability=NaN, last_sweep=NaN):
         self.Name = str(Name)
@@ -1279,6 +1315,7 @@ class WashOff(BaseSectionObject):
 
     """
     _identifier = [IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant]
+    _section_label = s.WASHOFF
 
     class FUNCTIONS:
         EXP = 'EXP'
@@ -1349,6 +1386,7 @@ class BuildUp(BaseSectionObject):
         time.
     """
     _identifier = [IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant]
+    _section_label = s.BUILDUP
 
     class FUNCTIONS:
         EXP = 'EXP'
@@ -1437,6 +1475,7 @@ class SnowPack(BaseSectionObject):
         than 1.0. If the line is omitted then no snow removal takes place.
     """
     _identifier = [IDENTIFIERS.Name, 'kind']
+    _section_label = s.SNOWPACKS
 
     class TYPES:
         PLOWABLE = 'PLOWABLE'
@@ -1571,6 +1610,7 @@ class Aquifer(BaseSectionObject):
         the [``GROUNDWATER``] section described below.
     """
     _identifier = IDENTIFIERS.Name
+    _section_label = s.AQUIFERS
 
     def __init__(self, Name, Por, WP, FC, Ks, Kslp, Tslp, ETu, ETs, Seep, Ebot, Egw, Umc, Epat=NaN):
         self.Name = str(Name)

@@ -112,6 +112,8 @@ class InpSectionGeneric(CustomDictWithAttributes):
 
     :term:`dict-like <mapping>`"
     """
+    _section_label = ''
+    """str: label of the section"""
 
     @classmethod
     def from_inp_lines(cls, lines):
@@ -146,9 +148,9 @@ class InpSectionGeneric(CustomDictWithAttributes):
                                        value=type2str(self[sub]) + '\n')
         return f
 
-    @property
-    def id(self):
-        return id(self)
+    # @property
+    # def id(self):
+    #     return id(self)
 
 
 ########################################################################################################################
@@ -168,6 +170,13 @@ class InpSection(CustomDict):
         """
         CustomDict.__init__(self)
         self._section_object = section_object
+
+    # def __repr__(self):
+    #     # return CustomDict.__repr__(self)
+    #     return str(self)
+    #
+    # def __str__(self):
+    #     return f'[{self._section_object._section_label}] '  # + ' | '.join((str(s) for s in self.keys()))
 
     @property
     def objects(self):
@@ -396,8 +405,14 @@ class BaseSectionObject(ABC):
     """str: attribute of an object which will be used as identifiers"""
     _table_inp_export = True
     """bool: if an section is writeable as table. Default ist True"""
-
     _section_class = InpSection
+    """class: section class to identify functionality"""
+    _section_label = ''
+    """str: label of the section"""
+
+    # @property
+    # def section_label(self):
+    #     return self._section_label
 
     def get(self, key):
         if isinstance(key, list):
@@ -431,12 +446,11 @@ class BaseSectionObject(ABC):
 
     def __eq__(self, other):
         # TODO: testing!!!
-
         return isinstance(self, type(other)) and all([is_equal(self[k], other[k]) for k in self.to_dict_().keys()])
 
-    @property
-    def id(self):
-        return id(self)
+    # @property
+    # def id(self):
+    #     return id(self)
 
     def _to_debug_string(self):
         """for debugging purposes

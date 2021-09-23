@@ -89,6 +89,10 @@ def convert_section_to_geosection(section: InpSection, crs="EPSG:32633") -> InpS
     return new
 
 
+# GeoPandas support for sections
+geo_section_converter = {COORDINATES: CoordinateGeo, VERTICES: VerticesGeo, POLYGONS: PolygonGeo}
+
+
 def add_geo_support(inp, crs="EPSG:32633"):
     for sec in [VERTICES, COORDINATES, POLYGONS]:
         if (sec in inp) and not isinstance(inp[sec], InpSectionGeo):

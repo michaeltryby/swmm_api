@@ -4,7 +4,12 @@ from shutil import rmtree
 from tqdm import tqdm
 
 from swmm_api import read_inp_file, swmm5_run, SwmmReport
+from swmm_api.input_file.sections import Timeseries
 
+# t = Timeseries.create_section("""KOSTRA 01-01-2021 00:00 0.0
+# KOSTRA 01-01-2021 00:05 1.9999999999999982
+# KOSTRA 01-01-2021 00:10 2.8000000000000007""")
+# exit()
 
 
 class tqdm2(tqdm):
@@ -28,6 +33,7 @@ example_dirs = [os.path.join(parent_dir, 'epaswmm5_apps_manual'),
                 os.path.join(parent_dir, 'epaswmm5_apps_manual', 'projects')]
 
 example_files = [os.path.join(folder, fn) for folder in example_dirs for fn in os.listdir(folder) if '.inp' in fn]
+
 
 for fn in tqdm2(example_files):
     # fn = '/home/markus/PycharmProjects/swmm_api/examples/epaswmm5_apps_manual/Example6-Final+TimeseriesVariation _MP.inp'

@@ -3,6 +3,7 @@ from numpy import NaN, isnan
 from ._identifiers import IDENTIFIERS
 from ..helpers import BaseSectionObject
 from .._type_converter import to_bool
+from .. import section_labels as s
 
 
 class _Link(BaseSectionObject):
@@ -62,6 +63,8 @@ class Conduit(_Link):
         InitFlow (float): flow in conduit at start of simulation (flow units) (default is 0). ``Q0``
         MaxFlow (float): maximum flow allowed in the conduit (flow units) (default is no limit | 0 = no limit). ``Qmax``
     """
+    _section_label = s.CONDUITS
+
     def __init__(self, Name, FromNode, ToNode, Length, Roughness, InOffset=0, OutOffset=0, InitFlow=0, MaxFlow=NaN):
         _Link.__init__(self, Name, FromNode, ToNode)
         self.Length = float(Length)
@@ -153,6 +156,8 @@ class Weir(_Link):
         RoadWidth (float): width of road lanes and shoulders for ``ROADWAY`` weir (ft or m). ``Width``
         RoadSurface (str): type of road surface for ``ROADWAY`` weir: ``PAVED`` or ``GRAVEL``. ``Surface``
     """
+    _section_label = s.WEIRS
+
     class TYPES:
         TRANSVERSE = 'TRANSVERSE'
         SIDEFLOW = 'SIDEFLOW'
@@ -247,6 +252,8 @@ class Outlet(_Link):
 
         Gated (bool): ``YES`` if flap gate present to prevent reverse flow, ``NO`` if not (default is ``NO``).
     """
+    _section_label = s.OUTLETS
+
     class TYPES:
         TABULAR_DEPTH = 'TABULAR/DEPTH'
         TABULAR_HEAD = 'TABULAR/HEAD'
@@ -331,6 +338,8 @@ class Orifice(_Link):
         Orate (int): time in decimal hours to open a fully closed orifice (or close a fully open one).
                         Use 0 if the orifice can open/close instantaneously.
     """
+    _section_label = s.ORIFICES
+
     class TYPES:
         """orientation of orifice: either SIDE or BOTTOM"""
         SIDE = 'SIDE'
@@ -383,6 +392,8 @@ class Pump(_Link):
 
     See Section 3.2 for a description of the different types of pumps available.
     """
+    _section_label = s.PUMPS
+
     class STATES:
         """status at start of simulation (either ON or OFF; default is ON)."""
         ON = 'ON'
