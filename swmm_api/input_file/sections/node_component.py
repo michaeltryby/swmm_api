@@ -114,31 +114,31 @@ class Inflow(BaseSectionObject):
         Node (str): name of node where external inflow enters.
         Constituent (str): ``'FLOW'`` or name of pollutant. ``Pollut``
         TimeSeries (str): name of time series in [``TIMESERIES``] section describing how external flow or pollutant
-        loading varies with time. ``Tseries``
+            loading varies with time. ``Tseries``
         Type (str): ``'FLOW'`` or ``CONCEN`` if pollutant inflow is described as a concentration, ``MASS`` if it is
-        described as a mass flow rate (default is ``CONCEN``).
+            described as a mass flow rate (default is ``CONCEN``).
         Mfactor (float): the factor that converts the inflow’s mass flow rate units into the project’s mass units per
-        second, where the project’s mass units are those specified for the pollutant in the [POLLUTANTS] section (
-        default is 1.0 - see example below).
+            second, where the project’s mass units are those specified for the pollutant in the [POLLUTANTS] section (
+            default is 1.0 - see example below).
         Sfactor (float): scaling factor that multiplies the recorded time series values (default is 1.0).
         Baseline (float): constant baseline value added to the time series value (default is 0.0). ``Base``
         Pattern (str): name of optional time pattern in [PATTERNS] section used to adjust the baseline value on a
-        periodic basis. ``Pat``
+            periodic basis. ``Pat``
 
     Attributes:
         Node (str): name of node where external inflow enters.
         Constituent (str): ``'FLOW'`` or name of pollutant. ``Pollut``
         TimeSeries (str): name of time series in [``TIMESERIES``] section describing how external flow or pollutant
-        loading varies with time. ``Tseries``
+            loading varies with time. ``Tseries``
         Type (str): ``'FLOW'`` or ``CONCEN`` if pollutant inflow is described as a concentration, ``MASS`` if it is
-        described as a mass flow rate (default is ``CONCEN``).
+            described as a mass flow rate (default is ``CONCEN``).
         Mfactor (float): the factor that converts the inflow’s mass flow rate units into the project’s mass units per
-        second, where the project’s mass units are those specified for the pollutant in the [POLLUTANTS] section (
-        default is 1.0 - see example below).
+            second, where the project’s mass units are those specified for the pollutant in the [POLLUTANTS] section (
+            default is 1.0 - see example below).
         Sfactor (float): scaling factor that multiplies the recorded time series values (default is 1.0).
         Baseline (float): constant baseline value added to the time series value (default is 0.0). ``Base``
         Pattern (str): name of optional time pattern in [PATTERNS] section used to adjust the baseline value on a
-        periodic basis. ``Pat``
+            periodic basis. ``Pat``
     """
     _identifier = [IDENTIFIERS.Node, IDENTIFIERS.Constituent]
     _section_label = s.INFLOWS

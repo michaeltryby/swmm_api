@@ -66,16 +66,3 @@ SECTION_TYPES = {
     LID_USAGE: LIDUsage,
 }
 """objects or section class for a section in the inp-file"""
-
-GEO_SECTIONS = [
-    COORDINATES,
-    VERTICES,
-    POLYGONS
-]
-
-GUI_SECTIONS = [
-    MAP,
-    SYMBOLS,
-    LABELS,
-    BACKDROP,
-]

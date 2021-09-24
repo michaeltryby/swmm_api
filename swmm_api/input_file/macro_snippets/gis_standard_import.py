@@ -5,6 +5,7 @@ from ..inp import SwmmInput
 from .. import section_labels as s
 from ..macros import reduce_vertices
 from ..section_types import SECTION_TYPES
+from ..section_lists import LINK_SECTIONS, NODE_SECTIONS
 import fiona
 import inspect
 
@@ -37,7 +38,7 @@ def gpkg_to_swmm(fn, label_sep='.'):
         if sec not in inp:
             inp[sec] = SECTION_TYPES[sec].create_section()
 
-    for sec in [s.JUNCTIONS, s.STORAGE, s.OUTFALLS]:
+    for sec in NODE_SECTIONS:
         if sec not in fiona.listlayers(fn):
             continue
         gdf = gpd.read_file(fn, layer=sec).set_index('Name')
@@ -68,7 +69,7 @@ def gpkg_to_swmm(fn, label_sep='.'):
             inp[s.STORAGE][i].Curve = [float(j) for j in c[0][1:-1].split(',')]
 
     # ---------------------------------
-    for sec in [s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS]:
+    for sec in LINK_SECTIONS:
         if sec not in fiona.listlayers(fn):
             continue
         gdf = gpd.read_file(fn, layer=sec).set_index('Name')

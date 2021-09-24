@@ -6,6 +6,7 @@ from tqdm import tqdm
 import re
 from .section_labels import *
 from ._type_converter import type2str, is_equal
+from .section_lists import LINK_SECTIONS, NODE_SECTIONS
 
 SWMM_VERSION = '5.1.015'
 
@@ -75,9 +76,9 @@ class CustomDict:
     def __bool__(self):
         return bool(self._data)
 
-    @property
-    def id(self):
-        return id(self)
+    # @property
+    # def id(self):
+    #     return id(self)
 
 
 class CustomDictWithAttributes(CustomDict):
@@ -665,39 +666,37 @@ def convert_section(head, lines, converter):
 
 ########################################################################################################################
 def _sort_by(key):
-    sections_order = [TITLE,
-                      OPTIONS,
-                      REPORT,
-                      EVAPORATION,
-                      TEMPERATURE,
+    sections_order = ([
+                          TITLE,
+                          OPTIONS,
+                          REPORT,
+                          EVAPORATION,
+                          TEMPERATURE
 
-                      JUNCTIONS,
-                      OUTFALLS,
-                      STORAGE,
-                      DWF,
-                      INFLOWS,
+                      ] + NODE_SECTIONS +
+                      [
+                          DWF,
+                          INFLOWS
 
-                      CONDUITS,
-                      WEIRS,
-                      ORIFICES,
-                      OUTLETS,
+                      ] + LINK_SECTIONS +
+                      [
 
-                      LOSSES,
-                      XSECTIONS,
-                      TRANSECTS,
+                          LOSSES,
+                          XSECTIONS,
+                          TRANSECTS,
 
-                      CURVES,
-                      TIMESERIES,
-                      RAINGAGES,
-                      PATTERNS,
+                          CURVES,
+                          TIMESERIES,
+                          RAINGAGES,
+                          PATTERNS,
 
-                      SUBCATCHMENTS,
-                      SUBAREAS,
-                      INFILTRATION,
+                          SUBCATCHMENTS,
+                          SUBAREAS,
+                          INFILTRATION,
 
-                      POLLUTANTS,
-                      LOADINGS,
-                      ]
+                          POLLUTANTS,
+                          LOADINGS,
+                      ])
     if key in sections_order:
         return sections_order.index(key)
     else:

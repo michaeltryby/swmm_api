@@ -2,7 +2,8 @@ import os
 import re
 
 from .helpers import _sort_by, section_to_string, CustomDictWithAttributes, convert_section, inp_sep, InpSection
-from .section_types import SECTION_TYPES, GUI_SECTIONS
+from .section_types import SECTION_TYPES
+from .section_lists import GUI_SECTIONS
 from .section_labels import *
 from .sections import *
 
@@ -61,7 +62,7 @@ class SwmmInput(CustomDictWithAttributes):
             converter = {h: converter[h] for h in converter if h in convert_sections}
 
         # __________________________________
-        if os.path.isfile(filename):
+        if os.path.isfile(filename) or filename.endswith('.inp'):
             with open(filename, 'r', encoding=encoding) as inp_file:
                 txt = inp_file.read()
         else:

@@ -123,7 +123,7 @@ def datetime_to_str(dt):
     elif isinstance(dt, str):
         return dt
     elif isinstance(dt, datetime.datetime):
-        return dt.strftime(format='%b/%d/%Y %H:%M:%S')
+        return dt.strftime(format='%m/%d/%Y %H:%M:%S')
 
 
 

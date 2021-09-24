@@ -5,6 +5,7 @@ from geopandas import GeoDataFrame, GeoSeries
 from ..macros import update_vertices, filter_nodes, filter_links, get_node_tags, get_link_tags, get_subcatchment_tags
 from ..inp import SwmmInput
 from .. import section_labels as s
+from ..section_lists import LINK_SECTIONS, NODE_SECTIONS
 from ..sections.map_geodata import (add_geo_support, InpSectionGeo, convert_section_to_geosection,
                                     geo_section_converter, )
 
@@ -72,9 +73,7 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
                     Can be anything accepted by pyproj.CRS.from_user_input(),
                     such as an authority string (eg “EPSG:4326”) or a WKT string.
     """
-    todo_sections = [s.JUNCTIONS, s.STORAGE, s.OUTFALLS,
-                     s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS,
-                     s.SUBCATCHMENTS]
+    todo_sections = NODE_SECTIONS + LINK_SECTIONS + [s.SUBCATCHMENTS]
     print(*todo_sections, sep=' | ')
 
     add_geo_support(inp, crs=crs)
@@ -82,7 +81,7 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
     # ---------------------------------
     t0 = time.time()
     nodes_tags = get_node_tags(inp)
-    for sec in [s.JUNCTIONS, s.STORAGE, s.OUTFALLS]:
+    for sec in NODE_SECTIONS:
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}')
 
@@ -104,7 +103,7 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
     # ---------------------------------
     links_tags = get_link_tags(inp)
     update_vertices(inp)
-    for sec in [s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS]:
+    for sec in LINK_SECTIONS:
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}').join(
                 inp[s.XSECTIONS].frame.rename(columns=lambda c: f'{s.XSECTIONS}{label_sep}{c}'))
@@ -202,7 +201,7 @@ def links_geo_data_frame(inp, label_sep='.'):
     links_tags = get_link_tags(inp)
     update_vertices(inp)
     res = None
-    for sec in [s.CONDUITS, s.WEIRS, s.OUTLETS, s.ORIFICES, s.PUMPS]:
+    for sec in LINK_SECTIONS:
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}').join(
                 inp[s.XSECTIONS].frame.rename(columns=lambda c: f'{s.XSECTIONS}{label_sep}{c}'))
@@ -237,7 +236,7 @@ def nodes_geo_data_frame(inp, label_sep='.'):
         inp[s.COORDINATES] = convert_section_to_geosection(inp[s.COORDINATES])
     nodes_tags = get_node_tags(inp)
     res = None
-    for sec in [s.JUNCTIONS, s.STORAGE, s.OUTFALLS]:
+    for sec in NODE_SECTIONS:
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}')
 

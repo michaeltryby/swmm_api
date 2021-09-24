@@ -875,7 +875,7 @@ class Timeseries(BaseSectionObject):
                     data.append([index, value])
 
         # add last timeseries
-        if line[0].upper() != cls.TYPES.FILE:
+        if data and (line[0].upper() != cls.TYPES.FILE):
             yield TimeseriesData(last, data)
 
 

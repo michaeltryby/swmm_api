@@ -83,6 +83,119 @@ class Junction(_Node):
         self.Aponded = float(Aponded)
 
 
+class Outfall(_Node):
+    """
+    Section: [**OUTFALLS**]
+
+    Purpose:
+        Identifies each outfall node (i.e., final downstream boundary) of the drainage system and the corresponding
+        water stage elevation. Only one link can be incident on an outfall node.
+
+    Formats:
+        ::
+
+            Name Elev FREE               (Gated) (RouteTo)
+            Name Elev NORMAL             (Gated) (RouteTo)
+            Name Elev FIXED      Stage   (Gated) (RouteTo)
+            Name Elev TIDAL      Tcurve  (Gated) (RouteTo)
+            Name Elev TIMESERIES Tseries (Gated) (RouteTo)
+
+    Formats-PCSWMM:
+        ``Name  InvertElev  OutfallType  Stage/Table/TimeSeries  TideGate  RouteTo``
+
+    Format-SWMM-GUI:
+        ``Name  Elevation  Type  StageData  Gated  RouteTo``
+
+    Args:
+        Name (str): name assigned to outfall node.
+        Elevation (float): invert elevation (ft or m). ``Elev``
+        Type (str): one of ``FREE``, ``NORMAL``, ``FIXED``, ``TIDAL``, ``TIMESERIES``
+        *args: -Arguments below-
+        Data (float | str): one of the following
+
+            - Stage (float): elevation of fixed stage outfall (ft or m). for ``FIXED``-Type
+            - Tcurve (str): name of curve in [``CURVES``] section containing tidal height (i.e., outfall stage) v. hour of day over a complete tidal cycle. for ``TIDAL``-Type
+            - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies with time.  for ``TIMESERIES``-Type
+
+        FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
+        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
+
+    Attributes:
+        Name (str): name assigned to outfall node.
+        Elevation (float): invert elevation (ft or m). ``Elev``
+        Type (str): one of ``FREE``, ``NORMAL``, ``FIXED``, ``TIDAL``, ``TIMESERIES``
+        Data (float | str): one of the following
+
+            - Stage (float): elevation of fixed stage outfall (ft or m). for ``FIXED``-Type
+            - Tcurve (str): name of curve in [``CURVES``] section containing tidal height (i.e., outfall stage) v. hour of day over a complete tidal cycle. for ``TIDAL``-Type
+            - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies with time.  for ``TIMESERIES``-Type
+
+        FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
+        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
+    """
+    _section_label = s.OUTFALLS
+
+    class TYPES:
+        FREE = 'FREE'
+        NORMAL = 'NORMAL'
+        FIXED = 'FIXED'
+        TIDAL = 'TIDAL'
+        TIMESERIES = 'TIMESERIES'
+
+    def __init__(self, Name, Elevation, Type, *args, Data=NaN, FlapGate=False, RouteTo=NaN):
+        _Node.__init__(self, Name, Elevation)
+        self.Type = Type
+        self.Data = NaN
+
+        if args:
+            if Type in [Outfall.TYPES.FIXED,
+                        Outfall.TYPES.TIDAL,
+                        Outfall.TYPES.TIMESERIES]:
+                self._data_init(*args)
+            else:
+                if len(args) == 3:
+                    self._data_init(*args)
+                else:
+                    self._no_data_init(*args)
+        else:
+            self.Data = Data
+            self.FlapGate = to_bool(FlapGate)
+            self.RouteTo = RouteTo
+
+    def _no_data_init(self, Gated=False, RouteTo=NaN):
+        """
+        if no keyword arguments used
+
+        Args:
+            Gated (bool): YES or NO depending on whether a flap gate is present that prevents reverse flow. The
+            default is NO.
+            RouteTo (str): optional name of a subcatchment that receives the outfall's discharge.
+                           The default is not to route the outfall’s discharge.
+        """
+        self.FlapGate = to_bool(Gated)
+        self.RouteTo = RouteTo
+
+    def _data_init(self, Data=NaN, Gated=False, RouteTo=NaN):
+        """
+        if not keyword arguments were used
+
+        Args:
+            Data (float | str): one of the following
+                Stage (float): elevation of fixed stage outfall (ft or m).
+                Tcurve (str): name of curve in [CURVES] section containing tidal height (i.e., outfall stage) v.
+                    hour of day over a complete tidal cycle.
+                Tseries (str): name of time series in [TIMESERIES] section that describes how outfall stage varies
+                with time.
+            Gated (bool): YES or NO depending on whether a flap gate is present that prevents reverse flow. The
+            default is NO.
+            RouteTo (str): optional name of a subcatchment that receives the outfall's discharge.
+                           The default is not to route the outfall’s discharge.
+        """
+        self.Data = Data
+        self.FlapGate = to_bool(Gated)
+        self.RouteTo = RouteTo
+
+
 class Storage(_Node):
     """
     Section: [**STORAGE**]
@@ -245,116 +358,3 @@ class Storage(_Node):
         self.Psi = float(Psi)
         self.Ksat = float(Ksat)
         self.IMD = float(IMD)
-
-
-class Outfall(_Node):
-    """
-    Section: [**OUTFALLS**]
-
-    Purpose:
-        Identifies each outfall node (i.e., final downstream boundary) of the drainage system and the corresponding
-        water stage elevation. Only one link can be incident on an outfall node.
-
-    Formats:
-        ::
-
-            Name Elev FREE               (Gated) (RouteTo)
-            Name Elev NORMAL             (Gated) (RouteTo)
-            Name Elev FIXED      Stage   (Gated) (RouteTo)
-            Name Elev TIDAL      Tcurve  (Gated) (RouteTo)
-            Name Elev TIMESERIES Tseries (Gated) (RouteTo)
-
-    Formats-PCSWMM:
-        ``Name  InvertElev  OutfallType  Stage/Table/TimeSeries  TideGate  RouteTo``
-
-    Format-SWMM-GUI:
-        ``Name  Elevation  Type  StageData  Gated  RouteTo``
-
-    Args:
-        Name (str): name assigned to outfall node.
-        Elevation (float): invert elevation (ft or m). ``Elev``
-        Type (str): one of ``FREE``, ``NORMAL``, ``FIXED``, ``TIDAL``, ``TIMESERIES``
-        *args: -Arguments below-
-        Data (float | str): one of the following
-
-            - Stage (float): elevation of fixed stage outfall (ft or m). for ``FIXED``-Type
-            - Tcurve (str): name of curve in [``CURVES``] section containing tidal height (i.e., outfall stage) v. hour of day over a complete tidal cycle. for ``TIDAL``-Type
-            - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies with time.  for ``TIMESERIES``-Type
-
-        FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
-        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
-
-    Attributes:
-        Name (str): name assigned to outfall node.
-        Elevation (float): invert elevation (ft or m). ``Elev``
-        Type (str): one of ``FREE``, ``NORMAL``, ``FIXED``, ``TIDAL``, ``TIMESERIES``
-        Data (float | str): one of the following
-
-            - Stage (float): elevation of fixed stage outfall (ft or m). for ``FIXED``-Type
-            - Tcurve (str): name of curve in [``CURVES``] section containing tidal height (i.e., outfall stage) v. hour of day over a complete tidal cycle. for ``TIDAL``-Type
-            - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies with time.  for ``TIMESERIES``-Type
-
-        FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
-        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
-    """
-    _section_label = s.OUTFALLS
-
-    class TYPES:
-        FREE = 'FREE'
-        NORMAL = 'NORMAL'
-        FIXED = 'FIXED'
-        TIDAL = 'TIDAL'
-        TIMESERIES = 'TIMESERIES'
-
-    def __init__(self, Name, Elevation, Type, *args, Data=NaN, FlapGate=False, RouteTo=NaN):
-        _Node.__init__(self, Name, Elevation)
-        self.Type = Type
-        self.Data = NaN
-
-        if args:
-            if Type in [Outfall.TYPES.FIXED,
-                        Outfall.TYPES.TIDAL,
-                        Outfall.TYPES.TIMESERIES]:
-                self._data_init(*args)
-            else:
-                if len(args) == 3:
-                    self._data_init(*args)
-                else:
-                    self._no_data_init(*args)
-        else:
-            self.Data = Data
-            self.FlapGate = to_bool(FlapGate)
-            self.RouteTo = RouteTo
-
-    def _no_data_init(self, Gated=False, RouteTo=NaN):
-        """
-        if no keyword arguments used
-
-        Args:
-            Gated (bool): YES or NO depending on whether a flap gate is present that prevents reverse flow. The
-            default is NO.
-            RouteTo (str): optional name of a subcatchment that receives the outfall's discharge.
-                           The default is not to route the outfall’s discharge.
-        """
-        self.FlapGate = to_bool(Gated)
-        self.RouteTo = RouteTo
-
-    def _data_init(self, Data=NaN, Gated=False, RouteTo=NaN):
-        """
-        if not keyword arguments were used
-
-        Args:
-            Data (float | str): one of the following
-                Stage (float): elevation of fixed stage outfall (ft or m).
-                Tcurve (str): name of curve in [CURVES] section containing tidal height (i.e., outfall stage) v.
-                    hour of day over a complete tidal cycle.
-                Tseries (str): name of time series in [TIMESERIES] section that describes how outfall stage varies
-                with time.
-            Gated (bool): YES or NO depending on whether a flap gate is present that prevents reverse flow. The
-            default is NO.
-            RouteTo (str): optional name of a subcatchment that receives the outfall's discharge.
-                           The default is not to route the outfall’s discharge.
-        """
-        self.Data = Data
-        self.FlapGate = to_bool(Gated)
-        self.RouteTo = RouteTo

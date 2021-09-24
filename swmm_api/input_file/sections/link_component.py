@@ -229,12 +229,12 @@ class Vertices(BaseSectionObject):
             x = float(x)
             y = float(y)
             if Link == last:
-                vertices.append([x, y])
+                vertices.append((x, y))
             else:
                 if last is not None:
                     yield cls(last, vertices)
                 last = Link
-                vertices = [[x, y]]
+                vertices = [(x, y)]
         # last
         if last is not None:
             yield cls(last, vertices)

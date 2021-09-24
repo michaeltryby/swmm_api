@@ -437,7 +437,7 @@ class TemperatureSection(InpSectionGeneric):
                 key += ' ' + line.pop(0)
                 if key == cls.KEYS.WINDSPEED_FILE:
                     assert n_options == 1
-                    value = line[0]
+                    value = ''
                 elif key == cls.KEYS.WINDSPEED_MONTHLY:
                     assert n_options == 13
                     value = line

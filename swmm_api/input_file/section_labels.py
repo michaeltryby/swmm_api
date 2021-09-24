@@ -29,21 +29,25 @@ PUMPS = 'PUMPS'  # pump link information
 ORIFICES = 'ORIFICES'  # orifice link information
 WEIRS = 'WEIRS'  # weir link information
 OUTLETS = 'OUTLETS'  # outlet link information
+
 XSECTIONS = 'XSECTIONS'  # conduit, orifice, and weir cross-section geometry
 TRANSECTS = 'TRANSECTS'  # transect geometry for conduits with irregular cross-sections
 LOSSES = 'LOSSES'  # conduit entrance/exit losses and flap valves
 
 CONTROLS = 'CONTROLS'  # rules that control pump and regulator operation
+
 POLLUTANTS = 'POLLUTANTS'  # pollutant information
 LANDUSES = 'LANDUSES'  # land use categories
 COVERAGES = 'COVERAGES'  # assignment of land uses to subcatchments
 LOADINGS = 'LOADINGS'  # initial pollutant loads on subcatchments
 BUILDUP = 'BUILDUP'  # buildup functions for pollutants and land uses
 WASHOFF = 'WASHOFF'  # washoff functions for pollutants and land uses
+
 TREATMENT = 'TREATMENT'  # pollutant removal functions at conveyance system nodes
 INFLOWS = 'INFLOWS'  # external hydrograph/pollutograph inflow at nodes
 DWF = 'DWF'  # baseline dry weather sanitary inflow at nodes
 RDII = 'RDII'  # rainfall-dependent I/I information at nodes
+
 HYDROGRAPHS = 'HYDROGRAPHS'  # unit hydrograph data used to construct RDII inflows
 CURVES = 'CURVES'  # x-y tabular data referenced in other sections
 TIMESERIES = 'TIMESERIES'  # time series data referenced in other sections
@@ -54,10 +58,11 @@ PATTERNS = 'PATTERNS'  # periodic multipliers referenced in other sections
 
 TAGS = 'TAGS'
 
-MAP = 'MAP'  # view  # X,Y coordinates of the map’s bounding rectangle
-POLYGONS = 'POLYGONS'  # catchment  # X,Y coordinates for each vertex of subcatchment polygons
 COORDINATES = 'COORDINATES'  # node  # X,Y coordinates for nodes
 VERTICES = 'VERTICES'  # link  # X,Y coordinates for each interior vertex of polyline links
+POLYGONS = 'POLYGONS'  # catchment  # X,Y coordinates for each vertex of subcatchment polygons
+
+MAP = 'MAP'  # view  # X,Y coordinates of the map’s bounding rectangle
 LABELS = 'LABELS'  # free text  # X,Y coordinates and text of labels
 SYMBOLS = 'SYMBOLS'  # rain gauge  # X,Y coordinates for rain gages
 BACKDROP = 'BACKDROP'  # background pic # X,Y coordinates of the bounding rectangle and file name of the backdrop image.

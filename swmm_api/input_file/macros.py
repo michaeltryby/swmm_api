@@ -15,6 +15,7 @@ from .sections import *
 from .sections._identifiers import IDENTIFIERS
 from .section_labels import VERTICES, COORDINATES, XSECTIONS
 from .section_types import SECTION_TYPES
+from .section_lists import LINK_SECTIONS, NODE_SECTIONS
 from .macro_snippets.curve_simplification import ramer_douglas, _vec2d_dist
 from .sections.link import _Link
 from .sections.node import _Node
@@ -195,7 +196,7 @@ def nodes_dict(inp: SwmmInput):
         dict[str, _Node]: dict of {labels: objects}
     """
     nodes: ChainMap[str, _Node] = ChainMap()
-    for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE]:
+    for section in NODE_SECTIONS:
         if section in inp:
             nodes.maps.append(inp[section])
     return nodes
@@ -230,7 +231,7 @@ def links_dict(inp: SwmmInput):  # or Weir or Orifice or Pump or Outlet
         dict[str, _Link]: dict of {labels: objects}
     """
     links: ChainMap[str, _Link] = ChainMap()
-    for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
+    for section in LINK_SECTIONS:
         if section in inp:
             links.maps.append(inp[section])
     return links
@@ -396,7 +397,7 @@ def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None
     Returns:
         SwmmInput: inp data
     """
-    for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE, sec.COORDINATES]:
+    for section in NODE_SECTIONS + [sec.COORDINATES]:
         if (section in inp) and (node_label in inp[section]):
             inp[section].pop(node_label)
 
@@ -409,7 +410,7 @@ def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None
             links = list()
     else:
         links = list()
-        for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
+        for section in LINK_SECTIONS:
             if section in inp:
                 links += list(inp[section].filter_keys([node_label], by='FromNode')) + \
                          list(inp[section].filter_keys([node_label], by='ToNode'))  # type: List[Conduit]
@@ -424,7 +425,7 @@ def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None
     return inp
 
 
-def move_flows(inp, from_node, to_node, only_constituent=None):
+def move_flows(inp: SwmmInput, from_node, to_node, only_constituent=None):
     """
     move flow (INFLOWS or DWF) from one node to another
 
@@ -440,39 +441,41 @@ def move_flows(inp, from_node, to_node, only_constituent=None):
     for section in (sec.INFLOWS, sec.DWF):
         if section not in inp:
             continue
+
         if only_constituent is None:
             only_constituent = [DryWeatherFlow.TYPES.FLOW]
-        for t in only_constituent:
-            index_old = (from_node, t)
+
+        for constituent in only_constituent:
+            index_old = (from_node, constituent)
+
             if index_old in inp[section]:
-                index_new = (to_node, t)
+                index_new = (to_node, constituent)
 
-                if section == sec.DWF:
-                    old = inp[section].pop(index_old)
-                    if index_new in inp[section]:
-                        new = inp[section][index_new]
-                        new.Base += old.Base
+                obj = inp[section].pop(index_old)
+                obj.Node = to_node
 
-                        # if not all([old[p] == new[p] for p in ['pattern1', 'pattern2', 'pattern3', 'pattern4']]):
-                        #     print(f'WARNING: move_flows  from "{from_node}" to "{to_node}". DWF patterns don\'t
-                        #     match!')
+                if index_new not in inp[section]:
+                    inp[section].add_obj(obj)
 
-                    else:
-                        inp[section][index_new] = old
-                        inp[section][index_new].Node = to_node
+                elif section == sec.DWF:
+                    # DryWeatherFlow can be easily added when Patterns are equal
+                    inp[section][index_new].Base += obj.Base
 
-                elif index_new in inp[section]:
+                    # if not all([old[p] == new[p] for p in ['pattern1', 'pattern2', 'pattern3', 'pattern4']]):
+                    #     print(f'WARNING: move_flows  from "{from_node}" to "{to_node}". DWF patterns don\'t
+                    #     match!')
+
+                elif section == sec.INFLOWS:
+                    # Inflows can't be added due to the multiplication factor / timeseries
+                    # if (TimeSeries, Type, Mfactor, Sfactor,Pattern) are equal then sum(Baseline)
                     print(f'WARNING: move_flows  from "{from_node}" to "{to_node}". Already Exists!')
 
-                else:
-                    inp[section][index_new] = inp[section].pop(index_old)
-                    inp[section][index_new].Node = to_node
-            else:
-                print(f'Nothing to move from "{from_node}" [{section}]')
+            # else:
+            #     print(f'Nothing to move from "{from_node}" [{section}]')
 
 
 def delete_link(inp: SwmmInput, link):
-    for s in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS, sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
+    for s in LINK_SECTIONS + [sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
         if (s in inp) and (link in inp[s]):
             inp[s].pop(link)
 
@@ -580,9 +583,13 @@ def combine_vertices(inp: SwmmInput, label1, label2):
         # if there are not coordinates this function is nonsense
         return
 
+    vertices_class = Vertices
+
     if sec.VERTICES not in inp:
         # we will at least ad the coordinates of the common node
         inp[sec.VERTICES] = Vertices.create_section()
+    else:
+        vertices_class = inp[sec.VERTICES]._section_object
 
     new_vertices = list()
 
@@ -599,7 +606,7 @@ def combine_vertices(inp: SwmmInput, label1, label2):
     if label1 in inp[sec.VERTICES]:
         inp[sec.VERTICES][label1].vertices = new_vertices
     else:
-        inp[sec.VERTICES].add_obj(Vertices(label1, vertices=new_vertices))
+        inp[sec.VERTICES].add_obj(vertices_class(label1, vertices=new_vertices))
 
 
 def combine_conduits(inp, c1, c2, graph: DiGraph = None):
@@ -884,8 +891,7 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
     # ToDo: Not Implemented: CONTROLS
 
     # Nodes and basic node components
-    for section in [sec.JUNCTIONS, sec.OUTFALLS, sec.DIVIDERS, sec.STORAGE,
-                    sec.COORDINATES, sec.RDII]:
+    for section in NODE_SECTIONS + [sec.COORDINATES, sec.RDII]:
         if (section in inp) and (old_label in inp[section]):
             inp[section][new_label] = inp[section].pop(old_label)
             if hasattr(inp[section][new_label], 'Name'):
@@ -960,8 +966,7 @@ def rename_link(inp: SwmmInput, old_label: str, new_label: str):
         new_label (str): new link label
     """
     # ToDo: Not Implemented: CONTROLS
-    for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS,
-                    sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
+    for section in LINK_SECTIONS + [sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
         if (section in inp) and (old_label in inp[section]):
             inp[section][new_label] = inp[section].pop(old_label)
             if hasattr(inp[section][new_label], 'Name'):
@@ -1148,11 +1153,7 @@ def filter_links_within_nodes(inp, final_nodes):
         SwmmInput: new inp-file data
     """
     final_links = set()
-    for section in [sec.CONDUITS,
-                    sec.PUMPS,
-                    sec.ORIFICES,
-                    sec.WEIRS,
-                    sec.OUTLETS]:
+    for section in LINK_SECTIONS:
         if section in inp:
             inp[section] = inp[section].slice_section(final_nodes, by=['FromNode', 'ToNode'])
             final_links |= set(inp[section].keys())
@@ -1175,11 +1176,7 @@ def filter_links(inp, final_links):
     Returns:
         SwmmInput: new inp-file data
     """
-    for section in [sec.CONDUITS,
-                    sec.PUMPS,
-                    sec.ORIFICES,
-                    sec.WEIRS,
-                    sec.OUTLETS]:
+    for section in LINK_SECTIONS:
         if section in inp:
             inp[section] = inp[section].slice_section(final_links)
 
@@ -1326,6 +1323,7 @@ def reduce_vertices(inp, node_range=0.25):
 
 
 def check_for_nodes(inp):
+    print('_'*20, '\nNodes not Found')
     links = links_dict(inp)
     nodes = nodes_dict(inp)
     for link in links.values():
@@ -1333,6 +1331,42 @@ def check_for_nodes(inp):
             print(link, link.FromNode)
         if link.ToNode not in nodes:
             print(link, link.ToNode)
+
+
+def check_for_duplicates(inp):
+    """
+    print duplicate objects in the links and nodes
+
+    Args:
+        inp (SwmmInput): inp data
+    """
+    print('DUPLICATE NODES')
+    for node in nodes_dict(inp):
+        if sum((node in inp[s] for s in NODE_SECTIONS + [sec.SUBCATCHMENTS] if s in inp)) != 1:
+            print('-', *[inp[s][node] for s in NODE_SECTIONS + [sec.SUBCATCHMENTS] if s in inp and node in inp[s]], sep='\n  ')
+    print('\nDUPLICATE LINKS')
+    for link in links_dict(inp):
+        if sum((link in inp[s] for s in LINK_SECTIONS if s in inp)) != 1:
+            print('-', *[inp[s][link] for s in LINK_SECTIONS if s in inp and link in inp[s]], sep='\n')
+
+
+def update_no_duplicates(inp_base, inp_update) -> SwmmInput:
+    inp_new = inp_base.copy()
+    inp_new.update(inp_update)
+
+    for node in nodes_dict(inp_new):
+        if sum((node in inp_new[s] for s in NODE_SECTIONS + [sec.SUBCATCHMENTS] if s in inp_new)) != 1:
+            for s in NODE_SECTIONS + [sec.SUBCATCHMENTS]:
+                if (s in inp_new) and (node in inp_new[s]) and (node not in inp_update[s]):
+                    del inp_new[s][node]
+
+    for link in links_dict(inp_new):
+        if sum((link in inp_new[s] for s in LINK_SECTIONS if s in inp_new)) != 1:
+            for s in LINK_SECTIONS:
+                if (s in inp_new) and (link in inp_new[s]) and (link not in inp_update[s]):
+                    del inp_new[s][link]
+
+    return inp_new
 
 
 def short_status(inp):
@@ -1643,33 +1677,33 @@ def compare_sections(s1, s2, precision=3):
     n_equal = 0
     not_equal = list()
 
-    for key in i1 | i2:
+    for key in sorted(i1 | i2):
         if (key in i1) and (key in i2):
             if s1[key] == s2[key]:
                 n_equal += 1
             else:
                 try:
                     if not isinstance(s1[key], BaseSectionObject):
-                        not_equal.append(f'"{key}": {s1[key]} != {s2[key]}')
+                        not_equal.append(f'{key}: {s1[key]} != {s2[key]}')
                     else:
                         diff = list()
                         for param in s1[key].to_dict_():
                             if not is_equal(s1[key][param], s2[key][param], precision=precision):
                                 diff.append(f'{param}=({s1[key][param]} != {s2[key][param]})')
                         if diff:
-                            not_equal.append(f'"{key}": ' + ' | '.join(diff))
+                            not_equal.append(f'{key}: ' + ' | '.join(diff))
                 except:
-                    not_equal.append(f'"{key}": can not compare')
+                    not_equal.append(f'{key}: can not compare')
 
         # -----------------------------
         elif (key in i1) and (key not in i2):
-            not_in_1.append(f'"{key}"')
+            not_in_1.append(str(key))
         elif (key not in i1) and (key in i2):
-            not_in_2.append(f'"{key}"')
+            not_in_2.append(str(key))
 
     # -----------------------------
     if not_equal:
-        s_warnings += 'not equal: \n    ' + '\n    '.join(not_equal) + '\n'
+        s_warnings += f'not equal ({len(not_equal)}): \n    ' + '\n    '.join(not_equal) + '\n'
 
     if not_in_1:
         s_warnings += f'not in inp1 ({len(not_in_1)}): ' + ' | '.join(not_in_1) + '\n'
