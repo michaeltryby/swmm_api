@@ -23,6 +23,18 @@ This package is based on the command line SWMM syntax. ([see Appendix D in the S
 pip install swmm-api
 ```
 
+## Alternative packages
+
+R-language: **swmmr** / [github](https://github.com/dleutnant/swmmr) / [cran](https://cran.r-project.org/web/packages/swmmr/index.html)
+
+python: **swmmio** / [docs](https://swmmio.readthedocs.io/en/latest/) / [pypi](https://pypi.org/project/swmmio/) / [github](https://github.com/aerispaha/swmmio) / 
+
+**GisToSWMM5** / [github](https://github.com/AaltoUrbanWater/GisToSWMM5) / converting gis data to swmm model (also possible with swmm_api: `swmm_api.input_file.macro_snippets.gis_standard_import` and `swmm_api.input_file.macro_snippets.gis_export`)
+
+**swmmtoolbox** / [github](https://github.com/timcera/swmmtoolbox) / Thanks to Tim Cera for this package! I used his package to understand the .out-files but completle rewrote the reading process in this package.
+
+**swmmnetwork** / [github](https://github.com/austinorr/swmmnetwork) / create graph network from swmm model (see `swmm_api.input_file.macros.inp_to_graph`)
+
 ## Read, manipulate and write the INP-File
 
 ### Read the INP-File

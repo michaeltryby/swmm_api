@@ -12,7 +12,7 @@ def run(fn_inp):
 
 
 def run_progress(fn_inp, n_total=100):
-    with Simulation(fn_inp) as sim:
+    with Simulation(fn_inp, swmm_lib_path='/home/markus/.local/bin/swmm5') as sim:
         total_time_seconds = (sim.end_time - sim.start_time) / timedelta(seconds=1)
         sim.step_advance(floor(total_time_seconds / n_total))
         progress = tqdm(total=n_total, desc=f'swmm5 {fn_inp}')

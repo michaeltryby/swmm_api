@@ -168,3 +168,9 @@ def _run_parallel(variable, func=swmm5_run, processes=4):
         for _ in tqdm(pool.imap(partial(func), variable),
                       total=len(variable)):
             pass
+
+
+def get_swmm_version():
+    swmm_path = infer_swmm_path()
+    shell_output = subprocess.run([swmm_path, '--version'], capture_output=True)
+    return shell_output.stdout.decode().strip()
