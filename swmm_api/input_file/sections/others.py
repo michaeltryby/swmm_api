@@ -1426,7 +1426,7 @@ class SnowPack(BaseSectionObject):
 
     Args:
         Name (str):
-            name assigned to snowpack parameter set .
+            name assigned to snowpack parameter set.
         Cmin (float):
             minimum melt coefficient (in/hr-deg F or mm/hr-deg C).
         Cmax (float):
@@ -1474,27 +1474,32 @@ class SnowPack(BaseSectionObject):
         transferred onto other areas. The various transfer fractions should sum to no more
         than 1.0. If the line is omitted then no snow removal takes place.
     """
-    _identifier = [IDENTIFIERS.Name, 'kind']
+    _identifier = IDENTIFIERS.Name
     _section_label = s.SNOWPACKS
+    _table_inp_export = False
 
-    class TYPES:
-        PLOWABLE = 'PLOWABLE'
-        IMPERVIOUS = 'IMPERVIOUS'
-        PERVIOUS = 'PERVIOUS'
-        REMOVAL = 'REMOVAL'
-
-        _possible = [PLOWABLE, IMPERVIOUS, PERVIOUS, REMOVAL]
-
-    def __init__(self, Name, pack_dict=None):
+    def __init__(self, Name, packs=None):
         self.Name = str(Name)
+        self.PLOWABLE = None
+        self.IMPERVIOUS = None
+        self.PERVIOUS = None
+        self.REMOVAL = None
 
-        self.pack_dict = dict()
-        if pack_dict is not None:
-            self.pack_dict = pack_dict
+        if isinstance(packs, dict):
+            for p in packs:
+                if p in self:
+                    self[p] = packs[p]
+        elif isinstance(packs, list):
+            for p in packs:
+                self.add_pack(p)
+        elif packs is None:
+            pass
+        else:
+            raise NotImplementedError(f'SnowPack packs tpye "{type(packs)}" not implemented!')
 
-    # @classmethod
-    # def from_inp_line(cls, Name, kind, *args, **kwargs):
-    #     return cls._surface_dict[kind.upper()](Name, kind, *args, **kwargs)
+    def add_pack(self, p):
+        if type(p) in self.TYPES._type2_dict:
+            self[self.TYPES._type2_dict[type(p)]] = p
 
     @classmethod
     def _convert_lines(cls, multi_line_args):
@@ -1505,57 +1510,78 @@ class SnowPack(BaseSectionObject):
             if last is None:
                 last = cls(name)
 
-            elif name != last.name:
+            elif name != last.Name:
                 yield last
                 last = cls(name)
 
             kind = kind.upper()
-            last.pack_dict[kind] = cls._pack_dict[kind](*line)
+            last[kind] = cls.TYPES._type_dict[kind](*line)
         yield last
 
-    class _Base(BaseSectionObject):
-        def __init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0):
-            self.Cmin = float(Cmin)
-            self.Cmax = float(Cmax)
-            self.Tbase = float(Tbase)
-            self.FWF = float(FWF)
-            self.SD0 = float(SD0)
-            self.FW0 = float(FW0)
+    class TYPES:
+        class _Base(BaseSectionObject):
+            _table_inp_export = False
+            _identifier = IDENTIFIERS.Name
+            _section_label = s.SNOWPACKS
 
-    class Plowable(_Base):
-        def __init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0, SNN0):
-            SnowPack._Base.__init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0)
-            self.SNN0 = float(SNN0)
+            def __init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0):
+                self.Cmin = float(Cmin)
+                self.Cmax = float(Cmax)
+                self.Tbase = float(Tbase)
+                self.FWF = float(FWF)
+                self.SD0 = float(SD0)
+                self.FW0 = float(FW0)
 
-    class Pervious(_Base):
-        def __init__(self, Name, kind, Cmin, Cmax, Tbase, FWF, SD0, FW0, SD100):
-            SnowPack._Base.__init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0)
-            self.SD100 = float(SD100)
+        class Plowable(_Base):
+            _LABEL = 'PLOWABLE'
 
-    class Impervious(_Base):
-        def __init__(self, Name, kind, Cmin, Cmax, Tbase, FWF, SD0, FW0, SD100):
-            SnowPack._Base.__init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0)
-            self.SD100 = float(SD100)
+            def __init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0, SNN0):
+                SnowPack.TYPES._Base.__init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0)
+                self.SNN0 = float(SNN0)
 
-    class Removal(BaseSectionObject):
-        def __init__(self, Dplow, Fout, Fimp, Fperv, Fimelt, Fsub=NaN, Scatch=NaN):
-            self.Dplow = float(Dplow)
-            self.Fout = float(Fout)
-            self.Fimp = float(Fimp)
-            self.Fperv = float(Fperv)
-            self.Fimelt = float(Fimelt)
-            self.Fsub = float(Fsub)
-            self.Scatch = str(Scatch)
+        class Pervious(_Base):
+            _LABEL = 'PERVIOUS'
 
-    _pack_dict = {TYPES.PLOWABLE: Plowable,
-                  TYPES.PERVIOUS: Pervious,
-                  TYPES.IMPERVIOUS: Impervious,
-                  TYPES.REMOVAL: Removal}
+            def __init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0, SD100):
+                SnowPack.TYPES._Base.__init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0)
+                self.SD100 = float(SD100)
+
+        class Impervious(Pervious):
+            _LABEL = 'IMPERVIOUS'
+
+        class Removal(BaseSectionObject):
+            _LABEL = 'REMOVAL'
+
+            def __init__(self, Dplow, Fout, Fimp, Fperv, Fimelt, Fsub=NaN, Scatch=NaN):
+                self.Dplow = float(Dplow)
+                self.Fout = float(Fout)
+                self.Fimp = float(Fimp)
+                self.Fperv = float(Fperv)
+                self.Fimelt = float(Fimelt)
+                self.Fsub = float(Fsub)
+                self.Scatch = Scatch
+
+        PLOWABLE = Plowable._LABEL
+        IMPERVIOUS = Pervious._LABEL
+        PERVIOUS = Impervious._LABEL
+        REMOVAL = Removal._LABEL
+
+        _possible = [PLOWABLE, IMPERVIOUS, PERVIOUS, REMOVAL]
+
+        _type_dict = {PLOWABLE: Plowable,
+                      IMPERVIOUS: Pervious,
+                      PERVIOUS: Impervious,
+                      REMOVAL: Removal}
+        _type2_dict = {Plowable: PLOWABLE,
+                       Pervious: IMPERVIOUS,
+                       Impervious: PERVIOUS,
+                       Removal: REMOVAL}
 
     def to_inp_line(self):
-        s = '{} {}\n'.format(self.Name, self.lid_kind)
-        for layer, l in self.layer_dict.items():
-            s += '{} {:<8} '.format(self.Name, layer) + l.to_inp_line() + '\n'
+        s = ''
+        for pack in self.TYPES._possible:
+            if self[pack] is not None:
+                s += f'{self.Name} {pack:<8} {self[pack].to_inp_line()}\n'
         return s
 
 

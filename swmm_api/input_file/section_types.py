@@ -50,6 +50,7 @@ SECTION_TYPES = {
     COVERAGES: Coverage,
     GWF: GroundwaterFlow,
     GROUNDWATER: Groundwater,
+    SNOWPACKS: SnowPack,
     # -----
     RAINGAGES: RainGage,
     PATTERNS: Pattern,

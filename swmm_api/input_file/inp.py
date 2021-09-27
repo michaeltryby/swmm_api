@@ -591,6 +591,17 @@ class SwmmInput(CustomDictWithAttributes):
             return self[AQUIFERS]
 
     @property
+    def SNOWPACKS(self):
+        """
+        SNOWPACKS section
+
+        Returns:
+            dict[str, SnowPack] | InpSection: SnowPack section
+        """
+        if SNOWPACKS in self:
+            return self[SNOWPACKS]
+
+    @property
     def LID_CONTROLS(self):
         """
         LID_CONTROLS section

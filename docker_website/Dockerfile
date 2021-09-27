@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update -y \
@@ -8,15 +8,19 @@ RUN apt-get update -y \
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
-RUN apt install pandoc -y
+RUN apt install pandoc proj-bin -y
 
 RUN pip3 install \
     numpy \
     pandas \
-    matplotlib \
-    networkx \
     tqdm \
+    networkx \
     fastparquet \
+    matplotlib \
+    Shapely \
+    pyproj \
+    Rtree \
+    geopandas \
     sphinx \
     nbsphinx \
     sphinx-rtd-theme \
