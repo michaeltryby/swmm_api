@@ -10,7 +10,6 @@ Input File Manipulation - Macros
     split_inp_to_files
     read_split_inp_file
     combined_subcatchment_frame
-    get_tags_frame
     get_node_tags
     get_link_tags
     get_subcatchment_tags
@@ -21,8 +20,6 @@ Input File Manipulation - Macros
     find_link
     calc_slope
     conduit_slopes
-    rel_diff
-    rel_slope_diff
     conduits_are_equal
     delete_node
     move_flows
@@ -48,7 +45,6 @@ Input File Manipulation - Macros
     filter_nodes
     filter_links_within_nodes
     filter_links
-    filter_link_components
     filter_subcatchments
     group_edit
     update_vertices

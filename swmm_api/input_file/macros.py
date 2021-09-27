@@ -211,7 +211,7 @@ def find_node(inp: SwmmInput, node_label):
         node_label (str): node Name/label
 
     Returns:
-        Junction or Storage or Outfall: searched node (if not found None)
+        Junction or swmm_api.input_file.sections.node.Storage or Outfall: searched node (if not found None)
     """
     nodes = nodes_dict(inp)
     if node_label in nodes:

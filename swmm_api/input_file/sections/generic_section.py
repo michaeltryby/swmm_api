@@ -381,7 +381,7 @@ class TemperatureSection(InpSectionGeneric):
     Use the ``TIMESERIES`` line to read air temperature from a time series or the ``FILE`` line
     to read it from an external Climate file.
     Climate files are discussed in Section 11.4 Climate Files.
-    If neither format is used, then air temperature remains constant at 70 degrees F.
+    If neither format is used, then air temperature remains constant at 70 degrees F (=21.11111 °C).
 
     Wind speed can be specified either by monthly average values or by the same
     Climate file used for air temperature. If neither option appears, then wind speed is

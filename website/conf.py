@@ -14,6 +14,7 @@
 
 import os
 import sys
+# from swmm_api import __version__
 
 sys.path.insert(0, os.path.abspath('..'))
 # print(*sys.path, sep='\n')
@@ -21,13 +22,13 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'EPA-SWMM API'
-copyright = '2020, Pichler'
+copyright = '2021, Pichler'
 author = 'Pichler'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = '0.2.0.10'
 
 
 # -- General configuration ---------------------------------------------------

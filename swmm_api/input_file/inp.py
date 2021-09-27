@@ -332,7 +332,7 @@ class SwmmInput(CustomDictWithAttributes):
         STORAGE section
 
         Returns:
-            dict[str, Storage] | InpSection: Storage section
+            dict[str, swmm_api.input_file.sections.node.Storage] | InpSection: Storage section
         """
         if STORAGE in self:
             return self[STORAGE]
