@@ -165,8 +165,9 @@ class SwmmOutExtract:
 
         # ____
         # Read codes of pollutant concentration UNITS = Number of pollutants * 4 byte integers
-        self.pollutant_units = dict(zip(self.labels[OBJECTS.POLLUTANT],
-                                        [_CONCENTRATION_UNITS[p] for p in self._next(n_pollutants, flat=False)]))
+        _pollutant_unit_labels = [_CONCENTRATION_UNITS[p] if p < len(_CONCENTRATION_UNITS) else 'NaN'
+                                  for p in self._next(n_pollutants, flat=False)]
+        self.pollutant_units = dict(zip(self.labels[OBJECTS.POLLUTANT], _pollutant_unit_labels))
 
         # ____
         # property values for subcatchments, nodes and links

@@ -1,5 +1,17 @@
 # Changelog  
 
+## 0.2.0.12 (Sep 28, 2021)
+- fixed out reader for custom pollutant unit
+- gis import example
+- LINK_SECTIONS, NODE_SECTIONS as section list
+- SnowPack as new Class for reader
+- datetime format fixed for import and export
+- new "check_for_duplicates" macro
+- fixed run for linux
+- new get_swmm_version function
+- pyswmm runner (not stable)
+- fixed docker for documentation site
+
 ## 0.2.0.6 (Sep 15, 2021)
 - better gis export
 - compare inp files
