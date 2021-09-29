@@ -953,6 +953,11 @@ class TimeseriesData(Timeseries):
         date_time, values = zip(*self.data)
         date_time_new = list()
         last_date = None
+        if len(date_time) > 10000 * 2:  # 10000 it/s
+            str_only = True
+        else:
+            str_only = False
+
         for dt in date_time:
             if isinstance(dt, Timestamp):
                 date_time_new.append(dt)
@@ -963,7 +968,10 @@ class TimeseriesData(Timeseries):
                 else:
                     last_date, time = parts
 
-                date_time_new.append(str_to_datetime(last_date, time))
+                date_time_new.append(str_to_datetime(last_date, time, str_only=str_only))
+        if str_only:
+            import pandas as pd
+            date_time_new = pd.to_datetime(date_time_new, format='%m/%d/%Y %H:%M:%S')
         self.data = list(zip(date_time_new, values))
 
     @property

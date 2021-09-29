@@ -53,7 +53,7 @@ def infer_type(x):
         return x
 
 
-def str_to_datetime(date=None, time=None):
+def str_to_datetime(date=None, time=None, str_only=False):
     if date:
         if '-' in date:
             date = date.replace('-', '/')
@@ -85,10 +85,13 @@ def str_to_datetime(date=None, time=None):
             elif len(parts) == 3:
                 return float(parts[0]) + float(parts[1])/60 + float(parts[2])/60/60
         else:
+            time_format = '%H:%M:%S'
             if time.count(':') == 1:
-                time_format = '%H:%M'
+                # time_format = '%H:%M'
+                time += ':00'
             elif time.count(':') == 2:
-                time_format = '%H:%M:%S'
+                pass
+                # time_format = '%H:%M:%S'
             elif time.count(':') == 0:
                 hours = float(time)
                 h = int(hours)
@@ -96,7 +99,7 @@ def str_to_datetime(date=None, time=None):
                 m = int(minutes)
                 s = int((minutes - m)*60)
                 time = f'{h:02d}:{m:02d}:{s:02d}'
-                time_format = '%H:%M:%S'
+
             else:
                 raise NotImplementedError(time)
 
@@ -104,8 +107,11 @@ def str_to_datetime(date=None, time=None):
         time = ''
         time_format = ''
 
-    return to_datetime(date + ' ' + time,
-                       format=month_format + date_format2 + ' ' + time_format)
+    if str_only:
+        return date + ' ' + time
+    else:
+        return to_datetime(date + ' ' + time,
+                           format=month_format + date_format2 + ' ' + time_format)
 
 
 def datetime_to_str(dt):
