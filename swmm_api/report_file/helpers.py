@@ -96,6 +96,9 @@ def _part_to_frame(part):
     elif len(subs) == 1:
         # no data
         return pd.DataFrame()
+    elif len(subs) == 2:
+        # input summary tables
+        header, data = subs
     else:
         notes, header, data = subs
     header = ['_'.join([i for i in c if i is not NaN]) for c in pd.read_fwf(StringIO(header), header=None).values.T]
@@ -108,8 +111,15 @@ def _part_to_frame(part):
     for c, h in enumerate(header):
         if 'days hr:min' in h:
             df[c] = df[c] + ' ' + df.pop(c+1)
+        elif 'Interval' in h:
+            df[c] = df[c] + ' ' + df.pop(c+1)
 
-    df.columns = header
+    if len(df.columns) < len(header):
+        df.columns = header[:len(df.columns)]
+        for h in header[len(df.columns):]:
+            df[h] = NaN
+    else:
+        df.columns = header
 
     df = df.set_index(header[0])
 
@@ -117,12 +127,17 @@ def _part_to_frame(part):
     df = df.replace('-nan(ind)', NaN)
 
     for col in df:
-        if 'Type' in col:
-            pass
-        elif 'days hr:min' in col:
+        # if 'Type' in col:
+        #     pass
+        if 'days hr:min' in col:
             df[col] = pd.to_timedelta(df[col].str.replace('  ', ' days ') + ':00')
+        # elif 'data' in col.lower():
+        #     pass
+        # elif 'interval' in col.lower():
+        #     pass
         else:
-            df[col] = df[col].astype(float)
+            df[col] = pd.to_numeric(df[col], errors='ignore')
+            # df[col] = df[col].astype(float)
     #
     # notes = str()
     # data = []
@@ -156,6 +171,17 @@ def _part_to_frame(part):
     #     else:
     #         df[col] = df[col].astype(float)
     return df.copy()
+
+
+def _routing_part_to_dict(raw):
+    elements = dict()
+    if raw.startswith('  All ') and raw.endswith('.'):
+        return elements
+
+    for line in raw.split('\n'):
+        line = line.split()
+        elements[line[1]] = line[-1][1:-1]
+    return elements
 
 
 def _continuity_part_to_dict(raw):
@@ -217,6 +243,7 @@ class UNIT:
 
 
 class VARS:
+
     class CONTINUITY:
         VOL_HM3 = 'Volume_hectare-m'
         VOL_1e6L = 'Volume_10^6 ltr'

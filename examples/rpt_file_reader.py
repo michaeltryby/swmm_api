@@ -9,8 +9,12 @@ pd.set_option('display.max_colwidth', 150)
 if __name__ == '__main__':
     r = read_rpt_file('epaswmm5_apps_manual/Example7-Final.rpt')
 
-    r.flow_routing_continuity
-
+    r.raingage_summary
+    r.subcatchment_summary
+    r.node_summary
+    r.link_summary
+    r.crosssection_summary
+    exit()
     r.flow_classification_summary
 
     ols = r.outfall_loading_summary['Total_Volume_10^6 ' + r.UNIT.VOL2] * 1000  # m³

@@ -1039,12 +1039,16 @@ def remove_empty_sections(inp):
     Returns:
         SwmmInput: cleaned inp-file data
     """
-    new_inp = SwmmInput()
-    for section in inp:
+    # new_inp = SwmmInput()
+    for section in list(inp.keys()):
         if inp[section]:
-            new_inp[section] = inp[section]
-    return new_inp
-
+            # if inplace:
+            del inp[section]
+            # else:
+            #     new_inp[section] = inp[section]
+    # if not inplace:
+    #     return new_inp
+    return inp
 
 def reduce_curves(inp):
     """

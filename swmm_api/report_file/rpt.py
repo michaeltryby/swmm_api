@@ -8,7 +8,8 @@ __license__ = "MIT"
 from pandas import to_datetime
 from pandas._libs.tslibs.timedeltas import Timedelta
 
-from .helpers import _get_title_of_part, _remove_lines, _part_to_frame, _continuity_part_to_dict, UNIT
+from .helpers import _get_title_of_part, _remove_lines, _part_to_frame, _continuity_part_to_dict, UNIT, \
+    _routing_part_to_dict
 
 """
 not ready to use
@@ -23,7 +24,6 @@ class SwmmReport:
         """
         create Report instance to read an .rpt-file
 
-
         Args:
             filename (str): path to .rpt file
         """
@@ -36,25 +36,41 @@ class SwmmReport:
         # TODO
         self._version_title = None
         self._note = None
-        self._analysis_options = None
-        self._runoff_quantity_continuity = None
-        self._flow_routing_continuity = None
-        self._time_step_critical_elements = None
-        self._highest_flow_instability_indexes = None
 
         self._routing_time_step_summary = None
 
+        # input summarys
+        self._element_count = None
+
         # ________________
-        self._subcatchment_runoff_summary = None
+        self._raingage_summary = None
+        self._subcatchment_summary = None
+        self._node_summary = None
+        self._link_summary = None
+        self._crosssection_summary = None
+        self._transect_summary = None
+
+        self._runoff_quantity_continuity = None
+        self._flow_routing_continuity = None
+
+        self._highest_continuity_errors = None
+        self._time_step_critical_elements = None
+        self._highest_flow_instability_indexes = None
+
+        self._analysis_options = None
+
         self._node_depth_summary = None
         self._node_inflow_summary = None
         self._node_surcharge_summary = None
         self._node_flooding_summary = None
         self._storage_volume_summary = None
         self._outfall_loading_summary = None
+
         self._link_flow_summary = None
         self._flow_classification_summary = None
         self._conduit_surcharge_summary = None
+
+        self._subcatchment_runoff_summary = None
 
     def __repr__(self):
         return f'SwmmReport(file="{self._filename}")'
@@ -162,6 +178,133 @@ class SwmmReport:
             raw = self.raw_parts.get('Runoff Quantity Continuity', None)
             self._runoff_quantity_continuity = _continuity_part_to_dict(raw)
         return self._runoff_quantity_continuity
+
+    @property
+    def highest_continuity_errors(self):
+        """
+        get the Highest Continuity Errors
+
+        Returns:
+            dict: Highest Continuity Errors
+        """
+        if self._highest_continuity_errors is None:
+            p = self.converted('Highest Continuity Errors')
+            self._highest_continuity_errors = _routing_part_to_dict(p)
+        return self._highest_continuity_errors
+
+    @property
+    def time_step_critical_elements(self):
+        """
+        get the Time-Step Critical Elements
+
+        Returns:
+            dict: Time-Step Critical Elements
+        """
+        if self._time_step_critical_elements is None:
+            p = self.converted('Time-Step Critical Elements')
+            self._time_step_critical_elements = _routing_part_to_dict(p)
+        return self._time_step_critical_elements
+
+    @property
+    def highest_flow_instability_indexes(self):
+        """
+        get the Highest Flow Instability Indexes
+
+        Returns:
+            dict: Highest Flow Instability Indexes
+        """
+        if self._highest_flow_instability_indexes is None:
+            p = self.converted('Highest Flow Instability Indexes')
+            self._highest_flow_instability_indexes = _routing_part_to_dict(p)
+        return self._highest_flow_instability_indexes
+
+    @property
+    def node_summary(self):
+        """
+        get the Node Depth Summary
+
+        Returns:
+            pandas.DataFrame: Node Depth Summary
+        """
+        if self._node_summary is None:
+            p = self.converted('Node Summary')
+            # p = '-'*10 + '\n' + p
+            self._node_summary = _part_to_frame(p)
+        return self._node_summary
+
+    @property
+    def link_summary(self):
+        """
+        get the Node Depth Summary
+
+        Returns:
+            pandas.DataFrame: Node Depth Summary
+        """
+        if self._link_summary is None:
+            p = self.converted('Link Summary')
+            # p = '-'*10 + '\n' + p
+            p = p.replace('From Node', 'FromNode')
+            p = p.replace('To Node', 'ToNode')
+            self._link_summary = _part_to_frame(p)
+        return self._link_summary
+
+    @property
+    def raingage_summary(self):
+        """
+        get the Node Depth Summary
+
+        Returns:
+            pandas.DataFrame: Node Depth Summary
+        """
+        if self._raingage_summary is None:
+            p = self.converted('Raingage Summary')
+            # p = '-'*10 + '\n' + p
+            p = p.replace('Data Source', 'DataSource')
+            self._raingage_summary = _part_to_frame(p)
+        return self._raingage_summary
+
+    @property
+    def subcatchment_summary(self):
+        """
+        get the Node Depth Summary
+
+        Returns:
+            pandas.DataFrame: Node Depth Summary
+        """
+        if self._subcatchment_summary is None:
+            p = self.converted('Subcatchment Summary')
+            # p = '-'*10 + '\n' + p
+            p = p.replace('Rain Gage', 'RainGage')
+            self._subcatchment_summary = _part_to_frame(p)
+        return self._subcatchment_summary
+
+    @property
+    def crosssection_summary(self):
+        """
+        get the Node Depth Summary
+
+        Returns:
+            pandas.DataFrame: Node Depth Summary
+        """
+        if self._crosssection_summary is None:
+            p = self.converted('Cross Section Summary')
+            # p = '-'*10 + '\n' + p
+            self._crosssection_summary = _part_to_frame(p)
+        return self._crosssection_summary
+
+    # @property
+    # def transect_summary(self):
+    #     """
+    #     get the Node Depth Summary
+    #
+    #     Returns:
+    #         pandas.DataFrame: Node Depth Summary
+    #     """
+    #     if self._transect_summary is None:
+    #         p = self.converted('Transect Summary')
+    #         # p = '-'*10 + '\n' + p
+    #         self._transect_summary = _part_to_frame(p)
+    #     return self._transect_summary
 
     @property
     def subcatchment_runoff_summary(self):
