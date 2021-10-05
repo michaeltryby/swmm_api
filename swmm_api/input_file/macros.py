@@ -1,6 +1,8 @@
 from collections import ChainMap
 from math import ceil
 import os
+from warnings import warn
+
 import numpy as np
 import pandas as pd
 from networkx import DiGraph, all_simple_paths, subgraph, node_connected_component, Graph
@@ -401,6 +403,9 @@ def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None
         if (section in inp) and (node_label in inp[section]):
             inp[section].pop(node_label)
 
+    if (sec.TAGS in inp) and ((Tag.TYPES.Node, node_label) in inp.TAGS):
+        del inp[sec.TAGS][(Tag.TYPES.Node, node_label)]
+
     # AND delete connected links
     if graph is not None:
         if node_label in graph:
@@ -479,11 +484,17 @@ def delete_link(inp: SwmmInput, link):
         if (s in inp) and (link in inp[s]):
             inp[s].pop(link)
 
+    if (sec.TAGS in inp) and ((Tag.TYPES.Link, link) in inp.TAGS):
+        del inp[sec.TAGS][(Tag.TYPES.Link, link)]
+
 
 def delete_subcatchment(inp: SwmmInput, subcatchment):
     for s in [sec.SUBCATCHMENTS, sec.SUBAREAS, sec.INFILTRATION, sec.POLYGONS, sec.LOADINGS, sec.COVERAGES]:
         if (s in inp) and (subcatchment in inp[s]):
             inp[s].pop(subcatchment)
+
+    if (sec.TAGS in inp) and ((Tag.TYPES.Subcatch, subcatchment) in inp.TAGS):
+        del inp[sec.TAGS][(Tag.TYPES.Subcatch, subcatchment)]
 
 
 def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
@@ -1039,16 +1050,11 @@ def remove_empty_sections(inp):
     Returns:
         SwmmInput: cleaned inp-file data
     """
-    # new_inp = SwmmInput()
     for section in list(inp.keys()):
-        if inp[section]:
-            # if inplace:
+        if not inp[section]:
             del inp[section]
-            # else:
-            #     new_inp[section] = inp[section]
-    # if not inplace:
-    #     return new_inp
     return inp
+
 
 def reduce_curves(inp):
     """
@@ -1327,14 +1333,13 @@ def reduce_vertices(inp, node_range=0.25):
 
 
 def check_for_nodes(inp):
-    print('_'*20, '\nNodes not Found')
     links = links_dict(inp)
     nodes = nodes_dict(inp)
     for link in links.values():
         if link.FromNode not in nodes:
-            print(link, link.FromNode)
+            warn(f'Nodes not Found | {link} |  {link.FromNode}')
         if link.ToNode not in nodes:
-            print(link, link.ToNode)
+            warn(f'Nodes not Found | {link} |  {link.ToNode}')
 
 
 def check_for_duplicates(inp):

@@ -69,6 +69,161 @@ class OptionSection(InpSectionGeneric):
 
         `* .. defaults`
 
+        FLOW_UNITS makes a choice of flow units. Selecting a US flow unit means that all
+        other quantities will be expressed in US units, while choosing a metric flow unit will
+        force all quantities to be expressed in metric units. The default is CFS.
+
+        INFILTRATION selects a model for computing infiltration of rainfall into the upper
+        soil zone of subcatchments. The default model is HORTON.
+
+        FLOW_ROUTING determines which method is used to route flows through the
+        drainage system. STEADY refers to sequential steady state routing (i.e. hydrograph
+        translation), KINWAVE to kinematic wave routing, DYNWAVE to dynamic wave routing.
+        The default routing method is KINWAVE.
+
+        LINK_OFFSETS determines the convention used to specify the position of a link
+        offset above the invert of its connecting node. DEPTH indicates that offsets are
+        expressed as the distance between the node invert and the link while ELEVATION
+        indicates that the absolute elevation of the offset is used. The default is DEPTH.
+
+        FORCE_MAIN_EQUATION establishes whether the Hazen-Williams (H-W) or the
+        Darcy-Weisbach (D-W) equation will be used to compute friction losses for
+        pressurized flow in conduits that have been assigned a Circular Force Main cross-
+        section shape. The default is H-W.
+
+        IGNORE_RAINFALL is set to YES if all rainfall data and runoff calculations should be
+        ignored. In this case SWMM only performs flow and pollutant routing based on user-
+        supplied direct and dry weather inflows. The default is NO.
+
+        IGNORE_SNOWMELT is set to YES if snowmelt calculations should be ignored when a
+        project file contains snow pack objects. The default is NO.
+
+        IGNORE_GROUNDWATER is set to YES if groundwater calculations should be ignored
+        when a project file contains aquifer objects. The default is NO.
+
+        IGNORE_RDII is set to YES if rainfall dependent inflow/infiltration should be ignored
+        when RDII unit hydrographs and RDII inflows have been supplied to a project file.
+        The default is NO.
+
+        IGNORE_ROUTING is set to YES if only runoff should be computed even if the project
+        contains drainage system links and nodes. The default is NO.
+
+        IGNORE_QUALITY is set to YES if pollutant washoff, routing, and treatment should be
+        ignored in a project that has pollutants defined. The default is NO.
+
+        ALLOW_PONDING determines whether excess water is allowed to collect atop nodes
+        and be re-introduced into the system as conditions permit. The default is NO ponding.
+
+        In order for ponding to actually occur at a particular node, a non-zero value for its
+        Ponded Area attribute must be used.
+
+        SKIP_STEADY_STATE should be set to YES if flow routing computations should be
+        skipped during steady state periods of a simulation during which the last set of
+        computed flows will be used. A time step is considered to be in steady state if the
+        percent difference between total system inflow and total system outflow is below the
+        SYS_FLOW_TOL and the percent difference between current and previous lateral
+        inflows are below the LAT_FLOW_TOL. The default for this option is NO.
+
+        SYS_FLOW_TOL is the maximum percent difference between total system inflow and
+        total system outflow which can occur in order for the SKIP_STEADY_STATE option to
+        take effect. The default is 5 percent.
+
+        LAT_FLOW_TOL is the maximum percent difference between the current and
+        previous lateral inflow at all nodes in the conveyance system in order for the
+        SKIP_STEADY_STATE option to take effect. The default is 5 percent.
+
+        START_DATE is the date when the simulation begins. If not supplied, a date of
+        1/1/2002 is used.
+
+        START_TIME is the time of day on the starting date when the simulation begins. The
+        default is 12 midnight (0:00:00).
+
+        END_DATE is the date when the simulation is to end. The default is the start date.
+        END_TIME is the time of day on the ending date when the simulation will end. The
+        default is 24:00:00.
+
+        REPORT_START_DATE is the date when reporting of results is to begin. The default is
+        the simulation start date.
+
+        REPORT_START_TIME is the time of day on the report starting date when reporting is
+        to begin. The default is the simulation start time of day.
+
+        SWEEP_START is the day of the year (month/day) when street sweeping operations
+        begin. The default is 1/1.
+
+        SWEEP_END is the day of the year (month/day) when street sweeping operations end.
+        The default is 12/31.
+
+        DRY_DAYS is the number of days with no rainfall prior to the start of the simulation.
+        The default is 0.
+
+        REPORT_STEP is the time interval for reporting of computed results. The default is
+        0:15:00.
+
+        WET_STEP is the time step length used to compute runoff from subcatchments
+        during periods of rainfall or when ponded water still remains on the surface. The
+        default is 0:05:00.
+
+        DRY_STEP is the time step length used for runoff computations (consisting essentially
+        of pollutant buildup) during periods when there is no rainfall and no ponded water.
+        The default is 1:00:00.
+
+        ROUTING_STEP is the time step length in seconds used for routing flows and water
+        quality constituents through the conveyance system. The default is 600 sec (5
+        minutes) which should be reduced if using dynamic wave routing. Fractional values
+        (e.g., 2.5) are permissible as are values entered in hours:minutes:seconds format.
+
+        LENGTHENING_STEP is a time step, in seconds, used to lengthen conduits under
+        dynamic wave routing, so that they meet the Courant stability criterion under full-flow
+        conditions (i.e., the travel time of a wave will not be smaller than the specified conduit
+        lengthening time step). As this value is decreased, fewer conduits will require
+        lengthening. A value of 0 (the default) means that no conduits will be lengthened.
+
+        VARIABLE_STEP is a safety factor applied to a variable time step computed for
+        each time period under dynamic wave flow routing. The variable time step is
+        computed so as to satisfy the Courant stability criterion for each conduit and yet not
+        exceed the ROUTING_STEP value. If the safety factor is 0 (the default), then no
+        variable time step is used.
+
+        MINIMUM_STEP is the smallest time step allowed when variable time steps are used
+        for dynamic wave flow routing. The default value is 0.5 seconds.
+
+        INERTIAL_DAMPING indicates how the inertial terms in the Saint Venant
+        momentum equation will be handled under dynamic wave flow routing. Choosing
+        NONE maintains these terms at their full value under all conditions. Selecting
+        PARTIAL will reduce the terms as flow comes closer to being critical (and ignores
+        them when flow is supercritical). Choosing FULL will drop the terms altogether.
+
+        NORMAL_FLOW_LIMITED specifies which condition is checked to determine if flow in
+        a conduit is supercritical and should thus be limited to the normal flow. Use SLOPE to
+        check if the water surface slope is greater than the conduit slope, FROUDE to check if
+        the Froude number is greater than 1.0, or BOTH to check both conditions. The default
+        is BOTH.
+
+        MIN_SURFAREA is a minimum surface area used at nodes when computing changes
+        in water depth under dynamic wave routing. If 0 is entered, then the default value of
+        12.566 ft2 (i.e., the area of a 4-ft diameter manhole) is used.
+
+        MIN_SLOPE is the minimum value allowed for a conduit’s slope (%). If zero (the
+        default) then no minimum is imposed (although SWMM uses a lower limit on
+        elevation drop of 0.001 ft (0.00035 m) when computing a conduit slope).
+
+        MAX_TRIALS is the maximum number of trials allowed during a time step to reach
+        convergence when updating hydraulic heads at the conveyance system’s nodes. The
+        default value is 8.
+
+        HEAD_TOLERANCE is the difference in computed head at each node between
+        successive trials below which the flow solution for the current time step is assumed to
+        have converged. The default tolerance is 0.005 ft (0.0015 m).
+
+        THREADS is the number of parallel computing threads to use for dynamic wave flow
+        routing on machines equipped with multi-core processors. The default is 1.
+
+        TEMPDIR provides the name of a file directory (or folder) where SWMM writes its
+        temporary files. If the directory name contains spaces then it should be placed within
+        double quotes. If no directory is specified, then the temporary files are written to the
+        current directory that the user is working in.
+
     Args:
         lines (list): section lines from input file
 
