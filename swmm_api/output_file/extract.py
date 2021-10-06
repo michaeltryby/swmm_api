@@ -10,7 +10,9 @@
 import copy
 import datetime
 import struct
+from io import SEEK_END, SEEK_SET
 from os import remove
+from warnings import warn
 
 from tqdm import tqdm
 
@@ -105,6 +107,10 @@ class SwmmExtractValueError(Exception):
         super().__init__("\n*\n*   {}\n*\n".format(message))
 
 
+class SwmmOutExtractWarning(UserWarning):
+    pass
+
+
 class SwmmOutExtract:
     """The class that handles all extraction of data from the out file."""
 
@@ -113,30 +119,32 @@ class SwmmOutExtract:
         self.fp = open(filename, "rb")
 
         # ____
-        self.fp.seek(-6 * _RECORDSIZE, 2)
+        self.fp.seek(-6 * _RECORDSIZE, SEEK_END)
         (
             _pos_start_labels,  # starting file position of ID names
             _pos_start_input,  # starting file position of input data
-            self.pos_start_output,  # starting file position of output data
-            self.n_periods,  # Number of reporting periods
+            _pos_start_output,  # starting file position of output data
+            _n_periods,  # Number of reporting periods
             error_code,
             magic_num_end,
         ) = self._next(6)
 
         # ____
-        self.fp.seek(0, 0)
+        self.fp.seek(0, SEEK_SET)
         magic_num_start = self._next()
 
         # ____
         # check errors
         if magic_num_start != _MAGIC_NUMBER:
             raise SwmmExtractValueError('Beginning magic number incorrect.')
+
         if magic_num_end != _MAGIC_NUMBER:
-            raise SwmmExtractValueError('Ending magic number incorrect.')
-        if error_code != 0:
-            raise SwmmExtractValueError(f'Error code "{error_code}" in output file indicates a problem with the run.')
-        if self.n_periods == 0:
-            raise SwmmExtractValueError('There are zero time periods in the output file.')
+            warn('Ending magic number incorrect.', SwmmOutExtractWarning)
+            # raise SwmmExtractValueError('Ending magic number incorrect.')
+            _n_periods = 0
+        elif error_code != 0:
+            warn(f'Error code "{error_code}" in output file indicates a problem with the run.', SwmmOutExtractWarning)
+            # raise SwmmExtractValueError(f'Error code "{error_code}" in output file indicates a problem with the run.')
 
         # ---
         # read additional parameters from start of file
@@ -145,13 +153,19 @@ class SwmmOutExtract:
         self.flow_unit = _FLOW_UNITS[self.flow_unit]
 
         # ____
+        # self.fp.seek(_pos_start_labels, SEEK_SET)  # not needed!
+        # print(self.fp.tell(), _pos_start_labels)
+        # assert _pos_start_labels == self.fp.tell()
+        # ____
         # Read in the names
         # get the dictionary of the object labels for each object type (link, node, subcatchment)
-        self.fp.seek(_pos_start_labels, 0)
         self.labels = dict()
         for kind, n in zip(OBJECTS.LIST_, [n_subcatch, n_nodes, n_links, n_pollutants, 0]):
             self.labels[kind] = [self._next(n=self._next(), dtype='s') for _ in range(n)]
 
+        # ____
+        # print(self.fp.tell(), _pos_start_input)
+        # assert _pos_start_input == self.fp.tell()
         # ____
         # Update variables to add pollutant names to subcatchment, nodes, and links.
         # get the dictionary of the object variables for each object type (link, node, subcatchment)
@@ -211,6 +225,22 @@ class SwmmOutExtract:
 
         # ____
         self._bytes_per_period = None
+
+        # ____
+        # print(self.fp.tell(), _pos_start_output)
+        # assert _pos_start_output == self.fp.tell()
+        # if _pos_start_output == 0:
+        # Out File not complete!
+        self.pos_start_output = self.fp.tell()
+
+        self.n_periods = _n_periods
+        if _n_periods == 0:
+            self.infer_n_periods()
+            warn('Infer time periods of the output file due to an corrupt SWMM .out-file.', SwmmOutExtractWarning)
+
+        if self.n_periods == 0:
+            warn('There are zero time periods in the output file.', SwmmOutExtractWarning)
+            # raise SwmmExtractValueError('There are zero time periods in the output file.')
 
     def __repr__(self):
         return f'SwmmOutExtract(file="{self.filename}")'
@@ -339,7 +369,22 @@ class SwmmOutExtract:
         for period in tqdm(range(self.n_periods)):
             period_offset = period * self.bytes_per_period
             for label, offset in zip(values.keys(), offset_list):
-                self.fp.seek(offset + period_offset, 0)
+                self.fp.seek(offset + period_offset, SEEK_SET)
                 values[label].append(self._next(dtype='f'))
 
         return values
+
+    def infer_n_periods(self):
+        not_done = True
+        period = 0
+        while not_done:
+            self.fp.seek(self.pos_start_output + period * self.bytes_per_period, SEEK_SET)
+            try:
+                dt = self._next(dtype='d')
+                # print(dt)
+                # print(datetime.datetime(1899, 12, 30) + datetime.timedelta(days=dt))
+                period += 1
+            except:
+                not_done = False
+
+        self.n_periods = period - 1
