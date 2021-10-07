@@ -1,1 +1,1 @@
-from .out import read_out_file, SwmmOut
+from .out import read_out_file, SwmmOutput

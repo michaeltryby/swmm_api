@@ -14,7 +14,7 @@ from .extract import SwmmOutExtract, OBJECTS, VARIABLES
 from . import parquet
 
 
-class SwmmOut(SwmmOutExtract):
+class SwmmOutput(SwmmOutExtract):
     """
     read the binary .out-file of EPA-SWMM
 
@@ -222,9 +222,9 @@ def read_out_file(out_filename):
     combined the reader of swmmtoolbox with the functionality of pandas
 
     Returns:
-        SwmmOut: class to extract data fromm the ``.out``-file
+        SwmmOutput: class to extract data fromm the ``.out``-file
     """
-    return SwmmOut(out_filename)
+    return SwmmOutput(out_filename)
 
 
 def out2frame(out_file):
@@ -240,5 +240,5 @@ def out2frame(out_file):
     Returns:
         pandas.DataFrame:
     """
-    out = SwmmOut(out_file)
+    out = SwmmOutput(out_file)
     return out.to_frame()

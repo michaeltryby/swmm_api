@@ -27,9 +27,11 @@ class SwmmReport:
         Args:
             filename (str): path to .rpt file
         """
-        self.raw_parts = dict()
-        self.converted_parts = dict()
         self._filename = filename
+        # ________________
+        self._raw_parts = dict()
+        self._converted_parts = dict()
+        # ________________
         self._report_to_dict()
 
         # ________________
@@ -41,6 +43,7 @@ class SwmmReport:
 
         # input summarys
         self._element_count = None
+        self._rainfall_file_summary = None
 
         # ________________
         self._raingage_summary = None
@@ -96,7 +99,7 @@ class SwmmReport:
         with open(self._filename, 'r') as file:
             lines = file.readlines()
 
-        self.raw_parts['Simulation Infos'] = ''.join(lines[-3:])
+        self._raw_parts['Simulation Infos'] = ''.join(lines[-3:])
         lines = lines[:-3]
         parts0 = ''.join(lines).split('\n  \n  ****')
 
@@ -104,15 +107,15 @@ class SwmmReport:
             if part.startswith('*'):
                 part = '  ****' + part
 
-            self.raw_parts[_get_title_of_part(part, str(i))] = _remove_lines(part, title=False, empty=True, sep=False)
+            self._raw_parts[_get_title_of_part(part, str(i))] = _remove_lines(part, title=False, empty=True, sep=False)
 
     def converted(self, key):
-        if key not in self.converted_parts:
-            if key not in self.raw_parts:
+        if key not in self._converted_parts:
+            if key not in self._raw_parts:
                 return ''
-            self.converted_parts[key] = _remove_lines(self.raw_parts[key], title=True, empty=False)
+            self._converted_parts[key] = _remove_lines(self._raw_parts[key], title=True, empty=False)
 
-        return self.converted_parts[key]
+        return self._converted_parts[key]
 
     @property
     def analysis_options(self):
@@ -162,7 +165,7 @@ class SwmmReport:
             dict: Flow Routing Continuity
         """
         if self._flow_routing_continuity is None:
-            raw = self.raw_parts.get('Flow Routing Continuity', None)
+            raw = self._raw_parts.get('Flow Routing Continuity', None)
             self._flow_routing_continuity = _continuity_part_to_dict(raw)
         return self._flow_routing_continuity
 
@@ -175,7 +178,7 @@ class SwmmReport:
             dict: Runoff Quantity Continuity
         """
         if self._runoff_quantity_continuity is None:
-            raw = self.raw_parts.get('Runoff Quantity Continuity', None)
+            raw = self._raw_parts.get('Runoff Quantity Continuity', None)
             self._runoff_quantity_continuity = _continuity_part_to_dict(raw)
         return self._runoff_quantity_continuity
 
@@ -247,6 +250,21 @@ class SwmmReport:
             p = p.replace('To Node', 'ToNode')
             self._link_summary = _part_to_frame(p)
         return self._link_summary
+
+    @property
+    def rainfall_file_summary(self):
+        """
+        get the Node Depth Summary
+
+        Returns:
+            pandas.DataFrame: Node Depth Summary
+        """
+        if self._rainfall_file_summary is None:
+            p = self.converted('Rainfall File Summary')
+            # p = '-'*10 + '\n' + p
+            # p = p.replace('Data Source', 'DataSource')
+            self._rainfall_file_summary = _part_to_frame(p)
+        return self._rainfall_file_summary
 
     @property
     def raingage_summary(self):
@@ -457,7 +475,7 @@ class SwmmReport:
         return self._conduit_surcharge_summary
 
     def get_simulation_info(self):
-        t = self.raw_parts.get('Simulation Infos', None)
+        t = self._raw_parts.get('Simulation Infos', None)
         if t:
             return dict(line.strip().split(':', 1) for line in t.split('\n'))
 
@@ -504,7 +522,7 @@ class SwmmReport:
         print(f)
 
     def get_errors(self):
-        t = self.raw_parts.get('Version+Title', None)
+        t = self._raw_parts.get('Version+Title', None)
         di = dict()
         if t:
             for line in t.split('\n'):
@@ -560,7 +578,7 @@ class SwmmReport:
             The premise of a control is comparing two different types of attributes to one another (for example,
             conduit flow and junction water depth).
         """
-        t = self.raw_parts.get('Version+Title', None)
+        t = self._raw_parts.get('Version+Title', None)
         di = dict()
         if t:
             for line in t.split('\n'):

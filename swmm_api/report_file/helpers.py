@@ -109,9 +109,9 @@ def _part_to_frame(part):
         del df[df.columns[-1]]
 
     for c, h in enumerate(header):
-        if 'days hr:min' in h:
-            df[c] = df[c] + ' ' + df.pop(c+1)
-        elif 'Interval' in h:
+        if (('days hr:min' in h)
+                or ('Recording_Frequency' in h)
+                or ('Interval' in h)):
             df[c] = df[c] + ' ' + df.pop(c+1)
 
     if len(df.columns) < len(header):
@@ -175,7 +175,7 @@ def _part_to_frame(part):
 
 def _routing_part_to_dict(raw):
     elements = dict()
-    if raw.startswith('  All ') and raw.endswith('.'):
+    if (raw.startswith('  All ') and raw.endswith('.')) or (raw.strip() == 'None') or (raw.strip() == ''):
         return elements
 
     for line in raw.split('\n'):
