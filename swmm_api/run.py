@@ -165,8 +165,7 @@ def _run_parallel(variable, func=swmm5_run, processes=4):
         from multiprocessing.dummy import Pool
 
         pool = Pool(processes)
-        for _ in tqdm(pool.imap(partial(func), variable),
-                      total=len(variable)):
+        for _ in tqdm(pool.imap(partial(func), variable), total=len(variable)):
             pass
 
 
