@@ -506,46 +506,225 @@ class Control(BaseSectionObject):
     Section: [**CONTROLS**]
 
     Purpose:
-        Determines how pumps and regulators will be adjusted based on simulation time or
-        conditions at specific nodes and links.
+        Determines how pumps and regulators will be adjusted
+        based on simulation time or conditions at specific nodes and links.
 
     Formats:
         Each control rule is a series of statements of the form:
         ::
-
-            RULE ruleID
-            IF condition_1
-            AND condition_2
-            OR condition_3
-            AND condition_4
+            RULE    ruleID
+            IF      condition_1
+            AND     condition_2
+            OR      condition_3
+            AND     condition_4
             Etc.
-            THEN action_1
-            AND action_2
+            THEN    action_1
+            AND     action_2
             Etc.
-            ELSE action_3
-            AND action_4
+            ELSE    action_3
+            AND     action_4
             Etc.
             PRIORITY value
 
     Remarks:
-        RuleID an ID label assigned to the rule.
-        condition_n a condition clause.
-        action_n an action clause.
-        value a priority value (e.g., a number from 1 to 5).
+        `RuleID`: an ID label assigned to the rule.
+        `condition_n`: a condition clause.
+        `action_n`: an action clause.
+        `value`: a priority value (e.g., a number from 1 to 5).
 
-        A condition clause of a Control Rule has the following format:
-            Object Name Attribute Relation Value
+        A **condition clause** of a Control Rule has the following format:
+            `Object Name Attribute Relation Value`
 
-        where Object is a category of object, Name is the object’s assigned ID name,
-        Attribute is the name of an attribute or property of the object, Relation is a
-        relational operator (=, <>, <, <=, >, >=), and Value is an attribute value.
+        where:
+            - `Object`: is a category of object,
+            - `Name`: is the object’s assigned ID name,
+            - `Attribute`: is the name of an attribute or property of the object,
+            - `Relation`: is a relational operator (=, <>, <, <=, >, >=), and
+            - `Value`: is an attribute value.
+
+        for example:
+        ::
+            NODE N23 DEPTH > 10
+            PUMP P45 STATUS = OFF
+            SIMULATION TIME = 12:45:00
+            NODE  N23  DEPTH  >  10
+            NODE  N23  DEPTH  >  NODE 25 DEPTH
+            PUMP  P45  STATUS =  OFF
+            LINK  P45  TIMEOPEN >= 6:30
+            SIMULATION CLOCKTIME = 22:45:00
+
+        TIMEOPEN is the duration a link has been in an OPEN or ON state or have its
+        SETTING be greater than zero; TIMECLOSED is the duration it has remained in a
+        CLOSED or OFF state or have its SETTING be zero.
+
+        +------------+------------+----------------------------------+
+        | Object     | Attributes | Value                            |
+        +============+============+==================================+
+        | NODE       | DEPTH      | numerical value                  |
+        +------------+------------+----------------------------------+
+        |            | HEAD       | numerical value                  |
+        +------------+------------+----------------------------------+
+        |            | VOLUME     | numerical value                  |
+        +------------+------------+----------------------------------+
+        |            | INFLOW     | numerical value                  |
+        +------------+------------+----------------------------------+
+        | LINK       | FLOW       | numerical value                  |
+        +------------+------------+----------------------------------+
+        |            | DEPTH      | numerical value                  |
+        +------------+------------+----------------------------------+
+        |            | TIMEOPEN   | decimal hours or hr:min          |
+        +------------+------------+----------------------------------+
+        |            | TIMECLOSED | decimal hours or hr:min          |
+        +------------+------------+----------------------------------+
+        | CONDUIT    | STATUS     | OPEN or CLOSED                   |
+        +------------+------------+----------------------------------+
+        |            | TIMEOPEN   | decimal hours or hr:min          |
+        +------------+------------+----------------------------------+
+        |            | TIMECLOSED | decimal hours or hr:min          |
+        +------------+------------+----------------------------------+
+        | PUMP       | STATUS     | ON or OFF                        |
+        +------------+------------+----------------------------------+
+        |            | SETTING    | pump curve multiplier            |
+        +------------+------------+----------------------------------+
+        |            | FLOW       | numerical value                  |
+        +------------+------------+----------------------------------+
+        |            | TIMEOPEN   | decimal hours or hr:min          |
+        +------------+------------+----------------------------------+
+        |            | TIMECLOSED | decimal hours or hr:min          |
+        +------------+------------+----------------------------------+
+        | ORIFICE    | SETTING    | fraction open                    |
+        +------------+------------+----------------------------------+
+        |            | TIMEOPEN   | decimal hours or hr:min          |
+        +------------+------------+----------------------------------+
+        |            | TIMECLOSED | decimal hours or hr:min          |
+        +------------+------------+----------------------------------+
+        | WEIR       | SETTING    | fraction open                    |
+        +------------+------------+----------------------------------+
+        |            | TIMEOPEN   | decimal hours or hr:min          |
+        +------------+------------+----------------------------------+
+        |            | TIMECLOSED | decimal hours or hr:min          |
+        +------------+------------+----------------------------------+
+        | OUTLET     | SETTING    | rating curve multiplier          |
+        +------------+------------+----------------------------------+
+        |            | TIMEOPEN   | decimal hours or hr:min          |
+        +------------+------------+----------------------------------+
+        |            | TIMECLOSED | decimal hours or hr:min          |
+        +------------+------------+----------------------------------+
+        | SIMULATION | TIME       | elapsed time in decimal hours or |
+        +------------+------------+----------------------------------+
+        |            |            | hr:min:sec                       |
+        +------------+------------+----------------------------------+
+        | SIMULATION | DATE       | month/day/year                   |
+        +------------+------------+----------------------------------+
+        |            | MONTH      | month of year (January = 1)      |
+        +------------+------------+----------------------------------+
+        |            | DAY        | day of week (Sunday = 1)         |
+        +------------+------------+----------------------------------+
+        |            | CLOCKTIME  | time of day in hr:min:sec        |
+        +------------+------------+----------------------------------+
+
+        An **Action Clause** of a Control Rule has the following format:
+            `Object Name Action = Value`
+            `PUMP id STATUS = ON/OFF`
+            `PUMP/ORIFICE/WEIR/OUTLET id SETTING = value`
+
+        where:
+            - `Object`: is a category of object,
+            - `Name`: is the object’s assigned ID name,
+            - `Action`: is the type of action
+            - `Value`: is the action value/setting/status.
+
+        where the meaning of SETTING depends on the object being controlled:
+            - for Pumps it is a multiplier applied to the flow computed from the pump curve,
+            - for Orifices it is the fractional amount that the orifice is fully open,
+            - for Weirs it is the fractional amount of the original freeboard that exists (i.e., weir control is accomplished by moving the crest height up or down),
+            - for Outlets it is a multiplier applied to the flow computed from the outlet's rating curve.
+
+        Modulated controls are control rules that provide for a continuous degree of control
+        applied to a pump or flow regulator as determined by the value of some controller
+        variable, such as water depth at a node, or by time. The functional relation between
+        the control setting and the controller variable is specified by using a control curve, a
+        time series, or a PID controller. To model these types of controls, the value entry on
+        the right-hand side of the action clause is replaced by the keyword CURVE,
+        TIMESERIES, or PID and followed by the id name of the respective control curve or
+        time series or by the gain, integral time (in minutes), and derivative time (in minutes)
+        of a PID controller. For direct action control the gain is a positive number while for
+        reverse action control it must be a negative number. By convention, the controller
+        variable used in a control curve or PID control will always be the object and attribute
+        named in the last condition clause of the rule. The value specified for this clause will
+        be the setpoint used in a PID controller.
+
+
+        for example:
+        ::
+            PUMP P67 STATUS = OFF
+            ORIFICE O212 SETTING = 0.5
+            WEIR W25 SETTING = CURVE C25
+            ORIFICE ORI_23 SETTING = PID 0.1 0.1 0.0
+
+        Only the RULE, IF and THEN portions of a rule are required; the other portions are optional.
+        When mixing AND and OR clauses, the OR operator has higher precedence than AND, i.e.,
+            IF A or B and C
+        is equivalent to
+            IF (A or B) and C.
+        If the interpretation was meant to be
+            IF A or (B and C)
+        then this can be expressed using two rules as in
+            IF A THEN ...
+            IF B and C THEN ...
+
+        The PRIORITY value is used to determine which rule applies when two or more rules
+        require that conflicting actions be taken on a link. A conflicting rule with a higher
+        priority value has precedence over one with a lower value (e.g., PRIORITY 5
+        outranks PRIORITY 1). A rule without a priority value always has a lower priority
+        than one with a value. For two rules with the same priority value, the rule that
+        appears first is given the higher priority.
+
 
     Examples:
         ::
 
-            NODE N23 DEPTH > 10
-            PUMP P45 STATUS = OFF
-            SIMULATION TIME = 12:45:00
+            ; Simple time-based pump control
+            RULE R1
+            IF SIMULATION TIME > 8
+            THEN PUMP 12 STATUS = ON
+            ELSE PUMP 12 STATUS = OFF
+
+            ; Multi-condition orifice gate control
+            RULE R2A
+            IF NODE 23 DEPTH > 12
+            AND LINK 165 FLOW > 100
+            THEN ORIFICE R55 SETTING = 0.5
+
+            RULE R2B
+            IF NODE 23 DEPTH > 12
+            AND LINK 165 FLOW > 200
+            THEN ORIFICE R55 SETTING = 1.0
+
+            RULE R2C
+            IF NODE 23 DEPTH <= 12
+            OR LINK 165 FLOW <= 100
+            THEN ORIFICE R55 SETTING = 0
+
+            ; PID controller that attempts to keep Node 23’s depth at 12:
+            RULE PID_1
+            IF NODE 23 DEPTH <> 12
+            THEN ORIFICE R55 SETTING = PID 0.5 0.1 0.0
+
+            ; Pump station operation with a main (N1A) and lag (N1B) pump
+            RULE R3A
+            IF NODE N1 DEPTH > 5
+            THEN PUMP N1A STATUS = ON
+
+            RULE R3B
+            IF PUMP N1A TIMEOPEN > 2:30
+            THEN PUMP N1B STATUS = ON
+            ELSE PUMP N1B STATUS = OFF
+
+            RULE R3C
+            IF NODE N1 DEPTH <= 0.5
+            THEN PUMP N1A STATUS = OFF
+            AND PUMP N1B STATUS = OFF
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False

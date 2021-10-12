@@ -1078,6 +1078,50 @@ def reduce_curves(inp):
     inp[sec.CURVES] = inp[sec.CURVES].slice_section(used_curves)
     return inp
 
+def reduce_controls(inp):
+    """
+    get used CONTROLS from [CONDUIT, ORIFICE, WEIR, OUTLET / NODE, LINK, CONDUIT, PUMP, ORIFICE, WEIR, OUTLET] and keep only used controls in the section
+
+    Args:
+        inp (SwmmInput): inp-file data
+
+    Returns:
+        SwmmInput: inp-file data with filtered CONTROLS section
+    """
+    if sec.CONTROLS not in inp:
+        return inp
+
+    used_controls = set()
+
+    links = links_dict(inp)
+    nodes = nodes_dict(inp)
+
+    def _in_use(k, l):
+        return (((k + 'S') in inp) and (l not in inp[k + 'S'])) or ((k == 'LINK') and (l not in links)) or ((k == 'NODE') and (l not in nodes))
+
+    for control in inp.CONTROLS.values():
+        is_used = True
+        for kind, label, *_ in control.conditions:
+            kind = kind.upper()
+            if _in_use(kind, label):
+                is_used = False
+                break
+        if is_used:
+            for kind, label, *_ in control.actions:
+                kind = kind.upper()
+                if _in_use(kind, label):
+                    is_used = False
+                    break
+
+        if is_used:
+            used_controls.add(control.Name)
+
+    if not used_controls:
+        del inp[sec.CONTROLS]
+    else:
+        inp[sec.CONTROLS] = inp[sec.CONTROLS].slice_section(used_controls)
+    return inp
+
 
 def simplify_curves(curve_section, dist=0.001):
     """
@@ -1555,11 +1599,7 @@ def create_sub_inp(inp, nodes):
     inp = filter_subcatchments(inp, nodes)
 
     # __________________________________________
-    # TODO
-    # if CONTROLS in inp:
-    #     del inp[CONTROLS]
-
-    # __________________________________________
+    inp = reduce_controls(inp)
     inp = reduce_curves(inp)
     inp = reduce_raingages(inp)
     inp = remove_empty_sections(inp)

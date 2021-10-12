@@ -86,3 +86,11 @@ def read_swmm_rainfall_file(file):
                      )
     df.index = pd.to_datetime(df[['year', 'month', 'day', 'hour', 'minute']])
     return df.set_index('station', append=True)['values'].copy()
+
+
+def read_swmm_tsf(file, sep='\t'):
+    df = pd.read_csv(file, comment=';', header=[0,1,2], sep=sep, index_col=0)
+    # 5/24/2019 12:00:00 AM
+    df.index = pd.to_datetime(df.index, format='%m/%d/%Y %I:%M:%S %p')
+    df.columns = ['|'.join(c) for c in df.columns]
+    return df
