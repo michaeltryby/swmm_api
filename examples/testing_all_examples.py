@@ -3,10 +3,10 @@ from shutil import rmtree
 
 from tqdm import tqdm
 
-from swmm_api import read_inp_file, swmm5_run, SwmmReport
+from swmm_api import read_inp_file, SwmmReport, SwmmOutput
 from swmm_api.input_file.sections import Timeseries
-from swmm_api.run import get_swmm_version
-from swmm_api.run_py import run_progress, run
+# from swmm_api.run import swmm5_run, get_swmm_version
+from swmm_api.run_py import run_progress, run, get_swmm_version
 
 # t = Timeseries.create_section("""KOSTRA 01-01-2021 00:00 0.0
 # KOSTRA 01-01-2021 00:05 1.9999999999999982
@@ -38,7 +38,10 @@ example_files = [os.path.join(folder, fn) for folder in example_dirs for fn in o
 
 
 version = get_swmm_version()
+print('Version: ', version)
+
 for fn in tqdm2(example_files):
+    print(fn)
     # fn = '/home/markus/PycharmProjects/swmm_api/examples/epaswmm5_apps_manual/Example6-Final+TimeseriesVariation _MP.inp'
 
     if version != '5.1.15' and fn.endswith('Example1_smm5-1-15.inp'):
@@ -48,7 +51,7 @@ for fn in tqdm2(example_files):
     inp.write_file(inp_fn)
     # swmm5_run(inp_fn, init_print=False)
     run_progress(inp_fn)
-    run(inp_fn)
+    # run(inp_fn)
     # rpt = SwmmReport(inp_fn.replace('.inp', '.rpt'))
     # print(rpt.get_warnings())
     os.remove(inp_fn.replace('.inp', '.rpt'))

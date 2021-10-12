@@ -2,6 +2,11 @@ from mp.helpers.check_time import Timer
 from swmm_api.run import swmm5_run, get_result_filenames, _run_parallel
 from swmm_api.run_py import run_progress, run
 from swmm_api import SwmmOutput, SwmmReport, SwmmInput
+import os
+
+
+pth_parent = '/home/markus/Downloads/test/'
+pth_parent = r'C:\Users\mp\PycharmProjects\swmm_api\examples\epaswmm5_apps_manual'
 
 
 def main():
@@ -14,13 +19,14 @@ def main():
     # rpt = SwmmReport(fn_rpt)
     # df = out.to_frame()
 
-    swmm5_run('/home/markus/Downloads/test/Example9.inp', init_print=True)  # 42 s
+    swmm5_run(os.path.join(pth_parent, 'Example9.inp'), init_print=True)  # 42 s
+    run_progress(os.path.join(pth_parent, 'Example9.inp'))
     exit()
 
-    variable = ['/home/markus/Downloads/test/Example9.inp',
-                '/home/markus/Downloads/test/Example9a.inp',
-                '/home/markus/Downloads/test/Example9b.inp',
-                '/home/markus/Downloads/test/Example9c.inp']
+    variable = [os.path.join(pth_parent, 'Example9.inp'),
+                os.path.join(pth_parent, 'Example9a.inp'),
+                os.path.join(pth_parent, 'Example9b.inp'),
+                os.path.join(pth_parent, 'Example9c.inp')]
     _run_parallel(variable, func=run_progress, processes=1)
     exit()
 

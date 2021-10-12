@@ -22,3 +22,7 @@ def run_progress(fn_inp, n_total=100):
         progress.update(progress.total - progress.n)
         progress.postfix = f'{sim.current_time}'
         progress.close()
+
+
+def get_swmm_version():
+    return '.'.join(solver.swmm_version_info())
