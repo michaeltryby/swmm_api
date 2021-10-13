@@ -4,16 +4,18 @@ import os
 
 from pandas import to_datetime
 
-from ..macros import (reduce_curves, reduce_raingages, combined_subcatchment_frame, find_node,
-                      find_link, calc_slope, delete_node, combine_conduits,
-                      conduit_iter_over_inp, junction_to_outfall, junction_to_storage, )
-from ... import read_inp_file
+from swmm_api.input_file.macros import (find_node,
+                                        find_link, calc_slope, conduit_iter_over_inp, combined_subcatchment_frame, )
+from swmm_api.input_file.macros.convert import junction_to_storage, junction_to_outfall
+from swmm_api.input_file.macros.reduce_unneeded import reduce_curves, reduce_raingages
+from swmm_api.input_file.macros.edit import delete_node, combine_conduits
+from swmm_api import read_inp_file
 from swmm_api.input_file.section_types import SECTION_TYPES
-from .. import SwmmInput, section_labels as sec
-from .._type_converter import offset2delta
-from ...output_file import parquet
-from ...output_file.out import read_out_file
-from ...run import swmm5_run
+from swmm_api.input_file import SwmmInput, section_labels as sec
+from swmm_api.input_file._type_converter import offset2delta
+from swmm_api.output_file import parquet
+from swmm_api.output_file.out import read_out_file
+from swmm_api.run import swmm5_run
 
 
 class InpMacros(SwmmInput):

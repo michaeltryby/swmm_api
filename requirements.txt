@@ -11,3 +11,4 @@ Shapely
 pyproj
 Rtree
 geopandas
+fiona

@@ -2,8 +2,7 @@ from swmm_api import read_inp_file
 from swmm_api.input_file.section_labels import *
 from swmm_api.input_file.sections.map_geodata import (VerticesGeo, CoordinateGeo,
                                                       PolygonGeo, )
-from swmm_api.input_file.macros import update_vertices
-from swmm_api.input_file.macro_snippets.gis_export import convert_inp_to_geo_package
+from swmm_api.input_file.macros.geo import update_vertices
 from swmm_api.run import swmm5_run
 
 inp = read_inp_file('epaswmm5_apps_manual/Example7-Final.inp',

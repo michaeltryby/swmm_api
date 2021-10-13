@@ -1,14 +1,18 @@
-from swmm_api.input_file.sections import Curve
-import matplotlib.pyplot as plt
-from numpy import ceil, append, arange, array, concatenate
+from matplotlib.pyplot import subplots
+from numpy import append, arange, array, concatenate
 
 
-# def _custom_round(x_, base):
-#     return base * ceil(float(x_) / base)
+def curve_figure(curve):
+    """
+    create a plot for a given curve
 
+    Args:
+        curve (swmm_api.input_file.sections.Curve):
 
-def curve_figure(curve: Curve):
-    fig, ax = plt.subplots()
+    Returns:
+        matplotlib.pyplot.Figure: curve plot
+    """
+    fig, ax = subplots()
 
     # -------------------------
     xlim = 1

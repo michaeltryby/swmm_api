@@ -5,7 +5,7 @@
 #%%
 
 from swmm_api import read_inp_file
-from swmm_api.input_file.macro_snippets.plot_macros import plot_map, plot_longitudinal
+from swmm_api.input_file.macros.plotting import plot_map, plot_longitudinal
 
 #%%
 

@@ -1,9 +1,13 @@
 import matplotlib.pyplot as plt
 from matplotlib import patches
 
-from ..macros import update_vertices, links_connected, links_dict, nodes_dict, get_path_subgraph
+from .collection import nodes_dict, links_dict
+from .geo import update_vertices
+from .graph import get_path_subgraph, links_connected
+from ..section_labels import (MAP, COORDINATES, POLYGONS, SUBCATCHMENTS, VERTICES, JUNCTIONS, STORAGE, OUTFALLS,
+                              XSECTIONS, )
 from ..sections import Outfall, Polygon, SubCatchment
-from ..section_labels import *
+
 
 def set_inp_dimensions(inp, ax):
     map_dim = inp[MAP]['DIMENSIONS']
