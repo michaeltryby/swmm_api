@@ -17,7 +17,8 @@ RUN pip3 install \
     sphinx \
     nbsphinx \
     sphinx-rtd-theme \
-    recommonmark
+    recommonmark \
+    SWMM_xsections_shape_generator
 
 
 RUN useradd -ms /bin/bash mp;

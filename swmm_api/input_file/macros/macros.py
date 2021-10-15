@@ -4,7 +4,7 @@ from statistics import mean
 
 from .collection import nodes_dict, links_dict
 from .graph import links_connected
-from .tags import get_subcatchment_tags
+from .tags import get_subcatchment_tags, get_node_tags
 
 from .. import SwmmInput, section_labels as sec
 from ..sections import CrossSection
@@ -29,7 +29,7 @@ def find_node(inp: SwmmInput, node_label):
         node_label (str): node Name/label
 
     Returns:
-        Junction or swmm_api.input_file.sections.node.Storage or Outfall: searched node (if not found None)
+        _Node | Junction | Storage | Outfall: searched node (if not found None)
     """
     nodes = nodes_dict(inp)
     if node_label in nodes:
@@ -45,7 +45,7 @@ def find_link(inp: SwmmInput, label):
         label (str): link Name/label
 
     Returns:
-        Conduit | Weir | Outlet | Orifice | Pump: searched link (if not found None)
+        _Link | Conduit | Weir | Outlet | Orifice | Pump: searched link (if not found None)
     """
     links = links_dict(inp)
     if label in links:
@@ -233,3 +233,43 @@ def combined_subcatchment_frame(inp: SwmmInput):
     df = inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
     df = df.join(get_subcatchment_tags(inp))
     return df
+
+
+def combined_nodes_frame(inp: SwmmInput):
+    """
+    combine all information of the subcatchment data-frames
+
+    Args:
+        inp (SwmmInput): inp-file data
+
+    Returns:
+        pandas.DataFrame: combined subcatchment data
+    """
+    df = inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
+    df = df.join(get_subcatchment_tags(inp))
+    return df
+
+
+def nodes_data_frame(inp, label_sep='.'):
+    nodes_tags = get_node_tags(inp)
+    res = None
+    for s in NODE_SECTIONS:
+        if s in inp:
+            df = inp[s].frame.rename(columns=lambda c: f'{label_sep}{c}')
+
+            if s == sec.STORAGE:
+                df[f'{sec.STORAGE}{label_sep}Curve'] = df[f'{sec.STORAGE}{label_sep}Curve'].astype(str)
+
+            for sub_sec in [sec.DWF, sec.INFLOWS]:
+                if sub_sec in inp:
+                    x = inp[sub_sec].frame.unstack(1)
+                    x.columns = [f'{label_sep}'.join([sub_sec, c[1], c[0]]) for c in x.columns]
+                    df = df.join(x)
+
+            df = df.join(inp[sec.COORDINATES].frame).join(nodes_tags)
+
+            if res is None:
+                res = df
+            else:
+                res = res.append(df)
+    return res

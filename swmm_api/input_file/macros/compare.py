@@ -44,9 +44,9 @@ def compare_sections(s1, s2, precision=3):
 
         # -----------------------------
         elif (key in i1) and (key not in i2):
-            not_in_1.append(str(key))
-        elif (key not in i1) and (key in i2):
             not_in_2.append(str(key))
+        elif (key not in i1) and (key in i2):
+            not_in_1.append(str(key))
 
     # -----------------------------
     if not_equal:
@@ -70,7 +70,7 @@ def compare_sections(s1, s2, precision=3):
     return res
 
 
-def compare_inp_files(fn1, fn2, precision=2):
+def compare_inp_files(fn1, fn2, precision=2, skip_section=None):
     """
     compare two inp files and get the differences as string output
 
@@ -78,6 +78,7 @@ def compare_inp_files(fn1, fn2, precision=2):
         fn1 (str): filename for the first inp file
         fn2 (str): filename for the second inp file
         precision (int): number of relevant decimal places
+        skip_section (list): skip sections if you don't care for specific changes
 
     Returns:
         str: differences of the files
@@ -92,6 +93,8 @@ def compare_inp_files(fn1, fn2, precision=2):
     sections = set(inp1.keys()) | set(inp2.keys())
 
     for section in sorted(sections, key=_sort_by):
+        if skip_section is not None and section in skip_section:
+            continue
         if section in [sec.TITLE]:
             continue
         s += '\n' + '#' * 100 + f'\n[{section}]\n'

@@ -12,3 +12,4 @@ pyproj
 Rtree
 geopandas
 fiona
+SWMM_xsections_shape_generator

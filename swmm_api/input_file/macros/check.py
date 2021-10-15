@@ -22,11 +22,18 @@ def check_for_duplicates(inp):
     Args:
         inp (SwmmInput): inp data
     """
-    print('DUPLICATE NODES')
+    l = list()
     for node in nodes_dict(inp):
         if sum((node in inp[s] for s in NODE_SECTIONS + [sec.SUBCATCHMENTS] if s in inp)) != 1:
-            print('-', *[inp[s][node] for s in NODE_SECTIONS + [sec.SUBCATCHMENTS] if s in inp and node in inp[s]], sep='\n  ')
-    print('\nDUPLICATE LINKS')
+            l += [inp[s][node] for s in NODE_SECTIONS + [sec.SUBCATCHMENTS] if s in inp and node in inp[s]]
+    if l:
+        print('DUPLICATE NODES')
+        print('\n- '.join(l))
+    # ---------------
+    l = list()
     for link in links_dict(inp):
         if sum((link in inp[s] for s in LINK_SECTIONS if s in inp)) != 1:
-            print('-', *[inp[s][link] for s in LINK_SECTIONS if s in inp and link in inp[s]], sep='\n')
+            l += [inp[s][link] for s in LINK_SECTIONS if s in inp and link in inp[s]]
+    if l:
+        print('\nDUPLICATE LINKS')
+        print('\n'.join(l))
