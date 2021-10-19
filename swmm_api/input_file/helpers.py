@@ -223,7 +223,7 @@ class InpSection(CustomDict):
         add objects to section
 
         Args:
-            items (list[BaseSectionObject]): new objects
+            items (list[BaseSectionObject] | tuple[BaseSectionObject]): new objects
         """
         for obj in items:
             self.add_obj(obj)

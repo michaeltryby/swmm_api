@@ -156,7 +156,7 @@ class SwmmInput(CustomDictWithAttributes):
         COORDINATES section
 
         Returns:
-            dict[str, Coordinate] | InpSection: Coordinates in INP
+            dict[str, Coordinate | CoordinateGeo] | InpSection: Coordinates in INP
         """
         if COORDINATES in self:
             return self[COORDINATES]

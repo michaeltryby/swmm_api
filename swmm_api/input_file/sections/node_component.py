@@ -1,4 +1,4 @@
-from numpy import NaN
+from numpy import NaN, isnan
 
 from ._identifiers import IDENTIFIERS
 from .._type_converter import convert_string, GIS_FLOAT_FORMAT
@@ -69,6 +69,9 @@ class DryWeatherFlow(BaseSectionObject):
 
         self.pattern4: str = convert_string(pattern4)
         """i.e. weekend-hourly-pattern"""
+
+    def get_pattern_list(self):
+        return [self[p] for p in ['pattern1', 'pattern2', 'pattern3', 'pattern4'] if isinstance(self[p], str)]
 
 
 class Inflow(BaseSectionObject):

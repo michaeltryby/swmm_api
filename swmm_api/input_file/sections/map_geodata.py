@@ -23,10 +23,10 @@ class InpSectionGeo(InpSection):
         self._crs = crs
 
     @property
-    def geo_series(self):
+    def geo_series(self) -> GeoSeries:
         return self.get_geo_series(self._crs)
 
-    def get_geo_series(self, crs):
+    def get_geo_series(self, crs) -> GeoSeries:
         return GeoSeries({l: i.geo for l, i in self.items()}, crs=crs, name='geometry')  # .simplify(0.5)
 
 

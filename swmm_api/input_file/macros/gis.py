@@ -367,3 +367,9 @@ def gpkg_to_swmm(fn, label_sep='.'):
         inp[s.POLYGONS] = SECTION_TYPES[s.POLYGONS].create_section_from_geoseries(gdf.geometry)
 
     return inp
+
+
+def update_length(inp):
+    add_geo_support(inp, crs="EPSG:32633")
+    for c in inp.CONDUITS.values():
+        c.Length = inp.VERTICES[c.Name].geo.length
