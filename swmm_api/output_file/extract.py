@@ -289,6 +289,10 @@ class SwmmOutExtract:
 
         return self._bytes_per_period
 
+    def _set_position(self, offset, whence=SEEK_SET):
+        if self.fp.tell() != offset:
+            self.fp.seek(offset, whence)
+
     def _next(self, n=1, dtype='i', flat=True):
         """
         read the next number or string in the binary .out-file
@@ -323,6 +327,9 @@ class SwmmOutExtract:
         """
         return struct.unpack(fmt, self.fp.read(size))
 
+    def _next_float(self):
+        return self._next_base('f', _RECORDSIZE)
+
     def get_selective_results(self, columns):
         """
         get results of selective columns in .out-file
@@ -349,28 +356,36 @@ class SwmmOutExtract:
 
         for kind, label, variable in columns:
             values['/'.join([kind, label, variable])] = list()
+
             index_kind = OBJECTS.LIST_.index(kind)
             index_variable = self.variables[kind].index(variable)
             item_index = self.labels[kind].index(str(label))
+            offset_list.append((2 + index_variable + {
+                0: (item_index * n_vars_subcatch),
+                1: (n_subcatch * n_vars_subcatch +
+                    item_index * n_vars_node),
+                2: (n_subcatch * n_vars_subcatch +
+                    n_nodes * n_vars_node +
+                    item_index * n_vars_link),
+                4: (n_subcatch * n_vars_subcatch +
+                    n_nodes * n_vars_node +
+                    n_links * n_vars_link)
+            }[index_kind])*_RECORDSIZE)
 
-            offset_list.append(self.pos_start_output
-                               + _RECORDSIZE * (2 + index_variable
-                                                + {0: (item_index * n_vars_subcatch),
-                                                   1: (n_subcatch * n_vars_subcatch +
-                                                       item_index * n_vars_node),
-                                                   2: (n_subcatch * n_vars_subcatch +
-                                                       n_nodes * n_vars_node +
-                                                       item_index * n_vars_link),
-                                                   4: (n_subcatch * n_vars_subcatch +
-                                                       n_nodes * n_vars_node +
-                                                       n_links * n_vars_link)
-                                                   }[index_kind]))
+        # offset_list = [o*_RECORDSIZE for o in offset_list]
+        # cols = list(values.keys())
+        # cols_sorted = sorted(cols, key=lambda e: offset_list[cols.index(e)])
+        # offset_sorted = sorted(offset_list)
+        # iter_label_offset = tuple(zip(cols_sorted, offset_sorted))
+        iter_label_offset = tuple(zip(values.keys(), offset_list))
 
-        for period in tqdm(range(self.n_periods)):
-            period_offset = period * self.bytes_per_period
-            for label, offset in zip(values.keys(), offset_list):
-                self.fp.seek(offset + period_offset, SEEK_SET)
-                values[label].append(self._next(dtype='f'))
+        for period_offset in tqdm(range(self.pos_start_output,  # start
+                                        self.pos_start_output + self.n_periods * self.bytes_per_period,  # stop
+                                        self.bytes_per_period)):  # step
+            # period_offset = self.pos_start_output + period * self.bytes_per_period
+            for label, offset in iter_label_offset:
+                self._set_position(offset + period_offset)
+                values[label].append(self._next_float())
 
         return values
 
