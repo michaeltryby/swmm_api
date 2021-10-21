@@ -1,5 +1,15 @@
 # Changelog  
 
+## 0.2.0.13 (Oct 21, 2021)
+- SwmmOutExtract.get_selective_results small performance boost
+- new function: update_length
+- updated and add example files
+- resorted macros
+- added macros with package `SWMM_xsections_shape_generator`
+- added Summary tables to SwmmReport reader
+- fixed some issued with SwmmReport
+- new function: `check_for_duplicates`
+
 ## 0.2.0.12 (Sep 28, 2021)
 - fixed out reader for custom pollutant unit
 - gis import example

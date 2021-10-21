@@ -105,7 +105,7 @@ see [examples/rpt_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-
 
 ## GIS interactions
 
-[`geopandas`](https://geopandas.org/) and its requirements must be installed! (not that easy with Windows)
+[`geopandas`](https://geopandas.org/) and its requirements (`Shapely`, `pyproj`, `Rtree`) must be installed! (not that easy with Windows)
 
 ```python
 from swmm_api import SwmmInput

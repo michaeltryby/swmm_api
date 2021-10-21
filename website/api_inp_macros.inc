@@ -6,7 +6,6 @@ Input File Manipulation - Macros
 .. rubric:: Overview
 
 .. autosummary::
-    section_from_frame
     split_inp_to_files
     read_split_inp_file
     combined_subcatchment_frame
@@ -46,11 +45,10 @@ Input File Manipulation - Macros
     filter_links_within_nodes
     filter_links
     filter_subcatchments
-    group_edit
     update_vertices
     reduce_vertices
     check_for_nodes
-    short_status
+    check_for_duplicates
     inp_to_graph
     get_path
     get_path_subgraph
@@ -71,8 +69,101 @@ Input File Manipulation - Macros
     set_times
     compare_sections
     compare_inp_files
+    convert_inp_to_geo_package
+    write_geo_package
+    get_subcatchment_connectors
+    problems_to_gis
+    links_geo_data_frame
+    nodes_geo_data_frame
+    gpkg_to_swmm
+    update_length
 
-.. automodule:: swmm_api.input_file.macros
+.. rubric:: check
+
+.. automodule:: swmm_api.input_file.macros.check
     :members:
     :no-undoc-members:
 
+.. rubric:: collection
+
+.. automodule:: swmm_api.input_file.macros.collection
+    :members:
+    :no-undoc-members:
+
+.. rubric:: compare
+
+.. automodule:: swmm_api.input_file.macros.compare
+    :members:
+    :no-undoc-members:
+
+.. rubric:: convert
+
+.. automodule:: swmm_api.input_file.macros.convert
+    :members:
+    :no-undoc-members:
+
+.. rubric:: curve
+
+.. automodule:: swmm_api.input_file.macros.curve
+    :members:
+    :no-undoc-members:
+
+.. rubric:: edit
+
+.. automodule:: swmm_api.input_file.macros.edit
+    :members:
+    :no-undoc-members:
+
+.. rubric:: filter
+
+.. automodule:: swmm_api.input_file.macros.filter
+    :members:
+    :no-undoc-members:
+
+.. rubric:: geo
+
+.. automodule:: swmm_api.input_file.macros.geo
+    :members:
+    :no-undoc-members:
+
+.. rubric:: gis
+
+.. automodule:: swmm_api.input_file.macros.gis
+    :members:
+    :no-undoc-members:
+
+.. rubric:: graph
+
+.. automodule:: swmm_api.input_file.macros.graph
+    :members:
+    :no-undoc-members:
+
+.. rubric:: macros
+
+.. automodule:: swmm_api.input_file.macros.macros
+    :members:
+    :no-undoc-members:
+
+.. rubric:: plotting
+
+.. automodule:: swmm_api.input_file.macros.plotting
+    :members:
+    :no-undoc-members:
+
+.. rubric:: reduce_unneeded
+
+.. automodule:: swmm_api.input_file.macros.reduce_unneeded
+    :members:
+    :no-undoc-members:
+
+.. rubric:: split_inp_file
+
+.. automodule:: swmm_api.input_file.macros.split_inp_file
+    :members:
+    :no-undoc-members:
+
+.. rubric:: tags
+
+.. automodule:: swmm_api.input_file.macros.tags
+    :members:
+    :no-undoc-members:

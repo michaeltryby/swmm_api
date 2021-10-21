@@ -328,7 +328,7 @@ class SwmmOutExtract:
         return struct.unpack(fmt, self.fp.read(size))
 
     def _next_float(self):
-        return self._next_base('f', _RECORDSIZE)
+        return self._next_base('f', _RECORDSIZE)[0]
 
     def get_selective_results(self, columns):
         """
@@ -381,7 +381,8 @@ class SwmmOutExtract:
 
         for period_offset in tqdm(range(self.pos_start_output,  # start
                                         self.pos_start_output + self.n_periods * self.bytes_per_period,  # stop
-                                        self.bytes_per_period)):  # step
+                                        self.bytes_per_period),
+                                  desc=f'{repr(self)}.get_selective_results(n_cols={len(columns)})'):  # step
             # period_offset = self.pos_start_output + period * self.bytes_per_period
             for label, offset in iter_label_offset:
                 self._set_position(offset + period_offset)

@@ -1,9 +1,9 @@
 Input File Manipulation - GIS Macros
 ------------------------------------
 
-.. currentmodule:: swmm_api.input_file.macro_snippets.gis_export
+.. currentmodule:: swmm_api.input_file.macros.gis
 
-.. rubric:: Overview Export
+.. rubric:: Overview
 
 .. autosummary::
     convert_inp_to_geo_package
@@ -12,21 +12,11 @@ Input File Manipulation - GIS Macros
     problems_to_gis
     links_geo_data_frame
     nodes_geo_data_frame
-
-
-.. automodule:: swmm_api.input_file.macro_snippets.gis_export
-    :members:
-    :no-undoc-members:
-
-
-.. currentmodule:: swmm_api.input_file.macro_snippets.gis_standard_import
-
-.. rubric:: Overview Import
-
-.. autosummary::
     gpkg_to_swmm
+    update_length
 
 
-.. automodule:: swmm_api.input_file.macro_snippets.gis_standard_import
+.. automodule:: swmm_api.input_file.macros.gis
     :members:
     :no-undoc-members:
+

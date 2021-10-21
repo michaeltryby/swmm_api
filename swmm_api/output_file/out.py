@@ -34,7 +34,7 @@ class SwmmOutput(SwmmOutExtract):
                                 periods=self.n_periods, freq=self.report_interval)
 
     def __repr__(self):
-        return f'SwmmOutput(file="{self.filename}")'
+        return f'SwmmOut(file="{self.filename}")'
 
     def _get_dtypes(self):
         """

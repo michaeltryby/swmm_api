@@ -512,6 +512,7 @@ class Control(BaseSectionObject):
     Formats:
         Each control rule is a series of statements of the form:
         ::
+
             RULE    ruleID
             IF      condition_1
             AND     condition_2
@@ -544,6 +545,7 @@ class Control(BaseSectionObject):
 
         for example:
         ::
+
             NODE N23 DEPTH > 10
             PUMP P45 STATUS = OFF
             SIMULATION TIME = 12:45:00
@@ -657,21 +659,17 @@ class Control(BaseSectionObject):
 
         for example:
         ::
+
             PUMP P67 STATUS = OFF
             ORIFICE O212 SETTING = 0.5
             WEIR W25 SETTING = CURVE C25
             ORIFICE ORI_23 SETTING = PID 0.1 0.1 0.0
 
         Only the RULE, IF and THEN portions of a rule are required; the other portions are optional.
-        When mixing AND and OR clauses, the OR operator has higher precedence than AND, i.e.,
-            IF A or B and C
-        is equivalent to
-            IF (A or B) and C.
-        If the interpretation was meant to be
-            IF A or (B and C)
-        then this can be expressed using two rules as in
-            IF A THEN ...
-            IF B and C THEN ...
+        When mixing AND and OR clauses, the OR operator has higher precedence than AND, i.e., `IF A or B and C`
+        is equivalent to `IF (A or B) and C.`
+        If the interpretation was meant to be `IF A or (B and C)`
+        then this can be expressed using two rules as in `IF A THEN ... IF B and C THEN ...`
 
         The PRIORITY value is used to determine which rule applies when two or more rules
         require that conflicting actions be taken on a link. A conflicting rule with a higher
@@ -725,6 +723,7 @@ class Control(BaseSectionObject):
             IF NODE N1 DEPTH <= 0.5
             THEN PUMP N1A STATUS = OFF
             AND PUMP N1B STATUS = OFF
+
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False

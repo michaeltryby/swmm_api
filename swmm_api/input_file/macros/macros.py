@@ -29,7 +29,7 @@ def find_node(inp: SwmmInput, node_label):
         node_label (str): node Name/label
 
     Returns:
-        _Node | Junction | Storage | Outfall: searched node (if not found None)
+        _Node | Junction | swmm_api.input_file.sections.node.Storage | Outfall: searched node (if not found None)
     """
     nodes = nodes_dict(inp)
     if node_label in nodes:
