@@ -3,7 +3,7 @@ from .sections import *
 
 """objects or section class for a section in the inp-file"""
 SECTION_TYPES = {
-    # TITLE: str,
+    TITLE: TitleSection,
     OPTIONS: OptionSection,
     EVAPORATION: EvaporationSection,
     TEMPERATURE: TemperatureSection,

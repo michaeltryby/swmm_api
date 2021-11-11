@@ -6,6 +6,7 @@ from .section_types import SECTION_TYPES
 from .section_lists import GUI_SECTIONS
 from .section_labels import *
 from .sections import *
+from .sections.subcatch import INFILTRATION_DICT
 
 
 class SwmmInput(CustomDictWithAttributes):
@@ -26,6 +27,10 @@ class SwmmInput(CustomDictWithAttributes):
                 else:
                     self[sec].update(d[sec])
 
+    def __init__(self, *args, **kwargs):
+        CustomDictWithAttributes.__init__(self, *args, **kwargs)
+        self._converter = SECTION_TYPES.copy()
+
     @classmethod
     def read_file(cls, filename, ignore_sections=None, convert_sections=None, custom_converter=None,
                   ignore_gui_sections=False, force_ignore_case=False, encoding='iso-8859-1'):
@@ -45,21 +50,22 @@ class SwmmInput(CustomDictWithAttributes):
         Returns:
             SwmmInput: dict-like data of the sections in the ``.inp``-file
         """
-        converter = SECTION_TYPES.copy()
+        inp = cls()
+        # converter = SECTION_TYPES.copy()
 
         if ignore_sections is None:
             ignore_sections = list()
         if ignore_gui_sections:
             ignore_sections += GUI_SECTIONS
         for s in ignore_sections:
-            if s in converter:
-                converter.pop(s)
+            if s in inp._converter:
+                inp._converter.pop(s)
 
         if custom_converter is not None:
-            converter.update(custom_converter)
+            inp._converter.update(custom_converter)
 
         if convert_sections is not None:
-            converter = {h: converter[h] for h in converter if h in convert_sections}
+            converter = {h: inp._converter[h] for h in inp._converter if h in convert_sections}
 
         # __________________________________
         if os.path.isfile(filename) or filename.endswith('.inp'):
@@ -77,10 +83,22 @@ class SwmmInput(CustomDictWithAttributes):
         section_text = [h.strip() for h in re.split(r"\[\w+\]", txt)[1:]]
 
         # __________________________________
-        inp = cls()
+
         for head, lines in zip(headers, section_text):
-            inp[head] = convert_section(head, lines, converter)
+            inp[head] = convert_section(head, lines, inp._converter)
+
         return inp
+
+    def __setitem__(self, key, item):
+        self._data.__setitem__(key, item)
+        if key == OPTIONS:
+            self.set_default_infiltration()
+        if hasattr(self[key], 'set_parent_inp'):
+            self[key].set_parent_inp(self)
+
+    def set_default_infiltration(self):
+        if OPTIONS in self and 'INFILTRATION' in self[OPTIONS]:
+            self._converter[INFILTRATION] = INFILTRATION_DICT.get(self[OPTIONS]['INFILTRATION'])
 
     def to_string(self, fast=True):
         """

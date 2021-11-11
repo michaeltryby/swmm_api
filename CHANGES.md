@@ -1,5 +1,10 @@
 # Changelog  
 
+## 0.2.0.14 (Oct 21, 2021)
+- New `TITLE` Section `TitleSection` based on `UserString`
+- Default Infiltration based on `OPTIONS` - `INFILTRATION` parameter (function: `SwmmInput.set_default_infiltration`)
+- added `InpSection.set_parent_inp` and `InpSection.get_parent_inp` to InpSections
+
 ## 0.2.0.13 (Oct 21, 2021)
 - SwmmOutExtract.get_selective_results small performance boost
 - new function: update_length

@@ -198,26 +198,16 @@ class Infiltration(BaseSectionObject):
         if n_args == 6:  # hortn
             subcls = InfiltrationHorton
         elif n_args == 4:
-            subcls = InfiltrationGreenAmpt
-        else:
-            # TODO
-            subcls = InfiltrationCurveNumber
+            subcls = cls
 
         # _____________________________________
         sub_class_id = None
         if SWMM_VERSION == '5.1.015':
             # NEU in swmm 5.1.015
             last_arg = args[-1]
-            cls_args = {
-                'HORTON': InfiltrationHorton,
-                'MODIFIED_HORTON': InfiltrationHorton,
-                'GREEN_AMPT': InfiltrationGreenAmpt,
-                'MODIFIED_GREEN_AMPT': InfiltrationGreenAmpt,
-                'CURVE_NUMBER': InfiltrationCurveNumber
-            }
-            if last_arg in cls_args:
+            if last_arg in INFILTRATION_DICT:
                 sub_class_id = last_arg
-                subcls = cls_args[last_arg]
+                subcls = INFILTRATION_DICT[last_arg]
                 args = args[:-1]
 
         if subcls != InfiltrationHorton:
@@ -348,6 +338,15 @@ class InfiltrationCurveNumber(Infiltration):
         self.Ksat = float(Ksat)
         self.DryTime = float(DryTime)
         self.kind = NaN
+
+
+INFILTRATION_DICT = {
+    'HORTON'             : InfiltrationHorton,
+    'MODIFIED_HORTON'    : InfiltrationHorton,
+    'GREEN_AMPT'         : InfiltrationGreenAmpt,
+    'MODIFIED_GREEN_AMPT': InfiltrationGreenAmpt,
+    'CURVE_NUMBER'       : InfiltrationCurveNumber
+}
 
 
 class Polygon(BaseSectionObject):

@@ -116,6 +116,16 @@ class InpSectionGeneric(CustomDictWithAttributes):
     _section_label = ''
     """str: label of the section"""
 
+    def __init__(self, *args, **kwargs):
+        CustomDictWithAttributes.__init__(self, *args, **kwargs)
+        self._inp = None
+
+    def set_parent_inp(self, inp):
+        self._inp = inp
+
+    def get_parent_inp(self):
+        return self._inp
+
     @classmethod
     def from_inp_lines(cls, lines):
         """
@@ -171,6 +181,14 @@ class InpSection(CustomDict):
         """
         CustomDict.__init__(self)
         self._section_object = section_object
+        self._inp = None
+
+    def set_parent_inp(self, inp):
+        self._inp = inp
+
+    def get_parent_inp(self):
+        return self._inp
+
 
     # def __repr__(self):
     #     # return CustomDict.__repr__(self)
@@ -649,14 +667,6 @@ def convert_section(head, lines, converter):
 
         elif isclass(section_):  # section_ ... type/class
             return section_.from_inp_lines(lines)
-            # if hasattr(section_, 'from_inp_lines'):
-            #     # section has multiple options over multiple lines
-            #     return section_.from_inp_lines(lines)
-            #     # REPORT, TIMESERIES, CURVES, TAGS
-            # else:
-            #     # each line is a object OR each object has multiple lines
-            #     # return InpSection.from_inp_lines(lines, section_)
-            #     return section_.create_section(lines)
 
         else:
             raise NotImplemented()

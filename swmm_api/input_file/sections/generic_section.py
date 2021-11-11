@@ -1,3 +1,5 @@
+from collections import UserString
+
 from .._type_converter import infer_type, type2str
 from ..helpers import InpSectionGeneric, CustomDict
 from .. import section_labels as s
@@ -14,6 +16,54 @@ def line_iter(lines):
             continue
         else:
             yield line.split()
+
+
+class TitleSection(UserString):
+    """
+    abstract class for ``.inp``-file sections without objects
+
+    :term:`dict-like <mapping>`"
+    """
+    _section_label = ''
+    """str: label of the section"""
+
+    def __init__(self, *args, **kwargs):
+        UserString.__init__(self, *args, **kwargs)
+        self._inp = None
+
+    def set_parent_inp(self, inp):
+        self._inp = inp
+
+    def get_parent_inp(self):
+        return self._inp
+
+    @classmethod
+    def from_inp_lines(cls, lines):
+        """
+        read ``.inp``-file lines and create an section object
+
+        Args:
+            lines (str | list[list[str]]): lines in the section of the ``.inp``-file
+
+        Returns:
+            InpSectionGeneric: object of the section
+        """
+        return cls(lines)
+
+    def to_inp_lines(self, fast=False):
+        """
+        write ``.inp``-file lines of the section object
+
+        Args:
+            fast (bool): speeding up conversion
+
+                - :obj:`True`: if no special formation of the input file is needed
+                - :obj:`False`: section is converted into a table to prettify string output (slower)
+
+        Returns:
+            str: ``.inp``-file lines of the section object
+        """
+        return self
 
 
 class OptionSection(InpSectionGeneric):
@@ -726,10 +776,10 @@ class FilesSection(InpSectionGeneric):
         _possible = [RAINFALL, RUNOFF, HOTSTART, RDII, INFLOWS, OUTFLOWS]
 
     def __setitem__(self, key, item):
-        CustomDict.__setitem__(self, key, item)
+        InpSectionGeneric.__setitem__(self, key, item)
 
     def __delitem__(self, key):
-        CustomDict.__delitem__(self, key)
+        InpSectionGeneric.__delitem__(self, key)
 
     @classmethod
     def from_inp_lines(cls, lines):

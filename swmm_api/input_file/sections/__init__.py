@@ -1,5 +1,5 @@
 from .generic_section import (OptionSection, EvaporationSection, TemperatureSection, ReportSection,
-                              MapSection, FilesSection, BackdropSection, AdjustmentsSection, )
+                              MapSection, FilesSection, BackdropSection, AdjustmentsSection, TitleSection)
 
 from .link import Conduit, Pump, Orifice, Weir, Outlet
 from .link_component import CrossSection, Loss, Vertices
