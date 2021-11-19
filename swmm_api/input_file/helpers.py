@@ -304,7 +304,8 @@ class InpSection(CustomDict):
             return ';; No Data'
 
         if fast or not self._table_inp_export:
-            return '\n'.join(o.to_inp_line() for o in self._sorted_values)
+            return '\n'.join(o.to_inp_line() for o in tqdm(self._sorted_values, desc=str(self._section_object.__name__),
+                                                           postfix='Write', total=len(self.keys())))
         else:
             return dataframe_to_inp_string(self.frame)
 
@@ -576,7 +577,7 @@ class BaseSectionObject(ABC):
                     # to create a progressbar in the reading process
                     # only needed with big (> 200 MB) files
                     lines = txt_to_lines(lines)
-                    lines = tqdm(lines, desc=cls.__name__, total=n_lines)
+                    lines = tqdm(lines, desc=cls.__name__, total=n_lines, postfix='Read')
                 else:
                     lines = txt_to_lines(lines)
 

@@ -51,7 +51,6 @@ class SwmmInput(CustomDictWithAttributes):
             SwmmInput: dict-like data of the sections in the ``.inp``-file
         """
         inp = cls()
-        # converter = SECTION_TYPES.copy()
 
         if ignore_sections is None:
             ignore_sections = list()
@@ -65,7 +64,7 @@ class SwmmInput(CustomDictWithAttributes):
             inp._converter.update(custom_converter)
 
         if convert_sections is not None:
-            converter = {h: inp._converter[h] for h in inp._converter if h in convert_sections}
+            inp._converter = {h: inp._converter[h] for h in inp._converter if h in convert_sections}
 
         # __________________________________
         if os.path.isfile(filename) or filename.endswith('.inp'):
@@ -97,7 +96,7 @@ class SwmmInput(CustomDictWithAttributes):
             self[key].set_parent_inp(self)
 
     def set_default_infiltration_from_options(self):
-        if OPTIONS in self and 'INFILTRATION' in self[OPTIONS]:
+        if OPTIONS in self and 'INFILTRATION' in self[OPTIONS] and isinstance(self[OPTIONS], dict):
             self.set_infiltration_method(INFILTRATION_DICT.get(self[OPTIONS]['INFILTRATION']))
 
     def set_infiltration_method(self, infiltration_class):

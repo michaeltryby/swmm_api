@@ -42,7 +42,7 @@ SECTION_TYPES = {
     # -----
     SUBCATCHMENTS: SubCatchment,
     SUBAREAS: SubArea,
-    INFILTRATION: Infiltration,
+    INFILTRATION: InfiltrationGreenAmpt,
 
     LOADINGS: Loading,
     WASHOFF: WashOff,
