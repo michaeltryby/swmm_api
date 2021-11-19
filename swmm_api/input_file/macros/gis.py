@@ -88,7 +88,7 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
     add_geo_support(inp, crs=crs)
 
     # ---------------------------------
-    t0 = time.time()
+    t0 = time.perf_counter()
     nodes_tags = get_node_tags(inp)
     for sec in NODE_SECTIONS:
         if sec in inp:
@@ -106,8 +106,8 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
             df = df.join(inp[s.COORDINATES].geo_series).join(nodes_tags)
 
             GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
-        print(f'{f"{time.time() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
-        t0 = time.time()
+        print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
+        t0 = time.perf_counter()
 
     # ---------------------------------
     links_tags = get_link_tags(inp)
@@ -127,8 +127,8 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
 
             GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
 
-        print(f'{f"{time.time() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
-        t0 = time.time()
+        print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
+        t0 = time.perf_counter()
 
     # ---------------------------------
     if s.SUBCATCHMENTS in inp:
@@ -141,7 +141,7 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
         gs_connector = get_subcatchment_connectors(inp)
         GeoDataFrame(gs_connector).to_file(gpkg_fn, driver=driver, layer=s.SUBCATCHMENTS + '_connector')
 
-    print(f'{f"{time.time() - t0:0.1f}s":^{len(s.SUBCATCHMENTS)}s}')
+    print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(s.SUBCATCHMENTS)}s}')
 
 
 def get_subcatchment_connectors(inp):

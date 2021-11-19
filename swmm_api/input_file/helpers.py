@@ -571,7 +571,7 @@ class BaseSectionObject(ABC):
                     yield line.split()
 
             if isinstance(lines, str):
-                if len(lines) > 10000000:
+                if len(lines) > 100000:
                     n_lines = lines.count('\n') + 1
                     # to create a progressbar in the reading process
                     # only needed with big (> 200 MB) files

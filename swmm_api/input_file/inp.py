@@ -92,13 +92,16 @@ class SwmmInput(CustomDictWithAttributes):
     def __setitem__(self, key, item):
         self._data.__setitem__(key, item)
         if key == OPTIONS:
-            self.set_default_infiltration()
+            self.set_default_infiltration_from_options()
         if hasattr(self[key], 'set_parent_inp'):
             self[key].set_parent_inp(self)
 
-    def set_default_infiltration(self):
+    def set_default_infiltration_from_options(self):
         if OPTIONS in self and 'INFILTRATION' in self[OPTIONS]:
-            self._converter[INFILTRATION] = INFILTRATION_DICT.get(self[OPTIONS]['INFILTRATION'])
+            self.set_infiltration_method(INFILTRATION_DICT.get(self[OPTIONS]['INFILTRATION']))
+
+    def set_infiltration_method(self, infiltration_class):
+        self._converter[INFILTRATION] = infiltration_class
 
     def to_string(self, fast=True):
         """
