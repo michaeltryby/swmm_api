@@ -29,56 +29,77 @@ class OBJECTS:
     LIST_ = [SUBCATCHMENT, NODE, LINK, POLLUTANT, SYSTEM]
 
 
+# from swmmtoolbox | swmm source | swmm gui | swmm manual
+# https://support.chiwater.com/77882/swmm5-output-file
 class VARIABLES:
     class SUBCATCHMENT:
-        RAINFALL = "Rainfall"
-        SNOW_DEPTH = "Snow_depth"
-        EVAPORATION_LOSS = "Evaporation_loss"
-        INFILTRATION_LOSS = "Infiltration_loss"
-        RUNOFF_RATE = "Runoff_rate"
-        GROUNDWATER_OUTFLOW = "Groundwater_outflow"
-        GROUNDWATER_ELEVATION = "Groundwater_elevation"
-        SOIL_MOISTURE = "Soil_moisture"
+        # Precipitation | Snow Depth | Evaporation | Infiltration | Runoff | GW Flow | GW Elev. |
+        # Soil Moisture | TSS
+        RAINFALL = "Rainfall"  # RAINFALL | rainfall intensity | Rainfall rate [mm/hr]
+        SNOW_DEPTH = "Snow_depth"  # SNOWDEPTH | snow depth [millimeters]
+        EVAPORATION_LOSS = "Evaporation_loss"  # EVAP | evap loss [mm/day]
+        INFILTRATION_LOSS = "Infiltration_loss"  # INFIL | infil loss [mm/hr]
+        RUNOFF_RATE = "Runoff_rate"  # RUNOFF | runoff flow rate
+        GROUNDWATER_OUTFLOW = "Groundwater_outflow"  # GW_FLOW | groundwater flow rate to node | Groundwater flow into the drainage network
+        GROUNDWATER_ELEVATION = "Groundwater_elevation"  # GW_ELEV | elevation of saturated gw table [m]
+        SOIL_MOISTURE = "Soil_moisture"  # SOIL_MOIST | soil moisture | Soil moisture in the unsaturated groundwater zone [fraction]
+        # Concentration (mass/volume) Washoff concentration of each pollutant.
 
         LIST_ = [RAINFALL, SNOW_DEPTH, EVAPORATION_LOSS, INFILTRATION_LOSS, RUNOFF_RATE, GROUNDWATER_OUTFLOW,
                  GROUNDWATER_ELEVATION, SOIL_MOISTURE]
 
     class NODE:
-        DEPTH_ABOVE_INVERT = 'Depth_above_invert'
-        HYDRAULIC_HEAD = 'Hydraulic_head'
-        VOLUME_STORED_PONDED = 'Volume_stored_ponded'
-        LATERAL_INFLOW = 'Lateral_inflow'
-        TOTAL_INFLOW = 'Total_inflow'
-        FLOW_LOST_FLOODING = 'Flow_lost_flooding'
+        # Depth | Head | Volume | Lateral Inflow | Total Inflow | Flooding | TSS
+        DEPTH_ABOVE_INVERT = 'Depth_above_invert'  # DEPTH | water depth above invert | Water depth above the node invert elevation [m]
+        HYDRAULIC_HEAD = 'Hydraulic_head'  # HEAD | hydraulic head | Absolute elevation per vertical datum [m]
+        VOLUME_STORED_PONDED = 'Volume_stored_ponded'  # VOLUME | volume stored & ponded | Stored water volume including ponded water [m³]
+        LATERAL_INFLOW = 'Lateral_inflow'  # LATFLOW | lateral inflow rate | Runoff + all other external (DW+GW+I&I+User) inflows
+        TOTAL_INFLOW = 'Total_inflow'  # INFLOW | total inflow rate | Lateral inflow + upstream inflows
+        FLOW_LOST_FLOODING = 'Flow_lost_flooding'  # OVERFLOW | overflow rate | Surface flooding; excess overflow when the node is at full depth
+        # CONCENTRATION [mass/volume] Concentration of each pollutant after any treatment.
 
         LIST_ = [DEPTH_ABOVE_INVERT, HYDRAULIC_HEAD, VOLUME_STORED_PONDED, LATERAL_INFLOW, TOTAL_INFLOW,
                  FLOW_LOST_FLOODING]
 
     class LINK:
-        FLOW_RATE = 'Flow_rate'
-        FLOW_DEPTH = 'Flow_depth'
-        FLOW_VELOCITY = 'Flow_velocity'
-        FROUDE_NUMBER = 'Froude_number'
-        CAPACITY = 'Capacity'
+        # Flow | Depth | Velocity | Volume | Capacity | TSS
+        FLOW_RATE = 'Flow_rate'  # FLOW | flow rate
+        FLOW_DEPTH = 'Flow_depth'  # DEPTH | flow depth | Average water depth [m]
+        FLOW_VELOCITY = 'Flow_velocity'  # VELOCITY | flow velocity
+        FROUDE_NUMBER = 'Froude_number'  # VOLUME | link volume
+        # Volume of water in the conduit; this is based on the midpoint depth and midpoint cross sectional area [m³]
+        CAPACITY = 'Capacity'  # CAPACITY | ratio of area to full area
+        # Fraction of full area filled by flow for conduits; control setting for pumps and regulators.
+        # Concentration (mass/volume) Concentration of each pollutant.
 
         LIST_ = [FLOW_RATE, FLOW_DEPTH, FLOW_VELOCITY, FROUDE_NUMBER, CAPACITY]
 
     class SYSTEM:
-        AIR_TEMPERATURE = 'Air_temperature'
-        RAINFALL = 'Rainfall'
-        SNOW_DEPTH = 'Snow_depth'
-        EVAPORATION_INFILTRATION = 'Evaporation_infiltration'
-        RUNOFF = 'Runoff'
-        DRY_WEATHER_INFLOW = 'Dry_weather_inflow'
-        GROUNDWATER_INFLOW = 'Groundwater_inflow'
-        RDII_INFLOW = 'RDII_inflow'
-        USER_DIRECT_INFLOW = 'User_direct_inflow'
-        TOTAL_LATERAL_INFLOW = 'Total_lateral_inflow'
-        FLOW_LOST_TO_FLOODING = 'Flow_lost_to_flooding'
-        FLOW_LEAVING_OUTFALLS = 'Flow_leaving_outfalls'
-        VOLUME_STORED_WATER = 'Volume_stored_water'
-        EVAPORATION_RATE = 'Evaporation_rate'
-        POTENTIAL_PET = 'Potential_PET'
+        # Temperature | Precipitation | Snow Depth | Infiltration | Runoff | DW Inflow |
+        # GW Inflow | I&I Inflow | Direct Inflow | Total Inflow | Flooding | Outflow |
+        # Storage | Evaporation | PET
+
+        # somewhere are Losses by Exfiltration in STORAGES
+
+        AIR_TEMPERATURE = 'Air_temperature'  # TEMPERATURE | air temperature [°C]
+        RAINFALL = 'Rainfall'  # RAINFALL | rainfall intensity | Total rainfall [mm/hr]
+        SNOW_DEPTH = 'Snow_depth'  # SNOWDEPTH | snow depth | Total snow depth [mm]
+        EVAPORATION_INFILTRATION = 'Evaporation_infiltration'  # INFIL | infil | Average system losses [mm/hr]
+
+        RUNOFF = 'Runoff'  # RUNOFF | runoff flow | Total runoff flow
+        DRY_WEATHER_INFLOW = 'Dry_weather_inflow'  # DWFLOW | dry weather inflow | Total dry weather inflow
+        GROUNDWATER_INFLOW = 'Groundwater_inflow'  # GWFLOW | ground water inflow | Total groundwater inflow
+        RDII_INFLOW = 'RDII_inflow'  # IIFLOW | RDII inflow | Total rainfall derived infiltration and inflow (RDII).
+
+        USER_DIRECT_INFLOW = 'User_direct_inflow'  # EXFLOW | external inflow | Total direct inflow
+        TOTAL_LATERAL_INFLOW = 'Total_lateral_inflow'  # INFLOW | total lateral inflow | total external inflow
+        # INFLOW = RUNOFF + DWFLOW + GWFLOW + IIFLOW + EXFLOW
+
+        FLOW_LOST_TO_FLOODING = 'Flow_lost_to_flooding'  # FLOODING | flooding outflow | Total external flooding
+        FLOW_LEAVING_OUTFALLS = 'Flow_leaving_outfalls'  # OUTFLOW | outfall outflow | Total outflow from outfalls
+        VOLUME_STORED_WATER = 'Volume_stored_water'  # STORAGE | storage volume | Total nodal storage volume in the system [m³]
+        EVAPORATION_RATE = 'Evaporation_rate'  # EVAP | evaporation | Actual evaporation [mm/day]
+        POTENTIAL_PET = 'Potential_PET'  # PET | potential ET | Potential evaporation [mm/day]
 
         LIST_ = [AIR_TEMPERATURE, RAINFALL, SNOW_DEPTH, EVAPORATION_INFILTRATION, RUNOFF, DRY_WEATHER_INFLOW,
                  GROUNDWATER_INFLOW, RDII_INFLOW, USER_DIRECT_INFLOW, TOTAL_LATERAL_INFLOW, FLOW_LOST_TO_FLOODING,
