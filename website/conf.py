@@ -28,7 +28,7 @@ author = 'Pichler'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.2.0.10'
+release = '0.2.0.15'
 
 
 # -- General configuration ---------------------------------------------------
@@ -95,7 +95,7 @@ exclude_patterns = ['public', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints', 
 # a list of builtin themes.
 #
 # html_theme = 'nature'
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'  # 'sphinx_rtd_theme'
 # html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme

@@ -2,7 +2,7 @@ Input File Sections
 -------------------
 
 Import from
-`swmm_api.input_file.sections.labels <https://gitlab.com/markuspichler/swmm_api/-/blob/master/swmm_api/input_file/section_labels.py>`_
+`swmm_api.input_file.section_labels <https://gitlab.com/markuspichler/swmm_api/-/blob/master/swmm_api/input_file/section_labels.py>`_
 all section headers, so you don't have to write every string for your own and save some typo error handling.
 
 .. code-block:: python
@@ -10,7 +10,7 @@ all section headers, so you don't have to write every string for your own and sa
     from swmm_api.input_file import section_labels
 
 Each section has a specific type, which can be seen under:
-`swmm_api.input_file.sections.types <https://gitlab.com/markuspichler/swmm_api/-/blob/master/swmm_api/input_file/section_types.py>`_
+`swmm_api.input_file.section_types <https://gitlab.com/markuspichler/swmm_api/-/blob/master/swmm_api/input_file/section_types.py>`_
 
 
 .. currentmodule:: swmm_api.input_file.sections.generic_section

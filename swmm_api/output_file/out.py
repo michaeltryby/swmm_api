@@ -9,7 +9,8 @@ __license__ = "MIT"
 from itertools import product
 from numpy import dtype, fromfile
 from pandas import date_range, DataFrame, MultiIndex
-from .extract import SwmmOutExtract, OBJECTS, VARIABLES
+from .extract import SwmmOutExtract
+from .definitions import OBJECTS, VARIABLES
 
 from . import parquet
 
@@ -98,40 +99,50 @@ class SwmmOutput(SwmmOutExtract):
         use this function instead of "get_part" if there are a lot of objects in the out-file.
 
         Args:
-            kind (str | list): ["subcatchment", "node", "link", "system"]
+            kind (str | list): ["subcatchment", "node", "link", "system"] (predefined in :obj:`swmm_api.output_file.definitions.OBJECTS`)
             label (str | list): name of the objekts
-            variable (str | list): variable names
-            slim (bool): set to `True` if there are a lot of objects and just few time-steps in the out-file.
+            variable (str | list): variable names (predefined in :obj:`swmm_api.output_file.definitions.VARIABLES`)
 
+                * subcatchment:
+                    - ``rainfall`` i.e.: :obj:`swmm_api.output_file.definitions.VARIABLES.SUBCATCHMENT.RAINFALL`
+                    - ``snow_depth``
+                    - ``evaporation``
+                    - ``infiltration``
+                    - ``runoff``
+                    - ``groundwater_outflow``
+                    - ``groundwater_elevation``
+                    - ``soil_moisture``
                 * node:
-                    - ``Depth_above_invert``
-                    - ``Hydraulic_head``
-                    - ``Volume_stored_ponded``
-                    - ``Lateral_inflow``
-                    - ``Total_inflow``
-                    - ``Flow_lost_flooding``
+                    - ``depth``
+                    - ``head``
+                    - ``volume``
+                    - ``lateral_inflow``
+                    - ``total_inflow``
+                    - ``flooding``
                 * link:
-                    - ``Flow_rate``
-                    - ``Flow_depth``
-                    - ``Flow_velocity``
-                    - ``Froude_number``
-                    - ``Capacity``
+                    - ``flow``
+                    - ``depth``
+                    - ``velocity``
+                    - ``volume``
+                    - ``capacity``
                 * system:
-                    - ``Air_temperature``
-                    - ``Rainfall``
-                    - ``Snow_depth``
-                    - ``Evaporation_infiltration``
-                    - ``Runoff``
-                    - ``Dry_weather_inflow``
-                    - ``Groundwater_inflow``
+                    - ``air_temperature``
+                    - ``rainfall``
+                    - ``snow_depth``
+                    - ``infiltration``
+                    - ``runoff``
+                    - ``dry_weather_inflow``
+                    - ``groundwater_inflow``
                     - ``RDII_inflow``
-                    - ``User_direct_inflow``
-                    - ``Total_lateral_inflow``
-                    - ``Flow_lost_to_flooding``
-                    - ``Flow_leaving_outfalls``
-                    - ``Volume_stored_water``
-                    - ``Evaporation_rate``
-                    - ``Potential_PET``
+                    - ``direct_inflow``
+                    - ``lateral_inflow``
+                    - ``flooding``
+                    - ``outflow``
+                    - ``volume``
+                    - ``evaporation``
+                    - ``PET``
+
+            slim (bool): set to `True` if there are a lot of objects and just few time-steps in the out-file.
 
 
         Returns:
