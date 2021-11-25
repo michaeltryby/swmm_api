@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'EPA-SWMM API'
+project = 'swmm_api'
 copyright = '2021, Pichler'
 author = 'Pichler'
 html_logo = "images/swmm_api_logo.svg"
@@ -210,7 +210,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'SWMM_API', 'EPA-SWMM API Documentation',
+    (master_doc, 'SWMM_API', 'SWMM API Documentation',
      author, 'SWMM_API', 'One line description of project.',
      'Miscellaneous'),
 ]

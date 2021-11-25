@@ -42,32 +42,32 @@ class COLUMNS:
     FOR_FILE = [STATION, YEAR, MONTH, DAY, MAX_TEMPERATURE, MIN_TEMPERATURE, EVAPORATION, WIND_SPEED]
 
 
-def read_climate_dat_file(fn):
+def read_climate_dat_file(filename):
     """
     read climate .dat-file
 
     Args:
-        fn (str): path to file with filename
+        filename (str): path and filename of the file to be read
 
     Returns:
         pandas.DataFrame: climate dataframe
     """
-    df = pd.read_csv(fn, sep=' ', decimal='.', parse_dates={'date': [1, 2, 3]},
+    df = pd.read_csv(filename, sep=' ', decimal='.', parse_dates={'date': [1, 2, 3]},
                      keep_date_col=False, header=None, index_col=['date'], na_values='*')
     df.columns = COLUMNS.FOR_FRAME
     return df
 
 
-def write_climate_dat_file(df, fn):
+def write_climate_dat_file(df, filename):
     """
     write climate .dat-file for SWMM
 
     Args:
         df (pandas.DataFrame): climate dataframe:
-        fn (str): path with filename where the file will be
+        filename (str): path and filename for the new file
     """
     df[COLUMNS.YEAR] = df.index.year
     df[COLUMNS.MONTH] = df.index.strftime('%m')
     df[COLUMNS.DAY] = df.index.strftime('%d')
 
-    df[COLUMNS.FOR_FILE].to_csv(fn, sep=' ', header=None, index=None, na_rep='*')
+    df[COLUMNS.FOR_FILE].to_csv(filename, sep=' ', header=None, index=None, na_rep='*')
