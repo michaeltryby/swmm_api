@@ -3,11 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-==================================
-Welcome to SWMM API documentation!
-==================================
+===============================
+The ``swmm_api`` documentation!
+===============================
 
-This is an unofficial EPA-SWMM programm interface for python to read, manipulate and write ``.inp``-files, read ``.rpt``-files and ``.out``-files.
+This is an unofficial EPA-SWMM program interface for python to read, manipulate and write ``.inp``-files, read ``.rpt``-files and ``.out``-files.
 
 .. warning::
     Be warned, that this application is still changing a lot.
@@ -16,30 +16,12 @@ This is an unofficial EPA-SWMM programm interface for python to read, manipulate
 
 .. toctree::
    :maxdepth: 2
-   :caption: README:
+   :caption: Content:
 
    README
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API:
-
-   api_inp
-   api_run
-   api_rpt
-   api_out
-   api_external_files
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Examples:
-
-   examples/inp_file_reader
-   examples/inp_file_macros
-   examples/inp_file_structure
-   examples/rpt_file_reader
-   examples/out_file_reader
-
+   api_reference/index
+   examples/index
+   CHANGES
 
 ******************
 Indices and tables
@@ -57,7 +39,7 @@ Sponsors and Partners
     :align: center
     :alt: TU Graz Logo
     :figclass: align-center
-    :width: 300
+    :width: 250
 
     TU Graz
 
@@ -65,6 +47,6 @@ Sponsors and Partners
     :align: center
     :alt: SWW Logo
     :figclass: align-center
-    :height: 150
+    :height: 100
 
     Institut für Siedlungswasserwirtschaft der TU Graz

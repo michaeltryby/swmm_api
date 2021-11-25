@@ -1,7 +1,12 @@
-FROM python:slim-bullseye
+FROM python:3.9-slim-bullseye
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt install pandoc proj-bin -y
+RUN apt-get update -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y\
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends pandoc proj-bin
+
+# RUN  update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+RUN pip3 install --upgrade pip3
 
 RUN pip3 install \
     numpy \
@@ -16,9 +21,9 @@ RUN pip3 install \
     geopandas \
     sphinx \
     nbsphinx \
-    sphinx-rtd-theme \
     recommonmark \
-    SWMM_xsections_shape_generator
+    SWMM_xsections_shape_generator \
+    pydata_sphinx_theme
 
 
 RUN useradd -ms /bin/bash mp;

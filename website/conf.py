@@ -24,12 +24,51 @@ sys.path.insert(0, os.path.abspath('..'))
 project = 'EPA-SWMM API'
 copyright = '2021, Pichler'
 author = 'Pichler'
+html_logo = "images/swmm_api_logo.svg"
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
 release = '0.2.0.15'
 
+html_theme_options = {  # https://fontawesome.com/v5.15/icons?d=gallery&p=2
+    "icon_links": [
+        {
+            "name": "GitLab",
+            "url": "https://gitlab.com/markuspichler/swmm_api",
+            "icon": "fab fa-gitlab",
+        },
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/swmm-api/",
+            "icon": 'fab fa-python',  # 'https://pypi.org/static/images/logo-small.95de8436.svg',
+        },
+        {
+            "name": "SWW @ TU Graz",
+            "url": "https://sww.tugraz.at",
+            "icon": 'fas fa-tint',  # 'images/logo_sww.png',
+        }
+    ],
+    "favicons": [
+          {
+             "rel": "icon",
+             "sizes": "16x16",
+             "href": 'images/swmm_api_logo_16.png',
+          },
+          {
+             "rel": "icon",
+             "sizes": "32x32",
+             "href": 'images/swmm_api_logo_32.png',
+          },
+          {
+             "rel": "apple-touch-icon",
+             "sizes": "180x180",
+             "href": 'images/swmm_api_logo_180.png'
+          },
+       ]
+}
+
+html_favicon = 'images/swmm_api_logo_16.png'
 
 # -- General configuration ---------------------------------------------------
 
