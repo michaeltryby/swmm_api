@@ -79,3 +79,17 @@ def filter_tags(inp_tags: SwmmInput, inp_objects: SwmmInput = None):
         keys += list(product([Tag.TYPES.Subcatch], list(inp_objects.SUBCATCHMENTS.keys())))
 
     return inp_tags.TAGS.slice_section(keys)
+
+
+def delete_tag_group(inp, part):
+    """
+    delete all tags of one group
+
+    Args:
+        inp (SwmmInput):
+        part (str): label of the group i.e.: :attr:`Tag.TYPE.Node` (or the strings: 'Node', 'Subcatch', 'Link')
+    """
+    if sec.TAGS in inp:
+        for key in list(inp[sec.TAGS].keys()):
+            if inp[sec.TAGS][key].kind == part:
+                del inp[sec.TAGS][key]

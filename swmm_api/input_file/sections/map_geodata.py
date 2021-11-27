@@ -7,6 +7,7 @@ from ..helpers import InpSection
 
 
 class InpSectionGeo(InpSection):
+    """child class of :obj:`swmm_api.input_file.helpers.InpSection`. See parent class for all functions."""
     def __init__(self, section_object, crs="EPSG:32633"):
         """
         create an object for ``.inp``-file sections with objects (i.e. nodes, links, subcatchments, raingages, ...)
@@ -15,31 +16,79 @@ class InpSectionGeo(InpSection):
             section_object (BaseSectionObject-like): object class which is stored in this section.
                 This information is used to set the index of the section and
                 to decide if the section can be exported (converted to a string) as a table.
+            crs: Coordinate Reference System of the geometry objects.
+                Can be anything accepted by :func:`pyproj.CRS.from_user_input()`,
+                such as an authority string (eg “EPSG:32633”) or a WKT string.
         """
         InpSection.__init__(self, section_object)
         self._crs = crs
 
     def set_crs(self, crs):
+        """
+        Set the Coordinate Reference System (CRS) of a geo-section.
+
+        Notes:
+            The underlying geometries are not transformed to this CRS.
+
+        Args:
+            crs: Coordinate Reference System of the geometry objects.
+                Can be anything accepted by :func:`pyproj.CRS.from_user_input()`,
+                such as an authority string (eg “EPSG:32633”) or a WKT string.
+        """
         self._crs = crs
 
     @property
     def geo_series(self) -> GeoSeries:
+        """
+        get a geopandas.GeoSeries representation for the geo-section
+        this function sets the object default crs.
+
+        Returns:
+            GeoSeries: geo-series of the section-data
+        """
         return self.get_geo_series(self._crs)
 
     def get_geo_series(self, crs) -> GeoSeries:
-        return GeoSeries({l: i.geo for l, i in self.items()}, crs=crs, name='geometry')  # .simplify(0.5)
+        """
+        get a geopandas.GeoSeries representation for the geo-section using a custom crs.
+
+        Args:
+            crs: Coordinate Reference System of the geometry objects.
+                Can be anything accepted by :func:`pyproj.CRS.from_user_input()`,
+                such as an authority string (eg “EPSG:32633”) or a WKT string.
+
+        Returns:
+            GeoSeries: geo-series of the section-data
+        """
+        return GeoSeries({label: item.geo for label, item in self.items()}, crs=crs, name='geometry')
 
 
 ########################################################################################################################
 class CoordinateGeo(Coordinate):
+    """child class of :obj:`.node_component.Coordinate`. See parent class for all functions."""
     _section_class = InpSectionGeo
 
     @property
     def geo(self):
+        """
+        get the shapely representation for the object (Point).
+
+        Returns:
+            shapely.geometry.Point: point object for the coordinates.
+        """
         return sh.Point(self.point)
 
     @classmethod
     def create_section_from_geoseries(cls, data: GeoSeries) -> InpSectionGeo:
+        """
+        create a COORDINATES inp-file section for a geopandas.GeoSeries
+
+        Args:
+            data (GeoSeries): geopandas.GeoSeries of coordinates
+
+        Returns:
+            InpSectionGeo: COORDINATES inp-file section
+        """
         return cls.create_section(zip(data.index, data.x, data.y))
 
 
