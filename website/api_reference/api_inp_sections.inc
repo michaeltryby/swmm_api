@@ -109,6 +109,20 @@ Each section has a specific type, which can be seen under:
     LIDControl
     LIDUsage
 
+.. currentmodule:: swmm_api.input_file.sections.map_geodata
+
+.. rubric:: Geo Data Sections
+
+.. autosummary::
+    CoordinateGeo
+    VerticesGeo
+    PolygonGeo
+    InpSectionGeo
+    add_geo_support
+    convert_section_to_geosection
+    remove_coordinates_from_vertices
+    section_to_geopandas
+
 
 Generic Sections
 ^^^^^^^^^^^^^^^^
@@ -260,3 +274,24 @@ LID Sections
 .. automodule:: swmm_api.input_file.sections.lid
     :members:
     :no-undoc-members:
+
+Geo Data Sections
+^^^^^^^^^^^^^^^^^
+
+.. currentmodule:: swmm_api.input_file.sections.map_geodata
+
+.. rubric:: Overview
+
+.. autosummary::
+    CoordinateGeo
+    VerticesGeo
+    PolygonGeo
+    InpSectionGeo
+    add_geo_support
+    convert_section_to_geosection
+    section_to_geopandas
+
+.. automodule:: swmm_api.input_file.sections.map_geodata
+    :members:
+    :no-undoc-members:
+    :member-order: bysource

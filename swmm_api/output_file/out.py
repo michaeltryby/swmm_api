@@ -14,6 +14,8 @@ from .definitions import OBJECTS, VARIABLES
 
 from . import parquet
 
+# TODO: explain Object structure in docs
+
 
 class SwmmOutput(SwmmOutExtract):
     """
