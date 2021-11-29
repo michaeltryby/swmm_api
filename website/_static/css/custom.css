@@ -1,0 +1,4 @@
+:root {
+    --pst-color-primary: 0, 106, 134;
+    --pst-color-active-navigation: var(--pst-color-primary);
+}
