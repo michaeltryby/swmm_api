@@ -573,7 +573,7 @@ class BaseSectionObject(ABC):
 
             if isinstance(lines, str):
                 if len(lines) > 100000:
-                    n_lines = lines.count('\n') + 1
+                    n_lines = lines.count('\n') - 1
                     # to create a progressbar in the reading process
                     # only needed with big (> 200 MB) files
                     lines = txt_to_lines(lines)
@@ -582,6 +582,10 @@ class BaseSectionObject(ABC):
                     lines = txt_to_lines(lines)
 
             sec.add_inp_lines(lines)
+
+            if isinstance(lines, tqdm):
+                lines.close()
+
         return sec
 
     @classmethod
