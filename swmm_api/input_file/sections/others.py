@@ -243,7 +243,7 @@ class Pollutant(BaseSectionObject):
 
     Args:
         Name (str): name assigned to pollutant.
-        Units (str): concentration units
+        unit (str): concentration units
 
                 - ``MG/L`` for milligrams per liter
                 - ``UG/L`` for micrograms per liter
@@ -263,7 +263,7 @@ class Pollutant(BaseSectionObject):
 
     Attributes:
         Name (str): name assigned to pollutant.
-        Units (str): concentration units
+        unit (str): concentration units
 
                 - ``MG/L`` for milligrams per liter
                 - ``UG/L`` for micrograms per liter
@@ -289,10 +289,10 @@ class Pollutant(BaseSectionObject):
         UG_PER_L = 'UG/L'
         COUNT_PER_L = '#/L'
 
-    def __init__(self, Name, Units, Crain, Cgw, Crdii, Kdecay,
+    def __init__(self, Name, unit, Crain, Cgw, Crdii, Kdecay,
                  SnowOnly=False, Co_Pollutant='*', Co_Frac=0, Cdwf=0, Cinit=0):
         self.Name = str(Name)
-        self.Units = str(Units)
+        self.Units = str(unit)
         self.Crain = float(Crain)
         self.Cgw = float(Cgw)
         self.Crdii = float(Crdii)

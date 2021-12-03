@@ -10,7 +10,7 @@ def append_na(x, every=3):
 
 def plotly_map(inp, fn):  # TODO
     coords = inp[COORDINATES]
-    from sww.libs.timeseries.plots.plotly_interface import PlotlyAxes, Ax
+    from mp.libs.timeseries.plots.plotly_interface import PlotlyAxes, Ax
     from plotly.graph_objs import Scatter
     axes = PlotlyAxes()
 
@@ -50,7 +50,7 @@ def plotly_map(inp, fn):  # TODO
 
 
 def plotly_mapX(inp, fn):
-    from sww.libs.timeseries.plots.plotly_interface import PlotlyAxes, Ax
+    from mp.libs.timeseries.plots.plotly_interface import PlotlyAxes, Ax
     from plotly.graph_objs import Scattergeo
 
     # TODO keine ahnung wie man koordinaten umrechnet
