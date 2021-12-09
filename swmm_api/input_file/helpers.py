@@ -484,11 +484,11 @@ class BaseSectionObject(ABC):
         args = list()
         for k, d in self.to_dict_().items():
             if isinstance(d, float) and isnan(d):
-                args.append('{} = NaN'.format(k))
+                args.append(f'{k}=NaN')
             elif isinstance(d, str):
-                args.append('{} = "{}"'.format(k, d))
+                args.append(f'{k}="{d}"')
             else:
-                args.append('{} = {}'.format(k, d))
+                args.append(f'{k}={d}')
         return '{}({})'.format(self.__class__.__name__, ', '.join(args))
 
     def to_inp_line(self):
