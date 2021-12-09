@@ -1,4 +1,4 @@
-from .reduce_unneeded import reduce_controls, reduce_curves, reduce_raingages, remove_empty_sections
+from .reduce_unneeded import reduce_controls, reduce_curves, reduce_raingages, remove_empty_sections, reduce_pattern
 from .. import section_labels as sec
 from ..section_lists import LINK_SECTIONS
 from ..sections import Tag
@@ -175,4 +175,5 @@ def create_sub_inp(inp, nodes):
     inp = reduce_curves(inp)
     inp = reduce_raingages(inp)
     inp = remove_empty_sections(inp)
+    inp = reduce_pattern(inp)
     return inp

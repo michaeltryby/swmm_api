@@ -27,6 +27,29 @@ def reduce_curves(inp):
     return inp
 
 
+def reduce_pattern(inp):
+    used_pattern = set()
+    if sec.EVAPORATION in inp:
+        #  optional monthly time pattern of multipliers for infiltration recovery rates during dry periods
+        if 'RECOVERY' in inp[sec.EVAPORATION]:
+            used_pattern.add(inp[sec.EVAPORATION]['RECOVERY'])
+
+    if sec.AQUIFERS in inp:
+        #  optional monthly time pattern used to adjust the upper zone evaporation fraction
+        used_pattern |= set(inp[sec.AQUIFERS].frame['Epat'].dropna().values)
+
+    if sec.INFLOWS in inp:
+        #  optional time pattern used to adjust the baseline value on a periodic basis
+        used_pattern |= set(inp[sec.INFLOWS].frame['Pattern'].dropna().values)
+
+    if sec.DWF in inp:
+        for i in range(1, 5):
+            used_pattern |= set(inp[sec.DWF].frame[f'pattern{i}'].dropna().values)
+
+    inp[sec.PATTERNS] = inp[sec.PATTERNS].slice_section(used_pattern)
+    return inp
+
+
 def reduce_controls(inp):
     """
     get used CONTROLS from [CONDUIT, ORIFICE, WEIR, OUTLET / NODE, LINK, CONDUIT, PUMP, ORIFICE, WEIR, OUTLET] and keep only used controls in the section

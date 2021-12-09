@@ -17,13 +17,13 @@ def transform_coordinates(inp, from_proj='epsg:31256', to_proj='epsg:32633'):
     if VERTICES in inp:
         for link in inp[VERTICES]:
             v = inp[VERTICES][link]  # type: Vertices
-            x,y = list(zip(*v.vertices))
+            x, y = list(zip(*v.vertices))
             v.vertices = list(zip(*transformer.transform(x, y)))
 
     if POLYGONS in inp:
         for subcatchment in inp[POLYGONS]:
             p = inp[POLYGONS][subcatchment]  # type: Polygon
-            x,y = list(zip(*p.polygon))
+            x, y = list(zip(*p.polygon))
             p.polygon = list(zip(*transformer.transform(x, y)))
 
 

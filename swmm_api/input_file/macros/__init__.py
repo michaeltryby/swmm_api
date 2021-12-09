@@ -8,9 +8,13 @@ from .edit import (delete_node, move_flows, delete_link, delete_subcatchment, sp
                    rename_timeseries, )
 from .filter import (filter_tags, filter_nodes, filter_links_within_nodes, filter_links, filter_subcatchments,
                      create_sub_inp, )
-from .geo import transform_coordinates, update_vertices
-from .gis import (convert_inp_to_geo_package, write_geo_package, get_subcatchment_connectors,
-                  links_geo_data_frame, nodes_geo_data_frame, gpkg_to_swmm, update_length, problems_to_gis)
+try:
+    from .geo import transform_coordinates, update_vertices
+    from .gis import (convert_inp_to_geo_package, write_geo_package, get_subcatchment_connectors,
+                      links_geo_data_frame, nodes_geo_data_frame, gpkg_to_swmm, update_length, problems_to_gis)
+except ImportError as e:
+    pass
+
 from .graph import (inp_to_graph, get_path, get_path_subgraph, next_links, next_links_labels, next_nodes,
                     previous_links, previous_links_labels, previous_nodes, links_connected, number_in_out,
                     downstream_nodes, upstream_nodes, get_network_forks, split_network, conduit_iter_over_inp)

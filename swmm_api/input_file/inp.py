@@ -54,6 +54,8 @@ class SwmmInput(CustomDictWithAttributes):
 
         if ignore_sections is None:
             ignore_sections = list()
+        if isinstance(ignore_sections, str):
+            ignore_sections = [ignore_sections]
         if ignore_gui_sections:
             ignore_sections += GUI_SECTIONS
         for s in ignore_sections:

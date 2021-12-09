@@ -180,7 +180,8 @@ def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, grap
     Args:
         inp (SwmmInput): inp-file data
         keep_node (str): label of a node in the part you want to keep
-        split_at_node (str): if you want to split the network, define the label of the node where you want to split it.
+        split_at_node (str | list | tuple | set): if you want to split the network,
+                define the label of the node (or multiple) where you want to split it.
         keep_split_node (bool): if you want to keep the ``split_at_node`` node.
         graph (networkx.DiGraph): networkx graph of the model
 
@@ -191,7 +192,11 @@ def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, grap
         graph = inp_to_graph(inp)
 
     if split_at_node is not None:
-        graph.remove_node(split_at_node)
+        if isinstance(split_at_node, str):
+            graph.remove_node(split_at_node)
+        else:
+            for n in split_at_node:
+                graph.remove_node(n)
 
     if isinstance(graph, DiGraph):
         graph = graph.to_undirected()
@@ -203,7 +208,10 @@ def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, grap
     # _______________
     final_nodes = list(sub.nodes)
     if split_at_node is not None and keep_split_node:
-        final_nodes.append(split_at_node)
+        if isinstance(split_at_node, str):
+            final_nodes.append(split_at_node)
+        else:
+            final_nodes += list(split_at_node)
     final_nodes = set(final_nodes)
 
     # _______________
