@@ -87,8 +87,8 @@ def compare_inp_files(fn1, fn2, precision=2, skip_section=None):
         f'   "{fn1}" (=inp1)\n' \
         f'   to\n' \
         f'   "{fn2}" (=inp2)\n\n'
-    inp1 = SwmmInput.read_file(fn1)
-    inp2 = SwmmInput.read_file(fn2)
+    inp1 = SwmmInput.read_file(fn1, ignore_sections=skip_section)
+    inp2 = SwmmInput.read_file(fn2, ignore_sections=skip_section)
 
     sections = set(inp1.keys()) | set(inp2.keys())
 

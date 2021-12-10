@@ -2,7 +2,7 @@ from numpy import NaN
 from pandas import DataFrame, Series, Timestamp
 
 from ._identifiers import IDENTIFIERS
-from .._type_converter import infer_type, to_bool, str_to_datetime, datetime_to_str
+from .._type_converter import infer_type, to_bool, str_to_datetime, datetime_to_str, type2str
 from ..helpers import BaseSectionObject, split_line_with_quotes
 from .. import section_labels as s
 
@@ -211,6 +211,24 @@ class Pattern(BaseSectionObject):
         # last
         if args:
             yield cls(*args)
+
+    def to_inp_line(self):
+        if self.Type in (self.TYPES.MONTHLY, self.TYPES.HOURLY, self.TYPES.WEEKEND):
+            s = ''
+            import numpy as np
+
+            l = len(self.Type)
+            first = True
+            for a in np.array_split(self.Factors, int(len(self.Factors) / 6)):
+                if first:
+                    s += f'{self.Name} {self.Type} '
+                    first = False
+                else:
+                    s += f'\n{self.Name} {" ":<{l}} '
+                s += ' '.join([type2str(i) for i in a])
+            return s
+        else:
+            return super().to_inp_line()
 
 
 class Pollutant(BaseSectionObject):

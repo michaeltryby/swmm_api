@@ -136,6 +136,40 @@ class SwmmInput(CustomDictWithAttributes):
         with open(filename, 'w', encoding=encoding) as f:
             f.write(self.to_string(fast=fast))
 
+    def check_for_section(self, obj):
+        """
+        check if a section is in the inp-data, and create it if not present
+
+        Args:
+            obj (BaseSectionObject or InpSectionGeneric):
+
+        Returns:
+            InpSection or InpSectionGeneric: section of inp
+        """
+        if obj._section_label not in self:
+            self[obj._section_label] = obj.create_section()
+        return self[obj._section_label]
+
+    def add_obj(self, obj):
+        """
+        add object to respective section
+
+        Args:
+            obj (BaseSectionObject):new object
+        """
+        self.check_for_section(obj)
+        self[obj._section_label].add_obj(obj)
+
+    def add_multiple(self, *items):
+        """
+        add multiple objects to respective sections
+
+        Args:
+            *items (BaseSectionObject): new objects
+        """
+        for obj in items:
+            self.add_obj(obj)
+
     @property
     def OPTIONS(self) -> OptionSection:
         if OPTIONS in self:

@@ -35,8 +35,8 @@ def filter_nodes(inp, final_nodes):
     # __________________________________________
     if sec.TAGS in inp:
         new = inp[sec.TAGS].create_new_empty()
-        new.add_multiple(inp[sec.TAGS].filter_keys([Tag.TYPES.Subcatch, Tag.TYPES.Link], by='kind'))
-        new.add_multiple(inp[sec.TAGS].filter_keys(((Tag.TYPES.Node, k) for k in final_nodes)))
+        new.add_multiple(*inp[sec.TAGS].filter_keys([Tag.TYPES.Subcatch, Tag.TYPES.Link], by='kind'))
+        new.add_multiple(*inp[sec.TAGS].filter_keys(((Tag.TYPES.Node, k) for k in final_nodes)))
         inp[sec.TAGS] = new
 
     # __________________________________________
@@ -98,8 +98,8 @@ def _filter_link_components(inp, final_links):
     # __________________________________________
     if sec.TAGS in inp:
         new = inp[sec.TAGS].create_new_empty()
-        new.add_multiple(inp[sec.TAGS].filter_keys([Tag.TYPES.Subcatch, Tag.TYPES.Node], by='kind'))
-        new.add_multiple(inp[sec.TAGS].filter_keys(((Tag.TYPES.Link, k) for k in final_links)))
+        new.add_multiple(*inp[sec.TAGS].filter_keys([Tag.TYPES.Subcatch, Tag.TYPES.Node], by='kind'))
+        new.add_multiple(*inp[sec.TAGS].filter_keys(((Tag.TYPES.Link, k) for k in final_links)))
         inp[sec.TAGS] = new
         # inp[sec.TAGS] = inp[sec.TAGS].slice_section(((Tag.TYPES.Link, k) for k in final_links))
 
@@ -134,8 +134,8 @@ def filter_subcatchments(inp, final_nodes):
         # __________________________________________
         if sec.TAGS in inp:
             new = inp[sec.TAGS].create_new_empty()
-            new.add_multiple(inp[sec.TAGS].filter_keys([Tag.TYPES.Link, Tag.TYPES.Node], by='kind'))
-            new.add_multiple(inp[sec.TAGS].filter_keys(((Tag.TYPES.Subcatch, k) for k in inp[sec.SUBCATCHMENTS])))
+            new.add_multiple(*inp[sec.TAGS].filter_keys([Tag.TYPES.Link, Tag.TYPES.Node], by='kind'))
+            new.add_multiple(*inp[sec.TAGS].filter_keys(((Tag.TYPES.Subcatch, k) for k in inp[sec.SUBCATCHMENTS])))
             inp[sec.TAGS] = new
             # inp[sec.TAGS] = inp[sec.TAGS].slice_section(((Tag.TYPES.Subcatch, k) for k in inp[sec.SUBCATCHMENTS]))
 

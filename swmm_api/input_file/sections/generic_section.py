@@ -24,7 +24,7 @@ class TitleSection(UserString):
 
     :term:`dict-like <mapping>`"
     """
-    _section_label = ''
+    _section_label = s.TITLE
     """str: label of the section"""
 
     def __init__(self, *args, **kwargs):

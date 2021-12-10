@@ -221,27 +221,12 @@ class InpSection(CustomDict):
         # if the section can be exported (converted to a string) as a table.
         return self._section_object._table_inp_export
 
-    def append(self, item):
-        """
-        add object(s) to section
-
-        Args:
-            item (BaseSectionObject | list[BaseSectionObject]): new objects
-
-        Warnings:
-            DeprecationWarning: to be removed !
-        """
-        if isinstance(item, (list, tuple)):
-            self.add_multiple(item)
-        else:
-            self.add_obj(item)
-
-    def add_multiple(self, items):
+    def add_multiple(self, *items):
         """
         add objects to section
 
         Args:
-            items (list[BaseSectionObject] | tuple[BaseSectionObject]): new objects
+            *items (BaseSectionObject): new objects
         """
         for obj in items:
             self.add_obj(obj)
@@ -251,7 +236,7 @@ class InpSection(CustomDict):
         add object to section
 
         Args:
-            obj (BaseSectionObject): new objects
+            obj (BaseSectionObject): new object
         """
         self[obj.get(self._identifier)] = obj
 
@@ -262,7 +247,7 @@ class InpSection(CustomDict):
         Args:
             multi_line_args (list[list[str]]): lines in the input file section
         """
-        self.add_multiple(self._section_object._convert_lines(multi_line_args))
+        self.add_multiple(*self._section_object._convert_lines(multi_line_args))
 
     @classmethod
     def from_inp_lines(cls, lines, section_class):
@@ -401,7 +386,7 @@ class InpSection(CustomDict):
             InpSection: new filtered section
         """
         new = self.create_new_empty()
-        new.add_multiple(self.filter_keys(keys, by=by))
+        new.add_multiple(*self.filter_keys(keys, by=by))
         return new
 
 
