@@ -17,7 +17,7 @@ def _get_title_of_part(part, alt):
 
     Args:
         part (str): string of a part in the report file
-        alt (str): alternative title
+        alt: alternative title
 
     Returns:
         str: title of the part

@@ -107,7 +107,7 @@ class SwmmReport:
             if part.startswith('*'):
                 part = '  ****' + part
 
-            self._raw_parts[_get_title_of_part(part, str(i))] = _remove_lines(part, title=False, empty=True, sep=False)
+            self._raw_parts[_get_title_of_part(part, i)] = _remove_lines(part, title=False, empty=True, sep=False)
 
     def converted(self, key):
         if key not in self._converted_parts:
