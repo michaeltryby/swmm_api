@@ -236,40 +236,40 @@ def combined_subcatchment_frame(inp: SwmmInput):
 
 
 def combined_nodes_frame(inp: SwmmInput):
-    """
-    combine all information of the subcatchment data-frames
-
-    Args:
-        inp (SwmmInput): inp-file data
-
-    Returns:
-        pandas.DataFrame: combined subcatchment data
-    """
-    df = inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
-    df = df.join(get_subcatchment_tags(inp))
-    return df
+    pass  # TODO
 
 
 def nodes_data_frame(inp, label_sep='.'):
     nodes_tags = get_node_tags(inp)
     res = None
-    for s in NODE_SECTIONS:
-        if s in inp:
-            df = inp[s].frame.rename(columns=lambda c: f'{label_sep}{c}')
+    for s, _ in iter_sections(inp, NODE_SECTIONS):
+        df = inp[s].frame.rename(columns=lambda c: f'{label_sep}{c}')
 
-            if s == sec.STORAGE:
-                df[f'{sec.STORAGE}{label_sep}Curve'] = df[f'{sec.STORAGE}{label_sep}Curve'].astype(str)
+        if s == sec.STORAGE:
+            df[f'{sec.STORAGE}{label_sep}Curve'] = df[f'{sec.STORAGE}{label_sep}Curve'].astype(str)
 
-            for sub_sec in [sec.DWF, sec.INFLOWS]:
-                if sub_sec in inp:
-                    x = inp[sub_sec].frame.unstack(1)
-                    x.columns = [f'{label_sep}'.join([sub_sec, c[1], c[0]]) for c in x.columns]
-                    df = df.join(x)
+        for sub_sec in [sec.DWF, sec.INFLOWS]:
+            if sub_sec in inp:
+                x = inp[sub_sec].frame.unstack(1)
+                x.columns = [f'{label_sep}'.join([sub_sec, c[1], c[0]]) for c in x.columns]
+                df = df.join(x)
 
-            df = df.join(inp[sec.COORDINATES].frame).join(nodes_tags)
+        df = df.join(inp[sec.COORDINATES].frame).join(nodes_tags)
 
-            if res is None:
-                res = df
-            else:
-                res = res.append(df)
+        if res is None:
+            res = df
+        else:
+            res = res.append(df)
     return res
+
+
+def iter_sections(inp, section_list):
+    for s in section_list:
+        if s in inp:
+            yield s, inp[s]
+
+
+def delete_sections(inp, section_list):
+    for s in section_list:
+        if s in inp:
+            del inp[s]

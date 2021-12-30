@@ -3,7 +3,6 @@ import re
 
 from .helpers import _sort_by, section_to_string, CustomDictWithAttributes, convert_section, inp_sep, InpSection
 from .section_types import SECTION_TYPES
-from .section_lists import GUI_SECTIONS
 from .section_labels import *
 from .sections import *
 from .sections.subcatch import INFILTRATION_DICT
@@ -27,13 +26,15 @@ class SwmmInput(CustomDictWithAttributes):
                 else:
                     self[sec].update(d[sec])
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, custom_section_handler=None, **kwargs):
         CustomDictWithAttributes.__init__(self, *args, **kwargs)
         self._converter = SECTION_TYPES.copy()
 
+        if custom_section_handler is not None:
+            self._converter.update(custom_section_handler)
+
     @classmethod
-    def read_file(cls, filename, ignore_sections=None, convert_sections=None, custom_converter=None,
-                  ignore_gui_sections=False, force_ignore_case=False, encoding='iso-8859-1'):
+    def read_file(cls, filename, custom_converter=None, force_ignore_case=False, encoding='iso-8859-1'):
         """
         read ``.inp``-file and convert the sections in pythonic objects
 
@@ -50,25 +51,7 @@ class SwmmInput(CustomDictWithAttributes):
         Returns:
             SwmmInput: dict-like data of the sections in the ``.inp``-file
         """
-        inp = cls()
-
-        if ignore_sections is None:
-            ignore_sections = list()
-        if isinstance(ignore_sections, str):
-            ignore_sections = [ignore_sections]
-        if ignore_gui_sections:
-            ignore_sections += GUI_SECTIONS
-        for s in ignore_sections:
-            if s in inp._converter:
-                inp._converter.pop(s)
-
-        if custom_converter is not None:
-            inp._converter.update(custom_converter)
-
-        if convert_sections is not None:
-            inp._converter = {h: inp._converter[h] for h in inp._converter if h in convert_sections}
-
-        # __________________________________
+        inp = cls(custom_section_handler=custom_converter)
         if os.path.isfile(filename) or filename.endswith('.inp'):
             with open(filename, 'r', encoding=encoding) as inp_file:
                 txt = inp_file.read()
@@ -80,15 +63,19 @@ class SwmmInput(CustomDictWithAttributes):
             txt = txt.upper()
 
         # __________________________________
-        headers = [h.upper() for h in re.findall(r"\[(\w+)\]", txt)]
-        section_text = [h.strip() for h in re.split(r"\[\w+\]", txt)[1:]]
-
-        # __________________________________
-
-        for head, lines in zip(headers, section_text):
-            inp[head] = convert_section(head, lines, inp._converter)
+        for head, lines in zip(re.findall(r"\[(\w+)\]", txt),
+                               re.split(r"\[\w+\]", txt)[1:]):
+            inp._data[head.upper()] = lines.strip()
 
         return inp
+
+    def force_convert_all(self):
+        (self[sec] for sec in self)
+
+    def __getitem__(self, key):
+        if isinstance(self._data[key], str):
+            self._data[key] = convert_section(key, self._data[key], self._converter)
+        return self._data.__getitem__(key)
 
     def __setitem__(self, key, item):
         self._data.__setitem__(key, item)
@@ -120,8 +107,7 @@ class SwmmInput(CustomDictWithAttributes):
         # sep = f'\n[{{}}]  ;;{"_" * 100}\n'
         for head in sorted(self.keys(), key=_sort_by):
             f += sep.format(head)
-            section_data = self[head]
-            f += section_to_string(section_data, fast=fast)
+            f += section_to_string(self._data[head], fast=fast)
         return f
 
     def write_file(self, filename, fast=True, encoding='iso-8859-1'):

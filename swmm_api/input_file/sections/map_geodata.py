@@ -1,5 +1,4 @@
 import shapely.geometry as sh
-from geopandas import GeoSeries
 
 from . import Conduit, Vertices, Coordinate, Polygon
 from ..section_labels import CONDUITS, VERTICES, COORDINATES, POLYGONS
@@ -38,17 +37,17 @@ class InpSectionGeo(InpSection):
         self._crs = crs
 
     @property
-    def geo_series(self) -> GeoSeries:
+    def geo_series(self):
         """
         Get a geopandas.GeoSeries representation for the geo-section.
         This function sets the object default crs.
 
         Returns:
-            GeoSeries: geo-series of the section-data
+            geopandas.GeoSeries: geo-series of the section-data
         """
         return self.get_geo_series(self._crs)
 
-    def get_geo_series(self, crs) -> GeoSeries:
+    def get_geo_series(self, crs):
         """
         get a geopandas.GeoSeries representation for the geo-section using a custom crs.
 
@@ -58,8 +57,9 @@ class InpSectionGeo(InpSection):
                 such as an authority string (eg “EPSG:32633”) or a WKT string.
 
         Returns:
-            GeoSeries: geo-series of the section-data
+            geopandas.GeoSeries: geo-series of the section-data
         """
+        from geopandas import GeoSeries
         return GeoSeries({label: item.geo for label, item in self.items()}, crs=crs, name='geometry')
 
 
@@ -79,12 +79,12 @@ class CoordinateGeo(Coordinate):
         return sh.Point(self.point)
 
     @classmethod
-    def create_section_from_geoseries(cls, data: GeoSeries) -> InpSectionGeo:
+    def create_section_from_geoseries(cls, data) -> InpSectionGeo:
         """
         create a COORDINATES inp-file section for a geopandas.GeoSeries
 
         Args:
-            data (GeoSeries): geopandas.GeoSeries of coordinates
+            data (geopandas.GeoSeries): geopandas.GeoSeries of coordinates
 
         Returns:
             InpSectionGeo: COORDINATES inp-file section
@@ -107,12 +107,12 @@ class VerticesGeo(Vertices):
         return sh.LineString(self.vertices)
 
     @classmethod
-    def create_section_from_geoseries(cls, data: GeoSeries) -> InpSectionGeo:
+    def create_section_from_geoseries(cls, data) -> InpSectionGeo:
         """
         create a VERTICES inp-file section for a geopandas.GeoSeries
 
         Args:
-            data (GeoSeries): geopandas.GeoSeries of coordinates
+            data (geopandas.GeoSeries): geopandas.GeoSeries of coordinates
 
         Returns:
             InpSectionGeo: VERTICES inp-file section
@@ -139,7 +139,7 @@ class PolygonGeo(Polygon):
         return sh.Polygon(self.polygon)
 
     @classmethod
-    def create_section_from_geoseries(cls, data: GeoSeries) -> InpSectionGeo:
+    def create_section_from_geoseries(cls, data) -> InpSectionGeo:
         """
         create a POLYGONS inp-file section for a geopandas.GeoSeries
 
@@ -147,7 +147,7 @@ class PolygonGeo(Polygon):
             Only uses the exterior coordinates and ignoring all interiors.
 
         Args:
-            data (GeoSeries): geopandas.GeoSeries of polygons
+            data (geopandas.GeoSeries): geopandas.GeoSeries of polygons
 
         Returns:
             InpSectionGeo: POLYGONS inp-file section

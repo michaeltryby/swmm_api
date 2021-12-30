@@ -1,11 +1,10 @@
-from pyproj import Transformer
-
 from . import links_dict
 from ..sections import Vertices, Coordinate, Polygon
 from ..section_labels import COORDINATES, VERTICES, POLYGONS
 
 
 def transform_coordinates(inp, from_proj='epsg:31256', to_proj='epsg:32633'):
+    from pyproj import Transformer
     # GK M34 to WGS 84 UTM zone 33N
     transformer = Transformer.from_crs(from_proj, to_proj, always_xy=True)
     # -----------------------------------

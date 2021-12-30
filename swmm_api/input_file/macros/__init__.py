@@ -9,10 +9,16 @@ from .edit import (delete_node, move_flows, delete_link, delete_subcatchment, sp
 from .filter import (filter_tags, filter_nodes, filter_links_within_nodes, filter_links, filter_subcatchments,
                      create_sub_inp, )
 try:
+    import warnings
+
+    warnings.filterwarnings('ignore', message='.*is incompatible with the GEOS version PyGEOS*')
+
     from .geo import transform_coordinates, update_vertices
     from .gis import (convert_inp_to_geo_package, write_geo_package, get_subcatchment_connectors,
                       links_geo_data_frame, nodes_geo_data_frame, gpkg_to_swmm, update_length, problems_to_gis)
 except ImportError as e:
+    print('Needed Packages: pyproj, fiona, geopandas, shapely')
+    print(e)
     pass
 
 from .graph import (inp_to_graph, get_path, get_path_subgraph, next_links, next_links_labels, next_nodes,
