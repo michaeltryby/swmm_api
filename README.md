@@ -43,12 +43,7 @@ python:
 from swmm_api.input_file.section_labels import TIMESERIES
 from swmm_api import read_inp_file
 
-inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])  # type: swmm_api.SwmmInput
-
-# convert_sections limits the convertions during the reading of the file to the following section
-# remove "convert_sections" to convert all sections 
-# converting sections helps manipulating the inp file
-# unconverted sections will be loaded as the raw string
+inp = read_inp_file('inputfile.inp')  # type: swmm_api.SwmmInput
 
 sec_timeseries = inp[TIMESERIES]  # type: swmm_api.input_file.helpers.InpSection
 ts = inp[TIMESERIES]['regenseries'].frame  # type: pandas.Series
