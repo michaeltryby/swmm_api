@@ -380,6 +380,6 @@ def gpkg_to_swmm(fn, label_sep='.'):
 
 
 def update_length(inp):
-    inp[SEC.CONDUITS] = convert_section_to_geosection(inp[SEC.CONDUITS], crs="EPSG:32633")
+    inp[SEC.VERTICES] = convert_section_to_geosection(inp[SEC.VERTICES], crs="EPSG:32633")
     for c in inp.CONDUITS.values():
         c.Length = inp.VERTICES[c.Name].geo.length

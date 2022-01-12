@@ -2,7 +2,7 @@ from abc import ABC
 from inspect import isfunction, isclass
 from numpy import isnan
 from pandas import DataFrame
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import re
 from .section_labels import *
 from ._type_converter import type2str, is_equal
@@ -158,6 +158,10 @@ class InpSectionGeneric(CustomDictWithAttributes):
             f += '{key}{value}'.format(key=sub.ljust(max_len),
                                        value=type2str(self[sub]) + '\n')
         return f
+
+    @classmethod
+    def create_section(cls):
+        return cls()
 
     # @property
     # def id(self):

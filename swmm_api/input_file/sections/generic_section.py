@@ -801,6 +801,12 @@ class FilesSection(InpSectionGeneric):
             data[f'{use_save} {kind}'] = ' '.join(fn).strip('"')
         return data
 
+    def use(self, kind, filename):
+        self[f'{self.KEYS.USE} {kind}'] = filename
+
+    def save(self, kind, filename):
+        self[f'{self.KEYS.SAVE} {kind}'] = filename
+
 
 class AdjustmentsSection(InpSectionGeneric):
     """

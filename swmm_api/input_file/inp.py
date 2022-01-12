@@ -69,7 +69,7 @@ class SwmmInput(CustomDictWithAttributes):
         return inp
 
     def force_convert_all(self):
-        (self[sec] for sec in self)
+        _ = [self[sec] for sec in self]
 
     def __getitem__(self, key):
         if isinstance(self._data[key], str):
@@ -119,6 +119,7 @@ class SwmmInput(CustomDictWithAttributes):
         """
         with open(filename, 'w', encoding=encoding) as f:
             f.write(self.to_string(fast=fast))
+        return filename
 
     def check_for_section(self, obj):
         """

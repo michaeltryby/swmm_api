@@ -176,11 +176,14 @@ def convert_section_to_geosection(section: InpSection, crs="EPSG:32633") -> InpS
           Polygon: PolygonGeo}
     # base object of the section
     old_type = section._section_object  # type: swmm_api.input_file.helpers.BaseSectionObject
-    new_type = di[old_type]
+
     # if already a geo-section
-    if old_type == new_type:
+    if old_type in di.values():
         section.set_crs(crs)
         return section
+
+    new_type = di[old_type]
+
     # create new section and set crs.
     new = new_type.create_section()  # type: InpSectionGeo
     new._data = {k: new_type(**vars(section[k])) for k in section}
