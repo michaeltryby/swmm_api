@@ -11,6 +11,8 @@
 [![PyPI - Downloads](https://img.shields.io/pypi/dw/swmm-api)](https://pypi.python.org/pypi/swmm-api)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/swmm-api)](https://pypi.python.org/pypi/swmm-api)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5862141.svg)](https://doi.org/10.5281/zenodo.5862141)
+
 
 With this package you can read INP-files, manipulate them and write new ones.
 You can run swmm within the python api.
@@ -43,12 +45,7 @@ python:
 from swmm_api.input_file.section_labels import TIMESERIES
 from swmm_api import read_inp_file
 
-inp = read_inp_file('inputfile.inp', convert_sections=[TIMESERIES])  # type: swmm_api.SwmmInput
-
-# convert_sections limits the convertions during the reading of the file to the following section
-# remove "convert_sections" to convert all sections 
-# converting sections helps manipulating the inp file
-# unconverted sections will be loaded as the raw string
+inp = read_inp_file('inputfile.inp')  # type: swmm_api.SwmmInput
 
 sec_timeseries = inp[TIMESERIES]  # type: swmm_api.input_file.helpers.InpSection
 ts = inp[TIMESERIES]['regenseries'].frame  # type: pandas.Series
@@ -128,3 +125,7 @@ inp_new.write_file('new_inputfile.inp')
 ```
 
 MORE INFORMATION COMING SOON
+
+## Cite as
+
+> *Pichler, Markus. (2022). swmm_api: API for reading, manipulating and running SWMM-Projects with python (0.2.0.16). Zenodo. https://doi.org/10.5281/zenodo.5862141*

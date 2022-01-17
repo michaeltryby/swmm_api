@@ -1,6 +1,25 @@
 # Changelog  
+## 0.2.0.16 (Jan 7, 2022)
+- moved predefined output file variables (VARIABLES, OBJECTS) to swmm_api.output_file.definitions
+- new functions:
+- swmm_api.input_file.macros.iter_sections
+- swmm_api.input_file.macros.delete_sections
+- added functions `add_obj` and `add_multiple` to SwmmInput object
+- added function `delete_tag_group` to delete tags for specific objects i.e. all node tags
+- `SEC` as reference for inp-sections
+- remove ignore_sections, convert_sections and ignore_gui_sections parameters of swmm_api.SwmmInput.read_file
+  - sections with be converted wenn needed.
+- added function
+  - SwmmInput.force_convert_all()
+- added `SUBCATCHMENT_SECTIONS` to `swmm_api.input_file.section_lists`
+- 
 
-## 0.2.0.14 (Oct 21, 2021)
+## 0.2.0.15 (Nov 19, 2021)
+- added functions in swmm_api.input_file.macros.*
+- added documentation for marcos
+- minor changes
+
+## 0.2.0.14 (Nov 11, 2021)
 - New `TITLE` Section `TitleSection` based on `UserString`
 - Default Infiltration based on `OPTIONS` - `INFILTRATION` parameter (function: `SwmmInput.set_default_infiltration`)
 - added `InpSection.set_parent_inp` and `InpSection.get_parent_inp` to InpSections
