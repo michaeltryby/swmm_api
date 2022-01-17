@@ -1,3 +1,5 @@
+import warnings
+
 import shapely.geometry as sh
 
 from . import Conduit, Vertices, Coordinate, Polygon
@@ -153,6 +155,9 @@ class PolygonGeo(Polygon):
             InpSectionGeo: POLYGONS inp-file section
         """
         s = cls.create_section()
+        has_interiors = data.interiors.apply(len) > 0
+        if has_interiors.any():
+            warnings.warn('Converting GeoSeries with Interiors(Holes) to POLYGON inp-section will ignore this interiors!')
         s.add_multiple(s._section_object(i, [xy[0:2] for xy in list(p.coords)]) for i, p in data.exterior.iteritems())
         return s
 

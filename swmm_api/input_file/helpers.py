@@ -1,3 +1,4 @@
+import types
 from abc import ABC
 from inspect import isfunction, isclass
 from numpy import isnan
@@ -232,6 +233,8 @@ class InpSection(CustomDict):
         Args:
             *items (BaseSectionObject): new objects
         """
+        if (len(items) == 1) and isinstance(items[0], types.GeneratorType):
+            items = items[0]
         for obj in items:
             self.add_obj(obj)
 
@@ -422,6 +425,8 @@ class BaseSectionObject(ABC):
     # @property
     # def section_label(self):
     #     return self._section_label
+
+    __name__ = 'BaseSectionObject'
 
     def get(self, key):
         if isinstance(key, list):
