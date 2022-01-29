@@ -1,5 +1,4 @@
-from shape_generator.converter_swmm_api import from_swmm_shape
-from shape_generator.swmm_std_cross_sections import swmm_std_cross_sections
+import shape_generator
 from . import find_link
 from ..sections import CrossSection, Pump
 from ... import SwmmInput
@@ -18,13 +17,13 @@ def get_cross_section_maker(inp: SwmmInput, link_label: str):
 
     if xs.Shape == CrossSection.SHAPES.CUSTOM:
         curve = inp.CURVES[xs.Curve]
-        return from_swmm_shape(curve, height=VIRTUAL_LENGTH)
+        return shape_generator.CrossSection.from_curve(curve, height=VIRTUAL_LENGTH)
     elif xs.Shape == CrossSection.SHAPES.IRREGULAR:
         return  # Todo: I don't know how
     elif xs.Shape in [CrossSection.SHAPES.RECT_OPEN, CrossSection.SHAPES.RECT_CLOSED]:
         return  # Todo: Rect
     else:
-        return swmm_std_cross_sections(xs.Shape, height=VIRTUAL_LENGTH)
+        return shape_generator.swmm_std_cross_sections(xs.Shape, height=VIRTUAL_LENGTH)
 
 
 def profil_area(inp: SwmmInput, link_label: str):
