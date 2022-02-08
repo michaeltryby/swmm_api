@@ -1,7 +1,7 @@
 from collections import ChainMap
 
 from ... import SwmmInput
-from .. import section_labels as sec
+from ..section_abr import SEC
 from ..section_lists import NODE_SECTIONS, LINK_SECTIONS
 from ..sections.link import _Link
 from ..sections.node import _Node
@@ -55,7 +55,7 @@ def subcachtment_nodes_dict(inp: SwmmInput):
     Returns:
         dict: dict[node] = list(subcatchments)
     """
-    if sec.SUBCATCHMENTS in inp:
+    if SEC.SUBCATCHMENTS in inp:
         di = {n: [] for n in nodes_dict(inp)}
         for s in inp.SUBCATCHMENTS.items():
             di[s.Outlet].append(s)

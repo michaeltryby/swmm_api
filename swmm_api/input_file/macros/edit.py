@@ -4,7 +4,7 @@ from networkx import DiGraph
 from .collection import nodes_dict, links_dict, subcachtment_nodes_dict
 from .graph import next_links_labels, previous_links, previous_links_labels, links_connected
 from .macros import calc_slope
-from .. import section_labels as sec
+from ..section_abr import SEC
 from ..section_lists import NODE_SECTIONS, LINK_SECTIONS
 from ..sections import Tag, DryWeatherFlow, Junction, Coordinate, Conduit, Loss, Vertices, EvaporationSection
 from ... import SwmmInput
@@ -26,12 +26,12 @@ def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None
     Returns:
         SwmmInput: inp data
     """
-    for section in NODE_SECTIONS + [sec.COORDINATES]:
+    for section in NODE_SECTIONS + [SEC.COORDINATES]:
         if (section in inp) and (node_label in inp[section]):
             inp[section].pop(node_label)
 
-    if (sec.TAGS in inp) and ((Tag.TYPES.Node, node_label) in inp.TAGS):
-        del inp[sec.TAGS][(Tag.TYPES.Node, node_label)]
+    if (SEC.TAGS in inp) and ((Tag.TYPES.Node, node_label) in inp.TAGS):
+        del inp[SEC.TAGS][(Tag.TYPES.Node, node_label)]
 
     # AND delete connected links
     if graph is not None:
@@ -70,7 +70,7 @@ def move_flows(inp: SwmmInput, from_node, to_node, only_constituent=None):
     Notes:
         works inplace
     """
-    for section in (sec.INFLOWS, sec.DWF):
+    for section in (SEC.INFLOWS, SEC.DWF):
         if section not in inp:
             continue
 
@@ -89,7 +89,7 @@ def move_flows(inp: SwmmInput, from_node, to_node, only_constituent=None):
                 if index_new not in inp[section]:
                     inp[section].add_obj(obj)
 
-                elif section == sec.DWF:
+                elif section == SEC.DWF:
                     # DryWeatherFlow can be easily added when Patterns are equal
                     inp[section][index_new].Base += obj.Base
 
@@ -97,7 +97,7 @@ def move_flows(inp: SwmmInput, from_node, to_node, only_constituent=None):
                     #     print(f'WARNING: move_flows  from "{from_node}" to "{to_node}". DWF patterns don\'t
                     #     match!')
 
-                elif section == sec.INFLOWS:
+                elif section == SEC.INFLOWS:
                     # Inflows can't be added due to the multiplication factor / timeseries
                     # if (TimeSeries, Type, Mfactor, Sfactor,Pattern) are equal then sum(Baseline)
                     print(f'WARNING: move_flows  from "{from_node}" to "{to_node}". Already Exists!')
@@ -107,28 +107,28 @@ def move_flows(inp: SwmmInput, from_node, to_node, only_constituent=None):
 
 
 def delete_link(inp: SwmmInput, link):
-    for s in LINK_SECTIONS + [sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
+    for s in LINK_SECTIONS + [SEC.XSECTIONS, SEC.LOSSES, SEC.VERTICES]:
         if (s in inp) and (link in inp[s]):
             inp[s].pop(link)
 
-    if (sec.TAGS in inp) and ((Tag.TYPES.Link, link) in inp.TAGS):
-        del inp[sec.TAGS][(Tag.TYPES.Link, link)]
+    if (SEC.TAGS in inp) and ((Tag.TYPES.Link, link) in inp.TAGS):
+        del inp[SEC.TAGS][(Tag.TYPES.Link, link)]
 
 
 def delete_subcatchment(inp: SwmmInput, subcatchment):
-    for s in [sec.SUBCATCHMENTS, sec.SUBAREAS, sec.INFILTRATION, sec.POLYGONS, sec.LOADINGS, sec.COVERAGES]:
+    for s in [SEC.SUBCATCHMENTS, SEC.SUBAREAS, SEC.INFILTRATION, SEC.POLYGONS, SEC.LOADINGS, SEC.COVERAGES]:
         if (s in inp) and (subcatchment in inp[s]):
             inp[s].pop(subcatchment)
 
-    if (sec.TAGS in inp) and ((Tag.TYPES.Subcatch, subcatchment) in inp.TAGS):
-        del inp[sec.TAGS][(Tag.TYPES.Subcatch, subcatchment)]
+    if (SEC.TAGS in inp) and ((Tag.TYPES.Subcatch, subcatchment) in inp.TAGS):
+        del inp[SEC.TAGS][(Tag.TYPES.Subcatch, subcatchment)]
 
 
 def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
     # mode = [cut_point (GUI), intervals (n), length (l)]
     nodes = nodes_dict(inp)
     if isinstance(conduit, str):
-        conduit = inp[sec.CONDUITS][conduit]  # type: Conduit
+        conduit = inp[SEC.CONDUITS][conduit]  # type: Conduit
 
     dx = 0
     n_new_nodes = 0
@@ -142,12 +142,12 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
     from_node = nodes[conduit.FromNode]
     to_node = nodes[conduit.ToNode]
 
-    from_node_coord = inp[sec.COORDINATES][from_node.Name]
-    to_node_coord = inp[sec.COORDINATES][to_node.Name]
+    from_node_coord = inp[SEC.COORDINATES][from_node.Name]
+    to_node_coord = inp[SEC.COORDINATES][to_node.Name]
 
     loss = None
-    if (sec.LOSSES in inp) and (conduit.Name in inp[sec.LOSSES]):
-        loss = inp[sec.LOSSES][conduit.Name]  # type: Loss
+    if (SEC.LOSSES in inp) and (conduit.Name in inp[SEC.LOSSES]):
+        loss = inp[SEC.LOSSES][conduit.Name]  # type: Loss
 
     new_nodes = list()
     new_links = list()
@@ -166,10 +166,10 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
                             Aponded=float(mean([from_node.Aponded, to_node.Aponded])),
                             )
             new_nodes.append(node)
-            inp[sec.JUNCTIONS].add_obj(node)
+            inp[SEC.JUNCTIONS].add_obj(node)
 
             # TODO: COORDINATES based on vertices
-            inp[sec.COORDINATES].add_obj(Coordinate(node.Name,
+            inp[SEC.COORDINATES].add_obj(Coordinate(node.Name,
                                                     x=interp(x, [0, conduit.Length],
                                                                 [from_node_coord.x, to_node_coord.x]),
                                                     y=interp(x, [0, conduit.Length],
@@ -185,11 +185,11 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
                        InitFlow=conduit.InitFlow,
                        MaxFlow=conduit.MaxFlow)
         new_links.append(link)
-        inp[sec.CONDUITS].add_obj(link)
+        inp[SEC.CONDUITS].add_obj(link)
 
-        xs = inp[sec.XSECTIONS][conduit.Name].copy()
+        xs = inp[SEC.XSECTIONS][conduit.Name].copy()
         xs.Link = link.Name
-        inp[sec.XSECTIONS].add_obj(xs)
+        inp[SEC.XSECTIONS].add_obj(xs)
 
         if loss:
             inlet = loss.Inlet if loss.Inlet and (new_node_i == 0) else 0
@@ -198,7 +198,7 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
             flap_gate = loss.FlapGate
 
             if any([inlet, outlet, average, flap_gate]):
-                inp[sec.LOSSES].add_obj(Loss(link.Name, inlet, outlet, average, flap_gate))
+                inp[SEC.LOSSES].add_obj(Loss(link.Name, inlet, outlet, average, flap_gate))
 
         # TODO: VERTICES
 
@@ -207,7 +207,7 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
         last_node = node
         x += dx
 
-    # if conduit.Name in inp[sec.VERTICES]:
+    # if conduit.Name in inp[SEC.VERTICES]:
     #     pass
     # else:
     #     # interpolate coordinates
@@ -217,34 +217,34 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
 
 
 def combine_vertices(inp: SwmmInput, label1, label2):
-    if sec.COORDINATES not in inp:
+    if SEC.COORDINATES not in inp:
         # if there are not coordinates this function is nonsense
         return
 
     vertices_class = Vertices
 
-    if sec.VERTICES not in inp:
+    if SEC.VERTICES not in inp:
         # we will at least ad the coordinates of the common node
-        inp[sec.VERTICES] = Vertices.create_section()
+        inp[SEC.VERTICES] = Vertices.create_section()
     else:
-        vertices_class = inp[sec.VERTICES]._section_object
+        vertices_class = inp[SEC.VERTICES]._section_object
 
     new_vertices = list()
 
-    if label1 in inp[sec.VERTICES]:
-        new_vertices += list(inp[sec.VERTICES][label1].vertices)
+    if label1 in inp[SEC.VERTICES]:
+        new_vertices += list(inp[SEC.VERTICES][label1].vertices)
 
     common_node = links_dict(inp)[label1].ToNode
-    if common_node in inp[sec.COORDINATES]:
-        new_vertices += [inp[sec.COORDINATES][common_node].point]
+    if common_node in inp[SEC.COORDINATES]:
+        new_vertices += [inp[SEC.COORDINATES][common_node].point]
 
-    if label2 in inp[sec.VERTICES]:
-        new_vertices += list(inp[sec.VERTICES][label2].vertices)
+    if label2 in inp[SEC.VERTICES]:
+        new_vertices += list(inp[SEC.VERTICES][label2].vertices)
 
-    if label1 in inp[sec.VERTICES]:
-        inp[sec.VERTICES][label1].vertices = new_vertices
+    if label1 in inp[SEC.VERTICES]:
+        inp[SEC.VERTICES][label1].vertices = new_vertices
     else:
-        inp[sec.VERTICES].add_obj(vertices_class(label1, vertices=new_vertices))
+        inp[SEC.VERTICES].add_obj(vertices_class(label1, vertices=new_vertices))
 
 
 def combine_conduits(inp, c1, c2, graph: DiGraph = None):
@@ -263,9 +263,9 @@ def combine_conduits(inp, c1, c2, graph: DiGraph = None):
         SwmmInput: inp data
     """
     if isinstance(c1, str):
-        c1 = inp[sec.CONDUITS][c1]
+        c1 = inp[SEC.CONDUITS][c1]
     if isinstance(c2, str):
-        c2 = inp[sec.CONDUITS][c2]
+        c2 = inp[SEC.CONDUITS][c2]
     # -------------------------
     if graph:
         graph.remove_edge(c1.FromNode, c1.ToNode)
@@ -301,7 +301,7 @@ def combine_conduits(inp, c1, c2, graph: DiGraph = None):
         c_new.OutOffset = c_second.OutOffset
 
     # Loss
-    if (sec.LOSSES in inp) and (c_new.Name in inp[sec.LOSSES]):
+    if (SEC.LOSSES in inp) and (c_new.Name in inp[SEC.LOSSES]):
         print(f'combine_conduits {c1.Name} and {c2.Name}. BUT WHAT TO DO WITH LOSSES?')
         # add losses
         pass
@@ -350,7 +350,7 @@ def dissolve_conduit(inp, c: Conduit, graph: DiGraph = None):
             graph.add_edge(c_new.FromNode, c_new.ToNode, label=c_new.Name)
 
         # Loss
-        if sec.LOSSES in inp and c_new.Name in inp[sec.LOSSES]:
+        if SEC.LOSSES in inp and c_new.Name in inp[SEC.LOSSES]:
             print(f'dissolve_conduit {c.Name} in {c_new.Name}. BUT WHAT TO DO WITH LOSSES?')
 
         if isinstance(c_new, Conduit):
@@ -378,7 +378,7 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
     # ToDo: Not Implemented: CONTROLS
 
     # Nodes and basic node components
-    for section in NODE_SECTIONS + [sec.COORDINATES, sec.RDII]:
+    for section in NODE_SECTIONS + [SEC.COORDINATES, SEC.RDII]:
         if (section in inp) and (old_label in inp[section]):
             inp[section][new_label] = inp[section].pop(old_label)
             if hasattr(inp[section][new_label], 'Name'):
@@ -387,13 +387,13 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
                 inp[section][new_label].Node = new_label
 
     # tags
-    if (sec.TAGS in inp) and ((Tag.TYPES.Node, old_label) in inp.TAGS):
-        tag = inp[sec.TAGS].pop((Tag.TYPES.Node, old_label))
+    if (SEC.TAGS in inp) and ((Tag.TYPES.Node, old_label) in inp.TAGS):
+        tag = inp[SEC.TAGS].pop((Tag.TYPES.Node, old_label))
         tag.Name = new_label
         inp.TAGS.add_obj(tag)
 
     # subcatchment outlets
-    if sec.SUBCATCHMENTS in inp:
+    if SEC.SUBCATCHMENTS in inp:
         for obj in subcachtment_nodes_dict(inp)[old_label]:
             obj.Outlet = new_label
         # -------
@@ -410,7 +410,7 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
         link.ToNode = new_label
 
     # -------
-    # for section in [sec.CONDUITS, sec.PUMPS, sec.ORIFICES, sec.WEIRS, sec.OUTLETS]:
+    # for section in [SEC.CONDUITS, SEC.PUMPS, SEC.ORIFICES, SEC.WEIRS, SEC.OUTLETS]:
     #     if section in inp:
     #         for obj in inp[section].filter_keys([old_label], 'FromNode'):  # type: _Link
     #             obj.FromNode = new_label
@@ -421,10 +421,10 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
 
     # (dwf-)inflows
     constituents = [DryWeatherFlow.TYPES.FLOW]
-    if sec.POLLUTANTS in inp:
+    if SEC.POLLUTANTS in inp:
         constituents += list(inp.POLLUTANTS.keys())
 
-    for section in [sec.INFLOWS, sec.DWF, sec.TREATMENT]:
+    for section in [SEC.INFLOWS, SEC.DWF, SEC.TREATMENT]:
         if section in inp:
             for constituent in constituents:
                 old_id = (old_label, constituent)
@@ -454,7 +454,7 @@ def rename_link(inp: SwmmInput, old_label: str, new_label: str):
         new_label (str): new link label
     """
     # ToDo: Not Implemented: CONTROLS
-    for section in LINK_SECTIONS + [sec.XSECTIONS, sec.LOSSES, sec.VERTICES]:
+    for section in LINK_SECTIONS + [SEC.XSECTIONS, SEC.LOSSES, SEC.VERTICES]:
         if (section in inp) and (old_label in inp[section]):
             inp[section][new_label] = inp[section].pop(old_label)
             if hasattr(inp[section][new_label], 'Name'):
@@ -462,8 +462,8 @@ def rename_link(inp: SwmmInput, old_label: str, new_label: str):
             else:
                 inp[section][new_label].Link = new_label
 
-    if (sec.TAGS in inp) and ((Tag.TYPES.Link, old_label) in inp.TAGS):
-        inp[sec.TAGS][(Tag.TYPES.Link, new_label)] = inp[sec.TAGS].pop((Tag.TYPES.Link, old_label))
+    if (SEC.TAGS in inp) and ((Tag.TYPES.Link, old_label) in inp.TAGS):
+        inp[SEC.TAGS][(Tag.TYPES.Link, new_label)] = inp[SEC.TAGS].pop((Tag.TYPES.Link, old_label))
 
 
 def rename_timeseries(inp, old_label, new_label):
@@ -478,40 +478,40 @@ def rename_timeseries(inp, old_label, new_label):
         old_label (str): previous timeseries label
         new_label (str): new timeseries label
     """
-    if old_label in inp[sec.TIMESERIES]:
-        obj = inp[sec.TIMESERIES].pop(old_label)
+    if old_label in inp[SEC.TIMESERIES]:
+        obj = inp[SEC.TIMESERIES].pop(old_label)
         obj.Name = new_label
-        inp[sec.TIMESERIES].add_obj(obj)
+        inp[SEC.TIMESERIES].add_obj(obj)
 
     key = EvaporationSection.KEYS.TIMESERIES  # TemperatureSection.KEYS.TIMESERIES, ...
 
-    if sec.RAINGAGES in inp:
-        f = inp[sec.RAINGAGES].frame
+    if SEC.RAINGAGES in inp:
+        f = inp[SEC.RAINGAGES].frame
         filtered_table = f[(f['Source'] == key) & (f['Timeseries'] == old_label)]
         if not filtered_table.empty:
             for i in filtered_table.index:
-                inp[sec.RAINGAGES][i].Timeseries = new_label
+                inp[SEC.RAINGAGES][i].Timeseries = new_label
 
-    if sec.EVAPORATION in inp:
-        if key in inp[sec.EVAPORATION]:
-            if inp[sec.EVAPORATION][key] == old_label:
-                inp[sec.EVAPORATION][key] = new_label
+    if SEC.EVAPORATION in inp:
+        if key in inp[SEC.EVAPORATION]:
+            if inp[SEC.EVAPORATION][key] == old_label:
+                inp[SEC.EVAPORATION][key] = new_label
 
-    if sec.TEMPERATURE in inp:
-        if key in inp[sec.TEMPERATURE]:
-            if inp[sec.TEMPERATURE][key] == old_label:
-                inp[sec.TEMPERATURE][key] = new_label
+    if SEC.TEMPERATURE in inp:
+        if key in inp[SEC.TEMPERATURE]:
+            if inp[SEC.TEMPERATURE][key] == old_label:
+                inp[SEC.TEMPERATURE][key] = new_label
 
-    if sec.OUTFALLS in inp:
-        f = inp[sec.OUTFALLS].frame
+    if SEC.OUTFALLS in inp:
+        f = inp[SEC.OUTFALLS].frame
         filtered_table = f[(f['Type'] == key) & (f['Data'] == old_label)]
         if not filtered_table.empty:
             for i in filtered_table.index:
-                inp[sec.OUTFALLS][i].Data = new_label
+                inp[SEC.OUTFALLS][i].Data = new_label
 
-    if sec.INFLOWS in inp:
-        f = inp[sec.INFLOWS].frame
+    if SEC.INFLOWS in inp:
+        f = inp[SEC.INFLOWS].frame
         filtered_table = f[f['TimeSeries'] == old_label]
         if not filtered_table.empty:
             for i in filtered_table.index:
-                inp[sec.INFLOWS][i].TimeSeries = new_label
+                inp[SEC.INFLOWS][i].TimeSeries = new_label

@@ -8,7 +8,7 @@ from .filter import filter_nodes, filter_links
 from .geo import update_vertices
 from .reduce_unneeded import reduce_vertices
 from .tags import get_node_tags, get_link_tags, get_subcatchment_tags
-from .. import SEC
+from ..section_abr import SEC
 
 from ..inp import SwmmInput
 from ..section_lists import LINK_SECTIONS, NODE_SECTIONS

@@ -3,16 +3,16 @@ from itertools import product
 import pandas as pd
 
 from ... import SwmmInput
-from .. import section_labels as sec
+from ..section_abr import SEC
 from .collection import nodes_dict, links_dict
 from ..sections import Tag
 
 
 def _get_tags_frame(inp, part=None):
-    if sec.TAGS in inp:
-        df_tags = inp[sec.TAGS].frame
+    if SEC.TAGS in inp:
+        df_tags = inp[SEC.TAGS].frame
         if part in df_tags.index.levels[0]:
-            return inp[sec.TAGS].frame.xs(part, axis=0, level=0)
+            return inp[SEC.TAGS].frame.xs(part, axis=0, level=0)
     return pd.Series(name='tags', dtype=str)
 
 
@@ -75,7 +75,7 @@ def filter_tags(inp_tags: SwmmInput, inp_objects: SwmmInput = None):
     links = links_dict(inp_objects)
     keys += list(product([Tag.TYPES.Link], list(links.keys())))
 
-    if sec.SUBCATCHMENTS in inp_objects:
+    if SEC.SUBCATCHMENTS in inp_objects:
         keys += list(product([Tag.TYPES.Subcatch], list(inp_objects.SUBCATCHMENTS.keys())))
 
     return inp_tags.TAGS.slice_section(keys)
@@ -89,7 +89,7 @@ def delete_tag_group(inp, part):
         inp (SwmmInput):
         part (str): label of the group i.e.: :attr:`Tag.TYPE.Node` (or the strings: 'Node', 'Subcatch', 'Link')
     """
-    if sec.TAGS in inp:
-        for key in list(inp[sec.TAGS].keys()):
-            if inp[sec.TAGS][key].kind == part:
-                del inp[sec.TAGS][key]
+    if SEC.TAGS in inp:
+        for key in list(inp[SEC.TAGS].keys()):
+            if inp[SEC.TAGS][key].kind == part:
+                del inp[SEC.TAGS][key]

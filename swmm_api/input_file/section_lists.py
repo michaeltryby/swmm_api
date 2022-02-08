@@ -1,4 +1,4 @@
-from swmm_api.input_file.section_labels import *
+from .section_labels import *
 
 GEO_SECTIONS = [COORDINATES, VERTICES, POLYGONS]
 GUI_SECTIONS = [MAP, SYMBOLS, LABELS, BACKDROP, PROFILES]

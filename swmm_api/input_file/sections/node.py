@@ -3,7 +3,8 @@ from numpy import NaN
 from ._identifiers import IDENTIFIERS
 from ..helpers import BaseSectionObject
 from .._type_converter import to_bool, infer_type
-from .. import section_labels as s
+from ..section_abr import SEC
+
 
 # NEU in python 3.7
 # from dataclasses import dataclass
@@ -73,7 +74,7 @@ class Junction(_Node):
                             can sustain under surcharge conditions (ft or m) (default is 0). ``Ysur``
         Aponded (float): area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0). ``Apond``
     """
-    _section_label = s.JUNCTIONS
+    _section_label = SEC.JUNCTIONS
 
     def __init__(self, Name, Elevation, MaxDepth=0, InitDepth=0, SurDepth=0, Aponded=0):
         _Node.__init__(self, Name, Elevation)
@@ -133,7 +134,7 @@ class Outfall(_Node):
         FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
         RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
     """
-    _section_label = s.OUTFALLS
+    _section_label = SEC.OUTFALLS
 
     class TYPES:
         FREE = 'FREE'
@@ -280,7 +281,7 @@ class Storage(_Node):
         Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
         IMD (float): soil initial moisture deficit (fraction).
     """
-    _section_label = s.STORAGE
+    _section_label = SEC.STORAGE
 
     class TYPES:
         TABULAR = 'TABULAR'

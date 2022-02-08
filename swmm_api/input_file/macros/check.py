@@ -1,6 +1,6 @@
 from warnings import warn
 
-from .. import section_labels as sec
+from ..section_abr import SEC
 from .collection import links_dict, nodes_dict
 from ..section_lists import NODE_SECTIONS, LINK_SECTIONS
 
@@ -24,8 +24,8 @@ def check_for_duplicates(inp):
     """
     l = list()
     for node in nodes_dict(inp):
-        if sum((node in inp[s] for s in NODE_SECTIONS + [sec.SUBCATCHMENTS] if s in inp)) != 1:
-            l += [inp[s][node] for s in NODE_SECTIONS + [sec.SUBCATCHMENTS] if s in inp and node in inp[s]]
+        if sum((node in inp[s] for s in NODE_SECTIONS + [SEC.SUBCATCHMENTS] if s in inp)) != 1:
+            l += [inp[s][node] for s in NODE_SECTIONS + [SEC.SUBCATCHMENTS] if s in inp and node in inp[s]]
     if l:
         print('DUPLICATE NODES')
         print('\n- '.join(l))

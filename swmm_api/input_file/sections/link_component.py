@@ -4,7 +4,7 @@ from pandas import DataFrame
 from ._identifiers import IDENTIFIERS
 from ..helpers import BaseSectionObject
 from .._type_converter import to_bool, GIS_FLOAT_FORMAT
-from .. import section_labels as s
+from ..section_abr import SEC
 
 
 class CrossSection(BaseSectionObject):
@@ -43,7 +43,7 @@ class CrossSection(BaseSectionObject):
         Tsect (str): name of an entry in the [``TRANSECTS``] section that describes the crosssection geometry of an irregular channel.
     """
     _identifier =IDENTIFIERS.Link
-    _section_label = s.XSECTIONS
+    _section_label = SEC.XSECTIONS
 
     class SHAPES:
         IRREGULAR = 'IRREGULAR'  # TransectCoordinates (Natural Channel)
@@ -163,7 +163,7 @@ class Loss(BaseSectionObject):
         SeepageRate (float): Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.) ``Seepage``
     """
     _identifier =IDENTIFIERS.Link
-    _section_label = s.LOSSES
+    _section_label = SEC.LOSSES
 
     class TYPES:
         INLET = 'Inlet'
@@ -213,7 +213,7 @@ class Vertices(BaseSectionObject):
     """
     _identifier =IDENTIFIERS.Link
     _table_inp_export = False
-    _section_label = s.VERTICES
+    _section_label = SEC.VERTICES
 
     def __init__(self, Link,  vertices):
         self.Link = str(Link)

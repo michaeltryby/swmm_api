@@ -1,7 +1,6 @@
-from .. import section_labels as sec
+from ..section_abr import SEC
 from .collection import links_dict, nodes_dict
 from ..misc.curve_simplification import ramer_douglas, _vec2d_dist
-from ..section_labels import VERTICES, COORDINATES
 
 
 def reduce_curves(inp):
@@ -14,39 +13,39 @@ def reduce_curves(inp):
     Returns:
         SwmmInput: inp-file data with filtered CURVES section
     """
-    if sec.CURVES not in inp:
+    if SEC.CURVES not in inp:
         return inp
     used_curves = set()
-    for section in [sec.STORAGE, sec.OUTLETS, sec.PUMPS, sec.XSECTIONS]:
+    for section in [SEC.STORAGE, SEC.OUTLETS, SEC.PUMPS, SEC.XSECTIONS]:
         if section in inp:
             for name in inp[section]:
                 if isinstance(inp[section][name].Curve, str):
                     used_curves.add(inp[section][name].Curve)
 
-    inp[sec.CURVES] = inp[sec.CURVES].slice_section(used_curves)
+    inp[SEC.CURVES] = inp[SEC.CURVES].slice_section(used_curves)
     return inp
 
 
 def reduce_pattern(inp):
     used_pattern = set()
-    if sec.EVAPORATION in inp:
+    if SEC.EVAPORATION in inp:
         #  optional monthly time pattern of multipliers for infiltration recovery rates during dry periods
-        if 'RECOVERY' in inp[sec.EVAPORATION]:
-            used_pattern.add(inp[sec.EVAPORATION]['RECOVERY'])
+        if 'RECOVERY' in inp[SEC.EVAPORATION]:
+            used_pattern.add(inp[SEC.EVAPORATION]['RECOVERY'])
 
-    if sec.AQUIFERS in inp:
+    if SEC.AQUIFERS in inp:
         #  optional monthly time pattern used to adjust the upper zone evaporation fraction
-        used_pattern |= set(inp[sec.AQUIFERS].frame['Epat'].dropna().values)
+        used_pattern |= set(inp[SEC.AQUIFERS].frame['Epat'].dropna().values)
 
-    if sec.INFLOWS in inp:
+    if SEC.INFLOWS in inp:
         #  optional time pattern used to adjust the baseline value on a periodic basis
-        used_pattern |= set(inp[sec.INFLOWS].frame['Pattern'].dropna().values)
+        used_pattern |= set(inp[SEC.INFLOWS].frame['Pattern'].dropna().values)
 
-    if sec.DWF in inp:
+    if SEC.DWF in inp:
         for i in range(1, 5):
-            used_pattern |= set(inp[sec.DWF].frame[f'pattern{i}'].dropna().values)
+            used_pattern |= set(inp[SEC.DWF].frame[f'pattern{i}'].dropna().values)
 
-    inp[sec.PATTERNS] = inp[sec.PATTERNS].slice_section(used_pattern)
+    inp[SEC.PATTERNS] = inp[SEC.PATTERNS].slice_section(used_pattern)
     return inp
 
 
@@ -60,7 +59,7 @@ def reduce_controls(inp):
     Returns:
         SwmmInput: inp-file data with filtered CONTROLS section
     """
-    if sec.CONTROLS not in inp:
+    if SEC.CONTROLS not in inp:
         return inp
 
     used_controls = set()
@@ -89,9 +88,9 @@ def reduce_controls(inp):
             used_controls.add(control.Name)
 
     if not used_controls:
-        del inp[sec.CONTROLS]
+        del inp[SEC.CONTROLS]
     else:
-        inp[sec.CONTROLS] = inp[sec.CONTROLS].slice_section(used_controls)
+        inp[SEC.CONTROLS] = inp[SEC.CONTROLS].slice_section(used_controls)
     return inp
 
 
@@ -125,10 +124,10 @@ def reduce_raingages(inp):
     Returns:
         SwmmInput: inp-file data with filtered RAINGAGES section
     """
-    if sec.SUBCATCHMENTS not in inp or sec.RAINGAGES not in inp:
+    if SEC.SUBCATCHMENTS not in inp or SEC.RAINGAGES not in inp:
         return inp
-    needed_raingages = {inp[sec.SUBCATCHMENTS][s].RainGage for s in inp[sec.SUBCATCHMENTS]}
-    inp[sec.RAINGAGES] = inp[sec.RAINGAGES].slice_section(needed_raingages)
+    needed_raingages = {inp[SEC.SUBCATCHMENTS][s].RainGage for s in inp[SEC.SUBCATCHMENTS]}
+    inp[SEC.RAINGAGES] = inp[SEC.RAINGAGES].slice_section(needed_raingages)
     return inp
 
 
@@ -151,21 +150,21 @@ def reduce_vertices(inp, node_range=0.25):
     links = links_dict(inp)
 
     for l in links.values():  # type: Conduit
-        if l.Name in inp[VERTICES]:
-            v = inp[VERTICES][l.Name].vertices
-            p = inp[COORDINATES][l.FromNode].point
+        if l.Name in inp[SEC.VERTICES]:
+            v = inp[SEC.VERTICES][l.Name].vertices
+            p = inp[SEC.COORDINATES][l.FromNode].point
             if _vec2d_dist(p, v[0]) < node_range:
                 v = v[1:]
 
             if v:
-                p = inp[COORDINATES][l.ToNode].point
+                p = inp[SEC.COORDINATES][l.ToNode].point
                 if _vec2d_dist(p, v[-1]) < node_range:
                     v = v[:-1]
 
             if v:
-                inp[VERTICES][l.Name].vertices = v
+                inp[SEC.VERTICES][l.Name].vertices = v
             else:
-                del inp[VERTICES][l.Name]
+                del inp[SEC.VERTICES][l.Name]
     return inp
 
 

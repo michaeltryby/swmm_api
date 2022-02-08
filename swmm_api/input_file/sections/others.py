@@ -4,7 +4,7 @@ from pandas import DataFrame, Series, Timestamp
 from ._identifiers import IDENTIFIERS
 from .._type_converter import infer_type, to_bool, str_to_datetime, datetime_to_str, type2str
 from ..helpers import BaseSectionObject, split_line_with_quotes
-from .. import section_labels as s
+from ..section_abr import SEC
 
 
 class RainGage(BaseSectionObject):
@@ -51,7 +51,7 @@ class RainGage(BaseSectionObject):
         Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = s.RAINGAGES
+    _section_label = SEC.RAINGAGES
 
     class FORMATS:
         INTENSITY = 'INTENSITY'
@@ -115,7 +115,7 @@ class Symbol(BaseSectionObject):
         y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
     """
     _identifier = IDENTIFIERS.Gage
-    _section_label = s.SYMBOLS
+    _section_label = SEC.SYMBOLS
 
     def __init__(self, Gage, x, y):
         self.Gage = str(Gage)
@@ -180,7 +180,7 @@ class Pattern(BaseSectionObject):
         Factors (list): multiplier values.
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = s.PATTERNS
+    _section_label = SEC.PATTERNS
 
     class TYPES:
         __class__ = 'Patter Types'
@@ -300,7 +300,7 @@ class Pollutant(BaseSectionObject):
         default is 0).
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = s.POLLUTANTS
+    _section_label = SEC.POLLUTANTS
 
     class UNITS:
         MG_PER_L = 'MG/L'
@@ -413,7 +413,7 @@ class Transect(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
-    _section_label = s.TRANSECTS
+    _section_label = SEC.TRANSECTS
 
     class KEYS:
         NC = 'NC'
@@ -745,7 +745,7 @@ class Control(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
-    _section_label = s.CONTROLS
+    _section_label = SEC.CONTROLS
 
     class Clauses:
         __class__ = 'Clauses'
@@ -884,7 +884,7 @@ class Curve(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
-    _section_label = s.CURVES
+    _section_label = SEC.CURVES
 
     class TYPES:
         STORAGE = 'STORAGE'
@@ -1019,7 +1019,7 @@ class Timeseries(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
-    _section_label = s.TIMESERIES
+    _section_label = SEC.TIMESERIES
 
     class TYPES:
         FILE = 'FILE'
@@ -1217,7 +1217,7 @@ class TimeseriesData(Timeseries):
 class Tag(BaseSectionObject):
     """Section: [**TAGS**]"""
     _identifier = ['kind', IDENTIFIERS.Name]
-    _section_label = s.TAGS
+    _section_label = SEC.TAGS
 
     class TYPES:
         Node = IDENTIFIERS.Node
@@ -1264,7 +1264,7 @@ class Label(BaseSectionObject):
             YES for italic font, NO otherwise.
     """
     _identifier = ['x', 'y', 'label']
-    _section_label = s.LABELS
+    _section_label = SEC.LABELS
 
     def __init__(self, x, y, label, anchor=NaN, font=NaN, size=NaN, bold=NaN, italic=NaN):
         self.x = float(x)
@@ -1349,7 +1349,7 @@ class Hydrograph(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
-    _section_label = s.HYDROGRAPHS
+    _section_label = SEC.HYDROGRAPHS
 
     class TYPES:
         SHORT = 'SHORT'
@@ -1453,7 +1453,7 @@ class LandUse(BaseSectionObject):
             days since last sweeping at start of the simulation.
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = s.LANDUSES
+    _section_label = SEC.LANDUSES
 
     def __init__(self, Name, sweep_interval=NaN, availability=NaN, last_sweep=NaN):
         self.Name = str(Name)
@@ -1519,7 +1519,7 @@ class WashOff(BaseSectionObject):
 
     """
     _identifier = [IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant]
-    _section_label = s.WASHOFF
+    _section_label = SEC.WASHOFF
 
     class FUNCTIONS:
         EXP = 'EXP'
@@ -1590,7 +1590,7 @@ class BuildUp(BaseSectionObject):
         time.
     """
     _identifier = [IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant]
-    _section_label = s.BUILDUP
+    _section_label = SEC.BUILDUP
 
     class FUNCTIONS:
         EXP = 'EXP'
@@ -1679,7 +1679,7 @@ class SnowPack(BaseSectionObject):
         than 1.0. If the line is omitted then no snow removal takes place.
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = s.SNOWPACKS
+    _section_label = SEC.SNOWPACKS
     _table_inp_export = False
 
     def __init__(self, Name, packs=None):
@@ -1726,7 +1726,7 @@ class SnowPack(BaseSectionObject):
         class _Base(BaseSectionObject):
             _table_inp_export = False
             _identifier = IDENTIFIERS.Name
-            _section_label = s.SNOWPACKS
+            _section_label = SEC.SNOWPACKS
 
             def __init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0):
                 self.Cmin = float(Cmin)
@@ -1840,7 +1840,7 @@ class Aquifer(BaseSectionObject):
         the [``GROUNDWATER``] section described below.
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = s.AQUIFERS
+    _section_label = SEC.AQUIFERS
 
     def __init__(self, Name, Por, WP, FC, Ks, Kslp, Tslp, ETu, ETs, Seep, Ebot, Egw, Umc, Epat=NaN):
         self.Name = str(Name)

@@ -2,7 +2,7 @@ from collections import UserString
 
 from .._type_converter import infer_type, type2str
 from ..helpers import InpSectionGeneric, CustomDict
-from .. import section_labels as s
+from ..section_abr import SEC
 
 
 def line_iter(lines):
@@ -24,7 +24,7 @@ class TitleSection(UserString):
 
     :term:`dict-like <mapping>`"
     """
-    _section_label = s.TITLE
+    _section_label = SEC.TITLE
     """str: label of the section"""
 
     def __init__(self, *args, **kwargs):
@@ -280,7 +280,7 @@ class OptionSection(InpSectionGeneric):
     Returns:
         dict: options
     """
-    _section_label = s.OPTIONS
+    _section_label = SEC.OPTIONS
 
     @classmethod
     def from_inp_lines(cls, lines):
@@ -335,7 +335,7 @@ class ReportSection(InpSectionGeneric):
 
         The SUBCATCHMENTS, NODES, LINKS, and LID lines can be repeated multiple times.
     """
-    _section_label = s.REPORT
+    _section_label = SEC.REPORT
 
     class KEYS:
         INPUT = 'INPUT'
@@ -467,7 +467,7 @@ class EvaporationSection(InpSectionGeneric):
         DRY_ONLY determines if evaporation only occurs during periods with no precipitation.
         The default is NO.
     """
-    _section_label = s.EVAPORATION
+    _section_label = SEC.EVAPORATION
 
     class KEYS:
         CONSTANT = 'CONSTANT'
@@ -596,7 +596,7 @@ class TemperatureSection(InpSectionGeneric):
     sub-areas. The ADC parameters will default to 1.0 (meaning no depletion) if no data
     are supplied for a particular type of sub-area.
     """
-    _section_label = s.TEMPERATURE
+    _section_label = SEC.TEMPERATURE
 
     class KEYS:
         TIMESERIES = 'TIMESERIES'
@@ -697,7 +697,7 @@ class MapSection(InpSectionGeneric):
         upper_right_y (float): upper-right Y coordinate ``Y2``
         units (str): one of FEET / METERS / DEGREES / NONE see :py:attr:`~MapSection.UNITS`
     """
-    _section_label = s.MAP
+    _section_label = SEC.MAP
 
     class KEYS:
         DIMENSIONS = 'DIMENSIONS'
@@ -758,7 +758,7 @@ class FilesSection(InpSectionGeneric):
         RDII files can either be used or saved in a run, but not both. A run can both use and save a Hot
         Start file (with different names).
     """
-    _section_label = s.FILES
+    _section_label = SEC.FILES
 
     class KEYS:
         USE = 'USE'
@@ -838,7 +838,7 @@ class AdjustmentsSection(InpSectionGeneric):
         The same adjustment is applied for each time period within a given month and is repeated for that
         month in each subsequent year being simulated.
     """
-    _section_label = s.ADJUSTMENTS
+    _section_label = SEC.ADJUSTMENTS
 
     class KEYS:
         TEMPERATURE = 'TEMPERATURE'
@@ -893,7 +893,7 @@ class BackdropSection(InpSectionGeneric):
         Y2
             upper-right Y coordinate of backdrop image
     """
-    _section_label = s.BACKDROP
+    _section_label = SEC.BACKDROP
 
     class KEYS:
         FILE = 'FILE'

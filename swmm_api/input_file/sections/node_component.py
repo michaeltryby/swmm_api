@@ -3,7 +3,7 @@ from numpy import NaN, isnan
 from ._identifiers import IDENTIFIERS
 from .._type_converter import convert_string, GIS_FLOAT_FORMAT
 from ..helpers import BaseSectionObject
-from .. import section_labels as s
+from ..section_abr import SEC
 
 
 class DryWeatherFlow(BaseSectionObject):
@@ -43,7 +43,7 @@ class DryWeatherFlow(BaseSectionObject):
         pattern4 (str, Optional): i.e.: weekend-hourly-pattern
     """
     _identifier = [IDENTIFIERS.Node, IDENTIFIERS.Constituent]
-    _section_label = s.DWF
+    _section_label = SEC.DWF
 
     class TYPES:
         FLOW = 'FLOW'
@@ -144,7 +144,7 @@ class Inflow(BaseSectionObject):
             periodic basis. ``Pat``
     """
     _identifier = [IDENTIFIERS.Node, IDENTIFIERS.Constituent]
-    _section_label = s.INFLOWS
+    _section_label = SEC.INFLOWS
 
     class TYPES:
         FLOW = 'FLOW'
@@ -189,7 +189,7 @@ class Coordinate(BaseSectionObject):
         y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
     """
     _identifier = IDENTIFIERS.Node
-    _section_label = s.COORDINATES
+    _section_label = SEC.COORDINATES
 
     def __init__(self, Node, x, y):
         self.Node = str(Node)
@@ -229,7 +229,7 @@ class RainfallDependentInfiltrationInflow(BaseSectionObject):
         sewer_area (float): area of the sewershed which contributes RDII to the node (acres or hectares).
     """
     _identifier = IDENTIFIERS.Node
-    _section_label = s.RDII
+    _section_label = SEC.RDII
 
     def __init__(self, Node, hydrograph, sewer_area):
         self.Node = str(Node)
@@ -295,7 +295,7 @@ class Treatment(BaseSectionObject):
             Node23 Lead R = 0.2 * R_TSS
     """
     _identifier = [IDENTIFIERS.Node, IDENTIFIERS.Pollutant]
-    _section_label = s.TREATMENT
+    _section_label = SEC.TREATMENT
 
     def __init__(self, Node, pollutant, result, function):
         self.Node = str(Node)
