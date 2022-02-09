@@ -19,7 +19,7 @@ def set_inp_dimensions(inp, ax):
     ax.set_ylim(y_min, y_max)
 
 
-def plot_map(inp):  # TODO
+def plot_map(inp, sc_connector=True, sc_center=True):  # TODO
     """
 
     Args:
@@ -39,13 +39,16 @@ def plot_map(inp):  # TODO
     # ---------------------
     update_vertices(inp)
 
-    for link, vertices in inp[VERTICES].items():
-        x, y = zip(*vertices.vertices)
-        ax.plot(x, y, 'y-')
+    if VERTICES in inp:
+        for link, vertices in inp[VERTICES].items():
+            x, y = zip(*vertices.vertices)
+            ax.plot(x, y, 'y-')
 
     # ---------------------
-
-    points = dict(inp[COORDINATES])
+    if COORDINATES in inp:
+        points = dict(inp[COORDINATES])
+    else:
+        points = dict()
     from shapely import geometry as shp
     points.update({poly.Subcatch: shp.Polygon(poly.polygon).centroid for poly in inp[POLYGONS].values()})
 
@@ -58,32 +61,37 @@ def plot_map(inp):  # TODO
 
             # ----------------
             # center point of sub-catchment
-            center = points[poly.Subcatch]
+            if sc_center:
+                center = points[poly.Subcatch]
+                ax.scatter(x=center.x, y=center.y, marker='s', c='k', zorder=999)
 
-            ax.scatter(x=center.x, y=center.y, marker='s', c='k', zorder=999)
-
-            subcatch = inp[SUBCATCHMENTS][poly.Subcatch]  # type: SubCatchment
-            outlet_point = points[subcatch.Outlet]
-            ax.plot([center.x, outlet_point.x], [center.y, outlet_point.y], 'r--')
+            # ----------------
+            # center connector to sub-catchment
+            if sc_connector:
+                subcatch = inp[SUBCATCHMENTS][poly.Subcatch]  # type: SubCatchment
+                outlet_point = points[subcatch.Outlet]
+                center = points[poly.Subcatch]
+                ax.plot([center.x, outlet_point.x], [center.y, outlet_point.y], 'r--')
 
     # ---------------------
-    coords = inp[COORDINATES].frame
-    node_style = {
-        JUNCTIONS: {'marker': '.', 'color': 'b'},
-        STORAGE: {'marker': 's', 'color': 'g'},
-        OUTFALLS: {'marker': '^', 'color': 'r'},
+    if COORDINATES in inp:
+        coords = inp[COORDINATES].frame
+        node_style = {
+            JUNCTIONS: {'marker': '.', 'color': 'b'},
+            STORAGE: {'marker': 's', 'color': 'g'},
+            OUTFALLS: {'marker': '^', 'color': 'r'},
 
-    }
-    ax.scatter(x=coords.x, y=coords.y,
-               marker=node_style[JUNCTIONS]['marker'], c=node_style[JUNCTIONS]['color'],
-               edgecolors='k', zorder=999)
+        }
+        ax.scatter(x=coords.x, y=coords.y,
+                   marker=node_style[JUNCTIONS]['marker'], c=node_style[JUNCTIONS]['color'],
+                   edgecolors='k', zorder=999)
 
-    for section in [STORAGE, OUTFALLS]:
-        if section in inp:
-            is_in_sec = coords.index.isin(inp[section].keys())
-            ax.scatter(x=coords[is_in_sec].x, y=coords[is_in_sec].y,
-                       marker=node_style[section]['marker'], c=node_style[section]['color'],
-                       edgecolors='k', zorder=9999)
+        for section in [STORAGE, OUTFALLS]:
+            if section in inp:
+                is_in_sec = coords.index.isin(inp[section].keys())
+                ax.scatter(x=coords[is_in_sec].x, y=coords[is_in_sec].y,
+                           marker=node_style[section]['marker'], c=node_style[section]['color'],
+                           edgecolors='k', zorder=9999)
 
     # ---------------------
     fig.tight_layout()

@@ -3,6 +3,7 @@ import time
 
 from numpy import NaN
 from pandas import MultiIndex
+from tqdm.auto import tqdm
 
 from .filter import filter_nodes, filter_links
 from .geo import update_vertices
@@ -107,7 +108,9 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
             df = df.join(inp[SEC.COORDINATES].geo_series).join(nodes_tags)
 
             GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
-        print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
+            print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
+        else:
+            print(f'{f"-":^{len(sec)}s}', end=' | ')
         t0 = time.perf_counter()
 
     # ---------------------------------
@@ -128,7 +131,9 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
 
             GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
 
-        print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
+            print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
+        else:
+            print(f'{f"-":^{len(sec)}s}', end=' | ')
         t0 = time.perf_counter()
 
     # ---------------------------------
@@ -142,7 +147,9 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
         gs_connector = get_subcatchment_connectors(inp)
         GeoDataFrame(gs_connector).to_file(gpkg_fn, driver=driver, layer=SEC.SUBCATCHMENTS + '_connector')
 
-    print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(SEC.SUBCATCHMENTS)}s}')
+        print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(SEC.SUBCATCHMENTS)}s}')
+    else:
+        print(f'{f"-":^{len(SEC.SUBCATCHMENTS)}s}', end=' | ')
 
 
 def get_subcatchment_connectors(inp):
@@ -160,16 +167,17 @@ def get_subcatchment_connectors(inp):
     # junctions = inp[s.COORDINATES].geo_series.reindex(outlets.values)
     # junctions.index = outlets.index
     from geopandas import GeoSeries
+    from shapely.geometry import LineString
 
     res = dict()
-    from shapely.geometry import LineString
-    for p in inp[SEC.POLYGONS]:
+    for p in tqdm(inp[SEC.POLYGONS], total=len(inp[SEC.POLYGONS].keys()), desc='get_subcatchment_connectors'):
         c = inp[SEC.POLYGONS][p].geo.centroid
         o = inp[SEC.SUBCATCHMENTS][p].Outlet
         if o not in inp[SEC.COORDINATES]:
             print(inp[SEC.SUBCATCHMENTS][p])
             continue
         res[p] = LineString([inp[SEC.COORDINATES][o].point, (c.x, c.y)])
+
     gs = GeoSeries(res, crs=inp[SEC.POLYGONS]._crs)
     gs.index.name = 'Subcatchment'
     gs.name = 'geometry'

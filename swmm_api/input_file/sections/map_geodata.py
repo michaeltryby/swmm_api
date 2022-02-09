@@ -93,6 +93,10 @@ class CoordinateGeo(Coordinate):
         """
         return cls.create_section(zip(data.index, data.x, data.y))
 
+    @classmethod
+    def from_shapely(cls, Node, point: sh.Point):
+        return cls(Node, point.x, point.y)
+
 
 class VerticesGeo(Vertices):
     """child class of :obj:`.link_component.Vertices`. See parent class for all functions."""
@@ -122,8 +126,13 @@ class VerticesGeo(Vertices):
         # geometry mit MultiLineString deswegen v[0] mit ersten und einzigen linestring zu verwenden
         s = cls.create_section()
         # s.update({i: Vertices(i, v) for i, v in zip(data.index, map(lambda i: list(i.coords), data.values))})
-        s.add_multiple(s._section_object(i, list(v.coords)) for i, v in data.to_dict().items())
+        # s.add_multiple(cls(i, list(v.coords)) for i, v in data.to_dict().items())
+        s.add_multiple(cls.from_shapely(i, v) for i, v in data.items())
         return s
+
+    @classmethod
+    def from_shapely(cls, Link, line: sh.LineString):
+        return cls(Link, list(line.coords))
 
 
 class PolygonGeo(Polygon):
@@ -158,8 +167,17 @@ class PolygonGeo(Polygon):
         has_interiors = data.interiors.apply(len) > 0
         if has_interiors.any():
             warnings.warn('Converting GeoSeries with Interiors(Holes) to POLYGON inp-section will ignore this interiors!')
-        s.add_multiple(s._section_object(i, [xy[0:2] for xy in list(p.coords)]) for i, p in data.exterior.iteritems())
+        # s.add_multiple(cls(i, [xy[0:2] for xy in list(p.coords)]) for i, p in data.exterior.iteritems())
+        s.add_multiple(cls.from_shapely(i, p) for i, p in data.items())
         return s
+
+    @classmethod
+    def from_shapely(cls, Subcatch, polygon: sh.Polygon):
+        return cls(Subcatch, cls.convert_shapely(polygon))
+
+    @staticmethod
+    def convert_shapely(polygon: sh.Polygon):
+        return [xy[0:2] for xy in list(polygon.exterior.coords)]
 
 
 ########################################################################################################################

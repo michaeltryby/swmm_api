@@ -5,7 +5,7 @@ from .collection import nodes_dict, links_dict, subcachtment_nodes_dict
 from .graph import next_links_labels, previous_links, previous_links_labels, links_connected
 from .macros import calc_slope
 from ..section_abr import SEC
-from ..section_lists import NODE_SECTIONS, LINK_SECTIONS
+from ..section_lists import NODE_SECTIONS, LINK_SECTIONS, SUBCATCHMENT_SECTIONS
 from ..sections import Tag, DryWeatherFlow, Junction, Coordinate, Conduit, Loss, Vertices, EvaporationSection
 from ... import SwmmInput
 
@@ -116,7 +116,8 @@ def delete_link(inp: SwmmInput, link):
 
 
 def delete_subcatchment(inp: SwmmInput, subcatchment):
-    for s in [SEC.SUBCATCHMENTS, SEC.SUBAREAS, SEC.INFILTRATION, SEC.POLYGONS, SEC.LOADINGS, SEC.COVERAGES]:
+    for s in SUBCATCHMENT_SECTIONS + [SEC.LOADINGS, SEC.COVERAGES]:
+        # , SEC.GWF, SEC.GROUNDWATER
         if (s in inp) and (subcatchment in inp[s]):
             inp[s].pop(subcatchment)
 
@@ -464,6 +465,19 @@ def rename_link(inp: SwmmInput, old_label: str, new_label: str):
 
     if (SEC.TAGS in inp) and ((Tag.TYPES.Link, old_label) in inp.TAGS):
         inp[SEC.TAGS][(Tag.TYPES.Link, new_label)] = inp[SEC.TAGS].pop((Tag.TYPES.Link, old_label))
+
+
+def rename_subcatchment(inp: SwmmInput, old_label: str, new_label: str):
+    for section in SUBCATCHMENT_SECTIONS + [SEC.LOADINGS, SEC.COVERAGES, SEC.GWF, SEC.GROUNDWATER]:
+        if (section in inp) and (old_label in inp[section]):
+            inp[section][new_label] = inp[section].pop(old_label)
+            if hasattr(inp[section][new_label], 'Name'):
+                inp[section][new_label].Name = new_label
+            else:
+                inp[section][new_label].Subcatch = new_label
+
+    if (SEC.TAGS in inp) and ((Tag.TYPES.Subcatch, old_label) in inp.TAGS):
+        inp[SEC.TAGS][(Tag.TYPES.Subcatch, new_label)] = inp[SEC.TAGS].pop((Tag.TYPES.Subcatch, old_label))
 
 
 def rename_timeseries(inp, old_label, new_label):

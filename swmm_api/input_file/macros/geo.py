@@ -1,4 +1,5 @@
 from . import links_dict
+from ..section_types import SECTION_TYPES
 from ..sections import Vertices, Coordinate, Polygon
 from ..section_labels import COORDINATES, VERTICES, POLYGONS
 
@@ -41,13 +42,19 @@ def update_vertices(inp):
     Returns:
         SwmmInput: changes inp data
     """
-    links = links_dict(inp)
-    coords = inp[COORDINATES]
-    for l in links.values():  # type: Conduit # or Weir or Orifice or Pump or Outlet
-        if l.Name not in inp[VERTICES]:
-            object_type = inp[VERTICES]._section_object
-            inp[VERTICES].add_obj(object_type(l.Name, vertices=list()))
+    if COORDINATES in inp:
+        links = links_dict(inp)
+        if links:
+            coords = inp[COORDINATES]
 
-        v = inp[VERTICES][l.Name].vertices
-        inp[VERTICES][l.Name].vertices = [coords[l.FromNode].point] + v + [coords[l.ToNode].point]
+            if VERTICES not in inp:
+                inp[VERTICES] = Vertices.create_section()
+
+            for l in links.values():  # type: Conduit # or Weir or Orifice or Pump or Outlet
+                if l.Name not in inp[VERTICES]:
+                    object_type = inp[VERTICES]._section_object
+                    inp[VERTICES].add_obj(object_type(l.Name, vertices=list()))
+
+                v = inp[VERTICES][l.Name].vertices
+                inp[VERTICES][l.Name].vertices = [coords[l.FromNode].point] + v + [coords[l.ToNode].point]
     return inp
