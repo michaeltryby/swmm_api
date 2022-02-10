@@ -20,20 +20,18 @@ use this file as an example for the usage of this package
 
 
 ########################################################################################################################
-def find_node(inp: SwmmInput, node_label):
+def find_node(inp: SwmmInput, label):
     """
     find node in inp-file data
 
     Args:
         inp (SwmmInput): inp-file data
-        node_label (str): node Name/label
+        label (str): node Name/label
 
     Returns:
         _Node | Junction | swmm_api.input_file.sections.node.Storage | Outfall: searched node (if not found None)
     """
-    nodes = nodes_dict(inp)
-    if node_label in nodes:
-        return nodes[node_label]
+    return nodes_dict(inp).get(label, None)
 
 
 def find_link(inp: SwmmInput, label):
@@ -47,9 +45,7 @@ def find_link(inp: SwmmInput, label):
     Returns:
         _Link | Conduit | Weir | Outlet | Orifice | Pump: searched link (if not found None)
     """
-    links = links_dict(inp)
-    if label in links:
-        return links[label]
+    return links_dict(inp).get(label, None)
 
 
 ########################################################################################################################

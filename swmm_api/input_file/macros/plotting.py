@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib import patches
 
 from .collection import nodes_dict, links_dict
-from .geo import update_vertices
+from .geo import complete_vertices
 from .graph import get_path_subgraph, links_connected
 from ..section_labels import (MAP, COORDINATES, POLYGONS, SUBCATCHMENTS, VERTICES, JUNCTIONS, STORAGE, OUTFALLS,
                               XSECTIONS, )
@@ -37,7 +37,7 @@ def plot_map(inp, sc_connector=True, sc_center=True):  # TODO
     ax.set_aspect(1.0)
 
     # ---------------------
-    update_vertices(inp)
+    complete_vertices(inp)
 
     if VERTICES in inp:
         for link, vertices in inp[VERTICES].items():

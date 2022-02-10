@@ -3,7 +3,7 @@ from networkx import DiGraph
 
 from .collection import nodes_dict, links_dict, subcachtment_nodes_dict
 from .graph import next_links_labels, previous_links, previous_links_labels, links_connected
-from .macros import calc_slope
+from .macros import calc_slope, find_link
 from ..section_abr import SEC
 from ..section_lists import NODE_SECTIONS, LINK_SECTIONS, SUBCATCHMENT_SECTIONS
 from ..sections import Tag, DryWeatherFlow, Junction, Coordinate, Conduit, Loss, Vertices, EvaporationSection
@@ -529,3 +529,8 @@ def rename_timeseries(inp, old_label, new_label):
         if not filtered_table.empty:
             for i in filtered_table.index:
                 inp[SEC.INFLOWS][i].TimeSeries = new_label
+
+
+def flip_link_direction(inp, link_label):
+    link = find_link(inp, link_label)
+    link.FromNode, link.ToNode = link.ToNode, link.FromNode

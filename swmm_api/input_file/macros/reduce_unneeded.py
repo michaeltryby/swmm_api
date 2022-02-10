@@ -1,6 +1,6 @@
 from ..section_abr import SEC
 from .collection import links_dict, nodes_dict
-from ..misc.curve_simplification import ramer_douglas, _vec2d_dist
+from ..misc.curve_simplification import ramer_douglas
 
 
 def reduce_curves(inp):
@@ -45,7 +45,8 @@ def reduce_pattern(inp):
         for i in range(1, 5):
             used_pattern |= set(inp[SEC.DWF].frame[f'pattern{i}'].dropna().values)
 
-    inp[SEC.PATTERNS] = inp[SEC.PATTERNS].slice_section(used_pattern)
+    if SEC.PATTERNS in inp:
+        inp[SEC.PATTERNS] = inp[SEC.PATTERNS].slice_section(used_pattern)
     return inp
 
 
@@ -128,43 +129,6 @@ def reduce_raingages(inp):
         return inp
     needed_raingages = {inp[SEC.SUBCATCHMENTS][s].RainGage for s in inp[SEC.SUBCATCHMENTS]}
     inp[SEC.RAINGAGES] = inp[SEC.RAINGAGES].slice_section(needed_raingages)
-    return inp
-
-
-def reduce_vertices(inp, node_range=0.25):
-    """
-    remove first and last vertices to keep only inner vertices (SWMM standard)
-
-    important if data originally from GIS and export to SWMM
-
-    Notes:
-        works inplace
-
-    Args:
-        inp (SwmmInput):
-        node_range (float): minimal distance in m from the first and last vertices to the end nodes
-
-    Returns:
-        SwmmInput:
-    """
-    links = links_dict(inp)
-
-    for l in links.values():  # type: Conduit
-        if l.Name in inp[SEC.VERTICES]:
-            v = inp[SEC.VERTICES][l.Name].vertices
-            p = inp[SEC.COORDINATES][l.FromNode].point
-            if _vec2d_dist(p, v[0]) < node_range:
-                v = v[1:]
-
-            if v:
-                p = inp[SEC.COORDINATES][l.ToNode].point
-                if _vec2d_dist(p, v[-1]) < node_range:
-                    v = v[:-1]
-
-            if v:
-                inp[SEC.VERTICES][l.Name].vertices = v
-            else:
-                del inp[SEC.VERTICES][l.Name]
     return inp
 
 

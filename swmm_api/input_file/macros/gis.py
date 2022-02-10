@@ -6,8 +6,7 @@ from pandas import MultiIndex
 from tqdm.auto import tqdm
 
 from .filter import filter_nodes, filter_links
-from .geo import update_vertices
-from .reduce_unneeded import reduce_vertices
+from .geo import complete_vertices, simplify_vertices, reduce_vertices
 from .tags import get_node_tags, get_link_tags, get_subcatchment_tags
 from ..section_abr import SEC
 
@@ -115,7 +114,8 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
 
     # ---------------------------------
     links_tags = get_link_tags(inp)
-    update_vertices(inp)
+    complete_vertices(inp)
+    simplify_vertices(inp)
     for sec in LINK_SECTIONS:
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}').join(
@@ -221,7 +221,7 @@ def links_geo_data_frame(inp, label_sep='.'):
     if (SEC.VERTICES in inp) and not isinstance(inp[SEC.VERTICES], InpSectionGeo):
         inp[SEC.VERTICES] = convert_section_to_geosection(inp[SEC.VERTICES])
     links_tags = get_link_tags(inp)
-    update_vertices(inp)
+    complete_vertices(inp)
     res = None
     for sec in LINK_SECTIONS:
         if sec in inp:
@@ -372,6 +372,7 @@ def gpkg_to_swmm(fn, label_sep='.'):
             if isinstance(c, list):
                 inp[SEC.OUTLETS][i].Curve = [float(j) for j in c[0][1:-1].split(',')]
 
+    simplify_vertices(inp)
     reduce_vertices(inp)
 
     # ---------------------------------
