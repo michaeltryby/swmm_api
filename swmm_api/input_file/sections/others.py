@@ -310,7 +310,7 @@ class Pollutant(BaseSectionObject):
     def __init__(self, Name, unit, Crain, Cgw, Crdii, Kdecay,
                  SnowOnly=False, Co_Pollutant='*', Co_Frac=0, Cdwf=0, Cinit=0):
         self.Name = str(Name)
-        self.Units = str(unit)
+        self.unit = str(unit)
         self.Crain = float(Crain)
         self.Cgw = float(Cgw)
         self.Crdii = float(Crdii)
@@ -1156,6 +1156,8 @@ class TimeseriesData(Timeseries):
 
         for dt in date_time:
             if isinstance(dt, Timestamp):
+                date_time_new.append(dt)
+            elif isinstance(dt, float):
                 date_time_new.append(dt)
             else:
                 parts = dt.split()

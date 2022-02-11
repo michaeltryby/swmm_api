@@ -72,6 +72,8 @@ class SwmmInput(CustomDictWithAttributes):
         _ = [self[sec] for sec in self]
 
     def __getitem__(self, key):
+        if key not in self:
+            self._data[key] = self._converter[key]()
         if isinstance(self._data[key], str):
             self._data[key] = convert_section(key, self._data[key], self._converter)
         return self._data.__getitem__(key)
