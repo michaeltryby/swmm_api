@@ -1,4 +1,23 @@
 # Changelog  
+
+## 0.2.0.17 (Feb 11, 2022)
+fixed:
+- error in copy Pollutant
+- error in TimeseriesData when datetime is a float
+
+renamed:
+- in swmm_api.input_file.macros.geo update_vertices to complete_vertices 
+
+added:
+- swmm_api.input_file.macros.edit.flip_link_direction
+- swmm_api.input_file.macros.geo.complete_link_vertices
+- swmm_api.input_file.macros.geo.simplify_link_vertices
+- swmm_api.input_file.macros.geo.simplify_vertices
+- automatic creation for sections when getter is called and not in inp-data
+
+moved:
+- reduce_vertices from swmm_api.input_file.macros.reduce_unneeded to geo
+
 ## 0.2.0.16 (Jan 7, 2022)
 - moved predefined output file variables (VARIABLES, OBJECTS) to swmm_api.output_file.definitions
 - new functions:
