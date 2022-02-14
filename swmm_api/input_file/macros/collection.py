@@ -1,6 +1,6 @@
 from collections import ChainMap
 
-from ... import SwmmInput
+from ..inp import SwmmInput
 from ..section_abr import SEC
 from ..section_lists import NODE_SECTIONS, LINK_SECTIONS
 from ..sections.link import _Link
@@ -45,7 +45,7 @@ def links_dict(inp: SwmmInput):  # or Weir or Orifice or Pump or Outlet
     return links
 
 
-def subcachtment_nodes_dict(inp: SwmmInput):
+def subcatchment_nodes_dict(inp: SwmmInput):
     """
     get dict where key=node and value=list of subcatchment connected to the node (set as outlet)
 

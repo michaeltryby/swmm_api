@@ -1,4 +1,5 @@
 import datetime
+import re
 from datetime import date, time, timedelta
 from pandas import isna, to_datetime, Timedelta, Timestamp, to_timedelta
 from pandas.tseries.frequencies import to_offset
@@ -229,3 +230,22 @@ def convert_string(x) -> str:
 
 
 GIS_FLOAT_FORMAT = '0.03f'
+
+_SECTION_PATTERN = re.compile(r'^[ \t]*([^;\n]+)[ \t]*;?[^\n]*$', flags=re.M)
+
+
+def txt_to_lines(content):
+    """
+    converts text to multiple line arguments
+
+    Comments will be ignored:
+        ;; section comment
+        ; object comment / either inline(at the end of the line) or before the line
+
+    Args:
+        content (str): section text
+    Yields:
+        list[str]: arguments per line in the input file section
+    """
+    for line in _SECTION_PATTERN.finditer(content):
+        yield line.group().split()

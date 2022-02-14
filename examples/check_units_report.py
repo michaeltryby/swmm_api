@@ -3,7 +3,7 @@ from swmm_api.input_file.section_labels import OPTIONS, LID_USAGE
 import os
 
 
-inp = read_inp_file('epaswmm5_apps_manual/Example6-Final.inp', ignore_gui_sections=False)
+inp = read_inp_file('epaswmm5_apps_manual/Example6-Final.inp')
 for unit in ['CFS', 'CMS', 'GPM', 'MGD', 'LPS', 'MLD']:
     inp[OPTIONS]['FLOW_UNITS'] = unit
     fn = f'temp/{unit}.inp'

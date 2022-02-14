@@ -7,6 +7,10 @@
 # http://www.sphinx-doc.org/en/master/config
 
 # https://pydata-sphinx-theme.readthedocs.io/en/latest/index.html
+# https://pydata-sphinx-theme.readthedocs.io/en/latest/demo/kitchen-sink/paragraph-markup.html
+# https://raw.githubusercontent.com/pydata/pydata-sphinx-theme/master/docs/demo/kitchen-sink/paragraph-markup.rst
+# pip install pydata-sphinx-theme
+# https://docutils.sourceforge.io/docs/ref/rst/directives.html
 
 # -- Path setup --------------------------------------------------------------
 

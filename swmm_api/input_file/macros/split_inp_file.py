@@ -1,7 +1,7 @@
 import os
 
 from ..helpers import section_to_string, convert_section
-from ... import SwmmInput
+from ..inp import SwmmInput
 from ..section_types import SECTION_TYPES
 
 

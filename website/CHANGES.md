@@ -1,4 +1,36 @@
 # Changelog  
+
+## 0.2.0.18 (Feb x, 2022)
+
+fixed:
+- type in swmm_api.input_file.macros.collection.subcachtment_nodes_dict > subcatchment_nodes_dict
+- copy error for swmm_api.input_file.sections.lid.LIDControl, swmm_api.input_file.sections.others.Hydrograph, SnowPack
+
+added:
+- funtion swmm_api.input_file.macros.edit.remove_quality_model
+- swmm_api.input_file.section_list.POLLUTANT_SECTIONS
+- missing report sections
+
+improved performance for reading bis inp-files
+
+## 0.2.0.17 (Feb 11, 2022)
+fixed:
+- error in copy Pollutant
+- error in TimeseriesData when datetime is a float
+
+renamed:
+- in swmm_api.input_file.macros.geo update_vertices to complete_vertices 
+
+added:
+- swmm_api.input_file.macros.edit.flip_link_direction
+- swmm_api.input_file.macros.geo.complete_link_vertices
+- swmm_api.input_file.macros.geo.simplify_link_vertices
+- swmm_api.input_file.macros.geo.simplify_vertices
+- automatic creation for sections when getter is called and not in inp-data
+
+moved:
+- reduce_vertices from swmm_api.input_file.macros.reduce_unneeded to geo
+
 ## 0.2.0.16 (Jan 7, 2022)
 - moved predefined output file variables (VARIABLES, OBJECTS) to swmm_api.output_file.definitions
 - new functions:

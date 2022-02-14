@@ -3,7 +3,7 @@ from math import floor
 
 from swmm.toolkit import solver
 from pyswmm import Simulation
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from swmm_api.run import get_result_filenames
 
 

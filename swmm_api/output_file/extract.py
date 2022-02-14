@@ -13,7 +13,7 @@ from os import remove
 import datetime
 import struct
 from io import SEEK_END, SEEK_SET
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from warnings import warn
 
 from .definitions import OBJECTS, VARIABLES

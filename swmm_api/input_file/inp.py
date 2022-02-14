@@ -1,7 +1,8 @@
 import os
 import re
 
-from .helpers import _sort_by, section_to_string, CustomDictWithAttributes, convert_section, inp_sep, InpSection
+from .helpers import (_sort_by, section_to_string, CustomDictWithAttributes, convert_section, inp_sep, InpSection,
+                      InpSectionGeneric, )
 from .section_types import SECTION_TYPES
 from .section_labels import *
 from .sections import *
@@ -72,21 +73,38 @@ class SwmmInput(CustomDictWithAttributes):
         _ = [self[sec] for sec in self]
 
     def __getitem__(self, key):
+        # if section not in inp-data, create an empty section
         if key not in self:
-            self._data[key] = self._converter[key]()
+            self._data[key] = self._converter[key].create_section()
+
+        # if section is a string (raw string from the .inp-file) convert section first
         if isinstance(self._data[key], str):
-            self._data[key] = convert_section(key, self._data[key], self._converter)
+            self[key] = convert_section(key, self._data[key], self._converter)
+
         return self._data.__getitem__(key)
 
     def __setitem__(self, key, item):
-        self._data.__setitem__(key, item)
+        super().__setitem__(key, item)
+        # super().__setattr__(key, item)
+        # self._data.__setitem__(key, item)
         if key == OPTIONS:
             self.set_default_infiltration_from_options()
         if hasattr(self[key], 'set_parent_inp'):
             self[key].set_parent_inp(self)
 
+    def __delattr__(self, item):
+        """delete section"""
+        if item in SECTION_TYPES:
+            # print('delete section')
+            del self._data[item]
+        else:
+            # print('delete attribute')
+            super().__delattr__(item)
+
     def set_default_infiltration_from_options(self):
-        if OPTIONS in self and 'INFILTRATION' in self[OPTIONS] and isinstance(self[OPTIONS], dict):
+        if OPTIONS in self \
+                and 'INFILTRATION' in self[OPTIONS] \
+                and isinstance(self[OPTIONS], (dict, OptionSection, InpSectionGeneric)):
             self.set_infiltration_method(INFILTRATION_DICT.get(self[OPTIONS]['INFILTRATION']))
 
     def set_infiltration_method(self, infiltration_class):
@@ -667,7 +685,7 @@ class SwmmInput(CustomDictWithAttributes):
             return self[LID_USAGE]
 
 
-def read_inp_file(filename, custom_converter=None,force_ignore_case=False, encoding='iso-8859-1'):
+def read_inp_file(filename, custom_converter=None, force_ignore_case=False, encoding='iso-8859-1'):
     """
     read ``.inp``-file and convert the sections in pythonic objects
 

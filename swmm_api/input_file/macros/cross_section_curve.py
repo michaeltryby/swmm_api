@@ -1,7 +1,7 @@
 import shape_generator
-from . import find_link
+from .macros import find_link
 from ..sections import CrossSection, Pump
-from ... import SwmmInput
+from ..inp import SwmmInput
 
 
 VIRTUAL_LENGTH = 100

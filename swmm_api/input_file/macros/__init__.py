@@ -1,11 +1,11 @@
 from .check import check_for_nodes, check_for_duplicates
-from .collection import nodes_dict, links_dict, subcachtment_nodes_dict
+from .collection import nodes_dict, links_dict, subcatchment_nodes_dict
 from .compare import compare_sections, compare_inp_files
 from .convert import junction_to_storage, junction_to_outfall, conduit_to_orifice
 from .curve import curve_figure
 from .edit import (combine_conduits, combine_conduits_keep_slope, combine_vertices, delete_link, delete_node,
                    delete_subcatchment, dissolve_conduit, flip_link_direction, move_flows, rename_link, rename_node,
-                   rename_subcatchment, rename_timeseries, split_conduit, )
+                   rename_subcatchment, rename_timeseries, split_conduit, remove_quality_model)
 from .filter import (filter_tags, filter_nodes, filter_links_within_nodes, filter_links, filter_subcatchments,
                      create_sub_inp, )
 try:

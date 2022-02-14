@@ -33,7 +33,7 @@ Input File Manipulation - Macros
     junction_to_storage
     junction_to_outfall
     conduit_to_orifice
-    subcachtment_nodes_dict
+    subcatchment_nodes_dict
     rename_node
     rename_link
     rename_timeseries
@@ -45,8 +45,12 @@ Input File Manipulation - Macros
     filter_links_within_nodes
     filter_links
     filter_subcatchments
-    update_vertices
+    complete_link_vertices
+    complete_vertices
     reduce_vertices
+    simplify_link_vertices
+    simplify_vertices
+    transform_coordinates
     check_for_nodes
     check_for_duplicates
     inp_to_graph
@@ -78,7 +82,34 @@ Input File Manipulation - Macros
     gpkg_to_swmm
     update_length
 
-.. rubric:: check
+.. currentmodule:: swmm_api.input_file.macros.check
+.. autosummary::
+    check_for_duplicates
+    check_for_nodes
+
+.. currentmodule:: swmm_api.input_file.macros.collection
+.. autosummary::
+    links_dict
+    nodes_dict
+    subcatchment_nodes_dict
+
+.. currentmodule:: swmm_api.input_file.macros.compare
+.. autosummary::
+    compare_inp_files
+    compare_sections
+    inp_version_control
+
+.. currentmodule:: swmm_api.input_file.macros.geo
+.. autosummary::
+    complete_link_vertices
+    complete_vertices
+    reduce_vertices
+    simplify_link_vertices
+    simplify_vertices
+    transform_coordinates
+
+check
+^^^^^
 
 .. automodule:: swmm_api.input_file.macros.check
     :members:

@@ -1358,6 +1358,29 @@ class Hydrograph(BaseSectionObject):
         MEDIUM = 'MEDIUM'
         LONG = 'LONG'
 
+    def __init__(self, Name, rain_gage, monthly_parameters=None):
+        self.Name = str(Name)
+        self.rain_gage = rain_gage
+
+        if monthly_parameters is None:
+            self.monthly_parameters = list()
+        else:
+            self.monthly_parameters = monthly_parameters
+
+    @classmethod
+    def _convert_lines(cls, multi_line_args):
+        last = None
+
+        for name, *line in multi_line_args:
+            # ---------------------------------
+            if line[0].upper() not in cls.MONTHS._possible:
+                if last is not None:
+                    yield last
+                last = cls(name, rain_gage=line[0])
+            elif name == last.Name:
+                last.monthly_parameters.append(cls.MONTHS.Parameters(name, *line))
+        yield last
+
     class MONTHS:
         JAN = 'JAN'
         FEB = 'FEB'
@@ -1376,56 +1399,37 @@ class Hydrograph(BaseSectionObject):
 
         _possible = [JAN, FEB, MAR, APR, MAI, JUN, JUL, AUG, SEP, OCT, NOV, DEC, ALL]
 
-    def __init__(self, Name, rain_gage):
-        self.Name = str(Name)
-        self.rain_gage = rain_gage
-        self.monthly_definitions = list()
+        class Parameters(BaseSectionObject):
+            _identifier = IDENTIFIERS.Name
 
-    @classmethod
-    def _convert_lines(cls, multi_line_args):
-        last = None
+            def __init__(self, Name, month, response, response_ratio, time_to_peak, recession_limb_ratio,
+                         depth_max=NaN, depth_recovery=NaN, depth_init=NaN):
+                """
 
-        for name, *line in multi_line_args:
-            # ---------------------------------
-            if line[0].upper() not in cls.MONTHS._possible:
-                if last is not None:
-                    yield last
-                last = cls(name, rain_gage=line[0])
-            elif name == last.Name:
-                last.monthly_definitions.append(cls.HydrographMonth(name, *line))
-        yield last
-
-    class HydrographMonth(BaseSectionObject):
-        _identifier = IDENTIFIERS.Name
-
-        def __init__(self, Name, month, response, response_ratio, time_to_peak, recession_limb_ratio,
-                     depth_max=NaN, depth_recovery=NaN, depth_init=NaN):
-            """
-
-            Args:
-                Name (str): name assigned to a unit hydrograph group.
-                month (str):
-                response (str):
-                response_ratio (float):
-                time_to_peak (float):
-                recession_limb_ratio (float):
-                depth_max (str):
-                depth_recovery (str):
-                depth_init (str):
-            """
-            self.Name = str(Name)
-            self.month = month
-            self.response = response
-            self.response_ratio = float(response_ratio)
-            self.time_to_peak = float(time_to_peak)
-            self.recession_limb_ratio = float(recession_limb_ratio)
-            self.depth_max = depth_max
-            self.depth_recovery = depth_recovery
-            self.depth_init = depth_init
+                Args:
+                    Name (str): name assigned to a unit hydrograph group.
+                    month (str):
+                    response (str):
+                    response_ratio (float):
+                    time_to_peak (float):
+                    recession_limb_ratio (float):
+                    depth_max (str):
+                    depth_recovery (str):
+                    depth_init (str):
+                """
+                self.Name = str(Name)
+                self.month = month
+                self.response = response
+                self.response_ratio = float(response_ratio)
+                self.time_to_peak = float(time_to_peak)
+                self.recession_limb_ratio = float(recession_limb_ratio)
+                self.depth_max = depth_max
+                self.depth_recovery = depth_recovery
+                self.depth_init = depth_init
 
     def to_inp_line(self):
         s = '{} {}\n'.format(self.Name, self.rain_gage)
-        for hyd in self.monthly_definitions:
+        for hyd in self.monthly_parameters:
             s += hyd.to_inp_line() + '\n'
         return s
 
@@ -1684,28 +1688,23 @@ class SnowPack(BaseSectionObject):
     _section_label = SEC.SNOWPACKS
     _table_inp_export = False
 
-    def __init__(self, Name, packs=None):
+    def __init__(self, Name, parts=None):
         self.Name = str(Name)
-        self.PLOWABLE = None
-        self.IMPERVIOUS = None
-        self.PERVIOUS = None
-        self.REMOVAL = None
+        self.parts = dict()
 
-        if isinstance(packs, dict):
-            for p in packs:
-                if p in self:
-                    self[p] = packs[p]
-        elif isinstance(packs, list):
-            for p in packs:
+        if isinstance(parts, dict):
+            self.parts = parts
+        elif isinstance(parts, list):
+            for p in parts:
                 self.add_pack(p)
-        elif packs is None:
+        elif parts is None:
             pass
         else:
-            raise NotImplementedError(f'SnowPack packs tpye "{type(packs)}" not implemented!')
+            raise NotImplementedError(f'SnowPack packs type "{type(parts)}" not implemented!')
 
     def add_pack(self, p):
-        if type(p) in self.TYPES._type2_dict:
-            self[self.TYPES._type2_dict[type(p)]] = p
+        if isinstance(p, self.PARTS._possible_types):
+            self.parts[p._LABEL] = p
 
     @classmethod
     def _convert_lines(cls, multi_line_args):
@@ -1721,10 +1720,10 @@ class SnowPack(BaseSectionObject):
                 last = cls(name)
 
             kind = kind.upper()
-            last[kind] = cls.TYPES._type_dict[kind](*line)
+            last.parts[kind] = cls.PARTS._dict[kind](*line)
         yield last
 
-    class TYPES:
+    class PARTS:
         class _Base(BaseSectionObject):
             _table_inp_export = False
             _identifier = IDENTIFIERS.Name
@@ -1742,14 +1741,14 @@ class SnowPack(BaseSectionObject):
             _LABEL = 'PLOWABLE'
 
             def __init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0, SNN0):
-                SnowPack.TYPES._Base.__init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0)
+                SnowPack.PARTS._Base.__init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0)
                 self.SNN0 = float(SNN0)
 
         class Pervious(_Base):
             _LABEL = 'PERVIOUS'
 
             def __init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0, SD100):
-                SnowPack.TYPES._Base.__init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0)
+                SnowPack.PARTS._Base.__init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0)
                 self.SD100 = float(SD100)
 
         class Impervious(Pervious):
@@ -1772,20 +1771,30 @@ class SnowPack(BaseSectionObject):
         PERVIOUS = Impervious._LABEL
         REMOVAL = Removal._LABEL
 
-        _possible = [PLOWABLE, IMPERVIOUS, PERVIOUS, REMOVAL]
+        _possible_types = (Plowable, Pervious, Impervious, Removal)
+        _possible = (PLOWABLE, PERVIOUS, IMPERVIOUS, REMOVAL)
 
-        _type_dict = {PLOWABLE: Plowable,
-                      IMPERVIOUS: Pervious,
-                      PERVIOUS: Impervious,
-                      REMOVAL: Removal}
-        _type2_dict = {Plowable: PLOWABLE,
-                       Pervious: IMPERVIOUS,
-                       Impervious: PERVIOUS,
-                       Removal: REMOVAL}
+        _dict = {x._LABEL: x for x in _possible_types}
+
+    @property
+    def plowable(self):
+        return self.parts[self.PARTS.PLOWABLE]
+
+    @property
+    def impervious(self):
+        return self.parts[self.PARTS.IMPERVIOUS]
+
+    @property
+    def pervious(self):
+        return self.parts[self.PARTS.PERVIOUS]
+
+    @property
+    def removal(self):
+        return self.parts[self.PARTS.REMOVAL]
 
     def to_inp_line(self):
         s = ''
-        for pack in self.TYPES._possible:
+        for pack in self.PARTS._possible:
             if self[pack] is not None:
                 s += f'{self.Name} {pack:<8} {self[pack].to_inp_line()}\n'
         return s

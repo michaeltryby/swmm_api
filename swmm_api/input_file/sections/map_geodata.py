@@ -2,7 +2,10 @@ import warnings
 
 import shapely.geometry as sh
 
-from . import Conduit, Vertices, Coordinate, Polygon
+from .link_component import Vertices
+from .link import Conduit
+from .node_component import Coordinate
+from .subcatch import Polygon
 from ..section_labels import CONDUITS, VERTICES, COORDINATES, POLYGONS
 from ..helpers import InpSection
 

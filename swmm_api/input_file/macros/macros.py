@@ -1,16 +1,16 @@
-import pandas as pd
-
 from statistics import mean
+
+import pandas as pd
 
 from .collection import nodes_dict, links_dict
 from .graph import links_connected
 from .tags import get_subcatchment_tags, get_node_tags
-
-from .. import SwmmInput, section_labels as sec
-from ..sections import CrossSection
+from ..inp import SwmmInput
+from ..section_abr import SEC
 from ..section_labels import XSECTIONS
 from ..section_lists import LINK_SECTIONS, NODE_SECTIONS
 from ..sections.link import _Link
+from ..sections.link_component import CrossSection
 
 """
 a collection of macros to manipulate an inp-file
@@ -119,8 +119,8 @@ def conduits_are_equal(inp: SwmmInput, link0, link1, diff_roughness=0.1, diff_sl
     if diff_roughness is not None:
         all_checks_out &= _rel_diff(link0.Roughness, link1.Roughness) < diff_roughness
 
-    xs0 = inp[sec.XSECTIONS][link0.Name]  # type: CrossSection
-    xs1 = inp[sec.XSECTIONS][link1.Name]  # type: CrossSection
+    xs0 = inp[SEC.XSECTIONS][link0.Name]  # type: CrossSection
+    xs1 = inp[SEC.XSECTIONS][link1.Name]  # type: CrossSection
 
     # Diameter values match within a specified percent tolerance (1 %)
     if diff_height is not None:
@@ -156,8 +156,8 @@ def update_no_duplicates(inp_base, inp_update) -> SwmmInput:
     inp_new.update(inp_update)
 
     for node in nodes_dict(inp_new):
-        if sum((node in inp_new[s] for s in NODE_SECTIONS + [sec.SUBCATCHMENTS] if s in inp_new)) != 1:
-            for s in NODE_SECTIONS + [sec.SUBCATCHMENTS]:
+        if sum((node in inp_new[s] for s in NODE_SECTIONS + [SEC.SUBCATCHMENTS] if s in inp_new)) != 1:
+            for s in NODE_SECTIONS + [SEC.SUBCATCHMENTS]:
                 if (s in inp_new) and (node in inp_new[s]) and (node not in inp_update[s]):
                     del inp_new[s][node]
 
@@ -207,12 +207,12 @@ def set_times(inp, start, end, head=None, tail=None):
         end = end + tail
 
     report_start = start
-    inp[sec.OPTIONS]['START_DATE'] = sim_start.date()
-    inp[sec.OPTIONS]['START_TIME'] = sim_start.time()
-    inp[sec.OPTIONS]['REPORT_START_DATE'] = report_start.date()
-    inp[sec.OPTIONS]['REPORT_START_TIME'] = report_start.time()
-    inp[sec.OPTIONS]['END_DATE'] = end.date()
-    inp[sec.OPTIONS]['END_TIME'] = end.time()
+    inp[SEC.OPTIONS]['START_DATE'] = sim_start.date()
+    inp[SEC.OPTIONS]['START_TIME'] = sim_start.time()
+    inp[SEC.OPTIONS]['REPORT_START_DATE'] = report_start.date()
+    inp[SEC.OPTIONS]['REPORT_START_TIME'] = report_start.time()
+    inp[SEC.OPTIONS]['END_DATE'] = end.date()
+    inp[SEC.OPTIONS]['END_TIME'] = end.time()
     return inp
 
 
@@ -226,7 +226,7 @@ def combined_subcatchment_frame(inp: SwmmInput):
     Returns:
         pandas.DataFrame: combined subcatchment data
     """
-    df = inp[sec.SUBCATCHMENTS].frame.join(inp[sec.SUBAREAS].frame).join(inp[sec.INFILTRATION].frame)
+    df = inp[SEC.SUBCATCHMENTS].frame.join(inp[SEC.SUBAREAS].frame).join(inp[SEC.INFILTRATION].frame)
     df = df.join(get_subcatchment_tags(inp))
     return df
 
@@ -241,16 +241,16 @@ def nodes_data_frame(inp, label_sep='.'):
     for s, _ in iter_sections(inp, NODE_SECTIONS):
         df = inp[s].frame.rename(columns=lambda c: f'{label_sep}{c}')
 
-        if s == sec.STORAGE:
-            df[f'{sec.STORAGE}{label_sep}Curve'] = df[f'{sec.STORAGE}{label_sep}Curve'].astype(str)
+        if s == SEC.STORAGE:
+            df[f'{SEC.STORAGE}{label_sep}Curve'] = df[f'{SEC.STORAGE}{label_sep}Curve'].astype(str)
 
-        for sub_sec in [sec.DWF, sec.INFLOWS]:
+        for sub_sec in [SEC.DWF, SEC.INFLOWS]:
             if sub_sec in inp:
                 x = inp[sub_sec].frame.unstack(1)
                 x.columns = [f'{label_sep}'.join([sub_sec, c[1], c[0]]) for c in x.columns]
                 df = df.join(x)
 
-        df = df.join(inp[sec.COORDINATES].frame).join(nodes_tags)
+        df = df.join(inp[SEC.COORDINATES].frame).join(nodes_tags)
 
         if res is None:
             res = df

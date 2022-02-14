@@ -1,5 +1,5 @@
 import os
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import pandas as pd
 from swmm_api.input_file import section_labels
 
@@ -17,7 +17,7 @@ process_bar = tqdm(example_dirs)
 for folder in process_bar:
     for fn in os.listdir(folder):
         if '.inp' in fn:
-            inp = read_inp_file(os.path.join(folder, fn), ignore_gui_sections=False)
+            inp = read_inp_file(os.path.join(folder, fn))
             print(fn)
             if 'projects' in folder:
                 fn = 'projects/' + fn

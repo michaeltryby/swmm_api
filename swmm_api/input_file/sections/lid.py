@@ -2,6 +2,7 @@ from numpy import NaN
 
 from ._identifiers import IDENTIFIERS
 from ..helpers import BaseSectionObject
+from ..section_abr import SEC
 
 
 class LIDControl(BaseSectionObject):
@@ -87,6 +88,7 @@ class LIDControl(BaseSectionObject):
         placed in a particular subcatchment.
     """
     _identifier = [IDENTIFIERS.Name, 'lid_kind']
+    _section_label = SEC.LID_CONTROLS
     _table_inp_export = False
 
     class LID_TYPES:
@@ -101,20 +103,13 @@ class LIDControl(BaseSectionObject):
 
         _possible = [BC, RG, GR, IT, PP, RB, RD, VS]
 
-    class SURFACE_TYPES:
-        SURFACE = 'SURFACE'
-        SOIL = 'SOIL'
-        PAVEMENT = 'PAVEMENT'
-        STORAGE = 'STORAGE'
-        DRAIN = 'DRAIN'
-        DRAINMAT = 'DRAINMAT'
-
-    def __init__(self, Name, lid_kind, surfaces=None):
+    def __init__(self, Name, lid_kind, layer_dict=None):
         self.Name = str(Name)
-        self.lid_kind = lid_kind.upper()
-        self.layer_dict = dict()
-        if surfaces is not None:
-            self.layer_dict = surfaces
+        self.lid_kind = lid_kind.upper()  # one of LID_TYPES
+        if layer_dict is None:
+            self.layer_dict = dict()
+        else:
+            self.layer_dict = layer_dict
 
     @classmethod
     def _convert_lines(cls, multi_line_args):
@@ -127,150 +122,167 @@ class LIDControl(BaseSectionObject):
                     yield last
                 last = cls(name, lid_kind=line[0].upper())
             elif name == last.Name:
-                surface_kind = line.pop(0).upper()
-                last.layer_dict[surface_kind] = cls._surface_dict[surface_kind](*line)
+                surface_kind = line.pop(0).upper()  # one of SURFACE_TYPES
+                last.layer_dict[surface_kind] = cls.LAYER_TYPES._dict[surface_kind](*line)
         yield last
 
-    class Surface(BaseSectionObject):
-        def __init__(self, StorHt, VegFrac, Rough, Slope, Xslope):
-            """
-            Args:
-                StorHt (float): when confining walls or berms are present this is the maximum depth to which water can
-                    pond above the surface of the unit before overflow occurs (in inches or mm). For LIDs that
-                    experience overland flow it is the height of any surface depression storage.
-                    For swales, it is the height of its trapezoidal cross section.
-                VegFrac (float): fraction of the surface storage volume that is filled with vegetation.
-                Rough (float): Manning's n for overland flow over surface soil cover, pavement, roof surface or a
-                    vegetative swale. Use 0 for other types of LIDs.
-                Slope (float): slope of a roof surface, pavement surface or vegetative swale (percent).
-                    Use 0 for other types of LIDs.
-                Xslope (float): slope (run over rise) of the side walls of a vegetative swale's cross section.
-                    Use 0 for other types of LIDs.
+    class LAYER_TYPES:
+        class Surface(BaseSectionObject):
+            _LABEL = 'SURFACE'
 
-            Remarks:
-                If either Rough or Slope values are 0 then any ponded water that exceeds the
-                surface storage depth is assumed to completely overflow the LID control within a
-                single time step.
-            """
-            self.StorHt = float(StorHt)
-            self.VegFrac = float(VegFrac)
-            self.Rough = float(Rough)
-            self.Slope = float(Slope)
-            self.Xslope = float(Xslope)
+            def __init__(self, StorHt, VegFrac, Rough, Slope, Xslope):
+                """
+                Args:
+                    StorHt (float): when confining walls or berms are present this is the maximum depth to which water can
+                        pond above the surface of the unit before overflow occurs (in inches or mm). For LIDs that
+                        experience overland flow it is the height of any surface depression storage.
+                        For swales, it is the height of its trapezoidal cross section.
+                    VegFrac (float): fraction of the surface storage volume that is filled with vegetation.
+                    Rough (float): Manning's n for overland flow over surface soil cover, pavement, roof surface or a
+                        vegetative swale. Use 0 for other types of LIDs.
+                    Slope (float): slope of a roof surface, pavement surface or vegetative swale (percent).
+                        Use 0 for other types of LIDs.
+                    Xslope (float): slope (run over rise) of the side walls of a vegetative swale's cross section.
+                        Use 0 for other types of LIDs.
 
-    class Soil(BaseSectionObject):
-        def __init__(self, Thick, Por, FC, WP, Ksat, Kcoeff, Suct):
-            """
-            Args:
-                Thick (float): thickness of the soil layer (inches or mm).
-                Por (float): soil porosity (volume of pore space relative to total volume).
-                FC (float): soil field capacity (volume of pore water relative to total volume after the
-                    soil has been allowed to drain fully).
-                WP (float): soil wilting point (volume of pore water relative to total volume for a well
-                    dried soil where only bound water remains).
-                Ksat (float): soil’s saturated hydraulic conductivity (in/hr or mm/hr).
-                Kcoeff (float): slope of the curve of log(conductivity) versus soil moisture content
-                    (dimensionless).
-                Suct (float): soil capillary suction (in or mm).
-            """
-            self.Thick = float(Thick)
-            self.Por = float(Por)
-            self.FC = float(FC)
-            self.WP = float(WP)
-            self.Ksat = float(Ksat)
-            self.Kcoeff = float(Kcoeff)
-            self.Suct = float(Suct)
+                Remarks:
+                    If either Rough or Slope values are 0 then any ponded water that exceeds the
+                    surface storage depth is assumed to completely overflow the LID control within a
+                    single time step.
+                """
+                self.StorHt = float(StorHt)
+                self.VegFrac = float(VegFrac)
+                self.Rough = float(Rough)
+                self.Slope = float(Slope)
+                self.Xslope = float(Xslope)
 
-    class Pavement(BaseSectionObject):
-        def __init__(self, Thick, Vratio, FracImp, Perm, Vclog, regeneration_interval=NaN, regeneration_fraction=NaN):
-            """
-            Args:
-                Thick (float): thickness of the pavement layer (inches or mm).
-                Vratio (float): void ratio (volume of void space relative to the volume of solids in the
-                    pavement for continuous systems or for the fill material used in modular
-                    systems). Note that porosity = void ratio / (1 + void ratio).
+        class Soil(BaseSectionObject):
+            _LABEL = 'SOIL'
 
-                FracImp (float): ratio of impervious paver material to total area for modular systems; 0 for
-                    continuous porous pavement systems.
-                Perm (float): permeability of the concrete or asphalt used in continuous systems or
-                    hydraulic conductivity of the fill material (gravel or sand) used in modular
-                    systems (in/hr or mm/hr).
-                Vclog (float): number of pavement layer void volumes of runoff treated it takes to
-                    completely clog the pavement. Use a value of 0 to ignore clogging.
-            """
-            self.Thick = float(Thick)
-            self.Vratio = float(Vratio)
-            self.FracImp = float(FracImp)
-            self.Perm = float(Perm)
-            self.Vclog = Vclog  # acc. to documentation
-            # self.clogging_factor = float(clogging_factor)
-            self.regeneration_interval = float(regeneration_interval)
-            self.regeneration_fraction = float(regeneration_fraction)
+            def __init__(self, Thick, Por, FC, WP, Ksat, Kcoeff, Suct):
+                """
+                Args:
+                    Thick (float): thickness of the soil layer (inches or mm).
+                    Por (float): soil porosity (volume of pore space relative to total volume).
+                    FC (float): soil field capacity (volume of pore water relative to total volume after the
+                        soil has been allowed to drain fully).
+                    WP (float): soil wilting point (volume of pore water relative to total volume for a well
+                        dried soil where only bound water remains).
+                    Ksat (float): soil’s saturated hydraulic conductivity (in/hr or mm/hr).
+                    Kcoeff (float): slope of the curve of log(conductivity) versus soil moisture content
+                        (dimensionless).
+                    Suct (float): soil capillary suction (in or mm).
+                """
+                self.Thick = float(Thick)
+                self.Por = float(Por)
+                self.FC = float(FC)
+                self.WP = float(WP)
+                self.Ksat = float(Ksat)
+                self.Kcoeff = float(Kcoeff)
+                self.Suct = float(Suct)
 
-    class Storage(BaseSectionObject):
-        def __init__(self, Height, Vratio, Seepage, Vclog):
-            """
-            Args:
-                Height (float): thickness of the storage layer or height of a rain barrel (inches or mm).
-                Vratio (float): void ratio (volume of void space relative to the volume of solids in the
-                    layer). Note that porosity = void ratio / (1 + void ratio).
-                Seepage (float): the rate at which water seeps from the layer into the underlying native
-                    soil when first constructed (in/hr or mm/hr). If there is an impermeable
-                    floor or liner below the layer then use a value of 0.
-                Vclog (int): number of storage layer void volumes of runoff treated it takes to
-                    completely clog the layer. Use a value of 0 to ignore clogging.
+        class Pavement(BaseSectionObject):
+            _LABEL = 'PAVEMENT'
 
-            Remarks:
-                Values for Vratio, Seepage, and Vclog are ignored for rain barrels.
-            """
-            self.Height = float(Height)
-            self.Vratio = float(Vratio)
-            self.Seepage = float(Seepage)
-            self.Vclog = int(Vclog)
+            def __init__(self, Thick, Vratio, FracImp, Perm, Vclog, regeneration_interval=NaN, regeneration_fraction=NaN):
+                """
+                Args:
+                    Thick (float): thickness of the pavement layer (inches or mm).
+                    Vratio (float): void ratio (volume of void space relative to the volume of solids in the
+                        pavement for continuous systems or for the fill material used in modular
+                        systems). Note that porosity = void ratio / (1 + void ratio).
 
-    class Drain(BaseSectionObject):
-        def __init__(self, Coeff, Expon, Offset, Delay, open_level=NaN, close_level=NaN):
-            """
-            Args:
-                Coeff (float): coefficient C that determines the rate of flow through the drain as a
-                    function of height of stored water above the drain bottom. For Rooftop
-                    Disconnection it is the maximum flow rate (in inches/hour or mm/hour)
-                    that the roof’s gutters and downspouts can handle before overflowing.
-                Expon (float): exponent n that determines the rate of flow through the drain as a
-                    function of height of stored water above the drain outlet.
-                Offset (float): height of the drain line above the bottom of the storage layer or rain
-                    barrel (inches or mm).
-                Delay: number of dry weather hours that must elapse before the drain line in a
-                    rain barrel is opened (the line is assumed to be closed once rainfall
-                    begins). A value of 0 signifies that the barrel's drain line is always open
-                    and drains continuously. This parameter is ignored for other types of
-                    LIDs.
-            """
-            self.Coeff = float(Coeff)
-            self.Expon = float(Expon)
-            self.Offset = float(Offset)
-            self.Delay = Delay  # acc. to documentation  / for Rain Barrels only
-            # self.open_level = open_level  # to in documentation
-            # self.close_level = close_level  # to in documentation
+                    FracImp (float): ratio of impervious paver material to total area for modular systems; 0 for
+                        continuous porous pavement systems.
+                    Perm (float): permeability of the concrete or asphalt used in continuous systems or
+                        hydraulic conductivity of the fill material (gravel or sand) used in modular
+                        systems (in/hr or mm/hr).
+                    Vclog (float): number of pavement layer void volumes of runoff treated it takes to
+                        completely clog the pavement. Use a value of 0 to ignore clogging.
+                """
+                self.Thick = float(Thick)
+                self.Vratio = float(Vratio)
+                self.FracImp = float(FracImp)
+                self.Perm = float(Perm)
+                self.Vclog = Vclog  # acc. to documentation
+                # self.clogging_factor = float(clogging_factor)
+                self.regeneration_interval = float(regeneration_interval)
+                self.regeneration_fraction = float(regeneration_fraction)
 
-    class Drainmat(BaseSectionObject):
-        def __init__(self, Thick, Vratio, Rough):
-            """
-            Args:
-                Thick (float): thickness of the drainage mat (inches or mm).
-                Vratio (float): ratio of void volume to total volume in the mat.
-                Rough (float): Manning's n constant used to compute the horizontal flow rate of drained water through the mat.
-            """
-            self.Thick = float(Thick)
-            self.Vratio = float(Vratio)
-            self.Rough = float(Rough)
+        class Storage(BaseSectionObject):
+            _LABEL = 'STORAGE'
 
-    _surface_dict = {SURFACE_TYPES.SURFACE: Surface,
-                     SURFACE_TYPES.SOIL: Soil,
-                     SURFACE_TYPES.PAVEMENT: Pavement,
-                     SURFACE_TYPES.STORAGE: Storage,
-                     SURFACE_TYPES.DRAIN: Drain,
-                     SURFACE_TYPES.DRAINMAT: Drainmat}
+            def __init__(self, Height, Vratio, Seepage, Vclog):
+                """
+                Args:
+                    Height (float): thickness of the storage layer or height of a rain barrel (inches or mm).
+                    Vratio (float): void ratio (volume of void space relative to the volume of solids in the
+                        layer). Note that porosity = void ratio / (1 + void ratio).
+                    Seepage (float): the rate at which water seeps from the layer into the underlying native
+                        soil when first constructed (in/hr or mm/hr). If there is an impermeable
+                        floor or liner below the layer then use a value of 0.
+                    Vclog (int): number of storage layer void volumes of runoff treated it takes to
+                        completely clog the layer. Use a value of 0 to ignore clogging.
+
+                Remarks:
+                    Values for Vratio, Seepage, and Vclog are ignored for rain barrels.
+                """
+                self.Height = float(Height)
+                self.Vratio = float(Vratio)
+                self.Seepage = float(Seepage)
+                self.Vclog = int(Vclog)
+
+        class Drain(BaseSectionObject):
+            _LABEL = 'DRAIN'
+
+            def __init__(self, Coeff, Expon, Offset, Delay, open_level=NaN, close_level=NaN):
+                """
+                Args:
+                    Coeff (float): coefficient C that determines the rate of flow through the drain as a
+                        function of height of stored water above the drain bottom. For Rooftop
+                        Disconnection it is the maximum flow rate (in inches/hour or mm/hour)
+                        that the roof’s gutters and downspouts can handle before overflowing.
+                    Expon (float): exponent n that determines the rate of flow through the drain as a
+                        function of height of stored water above the drain outlet.
+                    Offset (float): height of the drain line above the bottom of the storage layer or rain
+                        barrel (inches or mm).
+                    Delay: number of dry weather hours that must elapse before the drain line in a
+                        rain barrel is opened (the line is assumed to be closed once rainfall
+                        begins). A value of 0 signifies that the barrel's drain line is always open
+                        and drains continuously. This parameter is ignored for other types of
+                        LIDs.
+                """
+                self.Coeff = float(Coeff)
+                self.Expon = float(Expon)
+                self.Offset = float(Offset)
+                self.Delay = Delay  # acc. to documentation  / for Rain Barrels only
+                # self.open_level = open_level  # to in documentation
+                # self.close_level = close_level  # to in documentation
+
+        class Drainmat(BaseSectionObject):
+            _LABEL = 'DRAINMAT'
+
+            def __init__(self, Thick, Vratio, Rough):
+                """
+                Args:
+                    Thick (float): thickness of the drainage mat (inches or mm).
+                    Vratio (float): ratio of void volume to total volume in the mat.
+                    Rough (float): Manning's n constant used to compute the horizontal flow rate of drained water through the mat.
+                """
+                self.Thick = float(Thick)
+                self.Vratio = float(Vratio)
+                self.Rough = float(Rough)
+
+        SURFACE = Surface._LABEL
+        SOIL = Soil._LABEL
+        PAVEMENT = Pavement._LABEL
+        STORAGE = Storage._LABEL
+        DRAIN = Drain._LABEL
+        DRAINMAT = Drainmat._LABEL
+
+        _possible = [SURFACE, SOIL, PAVEMENT, STORAGE, DRAIN, DRAINMAT]
+
+        _dict = {x._LABEL: x for x in (Surface, Soil, Pavement, Storage, Drain, Drainmat)}
 
     def to_inp_line(self):
         s = '{} {}\n'.format(self.Name, self.lid_kind)
@@ -350,6 +362,7 @@ class LIDUsage(BaseSectionObject):
             S2 Swale 1 10000 50 0 0 0 “swale.rpt”
     """
     _identifier = [IDENTIFIERS.Subcatch, 'LID']
+    _section_label = SEC.LID_USAGE
 
     def __init__(self, Subcatch, LID, Number, Area, Width, InitSat, FromImp, ToPerv, RptFile=NaN, DrainTo=NaN):
         self.Subcatch = str(Subcatch)

@@ -10,13 +10,13 @@ def transform_coordinates(inp, from_proj='epsg:31256', to_proj='epsg:32633'):
     """
     transform all coordinates of the sections COORDINATES, VERTICES and POLYGONS from one projection to another.
 
-    Notes:
-        **works inplace!**
-
     Args:
         inp (swmm_api.SwmmInput): SWMM input data
         from_proj (str): Projection of data
         to_proj (str): Projection for resulting data
+
+    .. Important::
+        works inplace!
     """
     from pyproj import Transformer
     # GK M34 to WGS 84 UTM zone 33N

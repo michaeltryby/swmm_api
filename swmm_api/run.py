@@ -40,6 +40,15 @@ def infer_swmm_path():
 
 
 def get_result_filenames(inp_fn):
+    """
+    get filenames for the Report and Output files
+
+    Args:
+        inp_fn (str): filename of the Input-Files
+
+    Returns:
+        tuple(str, str): filenames for the Report- and Output-file
+    """
     return inp_fn.replace('.inp', '.rpt'), inp_fn.replace('.inp', '.out')
 
 
@@ -154,7 +163,7 @@ def swmm5_run_parallel(inp_fns, processes=4):
 
 
 def _run_parallel(variable, func=swmm5_run, processes=4):
-    from tqdm import tqdm
+    from tqdm.auto import tqdm
     from functools import partial
 
     if processes == 1:

@@ -1,12 +1,14 @@
+import re
 import types
 from abc import ABC
 from inspect import isfunction, isclass
+
 from numpy import isnan
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from tqdm.auto import tqdm
-import re
+
+from ._type_converter import type2str, is_equal, txt_to_lines
 from .section_labels import *
-from ._type_converter import type2str, is_equal
 from .section_lists import LINK_SECTIONS, NODE_SECTIONS
 
 SWMM_VERSION = '5.1.015'
@@ -83,20 +85,6 @@ class CustomDict:
 
 
 class CustomDictWithAttributes(CustomDict):
-    def __setitem__(self, key, item):
-        super().__setitem__(key, item)
-        try:
-            exec(f'self.{key} = self["{key}"]')
-        except:
-            pass
-
-    def __delitem__(self, key):
-        try:
-            exec(f'del self.{key}')
-        except:
-            pass
-        super().__delitem__(key)
-
     def copy(self):
         new = type(self)()
         for key in self:
@@ -120,6 +108,16 @@ class InpSectionGeneric(CustomDictWithAttributes):
     def __init__(self, *args, **kwargs):
         CustomDictWithAttributes.__init__(self, *args, **kwargs)
         self._inp = None
+
+    def __setitem__(self, key, item):
+        super().__setitem__(key, item)
+        if isinstance(key, str) and ' ' not in key:
+            super().__setattr__(key, item)
+
+    def __delitem__(self, key):
+        if hasattr(self, key):
+            super().__delattr__(key)
+        super().__delitem__(key)
 
     def set_parent_inp(self, inp):
         self._inp = inp
@@ -194,13 +192,26 @@ class InpSection(CustomDict):
     def get_parent_inp(self):
         return self._inp
 
-
     # def __repr__(self):
     #     # return CustomDict.__repr__(self)
     #     return str(self)
-    #
+
     # def __str__(self):
     #     return f'[{self._section_object._section_label}] '  # + ' | '.join((str(s) for s in self.keys()))
+
+    def __setitem__(self, key, value):
+        if isinstance(self._identifier, str):
+            if not isinstance(key, str):
+                raise UserWarning('Wrong key type')
+        else:
+            if len(self._identifier) != len(key):
+                raise UserWarning('Wrong number of keys')
+
+        if not isinstance(value, self._section_object):
+            raise UserWarning('Wrong section-object type')
+
+        super().__setitem__(key, value)
+
 
     @property
     def objects(self):
@@ -296,8 +307,18 @@ class InpSection(CustomDict):
             return ';; No Data'
 
         if fast or not self._table_inp_export:
-            return '\n'.join(o.to_inp_line() for o in tqdm(self._sorted_values, desc=str(self._section_object.__name__),
-                                                           postfix='Write', total=len(self.keys())))
+
+            # only show write progress for big files
+            n_objects = len(self.keys())
+            if n_objects > 10000:
+                _iterable = tqdm(self._sorted_values,
+                                 desc=self._section_object.__name__,
+                                 postfix='Write',
+                                 total=n_objects)
+            else:
+                _iterable = self._sorted_values
+
+            return '\n'.join(o.to_inp_line() for o in _iterable)
         else:
             return dataframe_to_inp_string(self.frame)
 
@@ -541,44 +562,24 @@ class BaseSectionObject(ABC):
             InpSection: new section of this object
         """
         sec = cls._section_class(cls)
+        # import sys
         if lines is not None:
-
-            def txt_to_lines(content):
-                """
-                converts text to multiple line arguments
-
-                Args:
-                    content (str): section text
-
-                Returns:
-                    list[list[str]]: lines in the input file section
-                """
-                for line in re.findall(r'^[ \t]*([^;\n]+)[ \t]*;?[^\n]*$', content, flags=re.M):
-                    # ;; section comment
-                    # ; object comment / either inline(at the end of the line) or before the line
-                    # if ';' in line:
-                    #     line
-                    # line = line.split(';')[0]
-                    # line = line.strip()
-                    # if line == '':  # ignore empty and comment lines
-                    #     continue
-                    # else:
-                    yield line.split()
-
+            # print(f'BYTES: {len(lines):>9_d}', )
             if isinstance(lines, str):
-                if len(lines) > 100000:
-                    n_lines = lines.count('\n') - 1
+                if len(lines) > 10_000_000:
+                    n_lines = lines.strip().count('\n') + 1
                     # to create a progressbar in the reading process
                     # only needed with big (> 200 MB) files
-                    lines = txt_to_lines(lines)
-                    lines = tqdm(lines, desc=cls.__name__, total=n_lines, postfix='Read')
+                    lines_iter = tqdm(txt_to_lines(lines), desc=cls.__name__, total=n_lines, postfix='Read')
                 else:
-                    lines = txt_to_lines(lines)
+                    lines_iter = txt_to_lines(lines)
+            else:
+                lines_iter = lines
 
-            sec.add_inp_lines(lines)
+            sec.add_inp_lines(lines_iter)
 
-            if isinstance(lines, tqdm):
-                lines.close()
+            if isinstance(lines_iter, tqdm):
+                lines_iter.close()
 
         return sec
 
@@ -731,27 +732,27 @@ def section_to_string(section, fast=True):
         f += section.replace(inp_sep, '').strip()
 
     # ----------------------
-    # elif isinstance(section, list):  # V0.1
-    #     for line in section:
-    #         f += type2str(line) + '\n'
+    elif isinstance(section, list):  # V0.1
+        for line in section:
+            f += type2str(line) + '\n'
     #
     # # ----------------------
-    # elif isinstance(section, dict):  # V0.2
-    #     max_len = len(max(section.keys(), key=len)) + 2
-    #     for sub in section:
-    #         f += '{key}{value}'.format(key=sub.ljust(max_len),
-    #                                    value=type2str(section[sub]) + '\n')
+    elif isinstance(section, dict):  # V0.2
+        max_len = len(max(section.keys(), key=len)) + 2
+        for sub in section:
+            f += '{key}{value}'.format(key=sub.ljust(max_len),
+                                       value=type2str(section[sub]) + '\n')
     #
     # ----------------------
-    # elif isinstance(section, (DataFrame, Series)):  # V0.3
-    #     if section.empty:
-    #         f += ';; NO data'
-    #
-    #     if isinstance(section, DataFrame):
-    #         f += dataframe_to_inp_string(section)
-    #
-    #     elif isinstance(section, Series):
-    #         f += section.apply(type2str).to_string()
+    elif isinstance(section, (DataFrame, Series)):  # V0.3
+        if section.empty:
+            f += ';; NO data'
+
+        if isinstance(section, DataFrame):
+            f += dataframe_to_inp_string(section)
+
+        elif isinstance(section, Series):
+            f += section.apply(type2str).to_string()
 
     # ----------------------
     elif isinstance(section, (InpSection, InpSectionGeneric)):  # V0.4

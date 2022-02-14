@@ -55,7 +55,7 @@ DRY_ONLY         NO
 [RAINGAGES]
 ;;Name           Format    Interval SCF      Source    
 ;;-------------- --------- ------ ------ ----------
-RainGage         INTENSITY 0:05     1.0      TIMESERIES 0.1-in          
+;RainGage         INTENSITY 0:05     1.0      TIMESERIES 0.1-in
 Null             INTENSITY 1:00     1.0      TIMESERIES Null            
 RainGage         INTENSITY 0:05     1.0      FILE       "Record.dat"     053005     IN   
 

@@ -2,7 +2,7 @@ from itertools import product
 
 import pandas as pd
 
-from ... import SwmmInput
+from ..inp import SwmmInput
 from ..section_abr import SEC
 from .collection import nodes_dict, links_dict
 from ..sections import Tag

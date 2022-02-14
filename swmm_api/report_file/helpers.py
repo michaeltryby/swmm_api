@@ -95,23 +95,34 @@ def _part_to_frame(part):
         notes, header, data, sytem = subs
     elif len(subs) == 1:
         # no data
-        return pd.DataFrame()
+        return #pd.DataFrame()
     elif len(subs) == 2:
         # input summary tables
         header, data = subs
     else:
         notes, header, data = subs
     header = ['_'.join([i for i in c if i is not NaN]) for c in pd.read_fwf(StringIO(header), header=None).values.T]
+
+    # Pumping Summary
+    if '% Time Off_Pump Curve_Low   High' in header:
+        header.remove('% Time Off_Pump Curve_Low   High')
+        header.append('% Time Off_Pump Curve_Low')
+        header.append('% Time Off_Pump Curve_High')
+
     # re.split(r"\s\s\s+", line.strip())
     df = pd.DataFrame(line.split() for line in data.split('\n'))
 
-    if 'ltr' in df.iloc[:, -1].unique():
+    last_col_values = df.iloc[:, -1].unique()
+    if 'ltr' in last_col_values or 'gal' in last_col_values:
         del df[df.columns[-1]]
 
     for c, h in enumerate(header):
         if (('days hr:min' in h)
                 or ('Recording_Frequency' in h)
-                or ('Interval' in h)):
+                or ('Interval' in h)
+                or ('CoPollutant' in h)):
+            if c+1 not in df.columns:
+                continue
             df[c] = df[c] + ' ' + df.pop(c+1)
 
     if len(df.columns) < len(header):

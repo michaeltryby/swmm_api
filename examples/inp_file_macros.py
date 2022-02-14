@@ -9,7 +9,7 @@ from swmm_api.input_file.macros.plotting import plot_map, plot_longitudinal
 
 #%%
 
-inp = read_inp_file('epaswmm5_apps_manual/projects/Example1.inp', ignore_gui_sections=False)
+inp = read_inp_file('epaswmm5_apps_manual/projects/Example1.inp')
 
 #%%
 

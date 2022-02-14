@@ -1,6 +1,6 @@
 from networkx import DiGraph, all_simple_paths, subgraph, node_connected_component
 
-from ... import SwmmInput
+from ..inp import SwmmInput
 from .collection import nodes_dict, links_dict
 from .filter import create_sub_inp
 

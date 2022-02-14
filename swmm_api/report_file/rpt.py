@@ -5,6 +5,7 @@ __email__ = "markus.pichler@tugraz.at"
 __version__ = "0.1"
 __license__ = "MIT"
 
+import pandas as pd
 from pandas import to_datetime
 from pandas._libs.tslibs.timedeltas import Timedelta
 
@@ -35,7 +36,6 @@ class SwmmReport:
         self._report_to_dict()
 
         # ________________
-        # TODO
         self._version_title = None
         self._note = None
 
@@ -55,6 +55,9 @@ class SwmmReport:
 
         self._runoff_quantity_continuity = None
         self._flow_routing_continuity = None
+        self._groundwater_continuity = None
+        self._quality_routing_continuity = None
+        self._runoff_quality_continuity = None
 
         self._highest_continuity_errors = None
         self._time_step_critical_elements = None
@@ -74,6 +77,20 @@ class SwmmReport:
         self._conduit_surcharge_summary = None
 
         self._subcatchment_runoff_summary = None
+
+        self._groundwater_summary = None
+
+        self._pollutant_summary = None
+        self._landuse_summary = None
+        self._link_pollutant_load_summary = None
+        self._subcatchment_washoff_summary = None
+
+        self._pumping_summary = None
+
+        self._lid_control_summary = None
+        self._lid_performance_summary = None
+
+        self._control_actions_taken = None
 
     def __repr__(self):
         return f'SwmmReport(file="{self._filename}")'
@@ -101,7 +118,7 @@ class SwmmReport:
 
         self._raw_parts['Simulation Infos'] = ''.join(lines[-3:])
         lines = lines[:-3]
-        parts0 = ''.join(lines).split('\n  \n  ****')
+        parts0 = ''.join(lines).replace('\n\n  ****', '\n  \n  ****').split('\n  \n  ****')
 
         for i, part in enumerate(parts0):
             if part.startswith('*'):
@@ -157,6 +174,40 @@ class SwmmReport:
         return self._analysis_options
 
     @property
+    def element_count(self):
+        if self._element_count is None:
+            p = self.converted('Element Count')
+
+            res = dict()
+            last_key = None
+            last_initial_spaces = 0
+
+            for line in p.split('\n'):
+                initial_spaces = len(line) - len(line.lstrip())
+
+                if '..' in line:
+                    key = line[:line.find('..')].strip()
+                    value = line[line.rfind('..') + 2:].strip()
+
+                    if last_initial_spaces > initial_spaces:
+                        last_key = None
+
+                    if last_key is not None:
+                        res[last_key].update({key: value})
+                    else:
+                        res[key] = value
+
+                    last_initial_spaces = initial_spaces
+
+                else:
+                    last_key = line.replace(':', '').strip()
+                    res[last_key] = dict()
+
+            self._element_count = res
+        return self._element_count
+
+
+    @property
     def flow_routing_continuity(self):
         """
         get the Flow Routing Continuity
@@ -181,6 +232,27 @@ class SwmmReport:
             raw = self._raw_parts.get('Runoff Quantity Continuity', None)
             self._runoff_quantity_continuity = _continuity_part_to_dict(raw)
         return self._runoff_quantity_continuity
+
+    @property
+    def groundwater_continuity(self):
+        if self._groundwater_continuity is None:
+            p = self._raw_parts.get('Groundwater Continuity', None)
+            self._groundwater_continuity = _continuity_part_to_dict(p)
+        return self._groundwater_continuity
+
+    @property
+    def quality_routing_continuity(self):
+        if self._quality_routing_continuity is None:
+            p = self._raw_parts.get('Quality Routing Continuity', None)
+            self._quality_routing_continuity = _continuity_part_to_dict(p)
+        return self._quality_routing_continuity
+
+    @property
+    def runoff_quality_continuity(self):
+        if self._runoff_quality_continuity is None:
+            p = self._raw_parts.get('Runoff Quality Continuity', None)
+            self._runoff_quality_continuity = _continuity_part_to_dict(p)
+        return self._runoff_quality_continuity
 
     @property
     def highest_continuity_errors(self):
@@ -309,20 +381,6 @@ class SwmmReport:
             # p = '-'*10 + '\n' + p
             self._crosssection_summary = _part_to_frame(p)
         return self._crosssection_summary
-
-    # @property
-    # def transect_summary(self):
-    #     """
-    #     get the Node Depth Summary
-    #
-    #     Returns:
-    #         pandas.DataFrame: Node Depth Summary
-    #     """
-    #     if self._transect_summary is None:
-    #         p = self.converted('Transect Summary')
-    #         # p = '-'*10 + '\n' + p
-    #         self._transect_summary = _part_to_frame(p)
-    #     return self._transect_summary
 
     @property
     def subcatchment_runoff_summary(self):
@@ -474,6 +532,113 @@ class SwmmReport:
             self._conduit_surcharge_summary = _part_to_frame(p)
         return self._conduit_surcharge_summary
 
+    @property
+    def control_actions_taken(self):
+        if self._control_actions_taken is None:
+            p = self.converted('Control Actions Taken')
+            if p:
+                self._control_actions_taken = p.split('\n')
+        return self._control_actions_taken
+
+    @property
+    def groundwater_summary(self):
+        if self._groundwater_summary is None:
+            p = self.converted('Groundwater Summary')
+            self._groundwater_summary = _part_to_frame(p)
+        return self._groundwater_summary
+
+    @property
+    def landuse_summary(self):
+        if self._landuse_summary is None:
+            p = self.converted('Landuse Summary')
+            self._landuse_summary = _part_to_frame(p)
+        return self._landuse_summary
+
+    @property
+    def lid_control_summary(self):
+        if self._lid_control_summary is None:
+            p = self.converted('LID Control Summary')
+            self._lid_control_summary = _part_to_frame(p)
+        return self._lid_control_summary
+
+    @property
+    def lid_performance_summary(self):
+        if self._lid_performance_summary is None:
+            p = self.converted('LID Performance Summary')
+            self._lid_performance_summary = _part_to_frame(p)
+        return self._lid_performance_summary
+
+    @property
+    def link_pollutant_load_summary(self):
+        if self._link_pollutant_load_summary is None:
+            p = self.converted('Link Pollutant Load Summary')
+            self._link_pollutant_load_summary = _part_to_frame(p)
+        return self._link_pollutant_load_summary
+
+    @property
+    def note(self):
+        if self._note is None:
+            self._note = ' '.join(self.converted('Note').strip(' *').split())
+        return self._note
+
+    @property
+    def pollutant_summary(self):
+        if self._pollutant_summary is None:
+            p = self.converted('Pollutant Summary')
+            self._pollutant_summary = _part_to_frame(p)
+        return self._pollutant_summary
+
+    @property
+    def pumping_summary(self):
+        if self._pumping_summary is None:
+            p = self.converted('Pumping Summary')
+            self._pumping_summary = _part_to_frame(p)
+        return self._pumping_summary
+
+    @property
+    def routing_time_step_summary(self):
+        if self._routing_time_step_summary is None:
+            p = self.converted('Routing Time Step Summary')
+            if p:
+                self._routing_time_step_summary = dict()
+                for line in self.converted('Routing Time Step Summary').split('\n'):
+                    key, value = ' '.join(line.split()).split(' : ')
+                    if 'sec' in value:
+                        value = pd.Timedelta(value)
+                    else:
+                        value = float(value)
+                    self._routing_time_step_summary[key] = value
+
+        return self._routing_time_step_summary
+
+    @property
+    def subcatchment_washoff_summary(self):
+        if self._subcatchment_washoff_summary is None:
+            p = self.converted('Subcatchment Washoff Summary')
+            self._subcatchment_washoff_summary = _part_to_frame(p)
+        return self._subcatchment_washoff_summary
+
+    @property
+    def transect_summary(self):
+        if self._transect_summary is None:
+            p = self.converted('Transect Summary')
+            self._transect_summary = dict()
+            for transect in p.split('Transect')[1:]:
+                label, *data = transect.split()
+                self._transect_summary[label] = dict()
+                sub = data[0][:-1]
+                d = []
+                for i in data[1:]:
+                    if i.endswith(':'):
+                        self._transect_summary[label][sub] = d
+                        sub = i[:-1]
+                    else:
+                        d.append(float(i))
+                self._transect_summary[label][sub] = d
+
+                self._transect_summary[label] = pd.DataFrame.from_dict(self._transect_summary[label])
+        return self._transect_summary
+
     def get_simulation_info(self):
         t = self._raw_parts.get('Simulation Infos', None)
         if t:
@@ -537,6 +702,12 @@ class SwmmReport:
 
     def print_errors(self):
         self._pprint(self.get_errors())
+
+    def get_version_title(self):
+        if self._version_title is None:
+            t = self._raw_parts.get('Version+Title', None)
+            self._version_title = t.split('\n')[0].strip()
+        return self._version_title
 
     def get_warnings(self):
         """

@@ -1,6 +1,6 @@
 from .collection import nodes_dict, links_dict
 from .graph import inp_to_graph, next_nodes, previous_links, next_links
-from ... import SwmmInput
+from ..inp import SwmmInput
 from ..section_abr import SEC
 from .._type_converter import is_equal
 from ..helpers import BaseSectionObject, _sort_by

@@ -1,13 +1,13 @@
-from numpy import interp, mean, ceil
 from networkx import DiGraph
+from numpy import interp, mean, ceil
 
-from .collection import nodes_dict, links_dict, subcachtment_nodes_dict
+from .collection import nodes_dict, links_dict, subcatchment_nodes_dict
 from .graph import next_links_labels, previous_links, previous_links_labels, links_connected
-from .macros import calc_slope, find_link
+from .macros import calc_slope, find_link, delete_sections
+from ..inp import SwmmInput
 from ..section_abr import SEC
-from ..section_lists import NODE_SECTIONS, LINK_SECTIONS, SUBCATCHMENT_SECTIONS
+from ..section_lists import NODE_SECTIONS, LINK_SECTIONS, SUBCATCHMENT_SECTIONS, POLLUTANT_SECTIONS
 from ..sections import Tag, DryWeatherFlow, Junction, Coordinate, Conduit, Loss, Vertices, EvaporationSection
-from ... import SwmmInput
 
 
 def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None):
@@ -395,7 +395,7 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
 
     # subcatchment outlets
     if SEC.SUBCATCHMENTS in inp:
-        for obj in subcachtment_nodes_dict(inp)[old_label]:
+        for obj in subcatchment_nodes_dict(inp)[old_label]:
             obj.Outlet = new_label
         # -------
         # for obj in inp.SUBCATCHMENTS.filter_keys([old_label], 'Outlet'):  # type: SubCatchment
@@ -534,3 +534,21 @@ def rename_timeseries(inp, old_label, new_label):
 def flip_link_direction(inp, link_label):
     link = find_link(inp, link_label)
     link.FromNode, link.ToNode = link.ToNode, link.FromNode
+
+
+def remove_quality_model(inp):
+    """
+    remove all sections only for modelling quality
+
+    Args:
+        inp (SwmmInput): inp-data
+
+    Note:
+        works inplace
+    """
+    delete_sections(inp, POLLUTANT_SECTIONS)
+
+    for sec in [SEC.INFLOWS, SEC.DWF]:
+        for k in list(inp[sec].keys()):
+            if inp[sec][k].Constituent != 'FLOW':
+                del inp[sec][k]
