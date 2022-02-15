@@ -1,10 +1,12 @@
+import dataclasses
+
 from numpy import NaN
 from pandas import DataFrame, Series, Timestamp
 
 from ._identifiers import IDENTIFIERS
 from .._type_converter import infer_type, to_bool, str_to_datetime, datetime_to_str, type2str
 from ..helpers import BaseSectionObject, split_line_with_quotes
-from ..section_abr import SEC
+from ..section_labels import *
 
 
 class RainGage(BaseSectionObject):
@@ -51,7 +53,7 @@ class RainGage(BaseSectionObject):
         Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = SEC.RAINGAGES
+    _section_label = RAINGAGES
 
     class FORMATS:
         INTENSITY = 'INTENSITY'
@@ -115,7 +117,7 @@ class Symbol(BaseSectionObject):
         y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
     """
     _identifier = IDENTIFIERS.Gage
-    _section_label = SEC.SYMBOLS
+    _section_label = SYMBOLS
 
     def __init__(self, Gage, x, y):
         self.Gage = str(Gage)
@@ -180,7 +182,7 @@ class Pattern(BaseSectionObject):
         Factors (list): multiplier values.
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = SEC.PATTERNS
+    _section_label = PATTERNS
 
     class TYPES:
         __class__ = 'Patter Types'
@@ -300,7 +302,7 @@ class Pollutant(BaseSectionObject):
         default is 0).
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = SEC.POLLUTANTS
+    _section_label = POLLUTANTS
 
     class UNITS:
         MG_PER_L = 'MG/L'
@@ -413,7 +415,7 @@ class Transect(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
-    _section_label = SEC.TRANSECTS
+    _section_label = TRANSECTS
 
     class KEYS:
         NC = 'NC'
@@ -745,16 +747,109 @@ class Control(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
-    _section_label = SEC.CONTROLS
+    _section_label = CONTROLS
 
-    class Clauses:
-        __class__ = 'Clauses'
+    class OBJECTS:
+        NODE = 'NODE'
+        LINK = 'LINK'
+        CONDUIT = 'CONDUIT'
+        PUMP = 'PUMP'
+        ORIFICE = 'ORIFICE'
+        WEIR = 'WEIR'
+        OUTLET = 'OUTLET'
+        SIMULATION = 'SIMULATION'
+
+    class ATTRIBUTES:
+        DEPTH = 'DEPTH'
+        HEAD = 'HEAD'
+        VOLUME = 'VOLUME'
+        INFLOW = 'INFLOW'
+        FLOW = 'FLOW'
+        TIMEOPEN = 'TIMEOPEN'
+        TIMECLOSED = 'TIMECLOSED'
+        STATUS = 'STATUS'
+        SETTING = 'SETTING'
+        TIME = 'TIME'
+        DATE = 'DATE'
+        MONTH = 'MONTH'
+        DAY = 'DAY'
+        CLOCKTIME = 'CLOCKTIME'
+
+    class LOGIC:
         RULE = 'RULE'
         IF = 'IF'
         THEN = 'THEN'
         PRIORITY = 'PRIORITY'
         AND = 'AND'
         OR = 'OR'
+
+    class _Condition(BaseSectionObject):
+        """
+        A **condition clause** of a Control Rule has the following format:
+            `Object Name Attribute Relation Value`
+            `SIMULATION Attribute Relation Value`
+
+        where:
+            - `Object`: is a category of object,
+            - `Name`: is the object’s assigned ID name,
+            - `Attribute`: is the name of an attribute or property of the object,
+            - `Relation`: is a relational operator (=, <>, <, <=, >, >=), and
+            - `Value`: is an attribute value.
+
+        for example:
+        ::
+
+            NODE N23 DEPTH > 10
+            PUMP P45 STATUS = OFF
+            SIMULATION TIME = 12:45:00
+            NODE  N23  DEPTH  >  10
+            NODE  N23  DEPTH  >  NODE 25 DEPTH
+            PUMP  P45  STATUS =  OFF
+            LINK  P45  TIMEOPEN >= 6:30
+            SIMULATION CLOCKTIME = 22:45:00
+        """
+        def __init__(self, logic, kind, *args):
+            self.logic = logic.upper()  # if and or
+            self.kind = kind.upper()  # Control.OBJECTS
+            self.label = NaN
+            line = list(args)
+            if kind.upper() == Control.OBJECTS.SIMULATION:
+                pass
+            else:
+                self.label = line.pop(0)
+
+            self.attribute = line.pop(0).upper()
+            self.relation = line.pop(0)
+            self.value = ' '.join(line)
+
+    class _Action(BaseSectionObject):
+        """
+        An **Action Clause** of a Control Rule has the following format:
+            `Object Name Action = Value`
+            `PUMP id STATUS = ON/OFF`
+            `PUMP/ORIFICE/WEIR/OUTLET id SETTING = value`
+
+        where:
+            - `Object`: is a category of object,
+            - `Name`: is the object’s assigned ID name,
+            - `Action`: is the type of action
+            - `Value`: is the action value/setting/status.
+
+        for example:
+        ::
+
+            PUMP P67 STATUS = OFF
+            ORIFICE O212 SETTING = 0.5
+            WEIR W25 SETTING = CURVE C25
+            ORIFICE ORI_23 SETTING = PID 0.1 0.1 0.0
+        """
+        def __init__(self, logic, kind, label, action, relation, *value):
+            self.logic = logic.upper()  # THAN, AND
+            self.kind = kind.upper()  # Control.OBJECTS
+            self.label = label
+            self.action = action.upper()
+            self.relation = relation  # immer "="  # always equal
+            self.value = ' '.join(value)
 
     def __init__(self, Name, conditions, actions, priority=0):
         self.Name = str(Name)
@@ -767,41 +862,41 @@ class Control(BaseSectionObject):
         args = list()
         is_condition = False
         is_action = False
-        for line in multi_line_args:
-            if line[0] == cls.Clauses.RULE:
+        for logic, *line in multi_line_args:
+            if logic.upper() == cls.LOGIC.RULE:
                 if args:
                     yield cls(*args)
                     args = list()
-                args.append(line[1])
+                args.append(line[0])
                 is_action = False
 
-            elif line[0] == cls.Clauses.IF:
-                args.append([line[1:]])
+            elif logic.upper() == cls.LOGIC.IF:
+                args.append([cls._Condition(logic, *line)])
                 is_condition = True
 
-            elif line[0] == cls.Clauses.THEN:
-                args.append([line[1:]])
+            elif logic.upper() == cls.LOGIC.THEN:
+                args.append([cls._Action(logic, *line)])
                 is_condition = False
                 is_action = True
 
-            elif line[0] == cls.Clauses.PRIORITY:
-                args.append(line[1])
+            elif logic.upper() == cls.LOGIC.PRIORITY:
+                args.append(line[0])
                 is_action = False
 
             elif is_condition:
-                args[-1].append(line)
+                args[-1].append(cls._Condition(logic, *line))
 
             elif is_action:
-                args[-1].append(line)
+                args[-1].append(cls._Action(logic, *line))
 
         # last
         yield cls(*args)
 
     def to_inp_line(self):
-        s = '{} {}\n'.format(self.Clauses.RULE, self.Name)
-        s += '{} {}\n'.format(self.Clauses.IF, '\n'.join([' '.join(c) for c in self.conditions]))
-        s += '{} {}\n'.format(self.Clauses.THEN, '\n'.join([' '.join(a) for a in self.actions]))
-        s += '{} {}\n'.format(self.Clauses.PRIORITY, self.priority)
+        s = f'{self.LOGIC.RULE} {self.Name}\n'
+        s += '{}\n'.format('\n'.join([c.to_inp_line() for c in self.conditions]))
+        s += '{}\n'.format('\n'.join([a.to_inp_line() for a in self.actions]))
+        s += f'{self.LOGIC.PRIORITY} {self.priority}\n'
         return s
 
 
@@ -884,7 +979,7 @@ class Curve(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
-    _section_label = SEC.CURVES
+    _section_label = CURVES
 
     class TYPES:
         STORAGE = 'STORAGE'
@@ -1019,7 +1114,7 @@ class Timeseries(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
-    _section_label = SEC.TIMESERIES
+    _section_label = TIMESERIES
 
     class TYPES:
         FILE = 'FILE'
@@ -1219,7 +1314,7 @@ class TimeseriesData(Timeseries):
 class Tag(BaseSectionObject):
     """Section: [**TAGS**]"""
     _identifier = ['kind', IDENTIFIERS.Name]
-    _section_label = SEC.TAGS
+    _section_label = TAGS
 
     class TYPES:
         Node = IDENTIFIERS.Node
@@ -1266,7 +1361,7 @@ class Label(BaseSectionObject):
             YES for italic font, NO otherwise.
     """
     _identifier = ['x', 'y', 'label']
-    _section_label = SEC.LABELS
+    _section_label = LABELS
 
     def __init__(self, x, y, label, anchor=NaN, font=NaN, size=NaN, bold=NaN, italic=NaN):
         self.x = float(x)
@@ -1351,7 +1446,7 @@ class Hydrograph(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Name
     _table_inp_export = False
-    _section_label = SEC.HYDROGRAPHS
+    _section_label = HYDROGRAPHS
 
     class TYPES:
         SHORT = 'SHORT'
@@ -1459,7 +1554,7 @@ class LandUse(BaseSectionObject):
             days since last sweeping at start of the simulation.
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = SEC.LANDUSES
+    _section_label = LANDUSES
 
     def __init__(self, Name, sweep_interval=NaN, availability=NaN, last_sweep=NaN):
         self.Name = str(Name)
@@ -1525,7 +1620,7 @@ class WashOff(BaseSectionObject):
 
     """
     _identifier = [IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant]
-    _section_label = SEC.WASHOFF
+    _section_label = WASHOFF
 
     class FUNCTIONS:
         EXP = 'EXP'
@@ -1596,7 +1691,7 @@ class BuildUp(BaseSectionObject):
         time.
     """
     _identifier = [IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant]
-    _section_label = SEC.BUILDUP
+    _section_label = BUILDUP
 
     class FUNCTIONS:
         EXP = 'EXP'
@@ -1685,7 +1780,7 @@ class SnowPack(BaseSectionObject):
         than 1.0. If the line is omitted then no snow removal takes place.
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = SEC.SNOWPACKS
+    _section_label = SNOWPACKS
     _table_inp_export = False
 
     def __init__(self, Name, parts=None):
@@ -1727,7 +1822,7 @@ class SnowPack(BaseSectionObject):
         class _Base(BaseSectionObject):
             _table_inp_export = False
             _identifier = IDENTIFIERS.Name
-            _section_label = SEC.SNOWPACKS
+            _section_label = SNOWPACKS
 
             def __init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0):
                 self.Cmin = float(Cmin)
@@ -1851,7 +1946,7 @@ class Aquifer(BaseSectionObject):
         the [``GROUNDWATER``] section described below.
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = SEC.AQUIFERS
+    _section_label = AQUIFERS
 
     def __init__(self, Name, Por, WP, FC, Ks, Kslp, Tslp, ETu, ETs, Seep, Ebot, Egw, Umc, Epat=NaN):
         self.Name = str(Name)

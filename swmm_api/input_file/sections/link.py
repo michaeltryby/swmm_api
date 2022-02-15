@@ -3,7 +3,7 @@ from numpy import NaN, isnan
 from ._identifiers import IDENTIFIERS
 from ..helpers import BaseSectionObject
 from .._type_converter import to_bool
-from ..section_abr import SEC
+from ..section_labels import CONDUITS, ORIFICES, OUTLETS, PUMPS, WEIRS
 
 
 class _Link(BaseSectionObject):
@@ -63,7 +63,7 @@ class Conduit(_Link):
         InitFlow (float): flow in conduit at start of simulation (flow units) (default is 0). ``Q0``
         MaxFlow (float): maximum flow allowed in the conduit (flow units) (default is no limit | 0 = no limit). ``Qmax``
     """
-    _section_label = SEC.CONDUITS
+    _section_label = CONDUITS
 
     def __init__(self, Name, FromNode, ToNode, Length, Roughness, InOffset=0, OutOffset=0, InitFlow=0, MaxFlow=NaN):
         _Link.__init__(self, Name, FromNode, ToNode)
@@ -127,7 +127,7 @@ class Orifice(_Link):
         Orate (int): time in decimal hours to open a fully closed orifice (or close a fully open one).
                         Use 0 if the orifice can open/close instantaneously.
     """
-    _section_label = SEC.ORIFICES
+    _section_label = ORIFICES
 
     class TYPES:
         """orientation of orifice: either SIDE or BOTTOM"""
@@ -209,7 +209,7 @@ class Outlet(_Link):
 
         Gated (bool): ``YES`` if flap gate present to prevent reverse flow, ``NO`` if not (default is ``NO``).
     """
-    _section_label = SEC.OUTLETS
+    _section_label = OUTLETS
 
     class TYPES:
         TABULAR_DEPTH = 'TABULAR/DEPTH'
@@ -283,7 +283,7 @@ class Pump(_Link):
 
     See Section 3.2 for a description of the different types of pumps available.
     """
-    _section_label = SEC.PUMPS
+    _section_label = PUMPS
 
     class STATES:
         """status at start of simulation (either ON or OFF; default is ON)."""
@@ -377,7 +377,7 @@ class Weir(_Link):
         RoadWidth (float): width of road lanes and shoulders for ``ROADWAY`` weir (ft or m). ``Width``
         RoadSurface (str): type of road surface for ``ROADWAY`` weir: ``PAVED`` or ``GRAVEL``. ``Surface``
     """
-    _section_label = SEC.WEIRS
+    _section_label = WEIRS
 
     class TYPES:
         TRANSVERSE = 'TRANSVERSE'

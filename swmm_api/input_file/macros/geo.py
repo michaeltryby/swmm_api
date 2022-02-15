@@ -1,7 +1,6 @@
 from .collection import links_dict
 from .macros import find_link
 from ..misc.curve_simplification import _vec2d_dist, ramer_douglas
-from ..section_abr import SEC
 from ..sections import Vertices, Coordinate, Polygon
 from ..section_labels import COORDINATES, VERTICES, POLYGONS
 
@@ -16,7 +15,7 @@ def transform_coordinates(inp, from_proj='epsg:31256', to_proj='epsg:32633'):
         to_proj (str): Projection for resulting data
 
     .. Important::
-        works inplace!
+        works inplace
     """
     from pyproj import Transformer
     # GK M34 to WGS 84 UTM zone 33N
@@ -44,17 +43,17 @@ def complete_link_vertices(inp, label_link):
     """
     add node coordinates to vertices of a single link (start and end point)
 
-    Notes:
-        **works inplace!**
+    .. Important::
+        works inplace
 
     Args:
         inp (swmm_api.SwmmInput): SWMM input data
         label_link (str): label of the link
     """
     link = find_link(inp, label_link)
-    inp[VERTICES][label_link].vertices = ([inp[SEC.COORDINATES][link.FromNode].point] +
+    inp[VERTICES][label_link].vertices = ([inp[COORDINATES][link.FromNode].point] +
                                           inp[VERTICES][label_link].vertices +
-                                          [inp[SEC.COORDINATES][link.ToNode].point])
+                                          [inp[COORDINATES][link.ToNode].point])
 
 
 def complete_vertices(inp):
@@ -63,8 +62,8 @@ def complete_vertices(inp):
 
     important for GIS export or GIS operations
 
-    Notes:
-        **works inplace!**
+    .. Important::
+        works inplace
 
     Args:
         inp (swmm_api.SwmmInput): SWMM input data
@@ -89,43 +88,43 @@ def reduce_vertices(inp, node_range=0.25):
 
     important if data originally from GIS and export to SWMM
 
-    Notes:
-        **works inplace!**
-
     Args:
         inp (swmm_api.SwmmInput): SWMM input data
         node_range (float): minimal distance in m from the first and last vertices to the end nodes
+
+    .. Important::
+        works inplace
     """
     links = links_dict(inp)
 
     for link_label in inp.VERTICES:
         l = links[link_label]
-        v = inp[SEC.VERTICES][link_label].vertices
-        p = inp[SEC.COORDINATES][l.FromNode].point
+        v = inp[VERTICES][link_label].vertices
+        p = inp[COORDINATES][l.FromNode].point
         if _vec2d_dist(p, v[0]) < node_range:
             v = v[1:]
 
         if v:
-            p = inp[SEC.COORDINATES][l.ToNode].point
+            p = inp[COORDINATES][l.ToNode].point
             if _vec2d_dist(p, v[-1]) < node_range:
                 v = v[:-1]
 
         if v:
-            inp[SEC.VERTICES][link_label].vertices = v
+            inp[VERTICES][link_label].vertices = v
         else:
-            del inp[SEC.VERTICES][link_label]
+            del inp[VERTICES][link_label]
 
 
 def simplify_link_vertices(vertices, dist=1.):
     """
     removes unneeded vertices with the Ramer-Douglas simplification
 
-    Notes:
-        **works inplace!**
-
     Args:
         vertices (Vertices): vertices-object of link
         dist (float): threshold of algorythm
+
+    .. Important::
+        works inplace
     """
     vertices.vertices = ramer_douglas(vertices.vertices, dist)
 
@@ -134,12 +133,12 @@ def simplify_vertices(inp, dist=1.):
     """
     removes unneeded vertices with the Ramer-Douglas simplification
 
-    Notes:
-        **works inplace!**
-
     Args:
         inp (swmm_api.SwmmInput): SWMM input data
         dist (float):  threshold of algorythm
+
+    .. Important::
+        works inplace
     """
     for v in inp.VERTICES:
         simplify_link_vertices(inp.VERTICES[v], dist)

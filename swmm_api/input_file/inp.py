@@ -1,5 +1,6 @@
 import os
 import re
+import warnings
 
 from .helpers import (_sort_by, section_to_string, CustomDictWithAttributes, convert_section, inp_sep, InpSection,
                       InpSectionGeneric, )
@@ -154,6 +155,21 @@ class SwmmInput(CustomDictWithAttributes):
         if obj._section_label not in self:
             self[obj._section_label] = obj.create_section()
         return self[obj._section_label]
+
+    def add_new_section(self, section):
+        """
+        add new section to the inp-data
+
+        Args:
+            section (InpSection, InpSectionGeneric):
+
+        .. Important::
+            works inplace
+        """
+        if section._label not in self:
+            self[section._label] = section
+        else:
+            warnings.warn(f'Section [{section._label}] not empty!')
 
     def add_obj(self, obj):
         """

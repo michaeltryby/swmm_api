@@ -4,7 +4,7 @@ from pandas import DataFrame
 from .._type_converter import GIS_FLOAT_FORMAT
 from ..helpers import BaseSectionObject, SWMM_VERSION
 from ._identifiers import IDENTIFIERS
-from ..section_abr import SEC
+from ..section_labels import SUBCATCHMENTS, SUBAREAS, INFILTRATION, POLYGONS, LOADINGS, COVERAGES, GWF, GROUNDWATER
 
 
 class SubCatchment(BaseSectionObject):
@@ -48,7 +48,7 @@ class SubCatchment(BaseSectionObject):
         accumulation and melting over the subcatchment. ``Spack``
     """
     _identifier = IDENTIFIERS.Name
-    _section_label = SEC.SUBCATCHMENTS
+    _section_label = SUBCATCHMENTS
 
     def __init__(self, Name, RainGage, Outlet, Area, Imperv, Width, Slope, CurbLen=0, SnowPack=NaN):
         self.Name = str(Name)
@@ -110,7 +110,7 @@ class SubArea(BaseSectionObject):
         PctRouted (float): percent of runoff routed from one type of area to another (default = 100). ``%Routed``
     """
     _identifier = IDENTIFIERS.Subcatch
-    _section_label = SEC.SUBAREAS
+    _section_label = SUBAREAS
 
     class RoutToOption:
         __class__ = 'RoutTo Option'
@@ -185,7 +185,7 @@ class Infiltration(BaseSectionObject):
         Subcatch (str): subcatchment name. ``Subcat``
     """
     _identifier = IDENTIFIERS.Subcatch
-    _section_label = SEC.INFILTRATION
+    _section_label = INFILTRATION
 
     # _table_inp_export = False
 
@@ -379,7 +379,7 @@ class Polygon(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Subcatch
     _table_inp_export = False
-    _section_label = SEC.POLYGONS
+    _section_label = POLYGONS
 
     def __init__(self, Subcatch, polygon):
         self.Subcatch = str(Subcatch)
@@ -454,7 +454,7 @@ class Loading(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Subcatch
     _table_inp_export = False
-    _section_label = SEC.LOADINGS
+    _section_label = LOADINGS
 
     def __init__(self, Subcatch, pollutant_buildup_dict=None):
         self.Subcatch = str(Subcatch)
@@ -528,7 +528,7 @@ class Coverage(BaseSectionObject):
         in the runoff from the subcatchment.
     """
     _identifier = IDENTIFIERS.Subcatch
-    _section_label = SEC.COVERAGES
+    _section_label = COVERAGES
 
     def __init__(self, Subcatch, land_use_dict=None):
         self.Subcatch = str(Subcatch)
@@ -616,7 +616,7 @@ class GroundwaterFlow(BaseSectionObject):
             Subactch1 DEEP 0.002
     """
     _identifier = [IDENTIFIERS.Subcatch, 'kind']
-    _section_label = SEC.GWF
+    _section_label = GWF
 
     class TYPES:
         LATERAL = 'LATERAL'
@@ -678,7 +678,7 @@ class Groundwater(BaseSectionObject):
             - H_cb = height of channel bottom above aquifer bottom (ft or m).
     """
     _identifier = [IDENTIFIERS.Subcatch, 'Aquifer', IDENTIFIERS.Node]
-    _section_label = SEC.GROUNDWATER
+    _section_label = GROUNDWATER
 
     def __init__(self, Subcatch, Aquifer, Node, Esurf, A1, B1, A2, B2, A3, Dsw, Egwt=NaN, Ebot=NaN, Egw=NaN, Umc=NaN):
         self.Subcatch = str(Subcatch)

@@ -2,7 +2,7 @@ from numpy import NaN
 
 from ._identifiers import IDENTIFIERS
 from ..helpers import BaseSectionObject
-from ..section_abr import SEC
+from ..section_labels import LID_USAGE, LID_CONTROLS
 
 
 class LIDControl(BaseSectionObject):
@@ -88,7 +88,7 @@ class LIDControl(BaseSectionObject):
         placed in a particular subcatchment.
     """
     _identifier = [IDENTIFIERS.Name, 'lid_kind']
-    _section_label = SEC.LID_CONTROLS
+    _section_label = LID_CONTROLS
     _table_inp_export = False
 
     class LID_TYPES:
@@ -362,7 +362,7 @@ class LIDUsage(BaseSectionObject):
             S2 Swale 1 10000 50 0 0 0 “swale.rpt”
     """
     _identifier = [IDENTIFIERS.Subcatch, 'LID']
-    _section_label = SEC.LID_USAGE
+    _section_label = LID_USAGE
 
     def __init__(self, Subcatch, LID, Number, Area, Width, InitSat, FromImp, ToPerv, RptFile=NaN, DrainTo=NaN):
         self.Subcatch = str(Subcatch)

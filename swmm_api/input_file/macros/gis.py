@@ -8,9 +8,8 @@ from tqdm.auto import tqdm
 from .filter import filter_nodes, filter_links
 from .geo import complete_vertices, simplify_vertices, reduce_vertices
 from .tags import get_node_tags, get_link_tags, get_subcatchment_tags
-from ..section_abr import SEC
-
 from ..inp import SwmmInput
+from ..section_labels import *
 from ..section_lists import LINK_SECTIONS, NODE_SECTIONS
 from ..section_types import SECTION_TYPES
 from ..sections import Tag
@@ -83,7 +82,7 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
     """
     from geopandas import GeoDataFrame
 
-    todo_sections = NODE_SECTIONS + LINK_SECTIONS + [SEC.SUBCATCHMENTS]
+    todo_sections = NODE_SECTIONS + LINK_SECTIONS + [SUBCATCHMENTS]
     print(*todo_sections, sep=' | ')
 
     add_geo_support(inp, crs=crs)
@@ -95,16 +94,16 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}')
 
-            if sec == SEC.STORAGE:
-                df[f'{SEC.STORAGE}{label_sep}Curve'] = df[f'{SEC.STORAGE}{label_sep}Curve'].astype(str)
+            if sec == STORAGE:
+                df[f'{STORAGE}{label_sep}Curve'] = df[f'{STORAGE}{label_sep}Curve'].astype(str)
 
-            for sub_sec in [SEC.DWF, SEC.INFLOWS]:
+            for sub_sec in [DWF, INFLOWS]:
                 if sub_sec in inp:
                     x = inp[sub_sec].frame.unstack(1)
                     x.columns = [f'{label_sep}'.join([sub_sec, c[1], c[0]]) for c in x.columns]
                     df = df.join(x)
 
-            df = df.join(inp[SEC.COORDINATES].geo_series).join(nodes_tags)
+            df = df.join(inp[COORDINATES].geo_series).join(nodes_tags)
 
             GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
             print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
@@ -119,15 +118,15 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
     for sec in LINK_SECTIONS:
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}').join(
-                inp[SEC.XSECTIONS].frame.rename(columns=lambda c: f'{SEC.XSECTIONS}{label_sep}{c}'))
+                inp[XSECTIONS].frame.rename(columns=lambda c: f'{XSECTIONS}{label_sep}{c}'))
 
-            if sec == SEC.OUTLETS:
-                df[f'{SEC.OUTLETS}{label_sep}Curve'] = df[f'{SEC.OUTLETS}{label_sep}Curve'].astype(str)
+            if sec == OUTLETS:
+                df[f'{OUTLETS}{label_sep}Curve'] = df[f'{OUTLETS}{label_sep}Curve'].astype(str)
 
-            if SEC.LOSSES in inp:
-                df = df.join(inp[SEC.LOSSES].frame.rename(columns=lambda c: f'{SEC.LOSSES}{label_sep}{c}'))
+            if LOSSES in inp:
+                df = df.join(inp[LOSSES].frame.rename(columns=lambda c: f'{LOSSES}{label_sep}{c}'))
 
-            df = df.join(inp[SEC.VERTICES].geo_series).join(links_tags)
+            df = df.join(inp[VERTICES].geo_series).join(links_tags)
 
             GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
 
@@ -137,19 +136,19 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
         t0 = time.perf_counter()
 
     # ---------------------------------
-    if SEC.SUBCATCHMENTS in inp:
-        df = inp[SEC.SUBCATCHMENTS].frame.rename(columns=lambda c: f'{SEC.SUBCATCHMENTS}{label_sep}{c}').join(
-            inp[SEC.SUBAREAS].frame.rename(columns=lambda c: f'{SEC.SUBAREAS}{label_sep}{c}')).join(
-            inp[SEC.INFILTRATION].frame.rename(columns=lambda c: f'{SEC.INFILTRATION}{label_sep}{c}')).join(
-            inp[SEC.POLYGONS].geo_series).join(get_subcatchment_tags(inp))
+    if SUBCATCHMENTS in inp:
+        df = inp[SUBCATCHMENTS].frame.rename(columns=lambda c: f'{SUBCATCHMENTS}{label_sep}{c}').join(
+            inp[SUBAREAS].frame.rename(columns=lambda c: f'{SUBAREAS}{label_sep}{c}')).join(
+            inp[INFILTRATION].frame.rename(columns=lambda c: f'{INFILTRATION}{label_sep}{c}')).join(
+            inp[POLYGONS].geo_series).join(get_subcatchment_tags(inp))
 
-        GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=SEC.SUBCATCHMENTS)
+        GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=SUBCATCHMENTS)
         gs_connector = get_subcatchment_connectors(inp)
-        GeoDataFrame(gs_connector).to_file(gpkg_fn, driver=driver, layer=SEC.SUBCATCHMENTS + '_connector')
+        GeoDataFrame(gs_connector).to_file(gpkg_fn, driver=driver, layer=SUBCATCHMENTS + '_connector')
 
-        print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(SEC.SUBCATCHMENTS)}s}')
+        print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(SUBCATCHMENTS)}s}')
     else:
-        print(f'{f"-":^{len(SEC.SUBCATCHMENTS)}s}', end=' | ')
+        print(f'{f"-":^{len(SUBCATCHMENTS)}s}', end=' | ')
 
 
 def get_subcatchment_connectors(inp):
@@ -170,15 +169,15 @@ def get_subcatchment_connectors(inp):
     from shapely.geometry import LineString
 
     res = dict()
-    for p in tqdm(inp[SEC.POLYGONS], total=len(inp[SEC.POLYGONS].keys()), desc='get_subcatchment_connectors'):
-        c = inp[SEC.POLYGONS][p].geo.centroid
-        o = inp[SEC.SUBCATCHMENTS][p].Outlet
-        if o not in inp[SEC.COORDINATES]:
-            print(inp[SEC.SUBCATCHMENTS][p])
+    for p in tqdm(inp[POLYGONS], total=len(inp[POLYGONS].keys()), desc='get_subcatchment_connectors'):
+        c = inp[POLYGONS][p].geo.centroid
+        o = inp[SUBCATCHMENTS][p].Outlet
+        if o not in inp[COORDINATES]:
+            print(inp[SUBCATCHMENTS][p])
             continue
-        res[p] = LineString([inp[SEC.COORDINATES][o].point, (c.x, c.y)])
+        res[p] = LineString([inp[COORDINATES][o].point, (c.x, c.y)])
 
-    gs = GeoSeries(res, crs=inp[SEC.POLYGONS]._crs)
+    gs = GeoSeries(res, crs=inp[POLYGONS]._crs)
     gs.index.name = 'Subcatchment'
     gs.name = 'geometry'
     return gs
@@ -218,23 +217,23 @@ def links_geo_data_frame(inp, label_sep='.'):
     """
     from geopandas import GeoDataFrame
 
-    if (SEC.VERTICES in inp) and not isinstance(inp[SEC.VERTICES], InpSectionGeo):
-        inp[SEC.VERTICES] = convert_section_to_geosection(inp[SEC.VERTICES])
+    if (VERTICES in inp) and not isinstance(inp[VERTICES], InpSectionGeo):
+        inp[VERTICES] = convert_section_to_geosection(inp[VERTICES])
     links_tags = get_link_tags(inp)
     complete_vertices(inp)
     res = None
     for sec in LINK_SECTIONS:
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}').join(
-                inp[SEC.XSECTIONS].frame.rename(columns=lambda c: f'{SEC.XSECTIONS}{label_sep}{c}'))
+                inp[XSECTIONS].frame.rename(columns=lambda c: f'{XSECTIONS}{label_sep}{c}'))
 
-            if sec == SEC.OUTLETS:
-                df[f'{SEC.OUTLETS}{label_sep}Curve'] = df[f'{SEC.OUTLETS}{label_sep}Curve'].astype(str)
+            if sec == OUTLETS:
+                df[f'{OUTLETS}{label_sep}Curve'] = df[f'{OUTLETS}{label_sep}Curve'].astype(str)
 
-            if SEC.LOSSES in inp:
-                df = df.join(inp[SEC.LOSSES].frame.rename(columns=lambda c: f'{SEC.LOSSES}{label_sep}{c}'))
+            if LOSSES in inp:
+                df = df.join(inp[LOSSES].frame.rename(columns=lambda c: f'{LOSSES}{label_sep}{c}'))
 
-            df = df.join(inp[SEC.VERTICES].geo_series).join(links_tags)
+            df = df.join(inp[VERTICES].geo_series).join(links_tags)
             if res is None:
                 res = df
             else:
@@ -256,24 +255,24 @@ def nodes_geo_data_frame(inp, label_sep='.'):
     """
     from geopandas import GeoDataFrame
 
-    if (SEC.COORDINATES in inp) and not isinstance(inp[SEC.COORDINATES], InpSectionGeo):
-        inp[SEC.COORDINATES] = convert_section_to_geosection(inp[SEC.COORDINATES])
+    if (COORDINATES in inp) and not isinstance(inp[COORDINATES], InpSectionGeo):
+        inp[COORDINATES] = convert_section_to_geosection(inp[COORDINATES])
     nodes_tags = get_node_tags(inp)
     res = None
     for sec in NODE_SECTIONS:
         if sec in inp:
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}')
 
-            if sec == SEC.STORAGE:
-                df[f'{SEC.STORAGE}{label_sep}Curve'] = df[f'{SEC.STORAGE}{label_sep}Curve'].astype(str)
+            if sec == STORAGE:
+                df[f'{STORAGE}{label_sep}Curve'] = df[f'{STORAGE}{label_sep}Curve'].astype(str)
 
-            for sub_sec in [SEC.DWF, SEC.INFLOWS]:
+            for sub_sec in [DWF, INFLOWS]:
                 if sub_sec in inp:
                     x = inp[sub_sec].frame.unstack(1)
                     x.columns = [f'{label_sep}'.join([sub_sec, c[1], c[0]]) for c in x.columns]
                     df = df.join(x)
 
-            df = df.join(inp[SEC.COORDINATES].geo_series).join(nodes_tags)
+            df = df.join(inp[COORDINATES].geo_series).join(nodes_tags)
 
             if res is None:
                 res = df
@@ -300,9 +299,9 @@ def gpkg_to_swmm(fn, label_sep='.'):
 
     inp = SwmmInput()
 
-    SECTION_TYPES.update({SEC.COORDINATES: CoordinateGeo,
-                          SEC.VERTICES   : VerticesGeo,
-                          SEC.POLYGONS   : PolygonGeo})
+    SECTION_TYPES.update({COORDINATES: CoordinateGeo,
+                          VERTICES   : VerticesGeo,
+                          POLYGONS   : PolygonGeo})
 
     def _check_sec(sec):
         if sec not in inp:
@@ -316,7 +315,7 @@ def gpkg_to_swmm(fn, label_sep='.'):
         cols = gdf.columns[gdf.columns.str.startswith(sec)]
         inp[sec] = SECTION_TYPES[sec].create_section(gdf[cols].reset_index().fillna(NaN).values)
 
-        for sub_sec in [SEC.DWF, SEC.INFLOWS]:
+        for sub_sec in [DWF, INFLOWS]:
             _check_sec(sub_sec)
             cols = gdf.columns[gdf.columns.str.startswith(sub_sec)]
             gdf_sub = gdf[cols].copy()
@@ -325,18 +324,18 @@ def gpkg_to_swmm(fn, label_sep='.'):
             gdf_sub = gdf_sub.stack(1)[cols_order]
             inp[sub_sec].update(SECTION_TYPES[sub_sec].create_section(gdf_sub.reset_index().values))
 
-        _check_sec(SEC.COORDINATES)
-        inp[SEC.COORDINATES].update(SECTION_TYPES[SEC.COORDINATES].create_section_from_geoseries(gdf.geometry))
+        _check_sec(COORDINATES)
+        inp[COORDINATES].update(SECTION_TYPES[COORDINATES].create_section_from_geoseries(gdf.geometry))
 
         tags = gdf[['tag']].copy()
         tags['type'] = Tag.TYPES.Node
-        _check_sec(SEC.TAGS)
-        inp[SEC.TAGS].update(SECTION_TYPES[SEC.TAGS].create_section(tags[['type', 'tag']].reset_index().values))
+        _check_sec(TAGS)
+        inp[TAGS].update(SECTION_TYPES[TAGS].create_section(tags[['type', 'tag']].reset_index().values))
 
-    for i in inp[SEC.STORAGE]:
-        c = inp[SEC.STORAGE][i].Curve
+    for i in inp[STORAGE]:
+        c = inp[STORAGE][i].Curve
         if isinstance(c, list):
-            inp[SEC.STORAGE][i].Curve = [float(j) for j in c[0][1:-1].split(',')]
+            inp[STORAGE][i].Curve = [float(j) for j in c[0][1:-1].split(',')]
 
     # ---------------------------------
     for sec in LINK_SECTIONS:
@@ -347,48 +346,48 @@ def gpkg_to_swmm(fn, label_sep='.'):
         cols = gdf.columns[gdf.columns.str.startswith(sec)]
         inp[sec] = SECTION_TYPES[sec].create_section(gdf[cols].reset_index().fillna(NaN).values)
 
-        for sub_sec in [SEC.XSECTIONS, SEC.LOSSES]:
+        for sub_sec in [XSECTIONS, LOSSES]:
             _check_sec(sub_sec)
             cols = gdf.columns[gdf.columns.str.startswith(sub_sec)].to_list()
             if cols:
-                if sub_sec == SEC.XSECTIONS:
+                if sub_sec == XSECTIONS:
                     cols = [f'{sub_sec}{label_sep}{i}' for i in inspect.getargspec(SECTION_TYPES[sub_sec]).args[2:]]
                 gdf_sub = gdf[cols].copy().dropna(how='all')
-                if sub_sec == SEC.LOSSES:
-                    gdf_sub[f'{SEC.LOSSES}{label_sep}FlapGate'] = gdf_sub[f'{SEC.LOSSES}{label_sep}FlapGate'] == 1
+                if sub_sec == LOSSES:
+                    gdf_sub[f'{LOSSES}{label_sep}FlapGate'] = gdf_sub[f'{LOSSES}{label_sep}FlapGate'] == 1
                 inp[sub_sec].update(SECTION_TYPES[sub_sec].create_section(gdf_sub.reset_index().values))
 
-        _check_sec(SEC.VERTICES)
-        inp[SEC.VERTICES].update(SECTION_TYPES[SEC.VERTICES].create_section_from_geoseries(gdf.geometry))
+        _check_sec(VERTICES)
+        inp[VERTICES].update(SECTION_TYPES[VERTICES].create_section_from_geoseries(gdf.geometry))
 
         tags = gdf[['tag']].copy()
         tags['type'] = Tag.TYPES.Link
-        _check_sec(SEC.TAGS)
-        inp[SEC.TAGS].update(SECTION_TYPES[SEC.TAGS].create_section(tags[['type', 'tag']].reset_index().values))
+        _check_sec(TAGS)
+        inp[TAGS].update(SECTION_TYPES[TAGS].create_section(tags[['type', 'tag']].reset_index().values))
 
-    if SEC.OUTLETS in inp:
-        for i in inp[SEC.OUTLETS]:
-            c = inp[SEC.OUTLETS][i].Curve
+    if OUTLETS in inp:
+        for i in inp[OUTLETS]:
+            c = inp[OUTLETS][i].Curve
             if isinstance(c, list):
-                inp[SEC.OUTLETS][i].Curve = [float(j) for j in c[0][1:-1].split(',')]
+                inp[OUTLETS][i].Curve = [float(j) for j in c[0][1:-1].split(',')]
 
     simplify_vertices(inp)
     reduce_vertices(inp)
 
     # ---------------------------------
-    if SEC.SUBCATCHMENTS in fiona.listlayers(fn):
-        gdf = read_file(fn, layer=SEC.SUBCATCHMENTS).set_index('Name')
+    if SUBCATCHMENTS in fiona.listlayers(fn):
+        gdf = read_file(fn, layer=SUBCATCHMENTS).set_index('Name')
 
-        for sec in [SEC.SUBCATCHMENTS, SEC.SUBAREAS, SEC.INFILTRATION]:
+        for sec in [SUBCATCHMENTS, SUBAREAS, INFILTRATION]:
             cols = gdf.columns[gdf.columns.str.startswith(sec)]
             inp[sec] = SECTION_TYPES[sec].create_section(gdf[cols].reset_index().fillna(NaN).values)
 
-        inp[SEC.POLYGONS] = SECTION_TYPES[SEC.POLYGONS].create_section_from_geoseries(gdf.geometry)
+        inp[POLYGONS] = SECTION_TYPES[POLYGONS].create_section_from_geoseries(gdf.geometry)
 
     return inp
 
 
 def update_length(inp):
-    inp[SEC.VERTICES] = convert_section_to_geosection(inp[SEC.VERTICES], crs="EPSG:32633")
+    inp[VERTICES] = convert_section_to_geosection(inp[VERTICES], crs="EPSG:32633")
     for c in inp.CONDUITS.values():
         c.Length = inp.VERTICES[c.Name].geo.length

@@ -102,7 +102,7 @@ class InpSectionGeneric(CustomDictWithAttributes):
 
     :term:`dict-like <mapping>`"
     """
-    _section_label = ''
+    _label = ''
     """str: label of the section"""
 
     def __init__(self, *args, **kwargs):
@@ -212,7 +212,6 @@ class InpSection(CustomDict):
 
         super().__setitem__(key, value)
 
-
     @property
     def objects(self):
         """
@@ -231,6 +230,16 @@ class InpSection(CustomDict):
             str | tuple: key of the objects label (can be a single or multiple keys)
         """
         return self._section_object._identifier
+
+    @property
+    def _label(self):
+        """
+        get the label of the section
+
+        Returns:
+            str: label of the section
+        """
+        return self._section_object._section_label
 
     @property
     def _table_inp_export(self):
@@ -482,6 +491,10 @@ class BaseSectionObject(ABC):
     def __eq__(self, other):
         # TODO: testing!!!
         return isinstance(self, type(other)) and all([is_equal(self[k], other[k]) for k in self.to_dict_().keys()])
+
+    def __hash__(self):
+        di = self.to_dict_()
+        return tuple([(k, v) for k, v in di.items()]).__hash__()
 
     # @property
     # def id(self):

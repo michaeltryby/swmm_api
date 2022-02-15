@@ -1,5 +1,35 @@
 # Changelog  
 
+## 0.2.0.18 (Feb x, 2022)
+
+fixed:
+- type in swmm_api.input_file.macros.collection.subcachtment_nodes_dict > subcatchment_nodes_dict
+- copy error for swmm_api.input_file.sections.lid.LIDControl, swmm_api.input_file.sections.others.Hydrograph, SnowPack
+- reduce_controls now works
+
+renamed:
+- in swmm_api.input_file.macros.collection subcatchment_nodes_dict to subcatchments_per_node_dict
+
+added:
+- function swmm_api.input_file.macros.edit.remove_quality_model
+- swmm_api.input_file.section_list.POLLUTANT_SECTIONS
+- missing report sections
+- swmm_api.input_file.macros.check.check_for_subcatchment_outlets
+- swmm_api.input_file.macros.collection.nodes_subcatchments_dict
+- InpSection and InpSectionGeneric have now _label for the section label
+- add_new_section to SwmmInput
+- SwmmInputGeo as alias of SwmmInput with geo_section_converter as custom_converter
+
+moved:
+- SEC from swmm_api.input_file.section_abr to swmm_api.input_file
+
+improved performance for reading bis inp-files
+
+changed:
+- in swmm_api.input_file.macros.check the functions check_for_nodes, check_for_duplicates now return set of error and don't print
+- BaseSectionObject are now hashable
+- Control object has now objects as action and condition for better usability
+
 ## 0.2.0.17 (Feb 11, 2022)
 fixed:
 - error in copy Pollutant

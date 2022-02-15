@@ -1,4 +1,4 @@
-from ..section_abr import SEC
+from ..section_labels import JUNCTIONS, CONDUITS, STORAGE, OUTFALLS, ORIFICES
 from ..sections import Storage, Outfall, Orifice
 
 
@@ -15,11 +15,11 @@ def junction_to_storage(inp, label, *args, **kwargs):
         *args: argument of the :class:`~swmm_api.input_file.inp_sections.node.Storage`-class
         **kwargs: keyword arguments of the :class:`~swmm_api.input_file.inp_sections.node.Storage`-class
     """
-    j = inp[SEC.JUNCTIONS].pop(label)  # type: Junction
-    if SEC.STORAGE not in inp:
-        inp[SEC.STORAGE] = Storage.create_section()
-    inp[SEC.STORAGE].add_obj(Storage(Name=label, Elevation=j.Elevation, MaxDepth=j.MaxDepth,
-                                     InitDepth=j.InitDepth, Apond=j.Aponded, *args, **kwargs))
+    j = inp[JUNCTIONS].pop(label)  # type: Junction
+    if STORAGE not in inp:
+        inp[STORAGE] = Storage.create_section()
+    inp[STORAGE].add_obj(Storage(Name=label, Elevation=j.Elevation, MaxDepth=j.MaxDepth,
+                                 InitDepth=j.InitDepth, Apond=j.Aponded, *args, **kwargs))
 
 
 def junction_to_outfall(inp, label, *args, **kwargs):
@@ -35,10 +35,10 @@ def junction_to_outfall(inp, label, *args, **kwargs):
         *args: argument of the :class:`~swmm_api.input_file.inp_sections.node.Outfall`-class
         **kwargs: keyword arguments of the :class:`~swmm_api.input_file.inp_sections.node.Outfall`-class
     """
-    j = inp[SEC.JUNCTIONS].pop(label)  # type: Junction
-    if SEC.OUTFALLS not in inp:
-        inp[SEC.OUTFALLS] = Outfall.create_section()
-    inp[SEC.OUTFALLS].add_obj(Outfall(Name=label, Elevation=j.Elevation, *args, **kwargs))
+    j = inp[JUNCTIONS].pop(label)  # type: Junction
+    if OUTFALLS not in inp:
+        inp[OUTFALLS] = Outfall.create_section()
+    inp[OUTFALLS].add_obj(Outfall(Name=label, Elevation=j.Elevation, *args, **kwargs))
 
 
 def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0):
@@ -60,8 +60,8 @@ def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0
         Orate (int): time in decimal hours to open a fully closed orifice (or close a fully open one).
                         Use 0 if the orifice can open/close instantaneously.
     """
-    c = inp[SEC.CONDUITS].pop(label)  # type: Conduit
-    if SEC.ORIFICES not in inp:
-        inp[SEC.ORIFICES] = Orifice.create_section()
-    inp[SEC.ORIFICES].add_obj(Orifice(Name=label, FromNode=c.FromNode, ToNode=c.ToNode,
-                                      Type=Type, Offset=Offset, Qcoeff=Qcoeff, FlapGate=FlapGate, Orate=Orate))
+    c = inp[CONDUITS].pop(label)  # type: Conduit
+    if ORIFICES not in inp:
+        inp[ORIFICES] = Orifice.create_section()
+    inp[ORIFICES].add_obj(Orifice(Name=label, FromNode=c.FromNode, ToNode=c.ToNode,
+                                  Type=Type, Offset=Offset, Qcoeff=Qcoeff, FlapGate=FlapGate, Orate=Orate))

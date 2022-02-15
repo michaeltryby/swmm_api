@@ -1,5 +1,5 @@
 from swmm_api import SwmmInput
-from swmm_api.input_file.section_abr import SEC
+from swmm_api.input_file import SEC
 from swmm_api.input_file.sections import FilesSection, BuildUp
 from swmm_api.input_file.section_labels import FILES
 

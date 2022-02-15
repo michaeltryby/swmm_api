@@ -8,6 +8,7 @@ from .node_component import Coordinate
 from .subcatch import Polygon
 from ..section_labels import CONDUITS, VERTICES, COORDINATES, POLYGONS
 from ..helpers import InpSection
+from ..inp import SwmmInput
 
 
 class InpSectionGeo(InpSection):
@@ -219,6 +220,24 @@ def convert_section_to_geosection(section: InpSection, crs="EPSG:32633") -> InpS
 
 # GeoPandas support for sections
 geo_section_converter = {COORDINATES: CoordinateGeo, VERTICES: VerticesGeo, POLYGONS: PolygonGeo}
+
+
+class SwmmInputGeo(SwmmInput):
+    """
+    overall class for an input file
+
+    child class of dict
+
+    just used for the copy function and to identify ``.inp``-file data
+    
+    added geo support
+    """""
+    @classmethod
+    def read_file(cls, filename, custom_converter=None, force_ignore_case=False, encoding='iso-8859-1'):
+        return super().read_file(filename, custom_converter=geo_section_converter, force_ignore_case=False, encoding='iso-8859-1')
+
+# Find: SwmmInput\.read_file\(([^,]*)\, custom_converter\=geo_section_converter\)
+# Replace: SwmmInputGeo.read_file($1)
 
 
 def add_geo_support(inp, crs="EPSG:32633"):

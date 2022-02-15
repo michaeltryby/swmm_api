@@ -1,7 +1,7 @@
 from .collection import nodes_dict, links_dict
 from .graph import inp_to_graph, next_nodes, previous_links, next_links
 from ..inp import SwmmInput
-from ..section_abr import SEC
+from ..section_labels import TITLE
 from .._type_converter import is_equal
 from ..helpers import BaseSectionObject, _sort_by
 
@@ -97,7 +97,7 @@ def compare_inp_files(fn1, fn2, precision=2, skip_section=None):
     for section in sorted(sections, key=_sort_by):
         if skip_section is not None and section in skip_section:
             continue
-        if section in [SEC.TITLE]:
+        if section in [TITLE]:
             continue
         s += '\n' + '#' * 100 + f'\n[{section}]\n'
 
@@ -120,6 +120,7 @@ def _to_coordinates_list(geo_series):
 
 
 def _next_nodes():
+    # TODO ...
     coords_from = _to_coordinates_list(geometry_from.geometry)
     coords_to = _to_coordinates_list(geometry_to.geometry)
     # distance_matrix = distance.cdist(coords_from, coords_to, 'euclidean')
