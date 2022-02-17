@@ -144,7 +144,7 @@ class InpSectionGeneric(CustomDictWithAttributes):
         """
         pass
 
-    def to_inp_lines(self, fast=False):
+    def to_inp_lines(self, fast=False, sort_objects_alphabetical=False):
         """
         write ``.inp``-file lines of the section object
 
@@ -572,7 +572,7 @@ class BaseSectionObject(ABC):
 
         # s += ' ' + ' '.join([type2str(i) for i in di.values()])
         # return s
-        return ' '.join([type2str(i) for i in di.values()])
+        return ' '.join([type2str(i) for i in di.values()]).strip()
 
     @classmethod
     def from_inp_line(cls, *line_args):
@@ -869,7 +869,10 @@ def section_to_string(section, fast=True, sort_objects_alphabetical=False):
         return dataframe_to_inp_string(section)
 
     # ----------------------
-    elif isinstance(section, (InpSection, InpSectionGeneric)):  # V4
+    elif isinstance(section, InpSectionGeneric):  # V4
+        return section.to_inp_lines(fast=fast)
+
+    elif isinstance(section, InpSection):  # V4
         return section.to_inp_lines(fast=fast, sort_objects_alphabetical=sort_objects_alphabetical)
 
 
@@ -893,6 +896,8 @@ def iter_section_lines(section, sort_objects_alphabetical=False):
         yield dataframe_to_inp_string(section)
 
     # ----------------------
-    elif isinstance(section, (InpSection, InpSectionGeneric)):  # V4
+    elif isinstance(section, InpSectionGeneric):
+        yield section.to_inp_lines(fast=True)
+    elif isinstance(section, InpSection):  # V4
         for line in section.iter_inp_lines(sort_objects_alphabetical=sort_objects_alphabetical):
             yield line

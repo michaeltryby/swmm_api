@@ -50,7 +50,7 @@ class TitleSection(UserString):
         """
         return cls(lines)
 
-    def to_inp_lines(self, fast=False):
+    def to_inp_lines(self, fast=False, sort_objects_alphabetical=False):
         """
         write ``.inp``-file lines of the section object
 
@@ -381,7 +381,7 @@ class ReportSection(InpSectionGeneric):
                 data[key] = value
         return data
 
-    def to_inp_lines(self, fast=False):
+    def to_inp_lines(self, fast=False, sort_objects_alphabetical=False):
         f = ''
         max_len = len(max(self.keys(), key=len)) + 2
 

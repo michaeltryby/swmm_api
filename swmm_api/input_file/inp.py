@@ -178,7 +178,8 @@ class SwmmInput(CustomDictWithAttributes):
             for head in self.get_section_headers(custom_sections_order):
                 f.write(head_to_str(head))
                 if per_line:
-                    for line in iter_section_lines(self._data[head], sort_objects_alphabetical=False):
+                    for line in iter_section_lines(self._data[head],
+                                                   sort_objects_alphabetical=sort_objects_alphabetical):
                         f.write(line + '\n')
                 else:
                     f.write(section_to_string(self._data[head], fast=fast,

@@ -240,7 +240,7 @@ class Vertices(BaseSectionObject):
             yield cls(last, vertices)
 
     def to_inp_line(self):
-        return '\n'.join([f'{self.Link}  {x:{GIS_FLOAT_FORMAT}} {y:{GIS_FLOAT_FORMAT}}' for x, y in self.vertices])
+        return '\n'.join([f'{self.Link} {x:{GIS_FLOAT_FORMAT}} {y:{GIS_FLOAT_FORMAT}}' for x, y in self.vertices])
 
     @property
     def frame(self):

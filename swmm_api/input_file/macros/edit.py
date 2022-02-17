@@ -529,7 +529,8 @@ def rename_timeseries(inp, old_label, new_label):
 
 def flip_link_direction(inp, link_label):
     link = find_link(inp, link_label)
-    link.FromNode, link.ToNode = link.ToNode, link.FromNode
+    if link:
+        link.FromNode, link.ToNode = link.ToNode, link.FromNode
 
 
 def remove_quality_model(inp):
