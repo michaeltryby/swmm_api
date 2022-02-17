@@ -602,9 +602,13 @@ class SwmmReport:
             if p:
                 self._routing_time_step_summary = dict()
                 for line in self.converted('Routing Time Step Summary').split('\n'):
+                    if 'Time Step Frequencies' in line:
+                        continue
                     key, value = ' '.join(line.split()).split(' : ')
                     if 'sec' in value:
                         value = pd.Timedelta(value)
+                    elif '%' in value:
+                        value = value
                     else:
                         value = float(value)
                     self._routing_time_step_summary[key] = value

@@ -1,11 +1,14 @@
 # Changelog  
 
-## 0.2.0.18 (Feb x, 2022)
+## 0.2.0.18 (Feb 17, 2022)
 
 fixed:
 - type in swmm_api.input_file.macros.collection.subcachtment_nodes_dict > subcatchment_nodes_dict
 - copy error for swmm_api.input_file.sections.lid.LIDControl, swmm_api.input_file.sections.others.Hydrograph, SnowPack
 - reduce_controls now works
+- error when reading a RDII
+- infiltration object type recognition
+- error when reading the report section "routing time step summary"
 
 renamed:
 - in swmm_api.input_file.macros.collection subcatchment_nodes_dict to subcatchments_per_node_dict
@@ -19,16 +22,24 @@ added:
 - InpSection and InpSectionGeneric have now _label for the section label
 - add_new_section to SwmmInput
 - SwmmInputGeo as alias of SwmmInput with geo_section_converter as custom_converter
+- example for sorting in the inp-file-writer
+- possibility to turn off sorting in inp-file write_file (`sort_objects_alphabetical=False`)
+- SwmmHotstart file reader
 
 moved:
 - SEC from swmm_api.input_file.section_abr to swmm_api.input_file
 
-improved performance for reading bis inp-files
-
+improved:
+- performance for reading bis inp-files
+- natural sorting for objects. (i.e. the object names \[J1, J2, J10\] were previously sorted as  \[J1, J10, J2\])
+- sections will be sorted as in the read file
+- default sorting is based on sorting of the EPA SWMM GUI / PCSWMM
+- 
 changed:
 - in swmm_api.input_file.macros.check the functions check_for_nodes, check_for_duplicates now return set of error and don't print
 - BaseSectionObject are now hashable
 - Control object has now objects as action and condition for better usability
+
 
 ## 0.2.0.17 (Feb 11, 2022)
 fixed:

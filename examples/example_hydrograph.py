@@ -1,5 +1,3 @@
-import io
-
 from swmm_api import read_inp_file
 from swmm_api.input_file.sections import GroundwaterFlow
 

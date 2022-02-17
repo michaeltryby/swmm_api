@@ -13,7 +13,7 @@ from .section_lists import LINK_SECTIONS, NODE_SECTIONS
 
 SWMM_VERSION = '5.1.015'
 
-inp_sep = ';;' + "_" * 100
+SEP_INP = ';;' + "_" * 100
 
 
 ########################################################################################################################
@@ -292,12 +292,15 @@ class InpSection(CustomDict):
         """
         return section_class.create_section(lines)
 
-    @property
-    def _sorted_values(self):
-        for k in sorted(self.keys()):
+    def get_objects(self, sort_alphabetical=False):
+        keys = self.keys()
+        if sort_alphabetical:
+            keys = sorted(keys, key=natural_keys)
+
+        for k in keys:
             yield self[k]
 
-    def to_inp_lines(self, fast=False):
+    def to_inp_lines(self, fast=False, sort_objects_alphabetical=False):
         """
         convert the section to a multi-line ``.inp``-file conform string
 
@@ -309,6 +312,9 @@ class InpSection(CustomDict):
                 - :obj:`True`: if no special formation of the input file is needed
                 - :obj:`False`: section is converted into a table to prettify string output (slower)
 
+            sort_objects_alphabetical (bool): if objects in a section should be sorted alphabetical |
+                default: use order of the read inp-file and append new objects
+
         Returns:
              str: lines of the ``.inp``-file section
         """
@@ -319,17 +325,19 @@ class InpSection(CustomDict):
 
             # only show write progress for big files
             n_objects = len(self.keys())
-            if n_objects > 10000:
-                _iterable = tqdm(self._sorted_values,
+            values = self.get_objects(sort_objects_alphabetical)
+            if n_objects > 50_000:
+                _iterable = tqdm(values,
                                  desc=self._section_object.__name__,
                                  postfix='Write',
                                  total=n_objects)
             else:
-                _iterable = self._sorted_values
+                _iterable = values
 
             return '\n'.join(o.to_inp_line() for o in _iterable)
         else:
-            return dataframe_to_inp_string(self.frame)
+            return dataframe_to_inp_string(self.get_dataframe(set_index=True,
+                                                              sort_objects_alphabetical=sort_objects_alphabetical))
 
     @property
     def frame(self):
@@ -340,19 +348,22 @@ class InpSection(CustomDict):
         Returns:
             pandas.DataFrame: section as table
         """
-        return self.get_dataframe(set_index=True)
+        return self.get_dataframe(set_index=True, sort_objects_alphabetical=True)
 
-    def get_dataframe(self, set_index=True):
+    def get_dataframe(self, set_index=True, sort_objects_alphabetical=False):
         """convert section to a pandas data-frame
 
-       This property is used for debugging purposes and data analysis of the input data of the swmm model.
+        Args:
+            set_index (bool): set object keys as index
+            sort_objects_alphabetical (bool): if objects in a section should be sorted alphabetical |
+                default: use order of the read inp-file and append new objects
 
-       Returns:
-           pandas.DataFrame: section as table
-       """
+        Returns:
+            pandas.DataFrame: section as table
+        """
         if not self:  # if empty
             return DataFrame()
-        df = DataFrame([i.to_dict_() for i in self._sorted_values])
+        df = DataFrame([i.to_dict_() for i in self.get_objects(sort_objects_alphabetical)])
         if set_index:
             df = df.set_index(self._identifier)
         return df
@@ -634,7 +645,7 @@ def dataframe_to_inp_string(df):
     if df.empty:
         return ';; NO data'
 
-    c = df.sort_index().copy()
+    c = df.copy()
     if c.columns.name is None:
         c.columns.name = comment_sign
     else:
@@ -684,49 +695,118 @@ def convert_section(head, lines, converter):
         else:
             raise NotImplemented()
     else:
-        return lines.replace(inp_sep, '').strip()
+        return lines.replace(SEP_INP, '').strip()
 
 
 ########################################################################################################################
-def _sort_by(key):
-    sections_order = ([
-                          TITLE,
-                          OPTIONS,
-                          REPORT,
-                          EVAPORATION,
-                          TEMPERATURE
+SECTIONS_ORDER_MP = ([
+                         TITLE,
+                         OPTIONS,
+                         REPORT,
+                         EVAPORATION,
+                         TEMPERATURE
 
-                      ] + NODE_SECTIONS +
-                      [
-                          DWF,
-                          INFLOWS
+                     ] + NODE_SECTIONS +
+                     [
+                         DWF,
+                         INFLOWS
 
-                      ] + LINK_SECTIONS +
-                      [
+                     ] + LINK_SECTIONS +
+                     [
 
-                          LOSSES,
-                          XSECTIONS,
-                          TRANSECTS,
+                         LOSSES,
+                         XSECTIONS,
+                         TRANSECTS,
 
-                          CURVES,
-                          TIMESERIES,
-                          RAINGAGES,
-                          PATTERNS,
+                         CURVES,
+                         TIMESERIES,
+                         RAINGAGES,
+                         PATTERNS,
 
-                          SUBCATCHMENTS,
-                          SUBAREAS,
-                          INFILTRATION,
+                         SUBCATCHMENTS,
+                         SUBAREAS,
+                         INFILTRATION,
 
-                          POLLUTANTS,
-                          LOADINGS,
-                      ])
+                         POLLUTANTS,
+                         LOADINGS,
+                     ])
+
+SECTION_ORDER_DEFAULT = [TITLE,
+                         OPTIONS,
+                         FILES,
+                         EVAPORATION,
+                         TEMPERATURE,
+                         RAINGAGES,
+                         SUBCATCHMENTS,
+                         SUBAREAS,
+                         INFILTRATION,
+                         LID_CONTROLS,
+                         LID_USAGE,
+                         AQUIFERS,
+                         GROUNDWATER,
+                         GWF,
+                         SNOWPACKS,
+                         JUNCTIONS,
+                         OUTFALLS,
+                         STORAGE,
+                         CONDUITS,
+                         PUMPS,
+                         ORIFICES,
+                         WEIRS,
+                         OUTLETS,
+                         XSECTIONS,
+                         TRANSECTS,
+                         LOSSES,
+                         CONTROLS,
+                         POLLUTANTS,
+                         LANDUSES,
+                         COVERAGES,
+                         LOADINGS,
+                         BUILDUP,
+                         WASHOFF,
+                         TREATMENT,
+                         INFLOWS,
+                         DWF,
+                         HYDROGRAPHS,
+                         RDII,
+                         CURVES,
+                         TIMESERIES,
+                         PATTERNS,
+                         REPORT,
+                         ADJUSTMENTS,
+                         TAGS,
+                         MAP,
+                         COORDINATES,
+                         VERTICES,
+                         POLYGONS,
+                         SYMBOLS,
+                         LABELS,
+                         BACKDROP,
+                         PROFILES]
+
+
+def check_order(inp, order_list=None):
+    if order_list is None:
+        order_list = SECTION_ORDER_DEFAULT
+    order = [order_list.index(o) if o in order_list else len(order_list) for o in inp]
+    return all((order[i+1] - order[i]) > 0 for i in range(len(order)-1))
+
+
+def _sort_by(key, sections_order):
     if key in sections_order:
         return sections_order.index(key)
     else:
         return len(sections_order)
 
 
-def section_to_string(section, fast=True):
+re_int = re.compile('(\d+)')
+
+
+def natural_keys(text):
+    return [int(text) if text.isdigit() else text for text in re_int.split(text)]
+
+
+def section_to_string(section, fast=True, sort_objects_alphabetical=False):
     """
     create a string of a section in an ``.inp``-file
 
@@ -734,6 +814,8 @@ def section_to_string(section, fast=True):
         section (InpSection | InpSectionGeneric):
             section of an ``.inp``-file
         fast (bool): don't use any formatting else format as table
+        sort_objects_alphabetical (bool): if objects in a section should be sorted alphabetical |
+            default: use order of the read inp-file and append new objects
 
     Returns:
         str: string of the ``.inp``-file section
@@ -742,7 +824,7 @@ def section_to_string(section, fast=True):
 
     # ----------------------
     if isinstance(section, str):  # Title
-        f += section.replace(inp_sep, '').strip()
+        f += section.replace(SEP_INP, '').strip()
 
     # ----------------------
     elif isinstance(section, list):  # V0.1
@@ -769,7 +851,7 @@ def section_to_string(section, fast=True):
 
     # ----------------------
     elif isinstance(section, (InpSection, InpSectionGeneric)):  # V0.4
-        f += section.to_inp_lines(fast=fast)
+        f += section.to_inp_lines(fast=fast, sort_objects_alphabetical=sort_objects_alphabetical)
 
     # ----------------------
     f += '\n'

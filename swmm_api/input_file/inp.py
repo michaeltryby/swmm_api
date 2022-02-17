@@ -2,8 +2,8 @@ import os
 import re
 import warnings
 
-from .helpers import (_sort_by, section_to_string, CustomDictWithAttributes, convert_section, inp_sep, InpSection,
-                      InpSectionGeneric, )
+from .helpers import (section_to_string, CustomDictWithAttributes, convert_section, SEP_INP, InpSection,
+                      InpSectionGeneric, SECTION_ORDER_DEFAULT, check_order, )
 from .section_types import SECTION_TYPES
 from .section_labels import *
 from .sections import *
@@ -18,6 +18,17 @@ class SwmmInput(CustomDictWithAttributes):
 
     just used for the copy function and to identify ``.inp``-file data
     """
+
+    def __init__(self, *args, custom_section_handler=None, **kwargs):
+        CustomDictWithAttributes.__init__(self, *args, **kwargs)
+        self._converter = SECTION_TYPES.copy()
+
+        if custom_section_handler is not None:
+            self._converter.update(custom_section_handler)
+
+        # only when reading a new file
+        self._original_section_order = None
+
     def update(self, d=None, **kwargs):
         for sec in d:
             if sec not in self:
@@ -27,13 +38,6 @@ class SwmmInput(CustomDictWithAttributes):
                     pass
                 else:
                     self[sec].update(d[sec])
-
-    def __init__(self, *args, custom_section_handler=None, **kwargs):
-        CustomDictWithAttributes.__init__(self, *args, **kwargs)
-        self._converter = SECTION_TYPES.copy()
-
-        if custom_section_handler is not None:
-            self._converter.update(custom_section_handler)
 
     @classmethod
     def read_file(cls, filename, custom_converter=None, force_ignore_case=False, encoding='iso-8859-1'):
@@ -64,10 +68,20 @@ class SwmmInput(CustomDictWithAttributes):
             txt = txt.upper()
 
         # __________________________________
+        inp._original_section_order = []
         for head, lines in zip(re.findall(r"\[(\w+)\]", txt),
                                re.split(r"\[\w+\]", txt)[1:]):
             inp._data[head.upper()] = lines.strip()
+            inp._original_section_order.append(head.upper())
 
+        # ----------------
+        # if order in inp follows default SWMM GUI order
+        #   set full/complete order list of SWMM GUI
+        #   to use the right order for additional created setions
+        if check_order(inp, SECTION_ORDER_DEFAULT):
+            inp._original_section_order = SECTION_ORDER_DEFAULT
+
+        inp.set_default_infiltration_from_options()
         return inp
 
     def force_convert_all(self):
@@ -88,8 +102,8 @@ class SwmmInput(CustomDictWithAttributes):
         super().__setitem__(key, item)
         # super().__setattr__(key, item)
         # self._data.__setitem__(key, item)
-        if key == OPTIONS:
-            self.set_default_infiltration_from_options()
+        # if key == OPTIONS:
+        #     self.set_default_infiltration_from_options()
         if hasattr(self[key], 'set_parent_inp'):
             self[key].set_parent_inp(self)
 
@@ -111,25 +125,38 @@ class SwmmInput(CustomDictWithAttributes):
     def set_infiltration_method(self, infiltration_class):
         self._converter[INFILTRATION] = infiltration_class
 
-    def to_string(self, fast=True):
+    def to_string(self, fast=True, custom_sections_order=None, sort_objects_alphabetical=False):
         """
         create the string of a new ``.inp``-file
 
         Args:
             fast (bool): don't use any formatting else format as table
+            custom_sections_order (list[str]): list of section names to preset the order of the section in the
+                created inp-file | default: order of the read inp-file + default order of the SWMM GUI
+            sort_objects_alphabetical (bool): if objects in a section should be sorted alphabetical |
+                default: use order of the read inp-file and append new objects
 
         Returns:
             str: string of input file text
         """
         f = ''
-        sep = f'\n{inp_sep}\n[{{}}]\n'
-        # sep = f'\n[{{}}]  ;;{"_" * 100}\n'
+        sep = f'\n{SEP_INP}\n[{{}}]\n'
+
+        if custom_sections_order is None:
+            custom_sections_order = self._original_section_order
+
+        def _sort_by(key):
+            if key in custom_sections_order:
+                return custom_sections_order.index(key)
+            else:
+                return len(custom_sections_order)
+
         for head in sorted(self.keys(), key=_sort_by):
             f += sep.format(head)
-            f += section_to_string(self._data[head], fast=fast)
+            f += section_to_string(self._data[head], fast=fast, sort_objects_alphabetical=sort_objects_alphabetical)
         return f
 
-    def write_file(self, filename, fast=True, encoding='iso-8859-1'):
+    def write_file(self, filename, fast=True, encoding='iso-8859-1', custom_sections_order=None, sort_objects_alphabetical=False):
         """
         create/write a new ``.inp``-file
 
@@ -137,9 +164,13 @@ class SwmmInput(CustomDictWithAttributes):
             filename (str): path/filename of created ``.inp``-file
             fast (bool): don't use any formatting else format as table
             encoding (str): define encoding for resulting inp-file
+            custom_sections_order (list[str]): list of section names to preset the order of the section in the created
+                inp-file | default: order of the read inp-file + default order of the SWMM GUI
+            sort_objects_alphabetical (bool): if objects in a section should be sorted alphabetical |
+                default: use order of the read inp-file and append new objects
         """
         with open(filename, 'w', encoding=encoding) as f:
-            f.write(self.to_string(fast=fast))
+            f.write(self.to_string(fast=fast, custom_sections_order=custom_sections_order))
         return filename
 
     def check_for_section(self, obj):

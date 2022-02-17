@@ -220,12 +220,12 @@ class RainfallDependentInfiltrationInflow(BaseSectionObject):
 
     Args:
         Node (str): name of node.
-        hydrograph (float): name of an RDII unit hydrograph group specified in the [``HYDROGRAPHS``] section.
+        hydrograph (str): name of an RDII unit hydrograph group specified in the [``HYDROGRAPHS``] section.
         sewer_area (float): area of the sewershed which contributes RDII to the node (acres or hectares).
 
     Attributes:
         Node (str): name of node.
-        hydrograph (float): name of an RDII unit hydrograph group specified in the [``HYDROGRAPHS``] section.
+        hydrograph (str): name of an RDII unit hydrograph group specified in the [``HYDROGRAPHS``] section.
         sewer_area (float): area of the sewershed which contributes RDII to the node (acres or hectares).
     """
     _identifier = IDENTIFIERS.Node
@@ -233,7 +233,7 @@ class RainfallDependentInfiltrationInflow(BaseSectionObject):
 
     def __init__(self, Node, hydrograph, sewer_area):
         self.Node = str(Node)
-        self.hydrograph = float(hydrograph)
+        self.hydrograph = str(hydrograph)
         self.sewer_area = float(sewer_area)
 
 
