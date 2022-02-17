@@ -2,8 +2,9 @@ import os
 import re
 import warnings
 
-from .helpers import (section_to_string, CustomDictWithAttributes, convert_section, SEP_INP, InpSection,
-                      InpSectionGeneric, SECTION_ORDER_DEFAULT, check_order, )
+from .helpers import (section_to_string, CustomDictWithAttributes, convert_section, InpSection,
+                      InpSectionGeneric, SECTION_ORDER_DEFAULT, check_order, SECTIONS_ORDER_MP, head_to_str,
+                      iter_section_lines, )
 from .section_types import SECTION_TYPES
 from .section_labels import *
 from .sections import *
@@ -27,7 +28,7 @@ class SwmmInput(CustomDictWithAttributes):
             self._converter.update(custom_section_handler)
 
         # only when reading a new file
-        self._original_section_order = None
+        self._original_section_order = SECTIONS_ORDER_MP
 
     def update(self, d=None, **kwargs):
         for sec in d:
@@ -125,6 +126,18 @@ class SwmmInput(CustomDictWithAttributes):
     def set_infiltration_method(self, infiltration_class):
         self._converter[INFILTRATION] = infiltration_class
 
+    def get_section_headers(self, custom_sections_order=None):
+        if custom_sections_order is None:
+            custom_sections_order = self._original_section_order
+
+        def _sort_by(key):
+            if key in custom_sections_order:
+                return custom_sections_order.index(key)
+            else:
+                return len(custom_sections_order)
+
+        return sorted(self.keys(), key=_sort_by)
+
     def to_string(self, fast=True, custom_sections_order=None, sort_objects_alphabetical=False):
         """
         create the string of a new ``.inp``-file
@@ -140,23 +153,13 @@ class SwmmInput(CustomDictWithAttributes):
             str: string of input file text
         """
         f = ''
-        sep = f'\n{SEP_INP}\n[{{}}]\n'
-
-        if custom_sections_order is None:
-            custom_sections_order = self._original_section_order
-
-        def _sort_by(key):
-            if key in custom_sections_order:
-                return custom_sections_order.index(key)
-            else:
-                return len(custom_sections_order)
-
-        for head in sorted(self.keys(), key=_sort_by):
-            f += sep.format(head)
+        for head in self.get_section_headers(custom_sections_order):
+            f += head_to_str(head)
             f += section_to_string(self._data[head], fast=fast, sort_objects_alphabetical=sort_objects_alphabetical)
         return f
 
-    def write_file(self, filename, fast=True, encoding='iso-8859-1', custom_sections_order=None, sort_objects_alphabetical=False):
+    def write_file(self, filename, fast=True, encoding='iso-8859-1', custom_sections_order=None,
+                   sort_objects_alphabetical=False, per_line=False):
         """
         create/write a new ``.inp``-file
 
@@ -168,10 +171,25 @@ class SwmmInput(CustomDictWithAttributes):
                 inp-file | default: order of the read inp-file + default order of the SWMM GUI
             sort_objects_alphabetical (bool): if objects in a section should be sorted alphabetical |
                 default: use order of the read inp-file and append new objects
+            per_line (bool): weather to write the data line per line (=True) or section per section (=False) into the
+                file. line per line has an advantage for big files (> 1 GB) and uses less memory (RAM).
         """
         with open(filename, 'w', encoding=encoding) as f:
-            f.write(self.to_string(fast=fast, custom_sections_order=custom_sections_order))
+            for head in self.get_section_headers(custom_sections_order):
+                f.write(head_to_str(head))
+                if per_line:
+                    for line in iter_section_lines(self._data[head], sort_objects_alphabetical=False):
+                        f.write(line + '\n')
+                else:
+                    f.write(section_to_string(self._data[head], fast=fast,
+                                              sort_objects_alphabetical=sort_objects_alphabetical))
         return filename
+
+    def print_string(self, custom_sections_order=None):
+        for head in self.get_section_headers(custom_sections_order):
+            print(head_to_str(head))
+            for line in iter_section_lines(self._data[head], sort_objects_alphabetical=False):
+                print(line)
 
     def check_for_section(self, obj):
         """

@@ -13,7 +13,13 @@ from .section_lists import LINK_SECTIONS, NODE_SECTIONS
 
 SWMM_VERSION = '5.1.015'
 
-SEP_INP = ';;' + "_" * 100
+COMMENT_STR = ';;'
+SEP_INP = COMMENT_STR + "_" * 100
+COMMENT_EMPTY_SECTION = COMMENT_STR + ' No Data'
+
+
+def head_to_str(head):
+    return f'\n{SEP_INP}\n[{head}]\n'
 
 
 ########################################################################################################################
@@ -319,10 +325,28 @@ class InpSection(CustomDict):
              str: lines of the ``.inp``-file section
         """
         if not self:  # if empty
-            return ';; No Data'
+            return COMMENT_EMPTY_SECTION
 
         if fast or not self._table_inp_export:
+            return '\n'.join(self.iter_inp_lines(sort_objects_alphabetical))
+        else:
+            return dataframe_to_inp_string(self.get_dataframe(set_index=True,
+                                                              sort_objects_alphabetical=sort_objects_alphabetical))
 
+    def iter_inp_lines(self, sort_objects_alphabetical=False):
+        """
+        convert the section to a multi-line ``.inp``-file conform string
+
+        This function is used for the ``.inp``-file writing
+
+        Args:
+            sort_objects_alphabetical (bool): if objects in a section should be sorted alphabetical |
+                default: use order of the read inp-file and append new objects
+
+        Yields:
+             str: lines of the ``.inp``-file section
+        """
+        if self:
             # only show write progress for big files
             n_objects = len(self.keys())
             values = self.get_objects(sort_objects_alphabetical)
@@ -334,10 +358,10 @@ class InpSection(CustomDict):
             else:
                 _iterable = values
 
-            return '\n'.join(o.to_inp_line() for o in _iterable)
-        else:
-            return dataframe_to_inp_string(self.get_dataframe(set_index=True,
-                                                              sort_objects_alphabetical=sort_objects_alphabetical))
+            for o in _iterable:
+                yield o.to_inp_line()
+        else:  # if empty
+            yield COMMENT_EMPTY_SECTION
 
     @property
     def frame(self):
@@ -641,24 +665,26 @@ def dataframe_to_inp_string(df):
     Returns:
         str: .inp file conform string for one section
     """
-    comment_sign = ';;'
     if df.empty:
-        return ';; NO data'
+        return COMMENT_EMPTY_SECTION
+
+    if isinstance(df, Series):
+        return df.apply(type2str).to_string()
 
     c = df.copy()
     if c.columns.name is None:
-        c.columns.name = comment_sign
+        c.columns.name = COMMENT_STR
     else:
-        if not c.columns.name.startswith(comment_sign):
-            c.columns.name = comment_sign + c.columns.name
+        if not c.columns.name.startswith(COMMENT_STR):
+            c.columns.name = COMMENT_STR + c.columns.name
 
     if c.index.name is not None:
-        if not c.index.name.startswith(comment_sign):
-            c.index.name = comment_sign + c.index.name
+        if not c.index.name.startswith(COMMENT_STR):
+            c.index.name = COMMENT_STR + c.index.name
 
     if c.index._typ == 'multiindex':
         if c.index.names is not None:
-            if not c.index.levels[0].name.startswith(comment_sign):
+            if not c.index.levels[0].name.startswith(COMMENT_STR):
                 c.index.set_names(';' + c.index.names[0], level=0, inplace=True)
                 # because pandas 1.0
                 # c.index.levels[0].name = ';' + c.index.levels[0].name
@@ -803,7 +829,10 @@ re_int = re.compile('(\d+)')
 
 
 def natural_keys(text):
-    return [int(text) if text.isdigit() else text for text in re_int.split(text)]
+    if isinstance(text, str):
+        return [int(text) if text.isdigit() else text for text in re_int.split(text)]
+    else:
+        return [*(natural_keys(t) for t in text)]
 
 
 def section_to_string(section, fast=True, sort_objects_alphabetical=False):
@@ -820,39 +849,50 @@ def section_to_string(section, fast=True, sort_objects_alphabetical=False):
     Returns:
         str: string of the ``.inp``-file section
     """
-    f = ''
-
-    # ----------------------
     if isinstance(section, str):  # Title
-        f += section.replace(SEP_INP, '').strip()
+        return section.replace(SEP_INP, '').strip()
 
     # ----------------------
-    elif isinstance(section, list):  # V0.1
+    elif isinstance(section, list):  # V1
+        return '\n'.join([type2str(line) for line in section])
+
+    # ----------------------
+    elif isinstance(section, dict):  # V2
+        max_len = len(max(section.keys(), key=len)) + 2
+        f = ''
+        for sub in section:
+            f += '{key}{value}'.format(key=sub.ljust(max_len), value=type2str(section[sub]) + '\n')
+        return f
+
+    # ----------------------
+    elif isinstance(section, (DataFrame, Series)):  # V3
+        return dataframe_to_inp_string(section)
+
+    # ----------------------
+    elif isinstance(section, (InpSection, InpSectionGeneric)):  # V4
+        return section.to_inp_lines(fast=fast, sort_objects_alphabetical=sort_objects_alphabetical)
+
+
+def iter_section_lines(section, sort_objects_alphabetical=False):
+    if isinstance(section, str):  # Title
+        yield section.replace(SEP_INP, '').strip()
+
+    # ----------------------
+    elif isinstance(section, list):  # V1
         for line in section:
-            f += type2str(line) + '\n'
-    #
-    # # ----------------------
-    elif isinstance(section, dict):  # V0.2
+            yield type2str(line)
+
+    # ----------------------
+    elif isinstance(section, dict):  # V2
         max_len = len(max(section.keys(), key=len)) + 2
         for sub in section:
-            f += '{key}{value}'.format(key=sub.ljust(max_len),
-                                       value=type2str(section[sub]) + '\n')
-    #
-    # ----------------------
-    elif isinstance(section, (DataFrame, Series)):  # V0.3
-        if section.empty:
-            f += ';; NO data'
-
-        if isinstance(section, DataFrame):
-            f += dataframe_to_inp_string(section)
-
-        elif isinstance(section, Series):
-            f += section.apply(type2str).to_string()
+            yield'{key}{value}'.format(key=sub.ljust(max_len), value=type2str(section[sub]) + '\n')
 
     # ----------------------
-    elif isinstance(section, (InpSection, InpSectionGeneric)):  # V0.4
-        f += section.to_inp_lines(fast=fast, sort_objects_alphabetical=sort_objects_alphabetical)
+    elif isinstance(section, (DataFrame, Series)):  # V3
+        yield dataframe_to_inp_string(section)
 
     # ----------------------
-    f += '\n'
-    return f
+    elif isinstance(section, (InpSection, InpSectionGeneric)):  # V4
+        for line in section.iter_inp_lines(sort_objects_alphabetical=sort_objects_alphabetical):
+            yield line
