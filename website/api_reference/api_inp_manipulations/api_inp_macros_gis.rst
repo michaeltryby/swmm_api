@@ -19,4 +19,3 @@ Input File Manipulation - GIS Macros
 .. automodule:: swmm_api.input_file.macros.gis
     :members:
     :no-undoc-members:
-

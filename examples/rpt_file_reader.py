@@ -7,11 +7,11 @@ def main():
     r.subcatchment_summary
     r.node_summary
     r.link_summary
-    r.crosssection_summary
+    r.cross_section_summary
     r.flow_classification_summary
     r.flow_classification_summary
     r.conduit_surcharge_summary
-    ols = r.outfall_loading_summary['Total_Volume_10^6 ' + r.UNIT.VOL2] * 1000  # m³
+    ols = r.outfall_loading_summary['Total_Volume_10^6 ' + r.unit.VOL2] * 1000  # m³
     ols = ols.to_dict()
 
 

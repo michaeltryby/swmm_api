@@ -159,7 +159,7 @@ class SwmmOutExtract(BinaryReader):
         self.report_interval = datetime.timedelta(seconds=self._next())
 
         # ____
-        self._bytes_per_period = None
+        self._bytes_per_period = self._infer_bytes_per_period()
 
         # ____
         # print(self.fp.tell(), _pos_start_output)
@@ -170,7 +170,7 @@ class SwmmOutExtract(BinaryReader):
 
         self.n_periods = _n_periods
         if _n_periods == 0:
-            self.infer_n_periods()
+            self._infer_n_periods()
             warn('Infer time periods of the output file due to an corrupt SWMM .out-file.', SwmmOutExtractWarning)
 
         if self.n_periods == 0:
@@ -180,22 +180,19 @@ class SwmmOutExtract(BinaryReader):
     def __repr__(self):
         return f'SwmmOutExtract(file="{self.filename}")'
 
-    @property
-    def bytes_per_period(self):
+    def _infer_bytes_per_period(self):
         """
         Calculate the bytes for each time period when reading the computed results
 
         Returns:
             int: bytes per period
         """
-        if self._bytes_per_period is None:
-            self._bytes_per_period = 2  # for the datetime
-            for obj in [OBJECTS.SUBCATCHMENT, OBJECTS.NODE, OBJECTS.LINK]:
-                self._bytes_per_period += len(self.variables[obj]) * len(self.labels[obj])
-            self._bytes_per_period += len(self.variables[OBJECTS.SYSTEM])
-            self._bytes_per_period *= _RECORDSIZE
-
-        return self._bytes_per_period
+        _bytes_per_period = 2  # for the datetime
+        for obj in [OBJECTS.SUBCATCHMENT, OBJECTS.NODE, OBJECTS.LINK]:
+            _bytes_per_period += len(self.variables[obj]) * len(self.labels[obj])
+        _bytes_per_period += len(self.variables[OBJECTS.SYSTEM])
+        _bytes_per_period *= _RECORDSIZE
+        return _bytes_per_period
 
     def get_selective_results(self, columns):
         """
@@ -247,8 +244,8 @@ class SwmmOutExtract(BinaryReader):
         iter_label_offset = tuple(zip(values.keys(), offset_list))
 
         for period_offset in tqdm(range(self.pos_start_output,  # start
-                                        self.pos_start_output + self.n_periods * self.bytes_per_period,  # stop
-                                        self.bytes_per_period),
+                                        self.pos_start_output + self.n_periods * self._bytes_per_period,  # stop
+                                        self._bytes_per_period),
                                   desc=f'{repr(self)}.get_selective_results(n_cols={len(columns)})'):  # step
             # period_offset = self.pos_start_output + period * self.bytes_per_period
             for label, offset in iter_label_offset:
@@ -257,11 +254,11 @@ class SwmmOutExtract(BinaryReader):
 
         return values
 
-    def infer_n_periods(self):
+    def _infer_n_periods(self):
         not_done = True
         period = 0
         while not_done:
-            self.fp.seek(self.pos_start_output + period * self.bytes_per_period, SEEK_SET)
+            self.fp.seek(self.pos_start_output + period * self._bytes_per_period, SEEK_SET)
             try:
                 dt = self._next(dtype='d')
                 # print(dt)

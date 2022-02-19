@@ -14,19 +14,25 @@ from .definitions import OBJECTS, VARIABLES
 
 from . import parquet
 
-# TODO: explain Object structure in docs
-
 
 class SwmmOutput(SwmmOutExtract):
     """
-    read the binary .out-file of EPA-SWMM
+    SWMM Output file (xxx.out).
 
-    based on the python package swmmtoolbox
+    combined the reader of `swmmtoolbox`_ with the functionality of pandas
 
-    combined the reader of swmmtoolbox with the functionality of pandas
+    .. _swmmtoolbox: https://github.com/timcera/swmmtoolbox
     """
-
     def __init__(self, filename):
+        """
+        SWMM Output file (xxx.out).
+
+        Args:
+            filename(str): path to .rpt file
+
+        Notes:
+            based on the python package swmmtoolbox
+        """
         SwmmOutExtract.__init__(self, filename)
 
         self._frame = None
@@ -59,7 +65,13 @@ class SwmmOutput(SwmmOutExtract):
         return sum([len(self.variables[kind]) * len(self.labels[kind]) for kind in OBJECTS.LIST_])
 
     @property
-    def columns_raw(self):
+    def _columns_raw(self):
+        """
+        get the column-names of the data
+
+        Returns:
+            list[list[str]]: multi-level column-names
+        """
         columns = list()
         for kind in OBJECTS.LIST_:
             columns += list(product([kind], self.labels[kind], self.variables[kind]))
@@ -74,7 +86,7 @@ class SwmmOutput(SwmmOutExtract):
         """
         if self._data is None:
             types = [('datetime', 'f8')]
-            types += list(map(lambda i: ('/'.join(i), 'f4'), self.columns_raw))
+            types += list(map(lambda i: ('/'.join(i), 'f4'), self._columns_raw))
             self.fp.seek(self.pos_start_output, 0)
             self._data = fromfile(self.fp, dtype=dtype(types))
         return self._data
@@ -106,43 +118,43 @@ class SwmmOutput(SwmmOutExtract):
             variable (str | list): variable names (predefined in :obj:`swmm_api.output_file.definitions.VARIABLES`)
 
                 * subcatchment:
-                    - ``rainfall`` i.e.: :obj:`swmm_api.output_file.definitions.VARIABLES.SUBCATCHMENT.RAINFALL`
-                    - ``snow_depth``
-                    - ``evaporation``
-                    - ``infiltration``
-                    - ``runoff``
-                    - ``groundwater_outflow``
-                    - ``groundwater_elevation``
-                    - ``soil_moisture``
+                    - ``rainfall`` i.e.: :attr:`~swmm_api.output_file.definitions.SUBCATCHMENT_VARIABLES.RAINFALL`
+                    - ``snow_depth`` i.e.: :attr:`~swmm_api.output_file.definitions.SUBCATCHMENT_VARIABLES.SNOW_DEPTH`
+                    - ``evaporation`` i.e.: :attr:`~swmm_api.output_file.definitions.SUBCATCHMENT_VARIABLES.EVAPORATION`
+                    - ``infiltration`` i.e.: :attr:`~swmm_api.output_file.definitions.SUBCATCHMENT_VARIABLES.INFILTRATION`
+                    - ``runoff`` i.e.: :attr:`~swmm_api.output_file.definitions.SUBCATCHMENT_VARIABLES.RUNOFF`
+                    - ``groundwater_outflow`` i.e.: :attr:`~swmm_api.output_file.definitions.SUBCATCHMENT_VARIABLES.GW_OUTFLOW`
+                    - ``groundwater_elevation`` i.e.: :attr:`~swmm_api.output_file.definitions.SUBCATCHMENT_VARIABLES.GW_ELEVATION`
+                    - ``soil_moisture`` i.e.: :attr:`~swmm_api.output_file.definitions.SUBCATCHMENT_VARIABLES.SOIL_MOISTURE`
                 * node:
-                    - ``depth``
-                    - ``head``
-                    - ``volume``
-                    - ``lateral_inflow``
-                    - ``total_inflow``
-                    - ``flooding``
+                    - ``depth`` i.e.: :attr:`~swmm_api.output_file.definitions.NODE_VARIABLES.DEPTH`
+                    - ``head`` i.e.: :attr:`~swmm_api.output_file.definitions.NODE_VARIABLES.HEAD`
+                    - ``volume`` i.e.: :attr:`~swmm_api.output_file.definitions.NODE_VARIABLES.VOLUME`
+                    - ``lateral_inflow`` i.e.: :attr:`~swmm_api.output_file.definitions.NODE_VARIABLES.LATERAL_INFLOW`
+                    - ``total_inflow`` i.e.: :attr:`~swmm_api.output_file.definitions.NODE_VARIABLES.TOTAL_INFLOW`
+                    - ``flooding`` i.e.: :attr:`~swmm_api.output_file.definitions.NODE_VARIABLES.FLOODING`
                 * link:
-                    - ``flow``
-                    - ``depth``
-                    - ``velocity``
-                    - ``volume``
-                    - ``capacity``
+                    - ``flow`` i.e.: :attr:`~swmm_api.output_file.definitions.LINK_VARIABLES.FLOW`
+                    - ``depth`` i.e.: :attr:`~swmm_api.output_file.definitions.LINK_VARIABLES.DEPTH`
+                    - ``velocity`` i.e.: :attr:`~swmm_api.output_file.definitions.LINK_VARIABLES.VELOCITY`
+                    - ``volume`` i.e.: :attr:`~swmm_api.output_file.definitions.LINK_VARIABLES.VOLUME`
+                    - ``capacity`` i.e.: :attr:`~swmm_api.output_file.definitions.LINK_VARIABLES.CAPACITY`
                 * system:
-                    - ``air_temperature``
-                    - ``rainfall``
-                    - ``snow_depth``
-                    - ``infiltration``
-                    - ``runoff``
-                    - ``dry_weather_inflow``
-                    - ``groundwater_inflow``
-                    - ``RDII_inflow``
-                    - ``direct_inflow``
-                    - ``lateral_inflow``
-                    - ``flooding``
-                    - ``outflow``
-                    - ``volume``
-                    - ``evaporation``
-                    - ``PET``
+                    - ``air_temperature`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.AIR_TEMPERATURE`
+                    - ``rainfall`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.RAINFALL`
+                    - ``snow_depth`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.SNOW_DEPTH`
+                    - ``infiltration`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.INFILTRATION`
+                    - ``runoff`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.RUNOFF`
+                    - ``dry_weather_inflow`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.DW_INFLOW`
+                    - ``groundwater_inflow`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.GW_INFLOW`
+                    - ``RDII_inflow`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.RDII_INFLOW`
+                    - ``direct_inflow`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.DIRECT_INFLOW`
+                    - ``lateral_inflow`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.LATERAL_INFLOW`
+                    - ``flooding`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.FLOODING`
+                    - ``outflow`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.OUTFLOW`
+                    - ``volume`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.VOLUME`
+                    - ``evaporation`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.EVAPORATION`
+                    - ``PET`` i.e.: :attr:`~swmm_api.output_file.definitions.SYSTEM_VARIABLES.PET`
 
             slim (bool): set to `True` if there are a lot of objects and just few time-steps in the out-file.
 
@@ -226,32 +238,32 @@ class SwmmOutput(SwmmOutExtract):
         parquet.write(self.to_frame(), self.filename.replace('.out', '.parquet'))
 
 
-def read_out_file(out_filename):
+def read_out_file(filename):
     """
-    read the binary ``.out``-file of EPA-SWMM
-
-    based on the python package swmmtoolbox
-
-    combined the reader of swmmtoolbox with the functionality of pandas
-
-    Returns:
-        SwmmOutput: class to extract data fromm the ``.out``-file
-    """
-    return SwmmOutput(out_filename)
-
-
-def out2frame(out_file):
-    """
-    read the binary .out file from EPA-SWMM and return a pandas Dataframe
-
-    Attention! don't use this if many object are in the out file an you only need few objects.
-    Use ``.get_part`` functionality of base class (return of ``read_out_file`` function)
+    Read the SWMM Output file (xxx.rpt).
 
     Args:
-        out_file (str): path to out file
+        filename (str): filename of the output file
 
     Returns:
-        pandas.DataFrame:
+        SwmmOutput: output file object
     """
-    out = SwmmOutput(out_file)
+    return SwmmOutput(filename)
+
+
+def out2frame(filename):
+    """
+    Get the content of the SWMM Output file as a DataFrame
+
+    Args:
+        filename (str): filename of the output file
+
+    Returns:
+        pandas.DataFrame: Content of the SWMM Output file
+
+    .. Important::
+        don't use this function if many object are in the out file and you only need few of them.
+        In this case use the method :meth:`SwmmOutput.get_part` instead.
+    """
+    out = SwmmOutput(filename)
     return out.to_frame()

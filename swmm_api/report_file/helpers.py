@@ -95,7 +95,8 @@ def _part_to_frame(part):
         notes, header, data, sytem = subs
     elif len(subs) == 1:
         # no data
-        return #pd.DataFrame()
+        return
+
     elif len(subs) == 2:
         # input summary tables
         header, data = subs
@@ -109,7 +110,6 @@ def _part_to_frame(part):
         header.append('% Time Off_Pump Curve_Low')
         header.append('% Time Off_Pump Curve_High')
 
-    # re.split(r"\s\s\s+", line.strip())
     df = pd.DataFrame(line.split() for line in data.split('\n'))
 
     last_col_values = df.iloc[:, -1].unique()
@@ -138,49 +138,11 @@ def _part_to_frame(part):
     df = df.replace('-nan(ind)', NaN)
 
     for col in df:
-        # if 'Type' in col:
-        #     pass
         if 'days hr:min' in col:
             df[col] = pd.to_timedelta(df[col].str.replace('  ', ' days ') + ':00')
-        # elif 'data' in col.lower():
-        #     pass
-        # elif 'interval' in col.lower():
-        #     pass
         else:
             df[col] = pd.to_numeric(df[col], errors='ignore')
-            # df[col] = df[col].astype(float)
-    #
-    # notes = str()
-    # data = []
-    # header = []
-    # sep_count = 0
-    # for line in part.split('\n'):
-    #     if len(line.strip()) == line.count('-'):  # line is only separator  OLD: '-----' in line:
-    #         sep_count += 1
-    #     elif sep_count == 0:
-    #         notes += line + '\n'
-    #     elif sep_count == 1:
-    #         header.append(line)
-    #     else:
-    #         data.append(line)
-    #
-    # # --------------------------------------------
-    # df = pd.read_fwf(StringIO('\n'.join(header)), header=list(range(len(header))))
-    # rename_cols = lambda col: '_'.join(str(c) for c in col if 'Unnamed:' not in c).strip().replace('_/', '/').replace(
-    #     '/_', '/')
-    # df.columns = [rename_cols(col) for col in df.columns.to_list()]
-    #
-    # df = pd.read_fwf(StringIO('\n'.join(header + data)),
-    #                  header=list(range(len(header))), index_col=0)
-    # rename_cols = lambda col: '_'.join(str(c) for c in col if 'Unnamed:' not in c).strip().replace('_/', '/').replace('/_', '/')
-    # df.columns = [rename_cols(col) for col in df.columns.to_list()]
-    # for col in df:
-    #     if 'Type' in col:
-    #         pass
-    #     elif 'days hr:min' in col:
-    #         df[col] = pd.to_timedelta(df[col].str.replace('  ', ' days ') + ':00')
-    #     else:
-    #         df[col] = df[col].astype(float)
+
     return df.copy()
 
 
@@ -196,8 +158,6 @@ def _routing_part_to_dict(raw):
 
 
 def _continuity_part_to_dict(raw):
-    # p = self.converted('Flow Routing Continuity')
-    # title = raw[:raw.index(p)]
     if raw is None:
         return dict()
 
@@ -205,7 +165,6 @@ def _continuity_part_to_dict(raw):
 
     df.columns = df.columns.droplevel(2)
     df.columns.name = None
-    # df.columns.names = [None, None]
     df.columns = ['_'.join(str(c) for c in col).strip() for col in df.columns.values]
 
     df.index.name = None
@@ -214,27 +173,45 @@ def _continuity_part_to_dict(raw):
     res = df.to_dict(orient='index')
     res['Continuity Error (%)'] = list(res['Continuity Error (%)'].values())[0]
 
-    # res = dict()
-    # for line in p.split('\n'):
-    #     key, *values = line.split()
-    #     if '..' in line:
-    #         key = line[:line.find('..')].strip()
-    #         value = line[line.rfind('..') + 2:].strip()
-    #         res[key] = value
-
     return res
 
 
-# def get_item_in_line(line, item):
-#     return float([v.strip() for v in line.split()][item])
+class ReportUnitConversion:
+    """
+    Unit conversion for the simulation results in the report file
+    
+    Attributes:
+        FLOW (str): for metric one of ['CMS', 'LPS', 'MLD'] | for imperial one of ['CFS', 'GPM', 'MGD']
+        VOL1 (str): for metric: 'hectare-m' | for imperial:
+        VOL2 (str): for metric: 'ltr' | for imperial: 'acre-feet'
+        DEPTH1 (str): for metric: 'mm'| for imperial: 'gal'
+        DEPTH2 (str): hydrological | for metric: 'Meters' | for imperial: 'inches'
+        MASS (str): hydraulic | for metric: 'kg' | for imperial: 'Feet'
+        LENGTH (str): for metric: 'm' | for imperial: 'lbs'
+        VOL3 (str): for metric: 'm3' | for imperial: 'ft3'
+        VELO (str): for metric: 'm/sec' | for imperial: 'ft/sec'
 
-class UNIT:
+    Examples
+    --------
+    >>> ReportUnitConversion('CMS').is_metric()
+    True
+    >>> ReportUnitConversion('GPM').is_imperial()
+    ['CFS', 'GPM', 'MGD']
+    >>> ReportUnitConversion('CMS').DEPTH1
+    'mm'
+    """
     _METRIC_FLOWS = ['CMS', 'LPS', 'MLD']
     _IMPERIAL_FLOWS = ['CFS', 'GPM', 'MGD']
 
     def __init__(self, flow_unit):
+        """
+        Unit conversion
+
+        Args:
+            flow_unit (str): unit of simulation results in the report file
+        """
         self.FLOW = flow_unit
-        if flow_unit in self._METRIC_FLOWS:
+        if self.is_metric():
             self.VOL1 = 'hectare-m'
             self.VOL2 = 'ltr'
             self.DEPTH1 = 'mm'  # hydrological
@@ -252,15 +229,40 @@ class UNIT:
         self.VOL3 = self.LENGTH + '3'
         self.VELO = self.LENGTH + '/sec'
 
+    def is_metric(self):
+        """
+        Indicator whether unit is metric.
 
-class VARS:
+        Returns:
+            bool: If unit is metric.
 
-    class CONTINUITY:
-        VOL_HM3 = 'Volume_hectare-m'
-        VOL_1e6L = 'Volume_10^6 ltr'
-        DEPTH_MM = 'Depth_mm'
+        See Also:
+            UNIT.is_imperial : If unit is imperial.
+        """
+        return self.FLOW in self._METRIC_FLOWS
 
-    class CONTINUITY_imp:
-        VOL_HM3 = 'Volume_acre-feet'
-        VOL_1e6L = 'Volume_10^6 gal'
-        DEPTH_MM = 'Depth_inches'
+    def is_imperial(self):
+        """
+        Indicator whether unit is imperial.
+
+        Returns:
+            bool: If unit is imperial.
+
+        See Also:
+            UNIT.is_metric : If unit is metric.
+        """
+        return self.FLOW in self._IMPERIAL_FLOWS
+
+
+class ContinuityVariables:
+    def __init__(self, flow_unit):
+        """
+        Unit conversion
+
+        Args:
+            flow_unit (str): unit of simulation results in the report file
+        """
+        u = ReportUnitConversion(flow_unit)
+        self.VOL_HM3 = f'Volume_{u.VOL1}'
+        self.VOL_1e6L = f'Volume_10^6 {u.VOL2}'
+        self.DEPTH_MM = f'Depth_{u.DEPTH1}'

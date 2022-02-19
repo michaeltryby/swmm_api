@@ -875,6 +875,12 @@ def section_to_string(section, fast=True, sort_objects_alphabetical=False):
     elif isinstance(section, InpSection):  # V4
         return section.to_inp_lines(fast=fast, sort_objects_alphabetical=sort_objects_alphabetical)
 
+    elif section is None:
+        return ''
+
+    else:
+        print(section, '?'*10)
+
 
 def iter_section_lines(section, sort_objects_alphabetical=False):
     if isinstance(section, str):  # Title

@@ -4,7 +4,7 @@ Input File Manipulation-Macros-Class
 All Input file macros combined in one class. Also including report and output file handling.
 
 
-.. currentmodule:: swmm_api.input_file.macro_snippets.macro_class
+.. currentmodule:: swmm_api.input_file.misc.macro_class
 
 .. rubric:: Class
 
@@ -13,13 +13,13 @@ All Input file macros combined in one class. Also including report and output fi
 
 .. rubric:: Methods
 
-.. autoclass:: swmm_api.input_file.macro_snippets.macro_class.InpMacros
+.. autoclass:: swmm_api.input_file.misc.macro_class.InpMacros
     :members:
 
 
 .. rubric:: Methods
 
-.. currentmodule:: swmm_api.input_file.macro_snippets.macro_class.InpMacros
+.. currentmodule:: swmm_api.input_file.misc.macro_class.InpMacros
 
 .. autosummary::
     set_name
@@ -29,8 +29,6 @@ All Input file macros combined in one class. Also including report and output fi
     read_file
     from_file
     write
-    from_pickle
-    to_pickle
     execute_swmm
     delete_report_file
     delete_inp_file
@@ -55,7 +53,6 @@ All Input file macros combined in one class. Also including report and output fi
     add_obj_to_report
     add_nodes_to_report
     add_links_to_report
-    add_timeseries_file
     reduce_curves
     reduce_raingages
     combined_subcatchment_infos

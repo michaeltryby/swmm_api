@@ -22,10 +22,18 @@ class BinaryReader(abc.ABC):
         self.close()
 
     def close(self):
+        """
+        Close the .out-file.
+
+        Close the binary file to prevent memory errors.
+        """
         if self.fp is not None:
             self.fp.close()
 
     def delete(self):
+        """
+        Close and delete the .out-file.
+        """
         self.close()
         remove(self.filename)
 

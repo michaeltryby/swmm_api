@@ -1,5 +1,5 @@
-API for Running SWMM
-====================
+Running SWMM
+============
 
 .. automodule:: swmm_api.run
     :members:

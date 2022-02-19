@@ -1,13 +1,56 @@
-API for the Output File Reader
-==============================
+Output File Reader
+==================
+.. currentmodule:: swmm_api
 
+Constructor
+~~~~~~~~~~~
+.. autosummary::
+    :toctree: out/
 
-.. automodule:: swmm_api.output_file.out
-    :members:
-    :no-undoc-members:
+    SwmmOutput
+    read_out_file
 
-.. automodule:: swmm_api.output_file.definitions
-    :members:
-    :undoc-members:
-    :member-order: bysource
+Macro
+~~~~~
+.. autosummary::
+    :toctree: out/
 
+    out2frame
+
+Content
+~~~~~~~
+.. autosummary::
+    :toctree: out/
+
+    SwmmOutput.get_part
+    SwmmOutput.number_columns
+    SwmmOutput.filename
+
+Export
+~~~~~~
+.. autosummary::
+    :toctree: out/
+
+    SwmmOutput.to_frame
+    SwmmOutput.to_numpy
+    SwmmOutput.to_parquet
+
+Definitions
+~~~~~~~~~~~
+.. currentmodule:: swmm_api.output_file
+
+.. autosummary::
+    :toctree: out/
+
+    OBJECTS
+    VARIABLES
+
+.. currentmodule:: swmm_api.output_file.definitions
+
+.. autosummary::
+    :toctree: out/
+
+    SUBCATCHMENT_VARIABLES
+    NODE_VARIABLES
+    LINK_VARIABLES
+    SYSTEM_VARIABLES

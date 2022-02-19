@@ -59,22 +59,22 @@ html_theme_options = {  # https://fontawesome.com/v5.15/icons?d=gallery&p=2
           {
              "rel": "icon",
              "sizes": "16x16",
-             "href": 'images/swmm_api_logo_16.png',
+             "href": 'swmm_api_logo_16.png',
           },
           {
              "rel": "icon",
              "sizes": "32x32",
-             "href": 'images/swmm_api_logo_32.png',
+             "href": 'swmm_api_logo_32.png',
           },
           {
              "rel": "apple-touch-icon",
              "sizes": "180x180",
-             "href": 'images/swmm_api_logo_180.png'
+             "href": 'swmm_api_logo_180.png'
           },
        ]
 }
 
-html_favicon = 'images/swmm_api_logo_16.png'
+html_favicon = '_static/swmm_api_logo_16.png'
 
 # -- General configuration ---------------------------------------------------
 

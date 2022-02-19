@@ -1,5 +1,5 @@
-API for external SWMM Files
----------------------------
+External SWMM Files
+-------------------
 
 Climate File
 ^^^^^^^^^^^^
@@ -28,8 +28,10 @@ For metric units,
     :no-undoc-members:
 
 
-DAT Timeseries
-^^^^^^^^^^^^^^
+Timeseries File
+^^^^^^^^^^^^^^^
+
+SWMM5 User Manual: Section 11.6 Time Series Files
 
 .. automodule:: swmm_api.input_file.misc.dat_timeseries
     :members:

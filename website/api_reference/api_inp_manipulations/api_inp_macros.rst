@@ -1,106 +1,46 @@
 Input File Manipulation - Macros
 --------------------------------
 
-.. currentmodule:: swmm_api.input_file.macros
-
-.. rubric:: Overview
-
-.. autosummary::
-    split_inp_to_files
-    read_split_inp_file
-    combined_subcatchment_frame
-    get_node_tags
-    get_link_tags
-    get_subcatchment_tags
-    filter_tags
-    nodes_dict
-    find_node
-    links_dict
-    find_link
-    calc_slope
-    conduit_slopes
-    conduits_are_equal
-    delete_node
-    move_flows
-    delete_link
-    delete_subcatchment
-    split_conduit
-    combine_vertices
-    combine_conduits
-    combine_conduits_keep_slope
-    dissolve_conduit
-    conduit_iter_over_inp
-    junction_to_storage
-    junction_to_outfall
-    conduit_to_orifice
-    subcatchment_nodes_dict
-    rename_node
-    rename_link
-    rename_timeseries
-    remove_empty_sections
-    reduce_curves
-    simplify_curves
-    reduce_raingages
-    filter_nodes
-    filter_links_within_nodes
-    filter_links
-    filter_subcatchments
-    complete_link_vertices
-    complete_vertices
-    reduce_vertices
-    simplify_link_vertices
-    simplify_vertices
-    transform_coordinates
-    check_for_nodes
-    check_for_duplicates
-    inp_to_graph
-    get_path
-    get_path_subgraph
-    next_links
-    next_links_labels
-    next_nodes
-    previous_links
-    previous_links_labels
-    previous_nodes
-    links_connected
-    number_in_out
-    downstream_nodes
-    upstream_nodes
-    create_sub_inp
-    split_network
-    get_network_forks
-    increase_max_node_depth
-    set_times
-    compare_sections
-    compare_inp_files
-    convert_inp_to_geo_package
-    write_geo_package
-    get_subcatchment_connectors
-    problems_to_gis
-    links_geo_data_frame
-    nodes_geo_data_frame
-    gpkg_to_swmm
-    update_length
+Check
+~~~~~
 
 .. currentmodule:: swmm_api.input_file.macros.check
 .. autosummary::
+    :toctree: macros/
+
     check_for_duplicates
     check_for_nodes
 
+Collection
+~~~~~~~~~~
+
 .. currentmodule:: swmm_api.input_file.macros.collection
 .. autosummary::
+    :toctree: macros/
+
     links_dict
     nodes_dict
-    subcatchment_nodes_dict
+    nodes_subcatchments_dict
+    subcatchments_per_node_dict
+
+Compare
+~~~~~~~
 
 .. currentmodule:: swmm_api.input_file.macros.compare
 .. autosummary::
+    :toctree: macros/
+
     compare_inp_files
     compare_sections
     inp_version_control
 
+Geo
+~~~
+
 .. currentmodule:: swmm_api.input_file.macros.geo
 .. autosummary::
+    :toctree: macros/
+
     complete_link_vertices
     complete_vertices
     reduce_vertices

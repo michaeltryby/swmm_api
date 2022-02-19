@@ -8,7 +8,7 @@ from .node import Junction, Storage, Outfall  # , Divider
 from .node_component import DryWeatherFlow, Inflow, Coordinate, RainfallDependentInfiltrationInflow, Treatment
 
 from .others import (RainGage, Control, Transect, Pattern, Pollutant, Symbol, Curve, Timeseries, Tag, Hydrograph,
-                     BuildUp, WashOff, LandUse, Label, Aquifer, SnowPack)
+                     BuildUp, WashOff, LandUse, Label, Aquifer, SnowPack, TimeseriesFile, TimeseriesData)
 
 from .subcatch import (SubArea, SubCatchment, Infiltration, InfiltrationHorton, InfiltrationCurveNumber,
                        InfiltrationGreenAmpt, Polygon, Loading, Coverage, GroundwaterFlow, Groundwater, )

@@ -11,3 +11,4 @@ Examples
    inp_file_structure
    rpt_file_reader
    out_file_reader
+   hotstart_file_reader
