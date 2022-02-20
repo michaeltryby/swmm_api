@@ -234,9 +234,11 @@ class Storage(_Node):
         Otherwise seepage rate will vary with storage depth.
 
     From C-Code:
-        //  Format of input line is:
-        //     nodeID  elev  maxDepth  initDepth  FUNCTIONAL a1 a2 a0 surDepth fEvap (infil) //(5.1.013)
-        //     nodeID  elev  maxDepth  initDepth  TABULAR    curveID  surDepth fEvap (infil) //
+        ::
+
+            //  Format of input line is:
+            //     nodeID  elev  maxDepth  initDepth  FUNCTIONAL a1 a2 a0 surDepth fEvap (infil) //(5.1.013)
+            //     nodeID  elev  maxDepth  initDepth  TABULAR    curveID  surDepth fEvap (infil) //
 
     Args:
         Name (str): name assigned to storage node.

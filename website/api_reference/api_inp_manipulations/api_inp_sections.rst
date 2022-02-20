@@ -20,6 +20,7 @@ Generic Sections
 .. autosummary::
     :toctree: inp_sections/
 
+    TitleSection
     OptionSection
     ReportSection
     EvaporationSection
@@ -75,11 +76,13 @@ Subcatchment Sections
     SubCatchment
     SubArea
     Infiltration
+    InfiltrationCurveNumber
+    InfiltrationGreenAmpt
     Polygon
     Loading
     Coverage
-    GroundwaterFlow
     Groundwater
+    GroundwaterFlow
 
 Other Object-based Sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

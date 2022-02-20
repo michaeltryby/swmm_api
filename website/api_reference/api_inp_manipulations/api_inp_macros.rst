@@ -10,6 +10,7 @@ Check
 
     check_for_duplicates
     check_for_nodes
+    check_for_subcatchment_outlets
 
 Collection
 ~~~~~~~~~~
@@ -34,6 +35,74 @@ Compare
     compare_sections
     inp_version_control
 
+Convert
+~~~~~~~
+
+.. currentmodule:: swmm_api.input_file.macros.convert
+.. autosummary::
+    :toctree: macros/
+
+    conduit_to_orifice
+    junction_to_outfall
+    junction_to_storage
+
+Cross-Section Curve
+~~~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: swmm_api.input_file.macros.cross_section_curve
+.. autosummary::
+    :toctree: macros/
+
+    get_cross_section_maker
+    profil_area
+    velocity
+
+Curve
+~~~~~
+
+.. currentmodule:: swmm_api.input_file.macros.curve
+.. autosummary::
+    :toctree: macros/
+
+    curve_figure
+
+Edit
+~~~~
+
+.. currentmodule:: swmm_api.input_file.macros.edit
+.. autosummary::
+    :toctree: macros/
+
+    combine_conduits
+    combine_conduits_keep_slope
+    combine_vertices
+    delete_link
+    delete_node
+    delete_subcatchment
+    dissolve_conduit
+    flip_link_direction
+    move_flows
+    remove_quality_model
+    rename_link
+    rename_node
+    rename_subcatchment
+    rename_timeseries
+    split_conduit
+
+Filter
+~~~~~~
+
+.. currentmodule:: swmm_api.input_file.macros.filter
+.. autosummary::
+    :toctree: macros/
+
+    create_sub_inp
+    filter_links
+    filter_links_within_nodes
+    filter_nodes
+    filter_subcatchments
+    filter_tags
+
 Geo
 ~~~
 
@@ -48,93 +117,117 @@ Geo
     simplify_vertices
     transform_coordinates
 
-check
-^^^^^
+GIS
+~~~
 
-.. automodule:: swmm_api.input_file.macros.check
-    :members:
-    :no-undoc-members:
+.. currentmodule:: swmm_api.input_file.macros.gis
+.. autosummary::
+    :toctree: macros/
 
-.. rubric:: collection
+    convert_inp_to_geo_package
+    get_subcatchment_connectors
+    gpkg_to_swmm
+    links_geo_data_frame
+    nodes_geo_data_frame
+    problems_to_gis
+    update_length
+    write_geo_package
 
-.. automodule:: swmm_api.input_file.macros.collection
-    :members:
-    :no-undoc-members:
+Graph
+~~~~~
 
-.. rubric:: compare
+.. currentmodule:: swmm_api.input_file.macros.graph
+.. autosummary::
+    :toctree: macros/
 
-.. automodule:: swmm_api.input_file.macros.compare
-    :members:
-    :no-undoc-members:
+    conduit_iter_over_inp
+    downstream_nodes
+    get_network_forks
+    get_path
+    get_path_subgraph
+    inp_to_graph
+    links_connected
+    next_links
+    next_links_labels
+    next_nodes
+    number_in_out
+    previous_links
+    previous_links_labels
+    previous_nodes
+    split_network
+    upstream_nodes
 
-.. rubric:: convert
+Other Macros
+~~~~~~~~~~~~
 
-.. automodule:: swmm_api.input_file.macros.convert
-    :members:
-    :no-undoc-members:
+.. currentmodule:: swmm_api.input_file.macros.macros
+.. autosummary::
+    :toctree: macros/
 
-.. rubric:: curve
+    calc_slope
+    combined_nodes_frame
+    combined_subcatchment_frame
+    conduit_slopes
+    conduits_are_equal
+    delete_sections
+    find_link
+    find_node
+    increase_max_node_depth
+    iter_sections
+    nodes_data_frame
+    set_times
+    update_no_duplicates
 
-.. automodule:: swmm_api.input_file.macros.curve
-    :members:
-    :no-undoc-members:
+Plotting
+~~~~~~~~
 
-.. rubric:: edit
+.. currentmodule:: swmm_api.input_file.macros.plotting
+.. autosummary::
+    :toctree: macros/
 
-.. automodule:: swmm_api.input_file.macros.edit
-    :members:
-    :no-undoc-members:
+    get_longitudinal_data
+    get_node_station
+    get_water_level
+    iter_over_inp
+    iter_over_inp_
+    plot_longitudinal
+    plot_map
+    set_inp_dimensions
+    set_zero_node
 
-.. rubric:: filter
+Reduce Unneeded
+~~~~~~~~~~~~~~~
 
-.. automodule:: swmm_api.input_file.macros.filter
-    :members:
-    :no-undoc-members:
+.. currentmodule:: swmm_api.input_file.macros.reduce_unneeded
+.. autosummary::
+    :toctree: macros/
 
-.. rubric:: geo
+    reduce_controls
+    reduce_curves
+    reduce_pattern
+    reduce_raingages
+    remove_empty_sections
+    simplify_curves
 
-.. automodule:: swmm_api.input_file.macros.geo
-    :members:
-    :no-undoc-members:
+Split the inp File
+~~~~~~~~~~~~~~~~~~
 
-.. rubric:: gis
+.. currentmodule:: swmm_api.input_file.macros.split_inp_file
+.. autosummary::
+    :toctree: macros/
 
-.. automodule:: swmm_api.input_file.macros.gis
-    :members:
-    :no-undoc-members:
+    read_split_inp_file
+    split_inp_to_files
 
-.. rubric:: graph
+Tags
+~~~~
 
-.. automodule:: swmm_api.input_file.macros.graph
-    :members:
-    :no-undoc-members:
+.. currentmodule:: swmm_api.input_file.macros.tags
+.. autosummary::
+    :toctree: macros/
 
-.. rubric:: macros
-
-.. automodule:: swmm_api.input_file.macros.macros
-    :members:
-    :no-undoc-members:
-
-.. rubric:: plotting
-
-.. automodule:: swmm_api.input_file.macros.plotting
-    :members:
-    :no-undoc-members:
-
-.. rubric:: reduce_unneeded
-
-.. automodule:: swmm_api.input_file.macros.reduce_unneeded
-    :members:
-    :no-undoc-members:
-
-.. rubric:: split_inp_file
-
-.. automodule:: swmm_api.input_file.macros.split_inp_file
-    :members:
-    :no-undoc-members:
-
-.. rubric:: tags
-
-.. automodule:: swmm_api.input_file.macros.tags
-    :members:
-    :no-undoc-members:
+    delete_tag_group
+    filter_tags
+    get_link_tags
+    get_node_tags
+    get_subcatchment_tags

@@ -85,7 +85,7 @@ class CoordinateGeo(Coordinate):
         return sh.Point(self.point)
 
     @classmethod
-    def create_section_from_geoseries(cls, data) -> InpSectionGeo:
+    def create_section_from_geoseries(cls, data):
         """
         create a COORDINATES inp-file section for a geopandas.GeoSeries
 
@@ -117,7 +117,7 @@ class VerticesGeo(Vertices):
         return sh.LineString(self.vertices)
 
     @classmethod
-    def create_section_from_geoseries(cls, data) -> InpSectionGeo:
+    def create_section_from_geoseries(cls, data) :
         """
         create a VERTICES inp-file section for a geopandas.GeoSeries
 
@@ -154,7 +154,7 @@ class PolygonGeo(Polygon):
         return sh.Polygon(self.polygon)
 
     @classmethod
-    def create_section_from_geoseries(cls, data) -> InpSectionGeo:
+    def create_section_from_geoseries(cls, data):
         """
         create a POLYGONS inp-file section for a geopandas.GeoSeries
 
@@ -185,7 +185,7 @@ class PolygonGeo(Polygon):
 
 
 ########################################################################################################################
-def convert_section_to_geosection(section: InpSection, crs="EPSG:32633") -> InpSectionGeo:
+def convert_section_to_geosection(section, crs="EPSG:32633"):
     """
     converting the section into a geo-section
 

@@ -22,13 +22,16 @@ class LIDControl(BaseSectionObject):
             Name DRAIN Coeff Expon Offset Delay
             Name DRAINMAT Thick Vratio Rough
 
-    Args:
+    Attributes:
         Name (str):
             name assigned to LID process.
-        kind (str):
-            BC for bio-retention cell; RG for rain garden; GR for green roof; IT for
-                infiltration trench; PP for permeable pavement; RB for rain barrel; RD for
-                rooftop disconnection; VS for vegetative swale.
+        lid_kind (str): - BC for bio-retention cell
+                        - RG for rain garden; GR for green roof
+                        - IT for infiltration trench
+                        - PP for permeable pavement
+                        - RB for rain barrel
+                        - RD for rooftop disconnection
+                        - VS for vegetative swale.
 
     Examples:
         ::
@@ -104,6 +107,21 @@ class LIDControl(BaseSectionObject):
         _possible = [BC, RG, GR, IT, PP, RB, RD, VS]
 
     def __init__(self, Name, lid_kind, layer_dict=None):
+        """
+        Create LID_CONTROLS object
+
+        Args:
+            Name (str):
+            name assigned to LID process.
+        lid_kind (str): - BC for bio-retention cell
+                        - RG for rain garden; GR for green roof
+                        - IT for infiltration trench
+                        - PP for permeable pavement
+                        - RB for rain barrel
+                        - RD for rooftop disconnection
+                        - VS for vegetative swale.
+            layer_dict (dict[str, LIDControl.LAYER_TYPES.Surface]): dict of used layers in control
+        """
         self.Name = str(Name)
         self.lid_kind = lid_kind.upper()  # one of LID_TYPES
         if layer_dict is None:

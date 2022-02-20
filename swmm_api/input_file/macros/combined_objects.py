@@ -82,3 +82,11 @@ class SuperConduit(Conduit, CrossSection, Loss, Vertices):
     def slope(self):
         return (self.from_node.Elevation + self.InOffset - (
                 self.to_node.Elevation + self.OutOffset)) / self.Length
+
+
+from swmm_api.input_file.sections import Junction, Storage, Outfall, Coordinate, DryWeatherFlow, Inflow, RainfallDependentInfiltrationInflow, Treatment
+
+
+class Node(Junction, Storage, Outfall, Coordinate, DryWeatherFlow, Inflow, RainfallDependentInfiltrationInflow, Treatment):
+    def __init__(self):
+        Junction.__init__(self)

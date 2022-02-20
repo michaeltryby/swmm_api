@@ -388,6 +388,15 @@ def gpkg_to_swmm(fn, label_sep='.'):
 
 
 def update_length(inp):
+    """
+    Set the length of all conduits based on the length of the vertices.
+
+    Args:
+        inp (SwmmInput): inp data
+
+    .. Important::
+        Works inplace.
+    """
     inp[VERTICES] = convert_section_to_geosection(inp[VERTICES], crs="EPSG:32633")
     for c in inp.CONDUITS.values():
         c.Length = inp.VERTICES[c.Name].geo.length

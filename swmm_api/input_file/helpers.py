@@ -599,7 +599,7 @@ class BaseSectionObject(ABC):
         return type(self)(**vars(self).copy())
 
     @classmethod
-    def create_section(cls, lines=None) -> InpSection:
+    def create_section(cls, lines=None):
         """
         creates a new section for the ``.inp``-file of this object and ads objects described in `lines`
 

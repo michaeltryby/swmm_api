@@ -5,7 +5,7 @@ from .collection import nodes_dict, links_dict
 from .filter import create_sub_inp
 
 
-def inp_to_graph(inp: SwmmInput) -> DiGraph:
+def inp_to_graph(inp):
     """
     create a network of the model with the networkx package
 
@@ -98,7 +98,7 @@ def number_in_out(g, node):
     return len(list(g.predecessors(node))), len(list(g.successors(node)))
 
 
-def downstream_nodes(graph: DiGraph, node: str) -> list:
+def downstream_nodes(graph, node):
     """
     get all nodes downstream of the node given
 
@@ -127,7 +127,7 @@ def _downstream_nodes(graph: DiGraph, node: str, node_list=None) -> list:
     return node_list
 
 
-def upstream_nodes(graph: DiGraph, node: str) -> list:
+def upstream_nodes(graph, node):
     """
     get all nodes upstream of the node given
 

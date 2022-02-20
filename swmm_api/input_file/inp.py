@@ -242,37 +242,79 @@ class SwmmInput(CustomDictWithAttributes):
             self.add_obj(obj)
 
     @property
-    def OPTIONS(self) -> OptionSection:
+    def OPTIONS(self):
+        """
+        OPTIONS Section
+
+        Returns:
+            OptionSection: OPTIONS Section
+        """
         if OPTIONS in self:
             return self[OPTIONS]
 
     @property
-    def REPORT(self) -> ReportSection:
+    def REPORT(self):
+        """
+        REPORT Section
+
+        Returns:
+            ReportSection: REPORT Section
+        """
         if REPORT in self:
             return self[REPORT]
 
     @property
-    def EVAPORATION(self) -> EvaporationSection:
+    def EVAPORATION(self):
+        """
+        EVAPORATION Section
+
+        Returns:
+            EvaporationSection: EVAPORATION Section
+        """
         if EVAPORATION in self:
             return self[EVAPORATION]
 
     @property
-    def TEMPERATURE(self) -> TemperatureSection:
+    def TEMPERATURE(self):
+        """
+        TEMPERATURE Section
+
+        Returns:
+            TemperatureSection: TEMPERATURE Section
+        """
         if TEMPERATURE in self:
             return self[TEMPERATURE]
 
     @property
-    def FILES(self) -> FilesSection:
+    def FILES(self):
+        """
+        FILES Section
+
+        Returns:
+            FilesSection: FILES Section
+        """
         if FILES in self:
             return self[FILES]
 
     @property
-    def BACKDROP(self) -> BackdropSection:
+    def BACKDROP(self):
+        """
+        BACKDROP Section
+
+        Returns:
+            BackdropSection: BACKDROP Section
+        """
         if BACKDROP in self:
             return self[BACKDROP]
 
     @property
-    def ADJUSTMENTS(self) -> AdjustmentsSection:
+    def ADJUSTMENTS(self):
+        """
+        ADJUSTMENTS Section
+
+        Returns:
+            AdjustmentsSection: ADJUSTMENTS Section
+        """
         if ADJUSTMENTS in self:
             return self[ADJUSTMENTS]
 

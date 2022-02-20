@@ -1,6 +1,6 @@
 © [Institute of Urban Water Management and Landscape Water Engineering](https://www.sww.tugraz.at), [Graz University of Technology](https://www.tugraz.at/home/) and [Markus Pichler](mailto:markus.pichler@tugraz.at)
 
-# This is an API for reading, manipulating and running SWMM-Projects
+# Getting started
 
 [![PyPI](https://img.shields.io/pypi/v/swmm-api.svg)](https://pypi.python.org/pypi/swmm-api)
 [![pipeline status](https://gitlab.com/markuspichler/swmm_api/badges/master/pipeline.svg)](https://gitlab.com/markuspichler/swmm_api/-/commits/master)
