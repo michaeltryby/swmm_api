@@ -189,16 +189,22 @@ class Infiltration(BaseSectionObject):
 
     # _table_inp_export = False
 
+    # jetbrains://clion/navigate/reference?project=Swmm5&path=src/infil.c : 133
+    # infil_readParams
+
     def __init__(self, Subcatch):
         self.Subcatch = str(Subcatch)
 
     @classmethod
     def from_inp_line(cls, Subcatch, *args, **kwargs):
-        n_args = len(args) + len(kwargs.keys()) + 1
-        if n_args == 6:  # hortn
-            subcls = InfiltrationHorton
-        elif n_args == 4:
-            subcls = cls
+
+        subcls = cls
+
+        # n_args = len(args) + len(kwargs.keys()) + 1
+        # if n_args == 6:  # hortn
+        #     subcls = InfiltrationHorton
+        # elif n_args == 4:
+        #     subcls = cls
 
         # _____________________________________
         sub_class_id = None
@@ -615,7 +621,7 @@ class GroundwaterFlow(BaseSectionObject):
             ;Constant seepage rate to deep aquifer
             Subactch1 DEEP 0.002
     """
-    _identifier = [IDENTIFIERS.Subcatch, 'kind']
+    _identifier = (IDENTIFIERS.Subcatch, 'kind')
     _section_label = GWF
 
     class TYPES:
@@ -677,7 +683,7 @@ class Groundwater(BaseSectionObject):
             - H_sw = height of surface water at receiving node above aquifer bottom (ft or m),
             - H_cb = height of channel bottom above aquifer bottom (ft or m).
     """
-    _identifier = [IDENTIFIERS.Subcatch, 'Aquifer', IDENTIFIERS.Node]
+    _identifier = (IDENTIFIERS.Subcatch, 'Aquifer', IDENTIFIERS.Node)
     _section_label = GROUNDWATER
 
     def __init__(self, Subcatch, Aquifer, Node, Esurf, A1, B1, A2, B2, A3, Dsw, Egwt=NaN, Ebot=NaN, Egw=NaN, Umc=NaN):

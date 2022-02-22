@@ -1,3 +1,5 @@
+from typing import NamedTuple
+
 from numpy import NaN, isnan
 from pandas import DataFrame
 
@@ -17,9 +19,9 @@ class CrossSection(BaseSectionObject):
     Formats:
         ::
 
-            Link Shape      Geom1 Geom2 Geom3 Geom4 (Barrels Culvert)
-            Link CUSTOM     Geom1 Curve (Barrels)
-            Link IRREGULAR  Tsect
+            Link Shape      Geom1 Geom2             Geom3 Geom4 (Barrels Culvert)
+            Link CUSTOM     Geom1       Curve                   (Barrels)
+            Link IRREGULAR                    Tsect
 
     Format-PCSWMM:
         ``Link Shape Geom1 Geom2 Geom3 Geom4 (Barrels Culvert)``
@@ -100,22 +102,24 @@ class CrossSection(BaseSectionObject):
         self.Geom3 = float(Geom3)
         self.Geom4 = float(Geom4)
         self.Barrels = int(Barrels)
-        # according to the c code 6 arguments are needed to not raise an error / non sense but you have to
+        # according to the c code 6 arguments are needed to not raise an error / nonsense, but you have to
         if Barrels != 1 or not isinstance(Barrels, str) and ~isnan(Barrels):
             self.Barrels = int(Barrels)
         self.Culvert = Culvert
 
     @classmethod
     def Irregular(cls, Link, Tsect):
-        """An ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect
-        object."""
-        return cls(Link, CrossSection.SHAPES.IRREGULAR, Tsect)
+        """
+        ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect object.
+        """
+        return cls(Link, CrossSection.SHAPES.IRREGULAR, Tsect=Tsect)
 
     @classmethod
     def Custom(cls, Link, Geom1, Curve):
-        """The ``CUSTOM`` shape is a closed conduit whose width versus height is described by a user-supplied Shape
-        Curve."""
-        return cls(Link, CrossSection.SHAPES.CUSTOM, Geom1, Curve)
+        """
+        ``CUSTOM`` shape is a closed conduit whose width versus height is described by a user-supplied Shape Curve.
+        """
+        return cls(Link, CrossSection.SHAPES.CUSTOM, Geom1=Geom1, Curve=Curve)
 
 
 class Loss(BaseSectionObject):

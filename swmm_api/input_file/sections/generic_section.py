@@ -18,7 +18,7 @@ def line_iter(lines):
             yield line.split()
 
 
-class TitleSection(UserString):
+class TitleSection(UserString, InpSectionGeneric):
     """
     abstract class for ``.inp``-file sections without objects
 
@@ -63,6 +63,9 @@ class TitleSection(UserString):
         Returns:
             str: ``.inp``-file lines of the section object
         """
+        return str(self)
+
+    def copy(self):
         return self
 
 

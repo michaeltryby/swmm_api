@@ -2,16 +2,16 @@ import os
 import re
 import warnings
 
-from .helpers import (section_to_string, CustomDictWithAttributes, convert_section, InpSection,
+from .helpers import (section_to_string, CustomDict, convert_section, InpSection,
                       InpSectionGeneric, SECTION_ORDER_DEFAULT, check_order, SECTIONS_ORDER_MP, head_to_str,
-                      iter_section_lines, )
+                      iter_section_lines, SwmmInputWarning, )
 from .section_types import SECTION_TYPES
 from .section_labels import *
 from .sections import *
 from .sections.subcatch import INFILTRATION_DICT
 
 
-class SwmmInput(CustomDictWithAttributes):
+class SwmmInput(CustomDict):
     """
     overall class for an input file
 
@@ -21,7 +21,7 @@ class SwmmInput(CustomDictWithAttributes):
     """
 
     def __init__(self, *args, custom_section_handler=None, **kwargs):
-        CustomDictWithAttributes.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._converter = SECTION_TYPES.copy()
 
         if custom_section_handler is not None:
@@ -29,6 +29,15 @@ class SwmmInput(CustomDictWithAttributes):
 
         # only when reading a new file
         self._original_section_order = SECTIONS_ORDER_MP
+
+    def copy(self):
+        new = type(self)()
+        for key in self:
+            if hasattr(self._data[key], 'copy'):
+                new._data[key] = self._data[key].copy()
+            else:
+                new._data[key] = self._data[key]
+        return new
 
     def update(self, d=None, **kwargs):
         for sec in d:
@@ -95,7 +104,7 @@ class SwmmInput(CustomDictWithAttributes):
 
         # if section is a string (raw string from the .inp-file) convert section first
         if isinstance(self._data[key], str):
-            self[key] = convert_section(key, self._data[key], self._converter)
+            self._data[key] = convert_section(key, self._data[key], self._converter)
 
         return self._data.__getitem__(key)
 
@@ -105,8 +114,8 @@ class SwmmInput(CustomDictWithAttributes):
         # self._data.__setitem__(key, item)
         # if key == OPTIONS:
         #     self.set_default_infiltration_from_options()
-        if hasattr(self[key], 'set_parent_inp'):
-            self[key].set_parent_inp(self)
+        if hasattr(self._data[key], 'set_parent_inp'):
+            self._data[key].set_parent_inp(self)
 
     def __delattr__(self, item):
         """delete section"""
@@ -219,7 +228,7 @@ class SwmmInput(CustomDictWithAttributes):
         if section._label not in self:
             self[section._label] = section
         else:
-            warnings.warn(f'Section [{section._label}] not empty!')
+            warnings.warn(f'Section [{section._label}] not empty!', SwmmInputWarning)
 
     def add_obj(self, obj):
         """

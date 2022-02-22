@@ -42,7 +42,7 @@ class DryWeatherFlow(BaseSectionObject):
         pattern3 (str, Optional): i.e.: hourly-pattern
         pattern4 (str, Optional): i.e.: weekend-hourly-pattern
     """
-    _identifier = [IDENTIFIERS.Node, IDENTIFIERS.Constituent]
+    _identifier = (IDENTIFIERS.Node, IDENTIFIERS.Constituent)
     _section_label = DWF
 
     class TYPES:
@@ -143,7 +143,7 @@ class Inflow(BaseSectionObject):
         Pattern (str): name of optional time pattern in [PATTERNS] section used to adjust the baseline value on a
             periodic basis. ``Pat``
     """
-    _identifier = [IDENTIFIERS.Node, IDENTIFIERS.Constituent]
+    _identifier = (IDENTIFIERS.Node, IDENTIFIERS.Constituent)
     _section_label = INFLOWS
 
     class TYPES:
@@ -294,7 +294,7 @@ class Treatment(BaseSectionObject):
             ; lead removal is 20% of TSS removal
             Node23 Lead R = 0.2 * R_TSS
     """
-    _identifier = [IDENTIFIERS.Node, IDENTIFIERS.Pollutant]
+    _identifier = (IDENTIFIERS.Node, IDENTIFIERS.Pollutant)
     _section_label = TREATMENT
 
     def __init__(self, Node, pollutant, result, function):

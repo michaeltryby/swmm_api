@@ -1,8 +1,11 @@
+import abc
+import datetime
 import re
 import types
 from abc import ABC
+from collections import UserString
 from inspect import isfunction, isclass
-
+import warnings
 from numpy import isnan
 from pandas import DataFrame, Series
 from tqdm.auto import tqdm
@@ -18,14 +21,22 @@ SEP_INP = COMMENT_STR + "_" * 100
 COMMENT_EMPTY_SECTION = COMMENT_STR + ' No Data'
 
 
+class SwmmInputWarning(UserWarning):
+    pass
+
+
 def head_to_str(head):
     return f'\n{SEP_INP}\n[{head}]\n'
 
 
+_TYPES_NO_COPY = (int, float, str, datetime.date, datetime.time, UserString)
+
+
 ########################################################################################################################
 class CustomDict:
-    """imitate :class:`collections.UserDict` (:term:`dict-like <mapping>`) but operations only effect self._data"""
-
+    """
+    imitate :class:`collections.UserDict` (:term:`dict-like <mapping>`) but operations only effect self._data
+    """
     def __init__(self, d=None, **kwargs):
         if d is None:
             self._data = kwargs
@@ -65,7 +76,8 @@ class CustomDict:
         return self._data.get(key) if key in self else default
 
     def copy(self):
-        return type(self)(self._data.copy())
+        return type(self)({k: v if isinstance(v, _TYPES_NO_COPY) else v.copy() for k, v in self._data.items()})
+        # return type(self)(self._data.copy())
 
     def values(self):
         return self._data.values()
@@ -90,19 +102,8 @@ class CustomDict:
     #     return id(self)
 
 
-class CustomDictWithAttributes(CustomDict):
-    def copy(self):
-        new = type(self)()
-        for key in self:
-            if getattr(self[key], 'copy', False):
-                new[key] = self[key].copy()
-            else:
-                new[key] = self[key]
-        return new
-
-
 ########################################################################################################################
-class InpSectionGeneric(CustomDictWithAttributes):
+class InpSectionGeneric(CustomDict):
     """
     abstract class for ``.inp``-file sections without objects
 
@@ -112,7 +113,7 @@ class InpSectionGeneric(CustomDictWithAttributes):
     """str: label of the section"""
 
     def __init__(self, *args, **kwargs):
-        CustomDictWithAttributes.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._inp = None
 
     def __setitem__(self, key, item):
@@ -168,10 +169,6 @@ class InpSectionGeneric(CustomDictWithAttributes):
     def create_section(cls):
         return cls()
 
-    # @property
-    # def id(self):
-    #     return id(self)
-
 
 ########################################################################################################################
 class InpSection(CustomDict):
@@ -188,7 +185,7 @@ class InpSection(CustomDict):
                 This information is used to set the index of the section and
                 to decide if the section can be exported (converted to a string) as a table.
         """
-        CustomDict.__init__(self)
+        super().__init__()
         self._section_object = section_object
         self._inp = None
 
@@ -208,13 +205,19 @@ class InpSection(CustomDict):
     def __setitem__(self, key, value):
         if isinstance(self._identifier, str):
             if not isinstance(key, str):
-                raise UserWarning('Wrong key type')
+                warnings.warn(f'Wrong key type (Unknown Behaviour)\n'
+                              f'Needed: "{self._identifier}" as string\n'
+                              f'Given: {key} of type {type(key)}', SwmmInputWarning)
         else:
             if len(self._identifier) != len(key):
-                raise UserWarning('Wrong number of keys')
+                warnings.warn(f'Wrong number of keys (Unknown Behaviour)\n'
+                              f'Needed keys: "{self._identifier}"\n'
+                              f'Given keys: "{key}"', SwmmInputWarning)
 
         if not isinstance(value, self._section_object):
-            raise UserWarning('Wrong section-object type')
+            warnings.warn(f'Wrong section-object type (Unknown Behaviour)\n'
+                          f'Needed type: "{self._section_object}"\n'
+                          f'Given type: "{type(value)}"', SwmmInputWarning)
 
         super().__setitem__(key, value)
 
@@ -232,10 +235,18 @@ class InpSection(CustomDict):
     def _identifier(self):
         """
         to set the index of the section (key to select an object an index for the dataframe export)
+
         Returns:
             str | tuple: key of the objects label (can be a single or multiple keys)
         """
         return self._section_object._identifier
+
+    @property
+    def _index_labels(self):
+        if isinstance(self._identifier, tuple):
+            return list(self._identifier)
+        else:
+            return self._identifier
 
     @property
     def _label(self):
@@ -389,7 +400,7 @@ class InpSection(CustomDict):
             return DataFrame()
         df = DataFrame([i.to_dict_() for i in self.get_objects(sort_objects_alphabetical)])
         if set_index:
-            df = df.set_index(self._identifier)
+            df = df.set_index(self._index_labels)
         return df
 
     def create_new_empty(self):
@@ -412,7 +423,8 @@ class InpSection(CustomDict):
         # ΔTime: 18.678 s
         # new._data = deepcopy(self._data)
         # ΔTime: 2.943 s
-        new._data = {k: self[k].copy() for k in self}
+        # new._data = {k: self[k].copy() for k in self}
+        new.add_multiple(v.copy() for v in self.values())
         return new
 
     def filter_keys(self, keys, by=None):
@@ -436,13 +448,15 @@ class InpSection(CustomDict):
                 return tuple()
 
             if isinstance(by, (list, set, tuple)):
-                filtered_keys = f[f[by].isin(keys).all(axis=1)].set_index(self._identifier).index
+                f_filtered = f[by].isin(keys).all(axis=1)
                 # filtered_keys = (k for k in self if any(map(lambda b: self[k][b] in keys, by)))
 
             else:
                 # filtered_keys = filter(lambda k: self[k][by] in keys, self)
                 # filtered_keys = (k for k in self if self[k][by] in keys)
-                filtered_keys = f[f[by].isin(keys)].set_index(self._identifier).index
+                f_filtered = f[by].isin(keys)
+
+            filtered_keys = f[f_filtered].set_index(self._index_labels).index
 
         return (self[k] for k in filtered_keys)
 
@@ -493,14 +507,19 @@ class BaseSectionObject(ABC):
 
     __name__ = 'BaseSectionObject'
 
+    @abc.abstractmethod
+    def __init__(self, *args, **kwargs):
+        pass
+
     def get(self, key):
-        if isinstance(key, list):
-            return tuple([self.get(k) for k in key])
-        return self.to_dict_().get(key)
+        if isinstance(key, (list, tuple, set)):
+            return type(key)([self.get(k) for k in key])
+        return self.__getattribute__(key)
 
     def set(self, key, value):
-        assert key in self.to_dict_(), f'{key} not a Object attribute | {self}'
-        vars(self)[key] = value
+        if not hasattr(self, key):
+            raise SwmmInputWarning(f'{key} not a Object attribute | {self}')
+        self.__setattr__(key, value)
 
     def __getitem__(self, key):
         return self.get(key)
@@ -515,7 +534,23 @@ class BaseSectionObject(ABC):
         Returns:
             dict:
         """
-        return vars(self).copy()
+        return vars(self)
+
+    @property
+    def attributes(self):
+        return tuple(self.to_dict_().keys())
+
+    @property
+    def values(self):
+        return tuple(self.to_dict_().values())
+
+    @property
+    def values_used(self):
+        return (v for v in self.values if not (isinstance(v, float) and isnan(v)))
+
+    def __iter__(self):
+        for k, v in self.to_dict_().items():
+            yield k, v
 
     def __repr__(self):
         return str(self)
@@ -524,12 +559,10 @@ class BaseSectionObject(ABC):
         return self._to_debug_string()
 
     def __eq__(self, other):
-        # TODO: testing!!!
-        return isinstance(self, type(other)) and all([is_equal(self[k], other[k]) for k in self.to_dict_().keys()])
+        return isinstance(self, type(other)) and all([is_equal(self[k], other[k]) for k in self.attributes])
 
     def __hash__(self):
-        di = self.to_dict_()
-        return tuple([(k, v) for k, v in di.items()]).__hash__()
+        return tuple([(k, v) for k, v in self]).__hash__()
 
     # @property
     # def id(self):
@@ -544,15 +577,7 @@ class BaseSectionObject(ABC):
         Returns:
             str: debug string of the object
         """
-        args = list()
-        for k, d in self.to_dict_().items():
-            if isinstance(d, float) and isnan(d):
-                args.append(f'{k}=NaN')
-            elif isinstance(d, str):
-                args.append(f'{k}="{d}"')
-            else:
-                args.append(f'{k}={d}')
-        return '{}({})'.format(self.__class__.__name__, ', '.join(args))
+        return f'{self.__class__.__name__}({", ".join([f"{k}={repr(v)}" for k, v in self])})'
 
     def to_inp_line(self):
         """
@@ -563,16 +588,7 @@ class BaseSectionObject(ABC):
         Returns:
             str: SWMM .inp file compatible string
         """
-        di = self.to_dict_()
-        # s = ''
-        # if isinstance(self._identifier, list):
-        #     s += ' '.join([str(di.pop(i)) for i in self._identifier])
-        # else:
-        #     s += str(di.pop(self._identifier))
-
-        # s += ' ' + ' '.join([type2str(i) for i in di.values()])
-        # return s
-        return ' '.join([type2str(i) for i in di.values()]).strip()
+        return ' '.join([type2str(i) for i in self.values_used]).strip()
 
     @classmethod
     def from_inp_line(cls, *line_args):
@@ -596,7 +612,8 @@ class BaseSectionObject(ABC):
         Returns:
             BaseSectionObject or Child: copy of the object
         """
-        return type(self)(**vars(self).copy())
+        # return type(self)(*self.values_used)
+        return type(self)(**self.to_dict_())
 
     @classmethod
     def create_section(cls, lines=None):
@@ -719,9 +736,11 @@ def convert_section(head, lines, converter):
             return section_.from_inp_lines(lines)
 
         else:
-            raise NotImplemented()
+            warnings.warn(f'Type of converter ({type(section_)}) for Section "{head}" not implemented. Section will not be converted.', SwmmInputWarning)
     else:
-        return lines.replace(SEP_INP, '').strip()
+        warnings.warn(f'Section "{head}" not implemented. Section will not be converted.', SwmmInputWarning)
+
+    return lines.replace(SEP_INP, '').strip()
 
 
 ########################################################################################################################

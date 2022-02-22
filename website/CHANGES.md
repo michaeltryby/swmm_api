@@ -1,6 +1,6 @@
 # Changelog  
 
-## 0.2.0.18 (Feb 17, 2022)
+## 0.2.0.18 (Feb 22, 2022)
 
 fixed:
 - type in swmm_api.input_file.macros.collection.subcachtment_nodes_dict > subcatchment_nodes_dict
@@ -34,7 +34,8 @@ improved:
 - natural sorting for objects. (i.e. the object names \[J1, J2, J10\] were previously sorted as  \[J1, J10, J2\])
 - sections will be sorted as in the read file
 - default sorting is based on sorting of the EPA SWMM GUI / PCSWMM
-- 
+- copy unconverted inp file as string
+
 changed:
 - in swmm_api.input_file.macros.check the functions check_for_nodes, check_for_duplicates now return set of error and don't print
 - BaseSectionObject are now hashable

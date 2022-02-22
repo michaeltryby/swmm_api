@@ -90,7 +90,7 @@ class LIDControl(BaseSectionObject):
         The actual dimensions of an LID control are provided in the [LID_USAGE] section when it is
         placed in a particular subcatchment.
     """
-    _identifier = [IDENTIFIERS.Name, 'lid_kind']
+    _identifier = (IDENTIFIERS.Name, 'lid_kind')
     _section_label = LID_CONTROLS
     _table_inp_export = False
 
@@ -379,7 +379,7 @@ class LIDUsage(BaseSectionObject):
             ;swale 200 ft long by 50 ft wide.
             S2 Swale 1 10000 50 0 0 0 “swale.rpt”
     """
-    _identifier = [IDENTIFIERS.Subcatch, 'LID']
+    _identifier = (IDENTIFIERS.Subcatch, 'LID')
     _section_label = LID_USAGE
 
     def __init__(self, Subcatch, LID, Number, Area, Width, InitSat, FromImp, ToPerv, RptFile=NaN, DrainTo=NaN):

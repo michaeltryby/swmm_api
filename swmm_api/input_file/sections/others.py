@@ -1,5 +1,3 @@
-import dataclasses
-
 from numpy import NaN
 from pandas import DataFrame, Series, Timestamp
 
@@ -25,19 +23,6 @@ class RainGage(BaseSectionObject):
     Format-PCSWMM:
         ``Name Format Interval SCF Source``
 
-    Args:
-        Name (str): name assigned to rain gage.
-        Format (str): form of recorded rainfall, either INTENSITY, VOLUME or CUMULATIVE.
-        Interval (str, Timedelta): time interval between gage readings in decimal hours or hours:minutes format
-                                    (e.g., 0:15 for 15-minute readings). ``Intvl``
-        SCF (float): snow catch deficiency correction factor (use 1.0 for no adjustment).
-        Source (str): one of ``'TIMESERIES'`` ``'FILE'``
-        *args: for automatic inp file reading
-        Timeseries (str): name of time series in [TIMESERIES] section with rainfall data. ``Tseries``
-        Filename (str): name of external file with rainfall data.
-                        Rainfall files are discussed in Section 11.3 Rainfall Files. ``Fname``
-        Station (str): name of recording station used in the rain file. ``Sta``
-        Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
 
     Attributes:
         Name (str): name assigned to rain gage.
@@ -68,8 +53,26 @@ class RainGage(BaseSectionObject):
         IN = 'IN'
         MM = 'MM'
 
-    def __init__(self, Name, Format, Interval, SCF, Source, *args, Timeseries=NaN, Filename=NaN, Station=NaN,
-                 Units=NaN):
+    def __init__(self, Name, Format, Interval, SCF, Source, *args,
+                 Timeseries=NaN,
+                 Filename=NaN, Station=NaN, Units=NaN):
+        """
+        Object for section RAINGAGES
+
+        Args:
+            Name (str): name assigned to rain gage.
+            Format (str): form of recorded rainfall, either INTENSITY, VOLUME or CUMULATIVE.
+            Interval (str, Timedelta): time interval between gage readings in decimal hours or hours:minutes format
+                                        (e.g., 0:15 for 15-minute readings). ``Intvl``
+            SCF (float): snow catch deficiency correction factor (use 1.0 for no adjustment).
+            Source (str): one of ``'TIMESERIES'`` ``'FILE'``
+            *args: for automatic inp file reading
+            Timeseries (:obj:`str`, optional): name of time series in [TIMESERIES] section with rainfall data. ``Tseries``
+            Filename (str): name of external file with rainfall data.
+                            Rainfall files are discussed in Section 11.3 Rainfall Files. ``Fname``
+            Station (str): name of recording station used in the rain file. ``Sta``
+            Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
+        """
         self.Name = str(Name)
         self.Format = Format
         self.Interval = Interval
@@ -82,8 +85,10 @@ class RainGage(BaseSectionObject):
         self.Units = Units
 
         if args:
-            if (Source == RainGage.SOURCES.TIMESERIES) and (len(args) == 1):
+            if Source == RainGage.SOURCES.TIMESERIES:
                 self.Timeseries = args[0]
+                if len(args) != 1:
+                    pass
 
             elif Source == RainGage.SOURCES.FILE:
                 self.Filename = args[0]
@@ -185,7 +190,6 @@ class Pattern(BaseSectionObject):
     _section_label = PATTERNS
 
     class TYPES:
-        __class__ = 'Patter Types'
         MONTHLY = 'MONTHLY'
         DAILY = 'DAILY'
         HOURLY = 'HOURLY'
@@ -196,6 +200,8 @@ class Pattern(BaseSectionObject):
         self.Type = Type
         if Factors is not None:
             self.Factors = Factors
+        elif isinstance(factors[0], (list, tuple)):
+            self.Factors = factors[0]
         else:
             self.Factors = list(float(f) for f in factors)
 
@@ -1313,7 +1319,7 @@ class TimeseriesData(Timeseries):
 
 class Tag(BaseSectionObject):
     """Section: [**TAGS**]"""
-    _identifier = ['kind', IDENTIFIERS.Name]
+    _identifier = ('kind', IDENTIFIERS.Name)
     _section_label = TAGS
 
     class TYPES:
@@ -1360,7 +1366,7 @@ class Label(BaseSectionObject):
         italic (bool):
             YES for italic font, NO otherwise.
     """
-    _identifier = ['x', 'y', 'label']
+    _identifier = ('x', 'y', 'label')
     _section_label = LABELS
 
     def __init__(self, x, y, label, anchor=NaN, font=NaN, size=NaN, bold=NaN, italic=NaN):
@@ -1619,7 +1625,7 @@ class WashOff(BaseSectionObject):
         mean concentration) function, ``C1`` is always in concentration units.
 
     """
-    _identifier = [IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant]
+    _identifier = (IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant)
     _section_label = WASHOFF
 
     class FUNCTIONS:
@@ -1690,7 +1696,7 @@ class BuildUp(BaseSectionObject):
         contains buildup rates (as mass per area or curb length per day) as a function of
         time.
     """
-    _identifier = [IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant]
+    _identifier = (IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant)
     _section_label = BUILDUP
 
     class FUNCTIONS:
@@ -1890,8 +1896,8 @@ class SnowPack(BaseSectionObject):
     def to_inp_line(self):
         s = ''
         for pack in self.PARTS._possible:
-            if self[pack] is not None:
-                s += f'{self.Name} {pack:<8} {self[pack].to_inp_line()}\n'
+            if self.parts[pack] is not None:
+                s += f'{self.Name} {pack:<8} {self.parts[pack].to_inp_line()}\n'
         return s
 
 

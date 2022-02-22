@@ -23,7 +23,8 @@ if not os.path.isdir(temp_dir):
 
 parent_dir = os.path.dirname(__file__)
 example_dirs = [os.path.join(parent_dir, 'epaswmm5_apps_manual'),
-                os.path.join(parent_dir, 'epaswmm5_apps_manual', 'projects')]
+                os.path.join(parent_dir, 'epaswmm5_apps_manual', 'projects'),
+                os.path.join(parent_dir, 'epaswmm5_apps_manual', 'Example6-Final_AllSections_GUI')]
 
 example_files = [os.path.join(folder, fn) for folder in example_dirs for fn in os.listdir(folder) if '.inp' in fn]
 example_files = tqdm(example_files, desc='TESTING_ALL_EXAMPLES')
@@ -38,7 +39,7 @@ def _convert_all(rpt):
             'analyse_start',
             'analysis_options',
             'conduit_surcharge_summary',
-            'crosssection_summary',
+            'cross_section_summary',
             'flow_classification_summary',
             'flow_routing_continuity',
             'flow_unit',
@@ -96,7 +97,17 @@ for fn in example_files:
     inp = read_inp_file(fn)
 
     # MANIPULATE
+
+    # convert all
     inp.force_convert_all()
+
+    # test copy
+    inp.copy()
+
+    fn_inp = os.path.join(temp_dir, 'temp.inp')
+    fn_rpt, fn_out = get_result_filenames(fn_inp)
+
+    # WRITE
     inp.REPORT['INPUT'] = True
     inp.REPORT['CONTINUITY'] = True
     inp.REPORT['FLOWSTATS'] = True
@@ -104,12 +115,6 @@ for fn in example_files:
     inp.REPORT['SUBCATCHMENTS'] = 'ALL'
     inp.REPORT['NODES'] = 'ALL'
     inp.REPORT['LINKS'] = 'ALL'
-    inp.copy()
-
-    fn_inp = os.path.join(temp_dir, 'temp.inp')
-    fn_rpt, fn_out = get_result_filenames(fn_inp)
-
-    # WRITE
     inp.write_file(fn_inp)
 
     # RUN
@@ -119,7 +124,6 @@ for fn in example_files:
 
     # REPORT
     rpt = SwmmReport(fn_rpt)
-
     _convert_all(rpt)
     # print(rpt.get_warnings())
 
