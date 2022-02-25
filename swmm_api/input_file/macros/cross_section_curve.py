@@ -7,7 +7,19 @@ from ..inp import SwmmInput
 VIRTUAL_LENGTH = 100
 
 
-def get_cross_section_maker(inp: SwmmInput, link_label: str):
+def get_cross_section_maker(inp, link_label):
+    """
+    Get a cross-section object.
+
+    Object type from the package `SWMM-xsections-shape-generator` to analyse and plot cross-sections.
+
+    Args:
+        inp (SwmmInput): inp-data
+        link_label (str): label of the link, where the cross-section is wanted
+
+    Returns:
+        shape_generator.CrossSection: cross-section object of the selected link
+    """
     c = find_link(inp, link_label)
     if c is None:
         return  # not found
@@ -26,7 +38,17 @@ def get_cross_section_maker(inp: SwmmInput, link_label: str):
         return shape_generator.swmm_std_cross_sections(xs.Shape, height=VIRTUAL_LENGTH)
 
 
-def profil_area(inp: SwmmInput, link_label: str):
+def profil_area(inp, link_label):
+    """
+    Get the area of the link with a given cross-section.
+
+    Args:
+        inp (SwmmInput): inp-data
+        link_label (str): label of the link, where the cross-section area is wanted
+
+    Returns:
+        float: area of the cross-section in m²
+    """
     cs = get_cross_section_maker(inp, link_label)
     if cs is None:
         return
@@ -42,7 +64,8 @@ def profil_area(inp: SwmmInput, link_label: str):
         return cs.area_v / VIRTUAL_LENGTH ** 2 * xs.Geom1
 
 
-def velocity(inp: SwmmInput, link_label, flow):
+def velocity(inp, link_label, flow):
+    # TODO
     cs = get_cross_section_maker(inp, link_label)
     if cs is None:
         return

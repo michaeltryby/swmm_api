@@ -1581,7 +1581,7 @@ class WashOff(BaseSectionObject):
 
             Landuse Pollutant FuncType C1 C2 SweepRmvl BmpRmvl
 
-    Args:
+    Attributes:
         landuse:
             land use name.
         pollutant:
@@ -1600,15 +1600,15 @@ class WashOff(BaseSectionObject):
     Remarks:
         Table D-3 Pollutant wash off functions
 
-        +------+--------------------------+--------------------------+------------+
-        | Name | Function                 | Equation                 | Units      |
-        +------+--------------------------+--------------------------+------------+
-        | EXP  | Exponential              | C1 (runoff) C2 (buildup) | Mass/hour  |
-        +------+--------------------------+--------------------------+------------+
-        | RC   | Rating Curve             | C1 (runoff) C2           | Mass/sec   |
-        +------+--------------------------+--------------------------+------------+
-        | EMC  | Event Mean Concentration | C1                       | Mass/Liter |
-        +------+--------------------------+--------------------------+------------+
+        +------+--------------------------+--------------------------------------+------------+
+        | Name | Function                 | Equation                             | Units      |
+        +------+--------------------------+--------------------------------------+------------+
+        | EXP  | Exponential              | :math:`C1 * (runoff)^{C2}*(buildup)` | Mass/hour  |
+        +------+--------------------------+--------------------------------------+------------+
+        | RC   | Rating Curve             | :math:`C1 * (runoff)^{C2}`           | Mass/sec   |
+        +------+--------------------------+--------------------------------------+------------+
+        | EMC  | Event Mean Concentration | :math:`C1`                           | Mass/Liter |
+        +------+--------------------------+--------------------------------------+------------+
 
         Each washoff function expresses its results in different units.
 
@@ -1624,6 +1624,9 @@ class WashOff(BaseSectionObject):
         function, the units of ``C1`` depend on the flow units employed. For the EMC (event
         mean concentration) function, ``C1`` is always in concentration units.
 
+    See Also:
+        `:class:swmm_api.input_file.helpers.BaseSectionObject` : Parent class of this one.
+        BaseSectionObject : Parent class of this one.
     """
     _identifier = (IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant)
     _section_label = WASHOFF
@@ -1634,6 +1637,25 @@ class WashOff(BaseSectionObject):
         EMC = 'EMC'
 
     def __init__(self, landuse, pollutant, func_type, C1, C2, sweeping_removal, BMP_removal):
+        """
+        WashOff object.
+
+        Args:
+            landuse:
+                land use name.
+            pollutant:
+                pollutant name.
+            func_type:
+                washoff function type: ``EXP`` / ``RC`` / ``EMC``.
+            C1 (float):
+                washoff function coefficients(see Table D-3).
+            C2 (float):
+                washoff function coefficients(see Table D-3).
+            sweeping_removal (float):
+                street sweeping removal efficiency (percent) .
+            BMP_removal (float):
+                BMP removal efficiency (percent).
+        """
         self.landuse = landuse
         self.pollutant = pollutant
         self.func_type = func_type
@@ -1644,7 +1666,7 @@ class WashOff(BaseSectionObject):
 
 
 class BuildUp(BaseSectionObject):
-    """
+    r"""
     Section: [**BUILDUP**]
 
     Purpose:
@@ -1655,7 +1677,7 @@ class BuildUp(BaseSectionObject):
 
             Landuse Pollutant FuncType C1 C2 C3 PerUnit
 
-    Args:
+    Attributes:
         landuse:
             land use name.
         pollutant:
@@ -1679,20 +1701,20 @@ class BuildUp(BaseSectionObject):
 
         Table: Pollutant buildup functions (t is antecedent dry days)
 
-        +------+-------------+---------------------+
-        | Name | Function    | Equation            |
-        +------+-------------+---------------------+
-        | POW  | Power       | Min (C1, C2*t^C3 )  |
-        +------+-------------+---------------------+
-        | EXP  | Exponential | C1*(1 – exp(-C2*t)) |
-        +------+-------------+---------------------+
-        | SAT  | Saturation  | C1*t / (C3 + t)     |
-        +------+-------------+---------------------+
-        | EXT  | External    | See below           |
-        +------+-------------+---------------------+
+        +---------+-------------+------------------------------+
+        | Name    | Function    | Equation                     |
+        +---------+-------------+------------------------------+
+        | ``POW`` | Power       | :math:`Min (C1, C2*t^{C3} )` |
+        +---------+-------------+------------------------------+
+        | ``EXP`` | Exponential | :math:`C1*(1 – e^{-C2*t})`   |
+        +---------+-------------+------------------------------+
+        | ``SAT`` | Saturation  | :math:`\frac{C1*t}{C3 + t}`  |
+        +---------+-------------+------------------------------+
+        | ``EXT`` | External    | See below                    |
+        +---------+-------------+------------------------------+
 
-        For the EXT buildup function, C1 is the maximum possible buildup (mass per area or
-        curb length), C2 is a scaling factor, and C3 is the name of a Time Series that
+        For the ``EXT`` buildup function, ``C1`` is the maximum possible buildup (mass per area or
+        curb length), ``C2`` is a scaling factor, and ``C3`` is the name of a Time Series that
         contains buildup rates (as mass per area or curb length per day) as a function of
         time.
     """
@@ -1710,6 +1732,25 @@ class BuildUp(BaseSectionObject):
         CURB = 'CURB'
 
     def __init__(self, landuse, pollutant, func_type, C1, C2, C3, per_unit):
+        """
+        BuildUp object.
+
+        Args:
+            landuse:
+                land use name.
+            pollutant:
+                pollutant name.
+            func_type:
+                buildup function type: ( ``POW`` / ``EXP`` / ``SAT`` / ``EXT`` ).
+            C1 (float):
+                buildup function parameters (see Table).
+            C2 (float):
+                buildup function parameters (see Table).
+            C3 (float):
+                buildup function parameters (see Table).
+            per_unit (str):
+                ``AREA`` if buildup is per unit area, ``CURBLENGTH`` if per length of curb.
+        """
         self.landuse = landuse
         self.pollutant = pollutant
         self.func_type = func_type

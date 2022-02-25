@@ -512,11 +512,27 @@ class BaseSectionObject(ABC):
         pass
 
     def get(self, key):
+        """
+        Get an attribute value by the attribute name.
+
+        Args:
+            key (str): name of the attribute.
+
+        Returns:
+            any: the attribute value
+        """
         if isinstance(key, (list, tuple, set)):
             return type(key)([self.get(k) for k in key])
         return self.__getattribute__(key)
 
     def set(self, key, value):
+        """
+        Set an attribute value.
+
+        Args:
+            key (str): name of the attribute.
+            value (any): value for the attribute.
+        """
         if not hasattr(self, key):
             raise SwmmInputWarning(f'{key} not a Object attribute | {self}')
         self.__setattr__(key, value)
@@ -538,14 +554,34 @@ class BaseSectionObject(ABC):
 
     @property
     def attributes(self):
+        """
+        Get the attributes names for the object.
+
+        Returns:
+            tuple[str]: Attribute names for the object
+        """
         return tuple(self.to_dict_().keys())
 
     @property
     def values(self):
+        """
+        Get the attributes values for the object.
+
+        Returns:
+            tuple[any]: Attribute values for the object
+        """
         return tuple(self.to_dict_().values())
 
     @property
     def values_used(self):
+        """
+        Get only the used attributes values for the object.
+
+        Values which aren't used are set as `:obj:numpy.nan`
+
+        Returns:
+            tuple[any]: Attribute values used for the object
+        """
         return (v for v in self.values if not (isinstance(v, float) and isnan(v)))
 
     def __iter__(self):
@@ -618,13 +654,15 @@ class BaseSectionObject(ABC):
     @classmethod
     def create_section(cls, lines=None):
         """
-        creates a new section for the ``.inp``-file of this object and ads objects described in `lines`
+        Create a new section for the ``.inp``-file of this object and adds objects described in `lines`
+
+        An empty section will be created when no lines are given.
 
         Args:
-            lines:
+            lines (list[list] | optional): lines of values for multiple objects in this section
 
         Returns:
-            InpSection: new section of this object
+            InpSection: new section of this object type
         """
         sec = cls._section_class(cls)
         # import sys
@@ -650,6 +688,15 @@ class BaseSectionObject(ABC):
 
     @classmethod
     def from_inp_lines(cls, lines):
+        """
+        Create a new section for the ``.inp``-file of this object and adds objects described in `lines`
+
+        Args:
+            lines (list[list]): lines of values for multiple objects in this section
+
+        Returns:
+            InpSection: new section of this object type
+        """
         return cls.create_section(lines)
 
     @classmethod

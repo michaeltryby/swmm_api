@@ -32,3 +32,9 @@ from .reduce_unneeded import (reduce_curves, reduce_controls, simplify_curves, r
                               remove_empty_sections, )
 from .split_inp_file import split_inp_to_files, read_split_inp_file
 from .tags import get_node_tags, get_link_tags, get_subcatchment_tags, filter_tags
+
+
+try:
+    from .cross_section_curve import (get_cross_section_maker, profil_area, velocity)
+except ImportError as e:
+    print('Missing package: pip install SWMM-xsections-shape-generator')

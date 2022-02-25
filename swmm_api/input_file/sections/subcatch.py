@@ -647,7 +647,7 @@ class Groundwater(BaseSectionObject):
 
             Subcat Aquifer Node Esurf A1 B1 A2 B2 A3 Dsw (Egwt Ebot Egw Umc)
 
-    Args:
+    Attributes:
         Subcat (float): subcatchment name.
         Aquifer (float): name of groundwater aquifer underneath the subcatchment.
         Node (float): name of node in conveyance system exchanging groundwater with aquifer.
@@ -667,15 +667,14 @@ class Groundwater(BaseSectionObject):
 
 
     Remarks:
-        The following optional parameters can be used to override the values supplied for the subcatchment’s aquifer:
-            - Ebot
-            - Egw
-            - Umc
+        The optional parameters (Ebot, Egw, Umc) can be used to override the values supplied for the subcatchment’s aquifer.
 
         The flow coefficients are used in the following equation that determines the lateral groundwater
         flow rate based on groundwater and surface water elevations:
 
-            Q_L = A1 * (H_gw – H_cb ) ^ B1 – A2 * (H_sw – H_cb ) ^ B2 + A3 * H_gw * H_sw
+        .. math::
+
+            Q_L = A1 * (H_{gw} – H_{cb} ) ^ {B1} – A2 * (H_{sw} – H_{cb} ) ^ {B2} + A3 * H_{gw} * H_{sw}
 
         where:
             - Q_L = lateral groundwater flow (cfs per acre or cms per hectare),
@@ -687,6 +686,27 @@ class Groundwater(BaseSectionObject):
     _section_label = GROUNDWATER
 
     def __init__(self, Subcatch, Aquifer, Node, Esurf, A1, B1, A2, B2, A3, Dsw, Egwt=NaN, Ebot=NaN, Egw=NaN, Umc=NaN):
+        """
+        Groundwater object.
+
+        Args:
+            Subcat (float): subcatchment name.
+            Aquifer (float): name of groundwater aquifer underneath the subcatchment.
+            Node (float): name of node in conveyance system exchanging groundwater with aquifer.
+            Esurf (float): surface elevation of subcatchment (ft or m).
+            A1 (float): groundwater flow coefficient (see below).
+            B1 (float): groundwater flow exponent (see below).
+            A2 (float): surface water flow coefficient (see below).
+            B2 (float): surface water flow exponent (see below).
+            A3 (float): surface water – groundwater interaction coefficient (see below).
+            Dsw (float): fixed depth of surface water at receiving node (ft or m)
+                        (set to zero if surface water depth will vary as computed by flow routing).
+            Egwt (float | optional): threshold groundwater table elevation which must be reached before any flow occurs (ft or m).
+                        Leave blank (or enter \\*) to use the elevation of the receiving node's invert.
+            Ebot (float | optional): elevation of the bottom of the aquifer (ft or m).
+            Egw (float | optional): groundwater table elevation at the start of the simulation (ft or m).
+            Umc (float | optional): unsaturated zone moisture content at start of simulation (volumetric fraction).
+        """
         self.Subcatch = str(Subcatch)
         self.Aquifer = str(Aquifer)
         self.Node = str(Node)
@@ -697,7 +717,7 @@ class Groundwater(BaseSectionObject):
         self.B2 = float(B2)
         self.A3 = float(A3)
         self.Dsw = float(Dsw)
-        self.Egwt = Egwt
-        self.Ebot = Ebot
-        self.Egw = Egw
-        self.Umc = Umc
+        self.Egwt = float(Egwt)
+        self.Ebot = float(Ebot)
+        self.Egw = float(Egw)
+        self.Umc = float(Umc)
