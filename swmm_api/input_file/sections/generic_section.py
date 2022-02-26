@@ -18,7 +18,7 @@ def line_iter(lines):
             yield line.split()
 
 
-class TitleSection(UserString, InpSectionGeneric):
+class TitleSection(InpSectionGeneric):
     """
     abstract class for ``.inp``-file sections without objects
 
@@ -27,15 +27,9 @@ class TitleSection(UserString, InpSectionGeneric):
     _section_label = TITLE
     """str: label of the section"""
 
-    def __init__(self, *args, **kwargs):
-        UserString.__init__(self, *args, **kwargs)
-        self._inp = None
-
-    def set_parent_inp(self, inp):
-        self._inp = inp
-
-    def get_parent_inp(self):
-        return self._inp
+    def __init__(self, txt, *args, **kwargs):
+        self.txt = txt
+        super().__init__(*args, **kwargs)
 
     @classmethod
     def from_inp_lines(cls, lines):
@@ -63,10 +57,13 @@ class TitleSection(UserString, InpSectionGeneric):
         Returns:
             str: ``.inp``-file lines of the section object
         """
-        return str(self)
+        return self.txt
 
     def copy(self):
-        return self
+        return type(self)(self.txt)
+
+    def __bool__(self):
+        return bool(self.txt)
 
 
 class OptionSection(InpSectionGeneric):

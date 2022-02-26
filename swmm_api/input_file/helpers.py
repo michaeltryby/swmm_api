@@ -127,9 +127,21 @@ class InpSectionGeneric(CustomDict):
         super().__delitem__(key)
 
     def set_parent_inp(self, inp):
+        """
+        Set inp-data object related to this section.
+
+        Args:
+            inp (SwmmInput): inp-data object related to this section.
+        """
         self._inp = inp
 
     def get_parent_inp(self):
+        """
+        Get inp-data object related to this section.
+
+        Returns:
+            SwmmInput: inp-data object related to this section.
+        """
         return self._inp
 
     @classmethod
@@ -190,9 +202,21 @@ class InpSection(CustomDict):
         self._inp = None
 
     def set_parent_inp(self, inp):
+        """
+        Set inp-data object related to this section.
+
+        Args:
+            inp (SwmmInput): inp-data object related to this section.
+        """
         self._inp = inp
 
     def get_parent_inp(self):
+        """
+        Get inp-data object related to this section.
+
+        Returns:
+            SwmmInput: inp-data object related to this section.
+        """
         return self._inp
 
     # def __repr__(self):
