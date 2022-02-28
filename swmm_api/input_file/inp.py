@@ -4,7 +4,7 @@ import warnings
 
 from .helpers import (section_to_string, CustomDict, convert_section, InpSection,
                       InpSectionGeneric, SECTION_ORDER_DEFAULT, check_order, SECTIONS_ORDER_MP, head_to_str,
-                      iter_section_lines, SwmmInputWarning, )
+                      iter_section_lines, SwmmInputWarning, BaseSectionObject)
 from .section_types import SECTION_TYPES
 from .section_labels import *
 from .sections import *
@@ -211,9 +211,16 @@ class SwmmInput(CustomDict):
         Returns:
             InpSection or InpSectionGeneric: section of inp
         """
-        if obj._section_label not in self:
-            self[obj._section_label] = obj.create_section()
-        return self[obj._section_label]
+        if hasattr(obj, '_section_label'):
+            sec = obj._section_label
+        elif hasattr(obj, '_label'):
+            sec = obj._label
+        else:
+            warnings.warn(f'Unknown Section Object type "{type(obj)}"', SwmmInputWarning)
+
+        if sec not in self:
+            self[sec] = obj.create_section()
+        return self[sec]
 
     def add_new_section(self, section):
         """
