@@ -5,9 +5,8 @@ __email__ = "markus.pichler@tugraz.at"
 __version__ = "0.1"
 __license__ = "MIT"
 
+import datetime
 import pandas as pd
-from pandas import to_datetime
-from pandas._libs.tslibs.timedeltas import Timedelta
 
 from .helpers import _get_title_of_part, _remove_lines, _part_to_frame, _continuity_part_to_dict, ReportUnitConversion, \
     _routing_part_to_dict
@@ -784,7 +783,7 @@ class SwmmReport:
         """
         v = self.get_simulation_info()['Analysis begun on']
         if v:
-            return to_datetime(v)
+            return datetime.datetime.strptime(v.strip(), '%a %b %d %H:%M:%S %Y')
 
     @property
     def analyse_end(self):
@@ -796,7 +795,8 @@ class SwmmReport:
         """
         v = self.get_simulation_info()['Analysis ended on']
         if v:
-            return to_datetime(v)
+            # datetime.datetime.strptime(v.strip(), '%c')
+            return datetime.datetime.strptime(v.strip(), '%a %b %d %H:%M:%S %Y')
 
     @property
     def analyse_duration(self):
@@ -809,9 +809,11 @@ class SwmmReport:
         v = self.get_simulation_info()['Total elapsed time']
         if v:
             if '< 1 sec' in v:
-                return Timedelta(seconds=1)
+                return datetime.timedelta(seconds=1)
+            if '.' in v:
+                return datetime.timedelta(days=v.split('.')[0]) + datetime.timedelta(*v.split('.')[1].split(':'))
 
-            return Timedelta(v)
+            return datetime.timedelta(*v.split(':'))
 
     @staticmethod
     def _pprint(di):

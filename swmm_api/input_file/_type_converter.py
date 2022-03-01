@@ -1,9 +1,9 @@
 import datetime
 import re
-from datetime import date, time, timedelta
-from pandas import isna, to_datetime, Timedelta, Timestamp, to_timedelta
+
+import numpy as np
+import pandas as pd
 from pandas.tseries.frequencies import to_offset
-from numpy import ndarray, NaN
 
 
 def to_bool(x):
@@ -28,7 +28,7 @@ def infer_type(x):
     Returns:
         object: object depending on string
     """
-    if isinstance(x, (list, ndarray)):
+    if isinstance(x, (list, np.ndarray)):
         return [infer_type(i) for i in x]
     elif not isinstance(x, str):
         return x
@@ -43,13 +43,13 @@ def infer_type(x):
     elif ('.' in x) and (x.lower().replace('.', '').replace('-', '').replace('e', '').isdecimal()):
         return float(x)
     elif x.count('/') == 2:
-        return to_datetime(x, format='%m/%d/%Y').date()
+        return datetime.datetime.strptime(x, '%m/%d/%Y').date()
     # elif x.count('/') == 1:
     #     return to_datetime(x, format='%m/%d').date()
     elif (x.count(':') == 2) and (len(x) == 8):
-        return to_datetime(x, format='%H:%M:%S').time()
+        return datetime.datetime.strptime(x, '%H:%M:%S').time()
     elif (x.count(':') == 1) and (len(x) == 5):
-        return to_datetime(x, format='%H:%M').time()
+        return datetime.datetime.strptime(x, '%H:%M').time()
     else:
         return x
 
@@ -111,8 +111,7 @@ def str_to_datetime(date=None, time=None, str_only=False):
     if str_only:
         return date + ' ' + time
     else:
-        return to_datetime(date + ' ' + time,
-                           format=month_format + date_format2 + ' ' + time_format)
+        return datetime.datetime.strptime(date + ' ' + time, month_format + date_format2 + ' ' + time_format)
 
 
 def datetime_to_str(dt):
@@ -130,16 +129,15 @@ def datetime_to_str(dt):
     elif isinstance(dt, str):
         return dt
     elif isinstance(dt, datetime.datetime):
-        return dt.strftime(format='%m/%d/%Y %H:%M:%S')
-
+        return dt.strftime('%m/%d/%Y %H:%M:%S')
 
 
 def time2delta(t):
-    return Timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
+    return datetime.timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
 
 
 def delta2time(d):
-    return Timestamp(2000, 1, 1, d.components.hours, d.components.minutes, d.components.seconds).time()
+    return datetime.datetime(2000, 1, 1, d.components.hours, d.components.minutes, d.components.seconds).time()
 
 
 def delta2offset(d):
@@ -147,7 +145,7 @@ def delta2offset(d):
 
 
 def offset2delta(o):
-    return to_timedelta(o)
+    return pd.to_timedelta(o)
 
 
 def delta2str(d):
@@ -187,21 +185,19 @@ def type2str(x):
     elif isinstance(x, int):
         return str(x)
     elif isinstance(x, float):
-        if isna(x):
+        if pd.isna(x):
             return ''
         if x == 0.0:
             return '0'
         return '{:0.7G}'.format(x)  # .rstrip('0').rstrip('.')
-    elif isinstance(x, date):
-        return x.strftime(format='%m/%d/%Y')
-    elif isinstance(x, time):
-        return x.strftime(format='%H:%M:%S')
-    elif isinstance(x, (Timedelta, timedelta)):
+    elif isinstance(x, datetime.date):
+        return x.strftime('%m/%d/%Y')
+    elif isinstance(x, datetime.time):
+        return x.strftime('%H:%M:%S')
+    elif isinstance(x, (pd.Timedelta, datetime.timedelta)):
         return delta2str(x)
     else:
         return str(x)
-
-import numpy as np
 
 
 def is_equal(x1, x2, precision=3):
@@ -216,7 +212,7 @@ def is_equal(x1, x2, precision=3):
 
 
 def convert_string(x) -> str:
-    if isna(x):
+    if pd.isna(x):
         return x
     x = str(x)
     if ' ' in x:
@@ -224,7 +220,7 @@ def convert_string(x) -> str:
     else:
         s = x.strip('"')
         if s == '':
-            return NaN
+            return np.NaN
         else:
             return s
 

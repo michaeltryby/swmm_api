@@ -804,7 +804,10 @@ def convert_section(head, lines, converter):
             return section_(lines)
 
         elif isclass(section_):  # section_ ... type/class
-            return section_.from_inp_lines(lines)
+            try:
+                return section_.from_inp_lines(lines)
+            except ValueError as e:
+                raise SwmmInputWarning(str(e) + f'\n{head}\n{section_}')
 
         else:
             warnings.warn(f'Type of converter ({type(section_)}) for Section "{head}" not implemented. Section will not be converted.', SwmmInputWarning)

@@ -1,5 +1,10 @@
 # Changelog  
 
+## 0.2.0.18.3 (Mar 01, 2022)
+
+Minor fixes
+Fixed Error when using Timeseries past the year 3000.
+
 ## 0.2.0.18 (Feb 22, 2022)
 
 fixed:

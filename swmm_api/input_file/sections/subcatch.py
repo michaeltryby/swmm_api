@@ -717,7 +717,7 @@ class Groundwater(BaseSectionObject):
         self.B2 = float(B2)
         self.A3 = float(A3)
         self.Dsw = float(Dsw)
-        self.Egwt = float(Egwt)
+        self.Egwt = Egwt
         self.Ebot = float(Ebot)
         self.Egw = float(Egw)
         self.Umc = float(Umc)

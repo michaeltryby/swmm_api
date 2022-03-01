@@ -1,5 +1,8 @@
+import datetime
+import warnings
+
+import pandas as pd
 from numpy import NaN
-from pandas import DataFrame, Series, Timestamp
 
 from ._identifiers import IDENTIFIERS
 from .._type_converter import infer_type, to_bool, str_to_datetime, datetime_to_str, type2str
@@ -1057,7 +1060,7 @@ class Curve(BaseSectionObject):
 
     @property
     def frame(self):
-        return DataFrame.from_records(self.points, columns=self._get_names(self.Type))
+        return pd.DataFrame.from_records(self.points, columns=self._get_names(self.Type))
 
     def to_inp_line(self):
         points = iter(self.points)
@@ -1250,28 +1253,34 @@ class TimeseriesData(Timeseries):
         date_time, values = zip(*self.data)
         date_time_new = list()
         last_date = None
+
+        # str_only: only for very long timeseries in the .inp-file.
+        # The datetime will be converted with pandas for performance boost.
         if len(date_time) > 10000 * 2:  # 10000 it/s
             str_only = True
         else:
             str_only = False
-
-        for dt in date_time:
-            if isinstance(dt, Timestamp):
-                date_time_new.append(dt)
-            elif isinstance(dt, float):
-                date_time_new.append(dt)
-            else:
-                parts = dt.split()
-                if len(parts) == 1:
-                    time = parts[0]
+        try:
+            for dt in date_time:
+                if isinstance(dt, (pd.Timestamp, datetime.datetime)):
+                    date_time_new.append(dt)
+                elif isinstance(dt, float):
+                    date_time_new.append(dt)
                 else:
-                    last_date, time = parts
+                    parts = dt.split()
+                    if len(parts) == 1:
+                        time = parts[0]
+                    else:
+                        last_date, time = parts
 
-                date_time_new.append(str_to_datetime(last_date, time, str_only=str_only))
-        if str_only:
-            import pandas as pd
-            date_time_new = pd.to_datetime(date_time_new, format='%m/%d/%Y %H:%M:%S')
-        self.data = list(zip(date_time_new, values))
+                    date_time_new.append(str_to_datetime(last_date, time, str_only=str_only))
+            if str_only:
+                    date_time_new = pd.to_datetime(date_time_new, format='%m/%d/%Y %H:%M:%S')
+
+            self.data = list(zip(date_time_new, values))
+        except:
+            # if the conversion doesn't work - skip it
+            warnings.warn(f'Could not convert Data for Timerseries(Name={self.Name}). First datetime = "{date_time[0]}"')
 
     @property
     def frame(self):
@@ -1282,7 +1291,7 @@ class TimeseriesData(Timeseries):
             pandas.Series: Timeseries
         """
         datetime, values = zip(*self.data)
-        return Series(index=datetime, data=values, name=self.Name)
+        return pd.Series(index=datetime, data=values, name=self.Name)
 
     def to_inp_line(self):
         f = ''
