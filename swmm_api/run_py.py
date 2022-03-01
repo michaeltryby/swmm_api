@@ -1,14 +1,29 @@
+import os
 from datetime import timedelta
 from math import floor
 
 from swmm.toolkit import solver
 from pyswmm import Simulation
 from tqdm.auto import tqdm
-from swmm_api.run import get_result_filenames
+
+from swmm_api import SwmmReport
+from swmm_api.run import get_result_filenames, SWMMRunError
 
 
 def run(fn_inp):
-    solver.swmm_run(fn_inp, *get_result_filenames(fn_inp))
+    try:
+        solver.swmm_run(fn_inp, *get_result_filenames(fn_inp))
+    except Exception as e:
+        fn_rpt, fn_out = get_result_filenames(fn_inp)
+        message = e.args[0] + '\n' + fn_inp
+        if os.path.isfile(fn_rpt):
+            with open(fn_rpt, 'r') as f:
+                rpt_content = f.read()
+            if 'ERROR' in rpt_content:
+                message += rpt_content
+        else:
+            message += 'NO Report file created!!!'
+        raise SWMMRunError(message)
 
 
 def run_progress(fn_inp, n_total=100):

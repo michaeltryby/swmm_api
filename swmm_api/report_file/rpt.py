@@ -243,7 +243,7 @@ class SwmmReport:
         Flow Routing Continuity
 
         Returns:
-            dict[str, str]: Flow Routing Continuity
+            dict[str, dict[str, float]]: Flow Routing Continuity
         """
         if self._flow_routing_continuity is None:
             raw = self._raw_parts.get('Flow Routing Continuity', None)
@@ -256,7 +256,7 @@ class SwmmReport:
         Runoff Quantity Continuity
 
         Returns:
-            dict[str, str]: Runoff Quantity Continuity
+            dict[str, dict[str, float]]: Runoff Quantity Continuity
         """
         if self._runoff_quantity_continuity is None:
             raw = self._raw_parts.get('Runoff Quantity Continuity', None)
@@ -269,7 +269,7 @@ class SwmmReport:
         Groundwater Continuity
 
         Returns:
-            dict[str, str]: Groundwater Continuity
+            dict[str, dict[str, float]]: Groundwater Continuity
         """
         if self._groundwater_continuity is None:
             p = self._raw_parts.get('Groundwater Continuity', None)
@@ -282,7 +282,7 @@ class SwmmReport:
         Quality Routing Continuity
 
         Returns:
-            dict[str, str]: Quality Routing Continuity
+            dict[str, dict[str, float]]: Quality Routing Continuity
         """
         if self._quality_routing_continuity is None:
             p = self._raw_parts.get('Quality Routing Continuity', None)
@@ -295,7 +295,7 @@ class SwmmReport:
         Runoff Quality Continuity
 
         Returns:
-            dict[str, str]: Runoff Quality Continuity
+            dict[str, dict[str, float]]: Runoff Quality Continuity
         """
         if self._runoff_quality_continuity is None:
             p = self._raw_parts.get('Runoff Quality Continuity', None)

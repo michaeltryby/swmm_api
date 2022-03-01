@@ -26,7 +26,7 @@ class SwmmInputWarning(UserWarning):
 
 
 def head_to_str(head):
-    return f'\n{SEP_INP}\n[{head}]\n'
+    return f'\n\n{SEP_INP}\n[{head}]\n'
 
 
 _TYPES_NO_COPY = (int, float, str, datetime.date, datetime.time, UserString)
