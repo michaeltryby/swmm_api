@@ -8,8 +8,8 @@ __license__ = "MIT"
 import datetime
 import pandas as pd
 
-from .helpers import _get_title_of_part, _remove_lines, _part_to_frame, _continuity_part_to_dict, ReportUnitConversion, \
-    _routing_part_to_dict
+from .helpers import (_get_title_of_part, _remove_lines, _part_to_frame, _continuity_part_to_dict, ReportUnitConversion,
+                      _routing_part_to_dict, _quality_continuity_part_to_dict, )
 
 
 class SwmmReport:
@@ -25,6 +25,7 @@ class SwmmReport:
 
         Notes:
             For more information see SWMM 5.1 User Manual | 9.1 Viewing a Status Report | S. 136
+            Landuse Labels are not allowed to be longer than 13 characters!
 
         .. Important::
             The summary results displayed in these tables are based on results found at every
@@ -112,11 +113,24 @@ class SwmmReport:
         lines = lines[:-3]
         parts0 = ''.join(lines).replace('\n\n  ****', '\n  \n  ****').split('\n  \n  ****')
 
+        def _concat_lines(a, b):
+            index_continuity = 28
+            if a[:index_continuity] == b[:index_continuity]:
+                return a + b[index_continuity:]
+            else:
+                return a + b
+
         for i, part in enumerate(parts0):
             if part.startswith('*'):
                 part = '  ****' + part
 
-            self._raw_parts[_get_title_of_part(part, i)] = _remove_lines(part, title=False, empty=True, sep=False)
+            key = _get_title_of_part(part, i)
+            if key in self._raw_parts:
+                new_lines = _remove_lines(part, title=False, empty=True, sep=False)
+                if new_lines.count('\n') == self._raw_parts[key].count('\n'):
+                    self._raw_parts[key] = '\n'.join([_concat_lines(a, b) for a, b in zip(self._raw_parts[key].split('\n'), new_lines.split('\n'))])
+            else:
+                self._raw_parts[key] = _remove_lines(part, title=False, empty=True, sep=False)
 
     def _get_converted_part(self, key):
         if key not in self._converted_parts:
@@ -285,7 +299,7 @@ class SwmmReport:
         """
         if self._quality_routing_continuity is None:
             p = self._raw_parts.get('Quality Routing Continuity', None)
-            self._quality_routing_continuity = _continuity_part_to_dict(p)
+            self._quality_routing_continuity = _quality_continuity_part_to_dict(p)
         return self._quality_routing_continuity
 
     @property
@@ -298,7 +312,7 @@ class SwmmReport:
         """
         if self._runoff_quality_continuity is None:
             p = self._raw_parts.get('Runoff Quality Continuity', None)
-            self._runoff_quality_continuity = _continuity_part_to_dict(p)
+            self._runoff_quality_continuity = _quality_continuity_part_to_dict(p)
         return self._runoff_quality_continuity
 
     @property

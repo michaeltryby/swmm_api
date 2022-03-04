@@ -176,6 +176,27 @@ def _continuity_part_to_dict(raw):
     return res
 
 
+def _quality_continuity_part_to_dict(raw):
+    if raw is None:
+        return {}
+    first_line = raw.split('\n')[0]
+    for word in first_line.strip(' *').split():
+        if len(word) > 14:
+            raw = raw.replace(word, f'{word[:14]} {word[14:]}')
+
+    df = pd.read_fwf(StringIO(raw), index_col=0, header=[0, 1, 2])
+
+    df.columns = df.columns.droplevel(2)
+    df.columns.name = None
+    df.columns = ['_'.join(str(c) for c in col).strip() for col in df.columns.values]
+
+    df.index.name = None
+    df.index = df.index.str.strip('. ')
+
+    res = df.to_dict(orient='index')
+    return res
+
+
 class ReportUnitConversion:
     """
     Unit conversion for the simulation results in the report file
