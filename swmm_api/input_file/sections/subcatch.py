@@ -197,7 +197,6 @@ class Infiltration(BaseSectionObject):
 
     @classmethod
     def from_inp_line(cls, Subcatch, *args, **kwargs):
-
         subcls = cls
 
         # n_args = len(args) + len(kwargs.keys()) + 1
@@ -464,7 +463,7 @@ class Loading(BaseSectionObject):
 
     def __init__(self, Subcatch, pollutant_buildup_dict=None):
         self.Subcatch = str(Subcatch)
-        self.pollutant_buildup_dict = dict()
+        self.pollutant_buildup_dict = {}
         if pollutant_buildup_dict:
             self.pollutant_buildup_dict = pollutant_buildup_dict
 
@@ -538,7 +537,7 @@ class Coverage(BaseSectionObject):
 
     def __init__(self, Subcatch, land_use_dict=None):
         self.Subcatch = str(Subcatch)
-        self.land_use_dict = dict()
+        self.land_use_dict = {}
         if land_use_dict:
             self.land_use_dict = land_use_dict
 

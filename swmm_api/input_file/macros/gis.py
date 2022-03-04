@@ -168,7 +168,7 @@ def get_subcatchment_connectors(inp):
     from geopandas import GeoSeries
     from shapely.geometry import LineString
 
-    res = dict()
+    res = {}
     for p in tqdm(inp[POLYGONS], total=len(inp[POLYGONS].keys()), desc='get_subcatchment_connectors'):
         c = inp[POLYGONS][p].geo.centroid
         o = inp[SUBCATCHMENTS][p].Outlet

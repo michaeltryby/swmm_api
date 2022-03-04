@@ -549,3 +549,35 @@ def remove_quality_model(inp):
         for k in list(inp[sec].keys()):
             if inp[sec][k].Constituent != 'FLOW':
                 del inp[sec][k]
+
+
+def delete_pollutant(inp, label):
+    """
+    Delete pollutant in model
+
+    Remove all entries with this pollutant
+
+    Args:
+        inp (SwmmInput):
+        label (str):
+    """
+    # TODO LID control
+    if POLLUTANTS in inp:
+        del inp.POLLUTANTS[label]
+    if SUBCATCHMENTS in inp:
+        for sc in inp.SUBCATCHMENTS:
+            if LOADINGS in inp and label in inp.LOADINGS[sc].pollutant_buildup_dict:
+                del inp.LOADINGS[sc].pollutant_buildup_dict[label]
+
+    if LANDUSES in inp:
+        for lu in inp.LANDUSES:
+            for sec in [BUILDUP, WASHOFF]:
+                if (sec in inp) and ((lu, label) in inp[sec]):
+                    del inp[sec][(lu, label)]
+
+    for n in nodes_dict(inp):
+        for sec in [TREATMENT, DWF, INFLOWS]:
+            if (sec in inp) and ((n, label) in inp[sec]):
+                del inp[sec][(n, label)]
+
+

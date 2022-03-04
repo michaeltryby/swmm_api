@@ -147,7 +147,7 @@ def _part_to_frame(part):
 
 
 def _routing_part_to_dict(raw):
-    elements = dict()
+    elements = {}
     if (raw.startswith('  All ') and raw.endswith('.')) or (raw.strip() == 'None') or (raw.strip() == ''):
         return elements
 
@@ -159,7 +159,7 @@ def _routing_part_to_dict(raw):
 
 def _continuity_part_to_dict(raw):
     if raw is None:
-        return dict()
+        return {}
 
     df = pd.read_fwf(StringIO(raw), index_col=0, header=[0, 1, 2])
 

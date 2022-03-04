@@ -281,7 +281,7 @@ def section_to_geopandas(section, crs="EPSG:32633"):
 ########################################################################################################################
 def remove_coordinates_from_vertices(inp):
     # SNIPPET ?!?
-    new_vertices_section = dict()
+    new_vertices_section = {}
     for link in inp[VERTICES]:  # type: str
         conduit = inp[CONDUITS][link]  # type: Conduit
         new_vertices = list()

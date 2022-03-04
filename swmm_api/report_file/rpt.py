@@ -32,8 +32,8 @@ class SwmmReport:
         """
         self._filename = filename
         # ________________
-        self._raw_parts = dict()
-        self._converted_parts = dict()
+        self._raw_parts = {}
+        self._converted_parts = {}
         # ________________
         # split report file to a dict
         self._report_to_dict()
@@ -147,7 +147,7 @@ class SwmmReport:
         if self._analysis_options is None:
             p = self._get_converted_part('Analysis Options')
 
-            res = dict()
+            res = {}
             last_key = None
             last_initial_spaces = 0
 
@@ -170,7 +170,7 @@ class SwmmReport:
 
                 else:
                     last_key = line.replace(':', '').strip()
-                    res[last_key] = dict()
+                    res[last_key] = {}
 
             self._analysis_options = res
         return self._analysis_options
@@ -208,7 +208,7 @@ class SwmmReport:
         if self._element_count is None:
             p = self._get_converted_part('Element Count')
 
-            res = dict()
+            res = {}
             last_key = None
             last_initial_spaces = 0
 
@@ -231,7 +231,7 @@ class SwmmReport:
 
                 else:
                     last_key = line.replace(':', '').strip()
-                    res[last_key] = dict()
+                    res[last_key] = {}
 
             self._element_count = res
         return self._element_count
@@ -707,7 +707,7 @@ class SwmmReport:
         if self._routing_time_step_summary is None:
             p = self._get_converted_part('Routing Time Step Summary')
             if p:
-                self._routing_time_step_summary = dict()
+                self._routing_time_step_summary = {}
                 for line in self._get_converted_part('Routing Time Step Summary').split('\n'):
                     if 'Time Step Frequencies' in line:
                         continue
@@ -745,10 +745,10 @@ class SwmmReport:
         """
         if self._transect_summary is None:
             p = self._get_converted_part('Transect Summary')
-            self._transect_summary = dict()
+            self._transect_summary = {}
             for transect in p.split('Transect')[1:]:
                 label, *data = transect.split()
-                self._transect_summary[label] = dict()
+                self._transect_summary[label] = {}
                 sub = data[0][:-1]
                 d = []
                 for i in data[1:]:
@@ -844,7 +844,7 @@ class SwmmReport:
             dict[str, (str | bool | list[str])]: key is the error and value is a object label, a list of object-label or a bool
         """
         t = self._raw_parts.get('Version+Title', None)
-        di = dict()
+        di = {}
         if t:
             for line in t.split('\n'):
                 line = line.strip()
@@ -921,7 +921,7 @@ class SwmmReport:
                 conduit flow and junction water depth).
         """
         t = self._raw_parts.get('Version+Title', None)
-        di = dict()
+        di = {}
         if t:
             for line in t.split('\n'):
                 line = line.strip()

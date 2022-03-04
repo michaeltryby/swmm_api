@@ -48,7 +48,7 @@ def plot_map(inp, sc_connector=True, sc_center=True):  # TODO
     if COORDINATES in inp:
         points = dict(inp[COORDINATES])
     else:
-        points = dict()
+        points = {}
     from shapely import geometry as shp
     points.update({poly.Subcatch: shp.Polygon(poly.polygon).centroid for poly in inp[POLYGONS].values()})
 

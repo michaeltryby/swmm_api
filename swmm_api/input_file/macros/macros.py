@@ -74,7 +74,7 @@ def conduit_slopes(inp: SwmmInput):
     Returns:
         pandas.Series: slopes
     """
-    slopes = dict()
+    slopes = {}
     for conduit in inp.CONDUITS.values():
         slopes[conduit.Name] = calc_slope(inp, conduit)
     return pd.Series(slopes)

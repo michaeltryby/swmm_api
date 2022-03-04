@@ -2,7 +2,7 @@ from ..section_labels import *
 from .collection import links_dict, nodes_dict
 from ..misc.curve_simplification import ramer_douglas
 from ..section_types import SECTION_TYPES
-from ..sections import Control
+from ..sections import Control, EvaporationSection
 
 
 def reduce_curves(inp):
@@ -150,10 +150,9 @@ def reduce_raingages(inp):
     Returns:
         SwmmInput: inp-file data with filtered RAINGAGES section
     """
-    if SUBCATCHMENTS not in inp or RAINGAGES not in inp:
-        return inp
-    needed_raingages = {inp[SUBCATCHMENTS][s].RainGage for s in inp[SUBCATCHMENTS]}
-    inp[RAINGAGES] = inp[RAINGAGES].slice_section(needed_raingages)
+    if (SUBCATCHMENTS in inp) and (RAINGAGES in inp):
+        needed_raingages = {inp[SUBCATCHMENTS][s].RainGage for s in inp[SUBCATCHMENTS]}
+        inp[RAINGAGES] = inp[RAINGAGES].slice_section(needed_raingages)
 
 
 def remove_empty_sections(inp):
@@ -169,3 +168,33 @@ def remove_empty_sections(inp):
     for section in list(inp.keys()):
         if not inp[section]:
             del inp[section]
+
+
+def reduce_timeseries(inp):
+    if TIMESERIES not in inp:
+        return
+
+    needed_timeseries = set()
+    key = EvaporationSection.KEYS.TIMESERIES  # TemperatureSection.KEYS.TIMESERIES, ...
+
+    if RAINGAGES in inp:
+        f = inp[RAINGAGES].frame
+        needed_timeseries |= set(f.loc[f['Source'].str.upper() == key, 'Timeseries'])
+
+    if EVAPORATION in inp:
+        if key in inp[EVAPORATION]:
+            needed_timeseries.add(inp[EVAPORATION][key])
+
+    if TEMPERATURE in inp:
+        if key in inp[TEMPERATURE]:
+            needed_timeseries.add(inp[TEMPERATURE][key])
+
+    if OUTFALLS in inp:
+        f = inp[OUTFALLS].frame
+        needed_timeseries |= set(f.loc[f['Type'].str.upper() == key, 'Data'])
+
+    if INFLOWS in inp:
+        f = inp[INFLOWS].frame
+        needed_timeseries |= set(f['TimeSeries'])
+
+    inp[TIMESERIES] = inp[TIMESERIES].slice_section(needed_timeseries)

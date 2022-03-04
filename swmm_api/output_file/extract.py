@@ -94,7 +94,7 @@ class SwmmOutExtract(BinaryReader):
         # ____
         # Read in the names
         # get the dictionary of the object labels for each object type (link, node, subcatchment)
-        self.labels = dict()
+        self.labels = {}
         for kind, n in zip(OBJECTS.LIST_, [n_subcatch, n_nodes, n_links, n_pollutants, 0]):
             self.labels[kind] = [self._next(n=self._next(), dtype='s') for _ in range(n)]
 
@@ -126,9 +126,9 @@ class SwmmOutExtract(BinaryReader):
         #     type, invert, & max. depth
         #   link
         #     type, offsets [ht. above start node invert (ft), ht. above end node invert (ft)], max. depth, & length
-        self.model_properties = dict()
+        self.model_properties = {}
         for kind in [OBJECTS.SUBCATCHMENT, OBJECTS.NODE, OBJECTS.LINK]:
-            self.model_properties[kind] = dict()
+            self.model_properties[kind] = {}
             # ------
             # read the property labels per object type
             property_labels = list()
@@ -140,7 +140,7 @@ class SwmmOutExtract(BinaryReader):
             # ------
             # read the values per object and per property
             for label in self.labels[kind]:
-                self.model_properties[kind][label] = dict()
+                self.model_properties[kind][label] = {}
                 for property_label in property_labels:
                     value = self._next(dtype={'type': 'i'}.get(property_label, 'f'))
                     if property_label == 'type':
@@ -216,7 +216,7 @@ class SwmmOutExtract(BinaryReader):
         n_links = len(self.labels[OBJECTS.LINK])
 
         offset_list = list()
-        values = dict()
+        values = {}
 
         for kind, label, variable in columns:
             values['/'.join([kind, label, variable])] = list()

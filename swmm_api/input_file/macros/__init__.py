@@ -5,7 +5,7 @@ from .convert import junction_to_storage, junction_to_outfall, conduit_to_orific
 from .curve import curve_figure
 from .edit import (combine_conduits, combine_conduits_keep_slope, combine_vertices, delete_link, delete_node,
                    delete_subcatchment, dissolve_conduit, flip_link_direction, move_flows, rename_link, rename_node,
-                   rename_subcatchment, rename_timeseries, split_conduit, remove_quality_model)
+                   rename_subcatchment, rename_timeseries, split_conduit, remove_quality_model, delete_pollutant)
 from .filter import (filter_tags, filter_nodes, filter_links_within_nodes, filter_links, filter_subcatchments,
                      create_sub_inp, )
 try:
@@ -29,7 +29,7 @@ from .macros import (find_node, find_link, calc_slope, conduit_slopes, conduits_
                      increase_max_node_depth, set_times, combined_subcatchment_frame, delete_sections)
 from .plotting import plot_map, plot_longitudinal
 from .reduce_unneeded import (reduce_curves, reduce_controls, simplify_curves, reduce_raingages,
-                              remove_empty_sections, )
+                              remove_empty_sections, reduce_timeseries)
 from .split_inp_file import split_inp_to_files, read_split_inp_file
 from .tags import get_node_tags, get_link_tags, get_subcatchment_tags, filter_tags
 

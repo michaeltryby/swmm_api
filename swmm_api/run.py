@@ -92,7 +92,7 @@ def run_swmm_custom(command_line):
 
 
 def check_swmm_errors(rpt, shell_output):
-    msgs = dict()
+    msgs = {}
 
     if isinstance(shell_output, str):
         msgs['CALL'] = shell_output

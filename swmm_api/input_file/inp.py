@@ -206,10 +206,10 @@ class SwmmInput(CustomDict):
         check if a section is in the inp-data, and create it if not present
 
         Args:
-            obj (BaseSectionObject or InpSectionGeneric):
+            obj (BaseSectionObject or InpSectionGeneric): section object
 
         Returns:
-            InpSection or InpSectionGeneric: section of inp
+            swmm_api.input_file.helpers.InpSection or swmm_api.input_file.helpers.InpSectionGeneric: section of inp
         """
         if hasattr(obj, '_section_label'):
             sec = obj._section_label

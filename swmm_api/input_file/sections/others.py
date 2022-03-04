@@ -270,26 +270,6 @@ class Pollutant(BaseSectionObject):
         The dry weather flow concentration can be overridden for any specific node of the conveyance
         system by editing the node's Inflows property.
 
-    Args:
-        Name (str): name assigned to pollutant.
-        unit (str): concentration units
-
-                - ``MG/L`` for milligrams per liter
-                - ``UG/L`` for micrograms per liter
-                - ``#/L`` for direct count per liter
-
-        Crain (float): concentration of pollutant in rainfall (concentration units).
-        Cgw (float): concentration of pollutant in groundwater (concentration units).
-        Crdii (float): concentration of pollutant in inflow/infiltration (concentration units). ``Cii``
-        Kdecay (float): first-order decay coefficient (1/days).
-        SnowOnly (bool): ``YES`` if pollutant buildup occurs only when there is snow cover, ``NO`` otherwise (default
-        is ``NO``). ``Sflag``
-        Co_Pollutant (str): name of co-pollutant (default is no co-pollutant designated by a ``*``). ``CoPoll``
-        Co_Frac (float): fraction of co-pollutant concentration (default is 0). ``CoFract``
-        Cdwf (float): pollutant concentration in dry weather flow (default is 0).
-        Cinit (float): pollutant concentration throughout the conveyance system at the start of the simulation (
-        default is 0).
-
     Attributes:
         Name (str): name assigned to pollutant.
         unit (str): concentration units
@@ -320,6 +300,29 @@ class Pollutant(BaseSectionObject):
 
     def __init__(self, Name, unit, Crain, Cgw, Crdii, Kdecay,
                  SnowOnly=False, Co_Pollutant='*', Co_Frac=0, Cdwf=0, Cinit=0):
+        """
+        Pollutant
+
+        Args:
+            Name (str): name assigned to pollutant.
+            unit (str): concentration units
+
+                    - ``MG/L`` for milligrams per liter
+                    - ``UG/L`` for micrograms per liter
+                    - ``#/L`` for direct count per liter
+
+            Crain (float): concentration of pollutant in rainfall (concentration units).
+            Cgw (float): concentration of pollutant in groundwater (concentration units).
+            Crdii (float): concentration of pollutant in inflow/infiltration (concentration units). ``Cii``
+            Kdecay (float): first-order decay coefficient (1/days).
+            SnowOnly (bool): ``YES`` if pollutant buildup occurs only when there is snow cover, ``NO`` otherwise (default
+                is ``NO``). ``Sflag``
+            Co_Pollutant (str): name of co-pollutant (default is no co-pollutant designated by a ``*``). ``CoPoll``
+            Co_Frac (float): fraction of co-pollutant concentration (default is 0). ``CoFract``
+            Cdwf (float): pollutant concentration in dry weather flow (default is 0).
+            Cinit (float): pollutant concentration throughout the conveyance system at the start of the simulation (
+                default is 0).
+        """
         self.Name = str(Name)
         self.unit = str(unit)
         self.Crain = float(Crain)
@@ -1841,7 +1844,7 @@ class SnowPack(BaseSectionObject):
 
     def __init__(self, Name, parts=None):
         self.Name = str(Name)
-        self.parts = dict()
+        self.parts = {}
 
         if isinstance(parts, dict):
             self.parts = parts

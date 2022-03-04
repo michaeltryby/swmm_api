@@ -160,7 +160,7 @@ def get_network_forks(inp):
     # pd.DataFrame.from_dict(forks, orient='index')
     g = inp_to_graph(inp)
     nodes = nodes_dict(inp)
-    forks = dict()
+    forks = {}
     for n in nodes:
         forks[n] = number_in_out(g, n)
     return forks

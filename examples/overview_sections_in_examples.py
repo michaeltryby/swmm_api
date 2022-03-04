@@ -11,7 +11,7 @@ example_dirs = [
     os.path.join(parent_dir, 'epaswmm5_apps_manual', 'projects')
 ]
 
-sections = dict()
+sections = {}
 
 process_bar = tqdm(example_dirs)
 for folder in process_bar:
