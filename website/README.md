@@ -35,7 +35,18 @@ python:
 - **GisToSWMM5** / [github](https://github.com/AaltoUrbanWater/GisToSWMM5) / converting gis data to swmm model (also possible with swmm_api: `swmm_api.input_file.macro_snippets.gis_standard_import` and `swmm_api.input_file.macro_snippets.gis_export`)
 - **swmmtoolbox** / [github](https://github.com/timcera/swmmtoolbox) / Thanks to _Tim Cera_ for this package! I used his package to understand the .out-files but completely rewrote the reading process in this package.
 - **swmmnetwork** / [github](https://github.com/austinorr/swmmnetwork) / create graph network from swmm model (see `swmm_api.input_file.macros.inp_to_graph`)
-- **SWMMOutputAPI** / [github](https://github.com/bemcdonnell/SWMMOutputAPI) / read the output file (see `swmm_api.output_file.out`)
+- **SWMMOutputAPI** / [github](https://github.com/bemcdonnell/SWMMOutputAPI) / read the output file (see `swmm_api.output_file.out`) / (OpenWaterAnalytics)
+- **swmm-pandas** / [pypi](https://pypi.org/project/swmm-pandas/) / equal functionalities to this package, but not feature complete
+- **swmmout** / [pypi](https://pypi.org/project/swmmout/) / [docs](https://swmmout.readthedocs.io/en/latest/) / simular to `swmmtoolbox` and `SWMMOutputAPI`
+
+## Other SWMM-related packages
+
+python:
+- **pyswmm** / [pypi](https://pypi.org/project/pyswmm/) / [github](https://github.com/OpenWaterAnalytics/pyswmm) / RTC, etc. / based on swmm-toolkit (OpenWaterAnalytics)
+- **swmm-toolkit** / [pypi](https://pypi.org/project/swmm-toolkit/) / [github](https://github.com/OpenWaterAnalytics/swmm-python) / by Michael Tryby (OpenWaterAnalytics)
+- **SWMM5** / [pypi](https://pypi.org/project/SWMM5/) / [github](https://github.com/asselapathirana/swmm5-python) / simular approach to swmm-toolkit (by Assela Pathirana)
+- **SWMM-xsections-shape-generator** / [pypi](https://pypi.org/project/SWMM-xsections-shape-generator/) / tool to generate custom shapes (by me)
+- **SWMM_EA** / [pypi](https://pypi.org/project/SWMM5_EA/) / usage of genetic algorithms with SWMM (by Assela Pathirana)
 
 ## Read, manipulate and write the INP-File
 
