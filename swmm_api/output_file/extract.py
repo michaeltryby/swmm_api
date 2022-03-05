@@ -48,7 +48,36 @@ class SwmmOutExtractWarning(UserWarning):
 
 
 class SwmmOutExtract(BinaryReader):
-    """The class that handles all extraction of data from the out file."""
+    """
+    The class that handles all extraction of data from the out file.
+
+    Attributes:
+        flow_unit (str): Flow unit. One of ['CMS', 'LPS', 'MLD', 'CFS', 'GPM', 'MGD']
+        labels (dict[str, list]): dictionary of the object labels as list (value) for each object type
+            (keys are: ``'link'``, ``'node'``, ``'subcatchment'``)
+        model_properties (dict[str, [dict[str, list]]]): property values for the subcatchments, nodes and links. 
+            The Properties for the objects are.
+        
+                    - ``subcatchment``
+                      - [area]
+                    - ``node``
+                      - [type, invert, max. depth]
+                    - ``link``
+                      - type, 
+                      - offsets
+                        - ht. above start node invert (ft), 
+                        - ht. above end node invert (ft), 
+                      - max. depth,
+                      - length
+        
+        n_periods (int): number of periods (=index-values)
+        pollutant_units (dict[str, str]): Units per pollutant.
+        _pos_start_output (int): Start position of the data.
+        report_interval (datetime.timedelta): Intervall of the index.
+        start_date (datetime.datetime): Start date of the data.
+        swmm_version (str): SWMM Version
+        variables (dict[str, list]): variables per object-type inclusive the pollutants.
+    """
 
     def __init__(self, filename):
         super().__init__(filename)
@@ -166,7 +195,7 @@ class SwmmOutExtract(BinaryReader):
         # assert _pos_start_output == self.fp.tell()
         # if _pos_start_output == 0:
         # Out File not complete!
-        self.pos_start_output = self.fp.tell()
+        self._pos_start_output = self.fp.tell()
 
         self.n_periods = _n_periods
         if _n_periods == 0:
@@ -194,7 +223,7 @@ class SwmmOutExtract(BinaryReader):
         _bytes_per_period *= _RECORDSIZE
         return _bytes_per_period
 
-    def get_selective_results(self, columns):
+    def _get_selective_results(self, columns):
         """
         get results of selective columns in .out-file
 
@@ -243,8 +272,8 @@ class SwmmOutExtract(BinaryReader):
         # iter_label_offset = tuple(zip(cols_sorted, offset_sorted))
         iter_label_offset = tuple(zip(values.keys(), offset_list))
 
-        for period_offset in tqdm(range(self.pos_start_output,  # start
-                                        self.pos_start_output + self.n_periods * self._bytes_per_period,  # stop
+        for period_offset in tqdm(range(self._pos_start_output,  # start
+                                        self._pos_start_output + self.n_periods * self._bytes_per_period,  # stop
                                         self._bytes_per_period),
                                   desc=f'{repr(self)}.get_selective_results(n_cols={len(columns)})'):  # step
             # period_offset = self.pos_start_output + period * self.bytes_per_period
@@ -258,7 +287,7 @@ class SwmmOutExtract(BinaryReader):
         not_done = True
         period = 0
         while not_done:
-            self.fp.seek(self.pos_start_output + period * self._bytes_per_period, SEEK_SET)
+            self.fp.seek(self._pos_start_output + period * self._bytes_per_period, SEEK_SET)
             try:
                 dt = self._next(dtype='d')
                 # print(dt)

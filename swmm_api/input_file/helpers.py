@@ -3,7 +3,6 @@ import datetime
 import re
 import types
 from abc import ABC
-from collections import UserString
 from inspect import isfunction, isclass
 import warnings
 from numpy import isnan
@@ -29,7 +28,7 @@ def head_to_str(head):
     return f'\n\n{SEP_INP}\n[{head}]\n'
 
 
-_TYPES_NO_COPY = (int, float, str, datetime.date, datetime.time, UserString)
+_TYPES_NO_COPY = (int, float, str, datetime.date, datetime.time)
 
 
 ########################################################################################################################
@@ -71,6 +70,15 @@ class CustomDict:
         return self._data.__str__()
 
     def get(self, key, default=None):
+        """
+
+        Args:
+            key:
+            default:
+
+        Returns:
+
+        """
         if isinstance(key, list):
             return (self.get(k) for k in key)
         return self._data.get(key) if key in self else default
@@ -107,7 +115,11 @@ class InpSectionGeneric(CustomDict):
     """
     abstract class for ``.inp``-file sections without objects
 
-    :term:`dict-like <mapping>`"
+    Notes:
+        Acts :term:`dict-like <mapping>`
+
+    Attributes:
+        _label (str): label of the section
     """
     _label = ''
     """str: label of the section"""
@@ -147,38 +159,41 @@ class InpSectionGeneric(CustomDict):
     @classmethod
     def from_inp_lines(cls, lines):
         """
-        read ``.inp``-file lines and create an section object
+        Read ``.inp``-file lines and create a new section.
 
         Args:
-            lines (str | list[list[str]]): lines in the section of the ``.inp``-file
+            lines (str | list[list[str]]): Lines in the section of the ``.inp``-file
 
         Returns:
-            InpSectionGeneric: object of the section
+            InpSectionGeneric: New section.
         """
         pass
 
     def to_inp_lines(self, fast=False, sort_objects_alphabetical=False):
         """
-        write ``.inp``-file lines of the section object
+        Convert the section to ``.inp``-file.lines.
 
         Args:
             fast (bool): speeding up conversion
 
-                - :obj:`True`: if no special formation of the input file is needed
-                - :obj:`False`: section is converted into a table to prettify string output (slower)
+                - :obj:`True`: If no special formation of the input file is needed.
+                - :obj:`False`: Section is converted into a table to prettify string output (slower).
 
         Returns:
-            str: ``.inp``-file lines of the section object
+            str: Lines of the ``.inp``-file section.
         """
-        f = ''
-        max_len = len(max(self.keys(), key=len)) + 2
-        for sub in self:
-            f += '{key}{value}'.format(key=sub.ljust(max_len),
-                                       value=type2str(self[sub]) + '\n')
-        return f
+        # size of the longest key (number of characters)
+        max_len = len(max(self.keys(), key=len))
+        return '\n'.join(f'{key.ljust(max_len)}  {type2str(value)}' for key, value in self.items())
 
     @classmethod
     def create_section(cls):
+        """
+        Create a new empty section.
+
+        Returns:
+            cls(): Empty section.
+        """
         return cls()
 
 

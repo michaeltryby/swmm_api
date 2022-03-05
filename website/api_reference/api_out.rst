@@ -22,15 +22,15 @@ Content
 .. autosummary::
     :toctree: out/
 
-    SwmmOutput.get_part
-    SwmmOutput.number_columns
     SwmmOutput.filename
+    SwmmOutput.number_columns
 
 Export
 ~~~~~~
 .. autosummary::
     :toctree: out/
 
+    SwmmOutput.get_part
     SwmmOutput.to_frame
     SwmmOutput.to_numpy
     SwmmOutput.to_parquet
@@ -54,3 +54,14 @@ Definitions
     NODE_VARIABLES
     LINK_VARIABLES
     SYSTEM_VARIABLES
+
+Parquet I/O
+~~~~~~~~~~~
+
+.. currentmodule:: swmm_api.output_file.parquet
+
+.. autosummary::
+    :toctree: out/
+
+    read
+    write

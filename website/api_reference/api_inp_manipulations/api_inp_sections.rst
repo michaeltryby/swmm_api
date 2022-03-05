@@ -76,6 +76,7 @@ Subcatchment Sections
     SubCatchment
     SubArea
     Infiltration
+    InfiltrationHorton
     InfiltrationCurveNumber
     InfiltrationGreenAmpt
     Polygon

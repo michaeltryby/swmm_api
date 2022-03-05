@@ -1,5 +1,3 @@
-from collections import UserString
-
 from .._type_converter import infer_type, type2str
 from ..helpers import InpSectionGeneric
 from ..section_labels import TITLE, OPTIONS, REPORT, EVAPORATION, TEMPERATURE, MAP, FILES, ADJUSTMENTS, BACKDROP
@@ -20,43 +18,35 @@ def line_iter(lines):
 
 class TitleSection(InpSectionGeneric):
     """
-    abstract class for ``.inp``-file sections without objects
+    Section: [**TITLE**]
 
-    :term:`dict-like <mapping>`"
+    Purpose:
+        Attaches a descriptive title to the project being analyzed.
+
+    Format:
+        Any number of lines may be entered. The first line will be used as a page header in the output report.
+
+    See Also:
+        :class:`~swmm_api.input_file.helpers.InpSectionGeneric`: Parent class of this section.
     """
-    _section_label = TITLE
+    _label = TITLE
     """str: label of the section"""
 
-    def __init__(self, txt, *args, **kwargs):
+    def __init__(self, txt):
+        """
+        Project Title.
+
+        Args:
+            txt (str): Project Title.
+        """
         self.txt = txt
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
     @classmethod
     def from_inp_lines(cls, lines):
-        """
-        read ``.inp``-file lines and create an section object
-
-        Args:
-            lines (str | list[list[str]]): lines in the section of the ``.inp``-file
-
-        Returns:
-            InpSectionGeneric: object of the section
-        """
         return cls(lines)
 
     def to_inp_lines(self, fast=False, sort_objects_alphabetical=False):
-        """
-        write ``.inp``-file lines of the section object
-
-        Args:
-            fast (bool): speeding up conversion
-
-                - :obj:`True`: if no special formation of the input file is needed
-                - :obj:`False`: section is converted into a table to prettify string output (slower)
-
-        Returns:
-            str: ``.inp``-file lines of the section object
-        """
         return self.txt
 
     def copy(self):

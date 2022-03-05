@@ -8,13 +8,14 @@ from .edit import (combine_conduits, combine_conduits_keep_slope, combine_vertic
                    rename_subcatchment, rename_timeseries, split_conduit, remove_quality_model, delete_pollutant)
 from .filter import (filter_tags, filter_nodes, filter_links_within_nodes, filter_links, filter_subcatchments,
                      create_sub_inp, )
+from .geo import (transform_coordinates, complete_vertices, reduce_vertices, complete_link_vertices,
+                  simplify_link_vertices, simplify_vertices, )
+
 try:
     import warnings
 
     warnings.filterwarnings('ignore', message='.*is incompatible with the GEOS version PyGEOS*')
 
-    from .geo import (transform_coordinates, complete_vertices, reduce_vertices, complete_link_vertices,
-                      simplify_link_vertices, simplify_vertices, )
     from .gis import (convert_inp_to_geo_package, write_geo_package, get_subcatchment_connectors,
                       links_geo_data_frame, nodes_geo_data_frame, gpkg_to_swmm, update_length, problems_to_gis)
 except ImportError as e:

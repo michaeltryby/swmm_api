@@ -33,7 +33,7 @@ def _check_name(filename):
     return filename
 
 
-def _multiindex_to_index(multiindex):
+def _multiindex_to_index(multiindex, sep='/'):
     """
 
     Args:
@@ -44,19 +44,26 @@ def _multiindex_to_index(multiindex):
     """
     if isinstance(multiindex, MultiIndex):
         # compact_name = '/'.join(str(c) for c in multiindex.names)
-        multiindex = ['/'.join(str(c) for c in col).strip() for col in multiindex.values]
+        multiindex = [sep.join(str(c) for c in col).strip() for col in multiindex.values]
         # multiindex.name = compact_name
     return multiindex
 
 
-def write(data, filename, compression='brotli'):
+def write(data, filename, compression='brotli', sep='/'):
     """
-    write data to parquet
+    Write data to parquet.
+
+    Based on :meth:`pandas.DataFrame.to_parquet` to write the file.
+
+    .. Important::
+        To overcome the disability to write multiindices in the parquet file, the multiindices get converted as string
+        and separated with the character defined by ``sep`` (default: ``'/'``)
 
     Args:
         data (pandas.DataFrame):
         filename (str): path to resulting file
-        compression (str):
+        compression (str): Used compression. See :meth:`pandas.DataFrame.to_parquet`
+        sep (str): Character used to separate multiindex labels in the parquet file. (default: ``'/'``)
     """
     filename = _check_name(filename)
     if isinstance(data, Series):
@@ -64,13 +71,13 @@ def write(data, filename, compression='brotli'):
     else:
         df = data.copy()
 
-    df.index = _multiindex_to_index(df.index)
-    df.columns = _multiindex_to_index(df.columns)
+    df.index = _multiindex_to_index(df.index, sep=sep)
+    df.columns = _multiindex_to_index(df.columns, sep=sep)
 
     df.to_parquet(filename, compression=compression)
 
 
-def _index_to_multiindex(index):
+def _index_to_multiindex(index, sep='/'):
     """
 
     Args:
@@ -79,27 +86,34 @@ def _index_to_multiindex(index):
     Returns:
         pandas.MultiIndex: new index with multiple levels
     """
-    if (index.dtype == np.object) and index.str.contains('/').all():
+    if (index.dtype == np.object) and index.str.contains(sep).all():
         # old_name = index.name
-        index = MultiIndex.from_tuples([col.split('/') for col in index])
+        index = MultiIndex.from_tuples([col.split(sep) for col in index])
         # if isinstance(old_name, str):
         #     new_names = old_name.split('/')
         #     index.names = new_names
     return index
 
 
-def read(filename):
+def read(filename, sep='/'):
     """
-    read parquet file
+    Read parquet file.
+
+    Based on :func:`pandas.read_parquet` to write the file.
+
+    .. Important::
+        To overcome the disability to write multiindices in the parquet file, the multiindices get converted as string
+        and separated with the character defined by ``sep`` (default: ``'/'``)
 
     Args:
         filename (str): path to parquet file
+        sep (str): Character used to separate multiindex labels in the parquet file. (default: ``'/'``)
 
     Returns:
         pandas.DataFrame: data
     """
     filename = _check_name(filename)
     df = read_parquet(filename)
-    df.columns = _index_to_multiindex(df.columns)
-    df.index = _index_to_multiindex(df.index)
+    df.columns = _index_to_multiindex(df.columns, sep=sep)
+    df.index = _index_to_multiindex(df.index, sep=sep)
     return df

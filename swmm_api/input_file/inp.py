@@ -95,47 +95,70 @@ class SwmmInput(CustomDict):
         return inp
 
     def force_convert_all(self):
-        _ = [self[sec] for sec in self]
+        for key in self:
+            self._convert_section(key)
 
     def __getitem__(self, key):
         # if section not in inp-data, create an empty section
         if key not in self:
             self._data[key] = self._converter[key].create_section()
-
-        # if section is a string (raw string from the .inp-file) convert section first
-        if isinstance(self._data[key], str):
-            self._data[key] = convert_section(key, self._data[key], self._converter)
+        else:
+            # if section is a string (raw string from the .inp-file) convert section first
+            self._convert_section(key)
 
         return self._data.__getitem__(key)
 
     def __setitem__(self, key, item):
         super().__setitem__(key, item)
-        # super().__setattr__(key, item)
-        # self._data.__setitem__(key, item)
-        # if key == OPTIONS:
-        #     self.set_default_infiltration_from_options()
+        # if a new section is added, make the section aware in which inp file it is.
         if hasattr(self._data[key], 'set_parent_inp'):
             self._data[key].set_parent_inp(self)
 
-    def __delattr__(self, item):
+    def __delattr__(self, attribute_name):
         """delete section"""
-        if item in SECTION_TYPES:
-            # print('delete section')
-            del self._data[item]
-        else:
-            # print('delete attribute')
-            super().__delattr__(item)
+        # if the attribute_name is a known section-key then only delete the data (not the attribute)
+        if attribute_name in self._data.keys():
+            del self._data[attribute_name]
+        else:  # else delete the attribute
+            super().__delattr__(attribute_name)
+
+    def _convert_section(self, key):
+        # if section is a string (raw string from the .inp-file) convert section first
+        if isinstance(self._data[key], str):
+            self._data[key] = convert_section(key, self._data[key], self._converter)
+
+            if hasattr(self._data[key], 'set_parent_inp'):
+                self._data[key].set_parent_inp(self)
 
     def set_default_infiltration_from_options(self):
+        """Set the default infiltration class based on the OPTIONS section."""
         if OPTIONS in self \
                 and 'INFILTRATION' in self[OPTIONS] \
                 and isinstance(self[OPTIONS], (dict, OptionSection, InpSectionGeneric)):
             self.set_infiltration_method(INFILTRATION_DICT.get(self[OPTIONS]['INFILTRATION']))
 
     def set_infiltration_method(self, infiltration_class):
+        """
+        Set the default infiltration class.
+
+        Args:
+            infiltration_class: One of
+                :class:`~swmm_api.input_file.sections.InfiltrationCurve`,
+                :class:`~swmm_api.input_file.sections.NumberInfiltrationGreenAmpt`,
+                :class:`~swmm_api.input_file.sections.InfiltrationHorton`
+        """
         self._converter[INFILTRATION] = infiltration_class
 
-    def get_section_headers(self, custom_sections_order=None):
+    def _get_section_headers(self, custom_sections_order=None):
+        """
+        Get list of section keys
+
+        Args:
+            custom_sections_order:
+
+        Returns:
+
+        """
         if custom_sections_order is None:
             custom_sections_order = self._original_section_order
 
@@ -162,7 +185,7 @@ class SwmmInput(CustomDict):
             str: string of input file text
         """
         f = ''
-        for head in self.get_section_headers(custom_sections_order):
+        for head in self._get_section_headers(custom_sections_order):
             f += head_to_str(head)
             f += section_to_string(self._data[head], fast=fast, sort_objects_alphabetical=sort_objects_alphabetical)
         return f
@@ -184,7 +207,7 @@ class SwmmInput(CustomDict):
                 file. line per line has an advantage for big files (> 1 GB) and uses less memory (RAM).
         """
         with open(filename, 'w', encoding=encoding) as f:
-            for head in self.get_section_headers(custom_sections_order):
+            for head in self._get_section_headers(custom_sections_order):
                 f.write(head_to_str(head))
                 if per_line:
                     for line in iter_section_lines(self._data[head],
@@ -196,7 +219,7 @@ class SwmmInput(CustomDict):
         return filename
 
     def print_string(self, custom_sections_order=None):
-        for head in self.get_section_headers(custom_sections_order):
+        for head in self._get_section_headers(custom_sections_order):
             print(head_to_str(head))
             for line in iter_section_lines(self._data[head], sort_objects_alphabetical=False):
                 print(line)
