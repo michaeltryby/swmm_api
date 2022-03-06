@@ -968,5 +968,8 @@ def read_rpt_file(filename):
 
     Returns:
         SwmmReport: report file object
+
+    See Also:
+        :meth:`SwmmReport.__init__` : Equal functionality.
     """
     return SwmmReport(filename)

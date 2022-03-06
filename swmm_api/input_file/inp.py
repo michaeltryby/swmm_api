@@ -151,13 +151,13 @@ class SwmmInput(CustomDict):
 
     def _get_section_headers(self, custom_sections_order=None):
         """
-        Get list of section keys
+        Get list of section keys/headers/labels.
 
         Args:
-            custom_sections_order:
+            custom_sections_order (list): Custom list for section sorting. (optional)
 
         Returns:
-
+            list: sorted section-headers based on given order
         """
         if custom_sections_order is None:
             custom_sections_order = self._original_section_order
@@ -172,7 +172,7 @@ class SwmmInput(CustomDict):
 
     def to_string(self, fast=True, custom_sections_order=None, sort_objects_alphabetical=False):
         """
-        create the string of a new ``.inp``-file
+        Convert the inp-data to a ``.inp``-file-string.
 
         Args:
             fast (bool): don't use any formatting else format as table
@@ -193,7 +193,7 @@ class SwmmInput(CustomDict):
     def write_file(self, filename, fast=True, encoding='iso-8859-1', custom_sections_order=None,
                    sort_objects_alphabetical=False, per_line=False):
         """
-        create/write a new ``.inp``-file
+        Write a new ``.inp``-file.
 
         Args:
             filename (str): path/filename of created ``.inp``-file
@@ -226,13 +226,13 @@ class SwmmInput(CustomDict):
 
     def check_for_section(self, obj):
         """
-        check if a section is in the inp-data, and create it if not present
+        Check if a section is in the inp-data, and create it if not present.
 
         Args:
             obj (BaseSectionObject or InpSectionGeneric): section object
 
         Returns:
-            swmm_api.input_file.helpers.InpSection or swmm_api.input_file.helpers.InpSectionGeneric: section of inp
+            swmm_api.input_file.helpers.InpSection | swmm_api.input_file.helpers.InpSectionGeneric: section of inp
         """
         if hasattr(obj, '_section_label'):
             sec = obj._section_label
@@ -279,6 +279,17 @@ class SwmmInput(CustomDict):
         """
         for obj in items:
             self.add_obj(obj)
+
+    @property
+    def TITLE(self):
+        """
+        TITLE Section
+
+        Returns:
+            TitleSection: TITLE Section
+        """
+        if TITLE in self:
+            return self[TITLE]
 
     @property
     def OPTIONS(self):
@@ -834,9 +845,9 @@ class SwmmInput(CustomDict):
 
 def read_inp_file(filename, custom_converter=None, force_ignore_case=False, encoding='iso-8859-1'):
     """
-    read ``.inp``-file and convert the sections in pythonic objects
+    Read ``.inp``-file and convert the sections in pythonic objects.
 
-    the sections will be converted when used
+    The sections will be converted when used.
 
     Args:
         filename (str): path/filename to .inp file
@@ -846,6 +857,9 @@ def read_inp_file(filename, custom_converter=None, force_ignore_case=False, enco
 
     Returns:
         SwmmInput: dict-like data of the sections in the ``.inp``-file
+
+    See Also:
+        :meth:`SwmmInput.read_file` : Equal functionality.
     """
     return SwmmInput.read_file(filename, custom_converter=custom_converter, force_ignore_case=force_ignore_case,
                                encoding=encoding)

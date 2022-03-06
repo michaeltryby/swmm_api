@@ -280,6 +280,9 @@ def read_out_file(filename):
 
     Returns:
         SwmmOutput: output file object
+
+    See Also:
+        :meth:`SwmmOutput.__init__` : Equal functionality.
     """
     return SwmmOutput(filename)
 
