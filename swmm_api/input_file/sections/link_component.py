@@ -4,7 +4,7 @@ from numpy import NaN, isnan
 from pandas import DataFrame
 
 from ._identifiers import IDENTIFIERS
-from ..helpers import BaseSectionObject
+from ..helpers import BaseSectionObject, InpSectionGeo
 from .._type_converter import to_bool, GIS_FLOAT_FORMAT
 from ..section_labels import XSECTIONS, LOSSES, VERTICES
 
@@ -218,6 +218,7 @@ class Vertices(BaseSectionObject):
     _identifier =IDENTIFIERS.Link
     _table_inp_export = False
     _section_label = VERTICES
+    _section_class = InpSectionGeo
 
     def __init__(self, Link,  vertices):
         self.Link = str(Link)
@@ -256,3 +257,46 @@ class Vertices(BaseSectionObject):
             pandas.DataFrame: section as table
         """
         return DataFrame.from_records(self.vertices, columns=['x', 'y'])
+
+    @property
+    def geo(self):
+        """
+        get the shapely representation for the object (LineString).
+
+        Returns:
+            shapely.geometry.LineString: LineString object for the vertices.
+        """
+        import shapely.geometry as sh
+        return sh.LineString(self.vertices)
+
+    @classmethod
+    def create_section_from_geoseries(cls, data) :
+        """
+        create a VERTICES inp-file section for a geopandas.GeoSeries
+
+        Args:
+            data (geopandas.GeoSeries): geopandas.GeoSeries of coordinates
+
+        Returns:
+            InpSectionGeo: VERTICES inp-file section
+        """
+        # geometry mit MultiLineString deswegen v[0] mit ersten und einzigen linestring zu verwenden
+        s = cls.create_section()
+        # s.update({i: Vertices(i, v) for i, v in zip(data.index, map(lambda i: list(i.coords), data.values))})
+        # s.add_multiple(cls(i, list(v.coords)) for i, v in data.to_dict().items())
+        s.add_multiple(cls.from_shapely(i, v) for i, v in data.items())
+        return s
+
+    @classmethod
+    def from_shapely(cls, Link, line):
+        """
+        Create a Vertices object with a shapely LineString
+
+        Args:
+            Link (str): label of the link
+            line (shapely.geometry.LineString):
+
+        Returns:
+            Vertices: Vertices object
+        """
+        return cls(Link, list(line.coords))

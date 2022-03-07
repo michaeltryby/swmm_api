@@ -375,7 +375,7 @@ class SwmmInput(CustomDict):
         COORDINATES section
 
         Returns:
-            dict[str, Coordinate | CoordinateGeo] | InpSection: Coordinates in INP
+            dict[str, Coordinate] | InpSectionGeo: Coordinates in INP
         """
         if COORDINATES in self:
             return self[COORDINATES]
@@ -386,7 +386,7 @@ class SwmmInput(CustomDict):
         VERTICES section
 
         Returns:
-            dict[str, Vertices] | InpSection: Vertices section
+            dict[str, Vertices] | InpSectionGeo: Vertices section
         """
         if VERTICES in self:
             return self[VERTICES]
@@ -397,7 +397,7 @@ class SwmmInput(CustomDict):
         POLYGONS section
 
         Returns:
-            dict[str, Polygon] | InpSection: Polygon section
+            dict[str, Polygon] | InpSectionGeo: Polygon section
         """
         if POLYGONS in self:
             return self[POLYGONS]

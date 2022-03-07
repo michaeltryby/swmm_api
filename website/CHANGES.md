@@ -1,5 +1,15 @@
 # Changelog  
 
+## 0.2.0.19 (Mar ??, 2022)
+
+removed:
+- CoordinatesGeo (functionality included in Coordinate)
+- VerticesGeo (functionality included in Vertices)
+- PolygonGeo (functionality included in Polygon)
+- SwmmInputGeo (functionality included in SwmmInput)
+
+An error will be raised when calling a geo-function and the proper packages are not installed.
+
 ## 0.2.0.18.3 (Mar 01, 2022)
 
 Minor fixes

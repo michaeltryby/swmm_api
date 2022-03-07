@@ -515,6 +515,64 @@ class InpSection(CustomDict):
         return new
 
 
+class InpSectionGeo(InpSection):
+    """child class of :class:`~swmm_api.input_file.helpers.InpSection`. See parent class for all functions."""
+    def __init__(self, section_object, crs="EPSG:32633"):
+        """
+        create a section for ``.inp``-file with geo-objects (i.e. nodes, links, subcatchments, raingages, ...)
+
+        Args:
+            section_object (BaseSectionObject-like): object class which is stored in this section.
+                This information is used to set the index of the section and
+                to decide if the section can be exported (converted to a string) as a table.
+            crs: Coordinate Reference System of the geometry objects.
+                Can be anything accepted by :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+                such as an authority string (eg “EPSG:32633”) or a WKT string.
+        """
+        InpSection.__init__(self, section_object)
+        self._crs = crs
+
+    def set_crs(self, crs):
+        """
+        Set the Coordinate Reference System (CRS) of a geo-section.
+
+        Notes:
+            The underlying geometries are not transformed to this CRS.
+
+        Args:
+            crs: Coordinate Reference System of the geometry objects.
+                Can be anything accepted by :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+                such as an authority string (eg “EPSG:32633”) or a WKT string.
+        """
+        self._crs = crs
+
+    @property
+    def geo_series(self):
+        """
+        Get a geopandas.GeoSeries representation for the geo-section.
+        This function sets the object default crs.
+
+        Returns:
+            geopandas.GeoSeries: geo-series of the section-data
+        """
+        return self.get_geo_series(self._crs)
+
+    def get_geo_series(self, crs):
+        """
+        get a geopandas.GeoSeries representation for the geo-section using a custom crs.
+
+        Args:
+            crs: Coordinate Reference System of the geometry objects.
+                Can be anything accepted by :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+                such as an authority string (eg “EPSG:32633”) or a WKT string.
+
+        Returns:
+            geopandas.GeoSeries: geo-series of the section-data
+        """
+        from geopandas import GeoSeries
+        return GeoSeries({label: item.geo for label, item in self.items()}, crs=crs, name='geometry')
+
+
 def split_line_with_quotes(line):
     if isinstance(line, (list, tuple)):
         line = ' '.join(line)

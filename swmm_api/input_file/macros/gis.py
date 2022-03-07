@@ -5,7 +5,6 @@ from numpy import NaN
 from pandas import MultiIndex
 from tqdm.auto import tqdm
 
-from .filter import filter_nodes, filter_links
 from .geo import complete_vertices, simplify_vertices, reduce_vertices
 from .tags import get_node_tags, get_link_tags, get_subcatchment_tags
 from ..inp import SwmmInput
@@ -13,8 +12,6 @@ from ..section_labels import *
 from ..section_lists import LINK_SECTIONS, NODE_SECTIONS
 from ..section_types import SECTION_TYPES
 from ..sections import Tag
-from ..sections.map_geodata import (add_geo_support, InpSectionGeo, convert_section_to_geosection,
-                                    geo_section_converter, CoordinateGeo, VerticesGeo, PolygonGeo, )
 
 """
 {'AeronavFAA': 'r',
@@ -44,6 +41,24 @@ from ..sections.map_geodata import (add_geo_support, InpSectionGeo, convert_sect
 """
 
 
+def set_crs(inp, crs="EPSG:32633"):
+    """
+    add geo-support to the inp-data
+
+    Warnings:
+        only for `VERTICES`, `COORDINATES`, `POLYGONS` sections
+
+    Args:
+        inp:
+        crs: Coordinate Reference System of the geometry objects.
+                Can be anything accepted by :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+                such as an authority string (eg “EPSG:32633”) or a WKT string.
+    """
+    for sec in [VERTICES, COORDINATES, POLYGONS]:
+        if sec in inp:
+            inp[sec].set_crs(crs=crs)
+
+
 def convert_inp_to_geo_package(inp_fn, gpkg_fn=None, driver='GPKG', label_sep='.', crs="EPSG:32633"):
     """
     convert inp file data from an .inp-file to a GIS database
@@ -61,7 +76,7 @@ def convert_inp_to_geo_package(inp_fn, gpkg_fn=None, driver='GPKG', label_sep='.
     if gpkg_fn is None:
         gpkg_fn = inp_fn.replace('.inp', '.gpkg')
 
-    inp = SwmmInput.read_file(inp_fn, custom_converter=geo_section_converter)
+    inp = SwmmInput.read_file(inp_fn)
 
     write_geo_package(inp, gpkg_fn, driver=driver, label_sep=label_sep, crs=crs)
 
@@ -85,7 +100,7 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
     todo_sections = NODE_SECTIONS + LINK_SECTIONS + [SUBCATCHMENTS]
     print(*todo_sections, sep=' | ')
 
-    add_geo_support(inp, crs=crs)
+    set_crs(inp, crs=crs)
 
     # ---------------------------------
     t0 = time.perf_counter()
@@ -183,26 +198,6 @@ def get_subcatchment_connectors(inp):
     return gs
 
 
-def problems_to_gis(inp, gpkg_fn, nodes=None, links=None, **kwargs):
-    """
-    filter inp data by nodes and links and write objects to a gis database
-
-    Args:
-        inp:
-        gpkg_fn:
-        nodes:
-        links:
-        **kwargs:
-    """
-    if nodes is not None:
-        inp = filter_nodes(inp, nodes)
-
-    if links is not None:
-        inp = filter_links(inp, links)
-
-    write_geo_package(inp, gpkg_fn, **kwargs)
-
-
 def links_geo_data_frame(inp, label_sep='.'):
     """
     convert link data in inp file to geo-data-frame
@@ -217,8 +212,6 @@ def links_geo_data_frame(inp, label_sep='.'):
     """
     from geopandas import GeoDataFrame
 
-    if (VERTICES in inp) and not isinstance(inp[VERTICES], InpSectionGeo):
-        inp[VERTICES] = convert_section_to_geosection(inp[VERTICES])
     links_tags = get_link_tags(inp)
     complete_vertices(inp)
     res = None
@@ -255,8 +248,6 @@ def nodes_geo_data_frame(inp, label_sep='.'):
     """
     from geopandas import GeoDataFrame
 
-    if (COORDINATES in inp) and not isinstance(inp[COORDINATES], InpSectionGeo):
-        inp[COORDINATES] = convert_section_to_geosection(inp[COORDINATES])
     nodes_tags = get_node_tags(inp)
     res = None
     for sec in NODE_SECTIONS:
@@ -299,14 +290,6 @@ def gpkg_to_swmm(fn, label_sep='.'):
 
     inp = SwmmInput()
 
-    SECTION_TYPES.update({COORDINATES: CoordinateGeo,
-                          VERTICES   : VerticesGeo,
-                          POLYGONS   : PolygonGeo})
-
-    def _check_sec(sec):
-        if sec not in inp:
-            inp[sec] = SECTION_TYPES[sec].create_section()
-
     for sec in NODE_SECTIONS:
         if sec not in fiona.listlayers(fn):
             continue
@@ -316,7 +299,6 @@ def gpkg_to_swmm(fn, label_sep='.'):
         inp[sec] = SECTION_TYPES[sec].create_section(gdf[cols].reset_index().fillna(NaN).values)
 
         for sub_sec in [DWF, INFLOWS]:
-            _check_sec(sub_sec)
             cols = gdf.columns[gdf.columns.str.startswith(sub_sec)]
             gdf_sub = gdf[cols].copy()
             gdf_sub.columns = MultiIndex.from_tuples([col.split(label_sep) for col in gdf_sub.columns])
@@ -324,12 +306,10 @@ def gpkg_to_swmm(fn, label_sep='.'):
             gdf_sub = gdf_sub.stack(1)[cols_order]
             inp[sub_sec].update(SECTION_TYPES[sub_sec].create_section(gdf_sub.reset_index().values))
 
-        _check_sec(COORDINATES)
         inp[COORDINATES].update(SECTION_TYPES[COORDINATES].create_section_from_geoseries(gdf.geometry))
 
         tags = gdf[['tag']].copy()
         tags['type'] = Tag.TYPES.Node
-        _check_sec(TAGS)
         inp[TAGS].update(SECTION_TYPES[TAGS].create_section(tags[['type', 'tag']].reset_index().values))
 
     for i in inp[STORAGE]:
@@ -347,7 +327,6 @@ def gpkg_to_swmm(fn, label_sep='.'):
         inp[sec] = SECTION_TYPES[sec].create_section(gdf[cols].reset_index().fillna(NaN).values)
 
         for sub_sec in [XSECTIONS, LOSSES]:
-            _check_sec(sub_sec)
             cols = gdf.columns[gdf.columns.str.startswith(sub_sec)].to_list()
             if cols:
                 if sub_sec == XSECTIONS:
@@ -357,12 +336,10 @@ def gpkg_to_swmm(fn, label_sep='.'):
                     gdf_sub[f'{LOSSES}{label_sep}FlapGate'] = gdf_sub[f'{LOSSES}{label_sep}FlapGate'] == 1
                 inp[sub_sec].update(SECTION_TYPES[sub_sec].create_section(gdf_sub.reset_index().values))
 
-        _check_sec(VERTICES)
         inp[VERTICES].update(SECTION_TYPES[VERTICES].create_section_from_geoseries(gdf.geometry))
 
         tags = gdf[['tag']].copy()
         tags['type'] = Tag.TYPES.Link
-        _check_sec(TAGS)
         inp[TAGS].update(SECTION_TYPES[TAGS].create_section(tags[['type', 'tag']].reset_index().values))
 
     if OUTLETS in inp:
@@ -397,6 +374,5 @@ def update_length(inp):
     .. Important::
         Works inplace.
     """
-    inp[VERTICES] = convert_section_to_geosection(inp[VERTICES], crs="EPSG:32633")
     for c in inp.CONDUITS.values():
         c.Length = inp.VERTICES[c.Name].geo.length

@@ -1,8 +1,10 @@
+import warnings
+
 from numpy import NaN
 from pandas import DataFrame
 
 from .._type_converter import GIS_FLOAT_FORMAT
-from ..helpers import BaseSectionObject, SWMM_VERSION
+from ..helpers import BaseSectionObject, SWMM_VERSION, InpSectionGeo
 from ._identifiers import IDENTIFIERS
 from ..section_labels import SUBCATCHMENTS, SUBAREAS, INFILTRATION, POLYGONS, LOADINGS, COVERAGES, GWF, GROUNDWATER
 
@@ -385,6 +387,7 @@ class Polygon(BaseSectionObject):
     _identifier = IDENTIFIERS.Subcatch
     _table_inp_export = False
     _section_label = POLYGONS
+    _section_class = InpSectionGeo
 
     def __init__(self, Subcatch, polygon):
         self.Subcatch = str(Subcatch)
@@ -416,6 +419,65 @@ class Polygon(BaseSectionObject):
 
     def to_inp_line(self):
         return '\n'.join([f'{self.Subcatch}  {x:{GIS_FLOAT_FORMAT}} {y:{GIS_FLOAT_FORMAT}}' for x, y in self.polygon])
+
+    @property
+    def geo(self):
+        """
+        get the shapely representation for the object (Polygon).
+
+        Returns:
+            shapely.geometry.Polygon: LineString object for the polygon.
+        """
+        import shapely.geometry as sh
+        return sh.Polygon(self.polygon)
+
+    @classmethod
+    def create_section_from_geoseries(cls, data):
+        """
+        create a POLYGONS inp-file section for a geopandas.GeoSeries
+
+        Warnings:
+            Only uses the exterior coordinates and ignoring all interiors.
+
+        Args:
+            data (geopandas.GeoSeries): geopandas.GeoSeries of polygons
+
+        Returns:
+            InpSectionGeo: POLYGONS inp-file section
+        """
+        s = cls.create_section()
+        has_interiors = data.interiors.apply(len) > 0
+        if has_interiors.any():
+            warnings.warn('Converting GeoSeries with Interiors(Holes) to POLYGON inp-section will ignore this interiors!')
+        # s.add_multiple(cls(i, [xy[0:2] for xy in list(p.coords)]) for i, p in data.exterior.iteritems())
+        s.add_multiple(cls.from_shapely(i, p) for i, p in data.items())
+        return s
+
+    @classmethod
+    def from_shapely(cls, Subcatch, polygon):
+        """
+        Create a Polygon object with a shapely Polygon.
+
+        Args:
+            Subcatch (str): Name of the subcatchment
+            polygon (shapely.geometry.Polygon):
+
+        Returns:
+            Polygon: Polygon object
+        """
+        return cls(Subcatch, cls.convert_shapely(polygon))
+
+    @staticmethod
+    def convert_shapely(polygon):
+        """
+        Convert a shapely polygon to a coordinate-pair-list.
+        Args:
+            polygon (shapely.geometry.Polygon):
+
+        Returns:
+            list[list[float,float]]: list of coordinate pairs of the polygon.
+        """
+        return [xy[0:2] for xy in list(polygon.exterior.coords)]
 
 
 class Loading(BaseSectionObject):

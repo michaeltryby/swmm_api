@@ -2,7 +2,7 @@ from .collection import links_dict
 from .macros import find_link
 from ..misc.curve_simplification import _vec2d_dist, ramer_douglas
 from ..sections import Vertices, Coordinate, Polygon
-from ..section_labels import COORDINATES, VERTICES, POLYGONS
+from ..section_labels import COORDINATES, VERTICES, POLYGONS, CONDUITS
 
 
 def transform_coordinates(inp, from_proj='epsg:31256', to_proj='epsg:32633'):
@@ -113,6 +113,20 @@ def reduce_vertices(inp, node_range=0.25):
             inp[VERTICES][link_label].vertices = v
         else:
             del inp[VERTICES][link_label]
+
+
+def remove_coordinates_from_vertices(inp):
+    # SNIPPET ?!?
+    new_vertices_section = {}
+    for link in inp[VERTICES]:  # type: str
+        conduit = inp[CONDUITS][link]  # type: Conduit
+        new_vertices = list()
+        # n1 = inp[COORDINATES][conduit.FromNode]
+        new_vertices.append(inp[COORDINATES][conduit.FromNode])
+        new_vertices += inp[VERTICES][link].vertices
+        new_vertices.append(inp[COORDINATES][conduit.ToNode])
+        new_vertices_section[link] = new_vertices
+    return new_vertices_section
 
 
 def simplify_link_vertices(vertices, dist=1.):

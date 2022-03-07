@@ -2,7 +2,7 @@ from numpy import NaN, isnan
 
 from ._identifiers import IDENTIFIERS
 from .._type_converter import convert_string, GIS_FLOAT_FORMAT
-from ..helpers import BaseSectionObject
+from ..helpers import BaseSectionObject, InpSectionGeo
 from ..section_labels import DWF, INFLOWS, COORDINATES, RDII, TREATMENT
 
 
@@ -190,6 +190,7 @@ class Coordinate(BaseSectionObject):
     """
     _identifier = IDENTIFIERS.Node
     _section_label = COORDINATES
+    _section_class = InpSectionGeo
 
     def __init__(self, Node, x, y):
         self.Node = str(Node)
@@ -203,6 +204,44 @@ class Coordinate(BaseSectionObject):
     def to_inp_line(self):
         # separate function to keep accuracy
         return f'{self.Node} {self.x:{GIS_FLOAT_FORMAT}} {self.y:{GIS_FLOAT_FORMAT}}'
+
+    @property
+    def geo(self):
+        """
+        get the shapely representation for the object (Point).
+
+        Returns:
+            shapely.geometry.Point: point object for the coordinates.
+        """
+        import shapely.geometry as sh
+        return sh.Point(self.point)
+
+    @classmethod
+    def create_section_from_geoseries(cls, data):
+        """
+        create a COORDINATES inp-file section for a geopandas.GeoSeries
+
+        Args:
+            data (geopandas.GeoSeries): geopandas.GeoSeries of coordinates
+
+        Returns:
+            InpSectionGeo: COORDINATES inp-file section
+        """
+        return cls.create_section(zip(data.index, data.x, data.y))
+
+    @classmethod
+    def from_shapely(cls, Node, point):
+        """
+        Create a Coordinate object with a shapely Point
+
+        Args:
+            Node (str): label of the node
+            point (shapely.geometry.Point):
+
+        Returns:
+            Coordinate: Coordinate object
+        """
+        return cls(Node, point.x, point.y)
 
 
 class RainfallDependentInfiltrationInflow(BaseSectionObject):

@@ -118,10 +118,9 @@ see [examples/rpt_file_reader.ipynb](https://gitlab.com/markuspichler/swmm_api/-
 
 ```python
 from swmm_api import SwmmInput
-from swmm_api.input_file.sections.map_geodata import geo_section_converter
 from swmm_api.input_file.macros.gis import write_geo_package, gpkg_to_swmm
 
-inp = SwmmInput.read_file('inputfile.inp', custom_converter=geo_section_converter)
+inp = SwmmInput.read_file('inputfile.inp')
 
 coords = inp.COORDINATES.geo_series  # type: geoandas.GeoSeries with points for all nodes
 vertices = inp.VERTICES.geo_series  # type: geoandas.GeoSeries with lines for all links
