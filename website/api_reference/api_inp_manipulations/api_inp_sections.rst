@@ -119,18 +119,3 @@ LID Sections
 
 
 .. currentmodule:: swmm_api.input_file.sections.map_geodata
-
-Geo Data Sections
-^^^^^^^^^^^^^^^^^
-.. autosummary::
-    :toctree: inp_sections/
-
-    CoordinateGeo
-    VerticesGeo
-    PolygonGeo
-    InpSectionGeo
-    add_geo_support
-    convert_section_to_geosection
-    remove_coordinates_from_vertices
-    section_to_geopandas
-    SwmmInputGeo

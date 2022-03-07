@@ -124,12 +124,12 @@ GIS
 .. autosummary::
     :toctree: macros/
 
+    set_crs
     convert_inp_to_geo_package
     get_subcatchment_connectors
     gpkg_to_swmm
     links_geo_data_frame
     nodes_geo_data_frame
-    problems_to_gis
     update_length
     write_geo_package
 
