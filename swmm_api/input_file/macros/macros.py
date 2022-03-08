@@ -1,3 +1,4 @@
+import os
 from statistics import mean
 
 import pandas as pd
@@ -8,6 +9,7 @@ from .tags import get_subcatchment_tags, get_node_tags
 from ..inp import SwmmInput
 from ..section_labels import *
 from ..section_lists import LINK_SECTIONS, NODE_SECTIONS
+from ..sections import TimeseriesFile
 from ..sections.link import _Link
 from ..sections.link_component import CrossSection
 
@@ -268,3 +270,31 @@ def delete_sections(inp, section_list):
     for s in section_list:
         if s in inp:
             del inp[s]
+
+
+def set_absolute_file_paths(inp, path_data_base):
+    """
+
+    Args:
+        inp (SwmmInput):
+        path_data_base:
+
+    Returns:
+
+    """
+    if FILES in inp:
+        pass  # ?
+
+    if RAINGAGES in inp:
+        for rg in inp.RAINGAGES.values():
+            if isinstance(rg.Filename, str):
+                rg.Filename = os.path.join(path_data_base, rg.Filename)
+
+    if TEMPERATURE in inp:
+        if 'FILE' in inp.TEMPERATURE:
+            inp.TEMPERATURE['FILE'] = os.path.join(path_data_base, inp.TEMPERATURE['FILE'])
+
+    if TIMESERIES in inp:
+        for ts in inp.TIMESERIES.values():
+            if isinstance(ts, TimeseriesFile):
+                ts.filename = os.path.join(path_data_base, ts.filename)

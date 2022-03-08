@@ -203,6 +203,7 @@ class Coordinate(BaseSectionObject):
 
     def to_inp_line(self):
         # separate function to keep accuracy
+        global GIS_FLOAT_FORMAT
         return f'{self.Node} {self.x:{GIS_FLOAT_FORMAT}} {self.y:{GIS_FLOAT_FORMAT}}'
 
     @property

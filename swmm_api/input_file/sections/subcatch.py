@@ -418,6 +418,7 @@ class Polygon(BaseSectionObject):
         return DataFrame.from_records(self.polygon, columns=['x', 'y'])
 
     def to_inp_line(self):
+        GIS_FLOAT_FORMAT = '0.1f'
         return '\n'.join([f'{self.Subcatch}  {x:{GIS_FLOAT_FORMAT}} {y:{GIS_FLOAT_FORMAT}}' for x, y in self.polygon])
 
     @property

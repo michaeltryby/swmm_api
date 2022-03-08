@@ -225,7 +225,7 @@ def convert_string(x) -> str:
             return s
 
 
-GIS_FLOAT_FORMAT = '0.03f'
+GIS_FLOAT_FORMAT = '0.3f'
 
 _SECTION_PATTERN = re.compile(r'^[ \t]*([^;\n]+)[ \t]*;?[^\n]*$', flags=re.M)
 

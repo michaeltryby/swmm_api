@@ -310,8 +310,9 @@ class SwmmInput(CustomDict):
         Returns:
             ReportSection: REPORT Section
         """
-        if REPORT in self:
-            return self[REPORT]
+        if REPORT not in self:
+            self[REPORT] = ReportSection()
+        return self[REPORT]
 
     @property
     def EVAPORATION(self):

@@ -17,7 +17,7 @@ try:
     warnings.filterwarnings('ignore', message='.*is incompatible with the GEOS version PyGEOS*')
 
     from .gis import (convert_inp_to_geo_package, write_geo_package, get_subcatchment_connectors,
-                      links_geo_data_frame, nodes_geo_data_frame, gpkg_to_swmm, update_length, problems_to_gis)
+                      links_geo_data_frame, nodes_geo_data_frame, gpkg_to_swmm, update_length, set_crs)
 except ImportError as e:
     print('Needed Packages: pyproj, fiona, geopandas, shapely')
     print(e)

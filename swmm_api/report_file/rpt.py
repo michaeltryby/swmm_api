@@ -99,6 +99,12 @@ class SwmmReport:
     def __repr__(self):
         return f'SwmmReport(file="{self._filename}")'
 
+    def summary(self):
+        print(repr(self), 'Headers:', *list(self._raw_parts.keys()), sep='\n  - ')
+        # self._pprint({
+        #
+        # })
+
     def _report_to_dict(self):
         """
         convert the report file into a dictionary depending on the different parts
@@ -541,7 +547,7 @@ class SwmmReport:
         """
         if self._outfall_loading_summary is None:
             p = self._get_converted_part('Outfall Loading Summary')
-            self._outfall_loading_summary = _part_to_frame(p.replace('Outfall Node', 'Outfall_Node '))
+            self._outfall_loading_summary = _part_to_frame(p.replace('Outfall Node', 'Outfall_Node'))
         return self._outfall_loading_summary
 
     @property

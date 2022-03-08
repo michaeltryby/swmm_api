@@ -13,13 +13,16 @@ from swmm_api.run import get_result_filenames, SWMMRunError
 def run(fn_inp):
     try:
         solver.swmm_run(fn_inp, *get_result_filenames(fn_inp))
+        print()
     except Exception as e:
         fn_rpt, fn_out = get_result_filenames(fn_inp)
         message = e.args[0] + '\n' + fn_inp
         if os.path.isfile(fn_rpt):
+            message += SwmmReport(fn_rpt).get_errors()
+
             with open(fn_rpt, 'r') as f:
                 rpt_content = f.read()
-            if 'ERROR' in rpt_content:
+            if 'ERROR' in rpt_content.upper():
                 message += rpt_content
         else:
             message += 'NO Report file created!!!'

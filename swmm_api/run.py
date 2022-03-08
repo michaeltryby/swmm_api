@@ -110,7 +110,7 @@ def check_swmm_errors(rpt, shell_output):
     if os.path.isfile(rpt):
         with open(rpt, 'r') as f:
             rpt_content = f.read()
-        if 'ERROR' in rpt_content:
+        if 'error' in rpt_content.lower():
             msgs['REPORT'] = rpt_content
     else:
         msgs['REPORT'] = 'NO Report file created!!!'
