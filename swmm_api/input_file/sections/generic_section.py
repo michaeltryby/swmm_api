@@ -1,5 +1,5 @@
 from .._type_converter import infer_type, type2str
-from ..helpers import InpSectionGeneric
+from ..helpers import InpSectionGeneric, SEP_INP
 from ..section_labels import TITLE, OPTIONS, REPORT, EVAPORATION, TEMPERATURE, MAP, FILES, ADJUSTMENTS, BACKDROP
 
 
@@ -44,7 +44,7 @@ class TitleSection(InpSectionGeneric):
 
     @classmethod
     def from_inp_lines(cls, lines):
-        return cls(lines)
+        return cls(lines.replace(SEP_INP, '').strip())
 
     def to_inp_lines(self, fast=False, sort_objects_alphabetical=False):
         return self.txt

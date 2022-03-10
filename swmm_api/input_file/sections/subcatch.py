@@ -25,18 +25,6 @@ class SubCatchment(BaseSectionObject):
     Format-PCSWMM:
         ``Name RainGage Outlet Area %Imperv Width %Slope CurbLen SnowPack``
 
-    Args:
-        Name (str): name assigned to subcatchment.
-        RainGage (str): name of rain gage in [RAINGAGES] section assigned to subcatchment. ``Rgage``
-        Outlet (str): name of node or subcatchment that receives runoff from subcatchment. ``OutID``
-        Area (float): area of subcatchment (acres or hectares).
-        Imperv (float): percent imperviousness of subcatchment. ``%Imperv``
-        Width (float): characteristic width of subcatchment (ft or meters).
-        Slope (float): subcatchment slope (percent).
-        CurbLen (float): total curb length (any length units). Use 0 if not applicable. ``Clength``
-        SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow
-        accumulation and melting over the subcatchment. ``Spack``
-
     Attributes:
         Name (str): name assigned to subcatchment.
         RainGage (str): name of rain gage in [RAINGAGES] section assigned to subcatchment. ``Rgage``
@@ -47,12 +35,27 @@ class SubCatchment(BaseSectionObject):
         Slope (float): subcatchment slope (percent).
         CurbLen (float): total curb length (any length units). Use 0 if not applicable. ``Clength``
         SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow
-        accumulation and melting over the subcatchment. ``Spack``
+            accumulation and melting over the subcatchment. ``Spack``
     """
     _identifier = IDENTIFIERS.Name
     _section_label = SUBCATCHMENTS
 
     def __init__(self, Name, RainGage, Outlet, Area, Imperv, Width, Slope, CurbLen=0, SnowPack=NaN):
+        """
+        SubCatchment object.
+
+        Args:
+            Name (str): name assigned to subcatchment.
+            RainGage (str): name of rain gage in [RAINGAGES] section assigned to subcatchment. ``Rgage``
+            Outlet (str): name of node or subcatchment that receives runoff from subcatchment. ``OutID``
+            Area (float): area of subcatchment (acres or hectares).
+            Imperv (float): percent imperviousness of subcatchment. ``%Imperv``
+            Width (float): characteristic width of subcatchment (ft or meters).
+            Slope (float): subcatchment slope (percent).
+            CurbLen (float): total curb length (any length units). Use 0 if not applicable. ``Clength``
+            SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow
+                accumulation and melting over the subcatchment. ``Spack``
+        """
         self.Name = str(Name)
         self.RainGage = str(RainGage)
         self.Outlet = str(Outlet)
@@ -81,21 +84,6 @@ class SubArea(BaseSectionObject):
     Format-PCSWMM:
         ``Subcatchment N-Imperv N-Perv S-Imperv S-Perv PctZero RouteTo PctRouted``
 
-    Args:
-        Subcatch (str): subcatchment name. ``Subcat``
-        N_Imperv (float): Manning's n for overland flow over the impervious sub-area. ``Nimp``
-        N_Perv (float): Manning's n for overland flow over the pervious sub-area. ``Nperv``
-        S_Imperv (float): depression storage for impervious sub-area (inches or mm). ``Simp``
-        S_Perv (float): depression storage for pervious sub-area (inches or mm). ``Sperv``
-        PctZero (float): percent of impervious area with no depression storage. ``%Zero``
-        RouteTo (str):
-
-            - ``IMPERVIOUS`` if pervious area runoff runs onto impervious area,
-            - ``PERVIOUS`` if impervious runoff runs onto pervious area,
-            - ``OUTLET`` if both areas drain to the subcatchment's outlet (default = ``OUTLET``).
-
-        PctRouted (float): percent of runoff routed from one type of area to another (default = 100). ``%Routed``
-
     Attributes:
         Subcatch (str): subcatchment name. ``Subcat``
         N_Imperv (float): Manning's n for overland flow over the impervious sub-area. ``Nimp``
@@ -122,6 +110,24 @@ class SubArea(BaseSectionObject):
 
     def __init__(self, Subcatch, N_Imperv, N_Perv, S_Imperv, S_Perv, PctZero, RouteTo=RoutToOption.OUTLET,
                  PctRouted=100):
+        """
+        SubArea object.
+
+        Args:
+            Subcatch (str): subcatchment name. ``Subcat``
+            N_Imperv (float): Manning's n for overland flow over the impervious sub-area. ``Nimp``
+            N_Perv (float): Manning's n for overland flow over the pervious sub-area. ``Nperv``
+            S_Imperv (float): depression storage for impervious sub-area (inches or mm). ``Simp``
+            S_Perv (float): depression storage for pervious sub-area (inches or mm). ``Sperv``
+            PctZero (float): percent of impervious area with no depression storage. ``%Zero``
+            RouteTo (str):
+
+                - ``IMPERVIOUS`` if pervious area runoff runs onto impervious area,
+                - ``PERVIOUS`` if impervious runoff runs onto pervious area,
+                - ``OUTLET`` if both areas drain to the subcatchment's outlet (default = ``OUTLET``).
+
+            PctRouted (float): percent of runoff routed from one type of area to another (default = 100). ``%Routed``
+        """
         self.Subcatch = str(Subcatch)
         self.N_Imperv = float(N_Imperv)
         self.N_Perv = float(N_Perv)
