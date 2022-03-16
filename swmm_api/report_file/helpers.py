@@ -54,7 +54,7 @@ def _remove_lines(part, title=True, empty=False, sep=False):
         str: converted part
     """
     lines = part.split('\n')
-    remove_lines = list()
+    remove_lines = []
     for no, line in enumerate(lines):
 
         if title:

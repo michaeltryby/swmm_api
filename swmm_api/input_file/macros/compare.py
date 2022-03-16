@@ -20,11 +20,11 @@ def compare_sections(s1, s2, precision=3):
     """
     i1 = set(s1.keys())
     i2 = set(s2.keys())
-    s_warnings = str()
-    not_in_1 = list()
-    not_in_2 = list()
+    s_warnings = ''
+    not_in_1 = []
+    not_in_2 = []
     n_equal = 0
-    not_equal = list()
+    not_equal = []
 
     for key in sorted(i1 | i2):
         if (key in i1) and (key in i2):
@@ -35,7 +35,7 @@ def compare_sections(s1, s2, precision=3):
                     if not isinstance(s1[key], BaseSectionObject):
                         not_equal.append(f'{key}: {s1[key]} != {s2[key]}')
                     else:
-                        diff = list()
+                        diff = []
                         for param in s1[key].to_dict_():
                             if not is_equal(s1[key][param], s2[key][param], precision=precision):
                                 diff.append(f'{param}=({s1[key][param]} != {s2[key][param]})')

@@ -226,7 +226,7 @@ class Vertices(BaseSectionObject):
 
     @classmethod
     def _convert_lines(cls, multi_line_args):
-        vertices = list()
+        vertices = []
         last = None
 
         for line in multi_line_args:

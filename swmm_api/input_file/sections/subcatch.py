@@ -401,7 +401,7 @@ class Polygon(BaseSectionObject):
 
     @classmethod
     def _convert_lines(cls, multi_line_args):
-        polygon = list()
+        polygon = []
         last = None
 
         for line in multi_line_args:

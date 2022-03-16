@@ -120,7 +120,7 @@ def remove_coordinates_from_vertices(inp):
     new_vertices_section = {}
     for link in inp[VERTICES]:  # type: str
         conduit = inp[CONDUITS][link]  # type: Conduit
-        new_vertices = list()
+        new_vertices = []
         # n1 = inp[COORDINATES][conduit.FromNode]
         new_vertices.append(inp[COORDINATES][conduit.FromNode])
         new_vertices += inp[VERTICES][link].vertices

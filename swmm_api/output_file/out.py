@@ -99,7 +99,7 @@ class SwmmOutput(SwmmOutExtract):
         Returns:
             list[list[str]]: multi-level column-names
         """
-        columns = list()
+        columns = []
         for kind in OBJECTS.LIST_:
             columns += list(product([kind], self.labels[kind], self.variables[kind]))
         return columns
@@ -223,7 +223,7 @@ class SwmmOutput(SwmmOutExtract):
             elif isinstance(i, list):
                 return [j for j in i if j in possibilities]
 
-        columns = list()
+        columns = []
         for k in _filter(kind, OBJECTS.LIST_):
             columns += list(product([k], _filter(label, self.labels[k]), _filter(variable, self.variables[k])))
         return columns

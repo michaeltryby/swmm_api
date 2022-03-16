@@ -115,7 +115,7 @@ def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
 
     keys = [COLS.STATION, COLS.INVERT_ELEV, COLS.CROWN_ELEV, COLS.GROUND_ELEV, COLS.WATER]
 
-    res = {k: list() for k in keys}
+    res = {k: [] for k in keys}
 
     def _update_res(*args):
         for k, v in zip(keys, args):
@@ -169,8 +169,8 @@ def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
 def get_water_level(inp, start_node, end_node, out, zero_node=None, absolute=True):
     nodes_depth = out.get_part('node', None, 'Depth_above_invert').mean().to_dict()
     nodes = nodes_dict(inp)
-    x_list = list()
-    water_level_list = list()
+    x_list = []
+    water_level_list = []
     stations_ = list(iter_over_inp(inp, start_node, end_node))
     stations = dict(stations_)
     sok = 0

@@ -116,7 +116,7 @@ def downstream_nodes(graph, node):
 
 def _downstream_nodes(graph: DiGraph, node: str, node_list=None) -> list:
     if node_list is None:
-        node_list = list()
+        node_list = []
     node_list.append(node)
     next_nodes = list(graph.successors(node))
     if next_nodes:
@@ -145,7 +145,7 @@ def upstream_nodes(graph, node):
 
 def _upstream_nodes(graph: DiGraph, node: str, node_list=None) -> list:
     if node_list is None:
-        node_list = list()
+        node_list = []
     node_list.append(node)
     next_nodes = list(graph.predecessors(node))
     if next_nodes:

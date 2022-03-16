@@ -210,7 +210,7 @@ class Pattern(BaseSectionObject):
 
     @classmethod
     def _convert_lines(cls, multi_line_args):
-        args = list()
+        args = []
         for line in multi_line_args:
             if line[1] in [cls.TYPES.MONTHLY, cls.TYPES.DAILY,
                            cls.TYPES.HOURLY, cls.TYPES.WEEKEND]:
@@ -453,7 +453,7 @@ class Transect(BaseSectionObject):
         self.modifier_meander = None
         self.set_modifiers(modifier_meander, modifier_stations, modifier_elevations)
 
-        self.station_elevations = list()
+        self.station_elevations = []
 
         if station_elevations is not None:
             for s in station_elevations:
@@ -871,14 +871,14 @@ class Control(BaseSectionObject):
 
     @classmethod
     def _convert_lines(cls, multi_line_args):
-        args = list()
+        args = []
         is_condition = False
         is_action = False
         for logic, *line in multi_line_args:
             if logic.upper() == cls.LOGIC.RULE:
                 if args:
                     yield cls(*args)
-                    args = list()
+                    args = []
                 args.append(line[0])
                 is_action = False
 
@@ -1038,7 +1038,7 @@ class Curve(BaseSectionObject):
     def _convert_lines(cls, multi_line_args):
         last = None
         Type = None
-        points = list()
+        points = []
         for name, *line in multi_line_args:
             remains = iter(line)
 
@@ -1048,7 +1048,7 @@ class Curve(BaseSectionObject):
                     # first return previous curve
                     yield cls(last, Type, points)
                 # reset variables
-                points = list()
+                points = []
                 last = name
                 Type = next(remains)
 
@@ -1136,14 +1136,14 @@ class Timeseries(BaseSectionObject):
 
     @classmethod
     def _convert_lines(cls, multi_line_args):
-        data = list()
+        data = []
         last = None
         last_date = None
 
         for name, *line in multi_line_args:
             # ---------------------------------
             if line[0].upper() == cls.TYPES.FILE:
-                yield TimeseriesFile(name, ' '.join(line[1:]))
+                yield TimeseriesFile(name, (' '.join(line[1:])).strip('"'))
                 last = name
 
             # ---------------------------------
@@ -1151,7 +1151,7 @@ class Timeseries(BaseSectionObject):
                 if name != last:
                     if last is not None:
                         yield TimeseriesData(last, data)
-                    data = list()
+                    data = []
                     last = name
                     last_date = None
 
@@ -1254,7 +1254,7 @@ class TimeseriesData(Timeseries):
         - Hours as float relative to simulation start time
         """
         date_time, values = zip(*self.data)
-        date_time_new = list()
+        date_time_new = []
         last_date = None
 
         # str_only: only for very long timeseries in the .inp-file.
@@ -1476,7 +1476,7 @@ class Hydrograph(BaseSectionObject):
         self.rain_gage = rain_gage
 
         if monthly_parameters is None:
-            self.monthly_parameters = list()
+            self.monthly_parameters = []
         else:
             self.monthly_parameters = monthly_parameters
 

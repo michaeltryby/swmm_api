@@ -36,9 +36,9 @@ def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None
             links = next_links_labels(graph, node_label) + previous_links_labels(graph, node_label)  # type: List[str]
             graph.remove_node(node_label)
         else:
-            links = list()
+            links = []
     else:
-        links = list()
+        links = []
         for section in LINK_SECTIONS:
             if section in inp:
                 links += list(inp[section].filter_keys([node_label], by='FromNode')) + \
@@ -145,8 +145,8 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
     if (LOSSES in inp) and (conduit.Name in inp[LOSSES]):
         loss = inp[LOSSES][conduit.Name]  # type: Loss
 
-    new_nodes = list()
-    new_links = list()
+    new_nodes = []
+    new_links = []
 
     x = dx
     last_node = from_node
@@ -225,7 +225,7 @@ def combine_vertices(inp: SwmmInput, label1, label2):
     else:
         vertices_class = inp[VERTICES]._section_object
 
-    new_vertices = list()
+    new_vertices = []
 
     if label1 in inp[VERTICES]:
         new_vertices += list(inp[VERTICES][label1].vertices)

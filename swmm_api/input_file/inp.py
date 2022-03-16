@@ -208,6 +208,8 @@ class SwmmInput(CustomDict):
         """
         with open(filename, 'w', encoding=encoding) as f:
             for head in self._get_section_headers(custom_sections_order):
+                if not self._data[head]:  # if section is empty
+                    continue
                 f.write(head_to_str(head))
                 if per_line:
                     for line in iter_section_lines(self._data[head],

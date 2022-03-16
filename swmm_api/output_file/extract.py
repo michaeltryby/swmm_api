@@ -160,7 +160,7 @@ class SwmmOutExtract(BinaryReader):
             self.model_properties[kind] = {}
             # ------
             # read the property labels per object type
-            property_labels = list()
+            property_labels = []
             for i in list(self._next(self._next(), flat=False)):
                 property_label = _PROPERTY_LABELS[i]
                 if property_label in property_labels:
@@ -244,11 +244,11 @@ class SwmmOutExtract(BinaryReader):
         n_nodes = len(self.labels[OBJECTS.NODE])
         n_links = len(self.labels[OBJECTS.LINK])
 
-        offset_list = list()
+        offset_list = []
         values = {}
 
         for kind, label, variable in columns:
-            values['/'.join([kind, label, variable])] = list()
+            values['/'.join([kind, label, variable])] = []
 
             index_kind = OBJECTS.LIST_.index(kind)
             index_variable = self.variables[kind].index(variable)
