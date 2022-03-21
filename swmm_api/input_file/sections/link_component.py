@@ -150,14 +150,6 @@ class Loss(BaseSectionObject):
         Only enter data for conduits that actually have minor losses, flap valves, or seepage
         losses.
 
-    Args:
-        Link (str): name of conduit ``Conduit``
-        Inlet (float): entrance minor head loss coefficient. ``Kentry``
-        Outlet (float): exit minor head loss coefficient. ``Kexit``
-        Average (float): average minor head loss coefficient across length of conduit. ``Kavg``
-        FlapGate (bool): YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO). ``Flap``
-        SeepageRate (float): Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.) ``Seepage``
-
     Attributes:
         Link (str): name of conduit ``Conduit``
         Inlet (float): entrance minor head loss coefficient. ``Kentry``
@@ -175,6 +167,17 @@ class Loss(BaseSectionObject):
         AVERAGE = 'Average'
 
     def __init__(self, Link, Inlet=0, Outlet=0, Average=0, FlapGate=False, SeepageRate=0):
+        """
+        Loss object.
+
+        Args:
+            Link (str): name of conduit ``Conduit``
+            Inlet (float): entrance minor head loss coefficient. ``Kentry``
+            Outlet (float): exit minor head loss coefficient. ``Kexit``
+            Average (float): average minor head loss coefficient across length of conduit. ``Kavg``
+            FlapGate (bool): YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO). ``Flap``
+            SeepageRate (float): Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.) ``Seepage``
+        """
         self.Link = str(Link)
         self.Inlet = float(Inlet)
         self.Outlet = float(Outlet)

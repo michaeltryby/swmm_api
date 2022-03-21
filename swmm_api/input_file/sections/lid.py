@@ -124,10 +124,7 @@ class LIDControl(BaseSectionObject):
         """
         self.Name = str(Name)
         self.lid_kind = lid_kind.upper()  # one of LID_TYPES
-        if layer_dict is None:
-            self.layer_dict = {}
-        else:
-            self.layer_dict = layer_dict
+        self.layer_dict = {} if layer_dict is None else layer_dict
 
     @classmethod
     def _convert_lines(cls, multi_line_args):

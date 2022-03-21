@@ -52,7 +52,9 @@ HYDROGRAPHS = 'HYDROGRAPHS'  # unit hydrograph data used to construct RDII inflo
 CURVES = 'CURVES'  # x-y tabular data referenced in other sections
 TIMESERIES = 'TIMESERIES'  # time series data referenced in other sections
 PATTERNS = 'PATTERNS'  # periodic multipliers referenced in other sections
-
+STREET = 'STREET'  # cross-section geometry for street conduits | new in SWMM 5.2
+INLETS = 'INLETS'  # design data for storm drain inlets | new in SWMM 5.2
+INLET_USAGE = 'INLET_USAGE'  # assignment of inlets to street and channel conduits | new in SWMM 5.2
 # ___________________________
 # NOT IN SWMM DOCU
 
