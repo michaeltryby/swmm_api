@@ -97,6 +97,9 @@ Other Object-based Sections
     Transect
     Control
     Curve
+    Street
+    Inlet
+    InletUsage
     Timeseries
     TimeseriesFile
     TimeseriesData
