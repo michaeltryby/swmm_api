@@ -33,7 +33,7 @@ def plot_map(inp):  # TODO
                     WEIRS,
                     OUTLETS]:
         if section in inp:
-            for link in inp[section].values():
+            for link in inp[section].values():  # type: swmm_api.input_file.sections.link._Link
                 if link.Name in inp[VERTICES]:
                     points = [_points(inp[COORDINATES][link.FromNode])] \
                              + inp[VERTICES][link.Name].vertices \

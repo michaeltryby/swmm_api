@@ -105,53 +105,56 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
     # ---------------------------------
     t0 = time.perf_counter()
     nodes_tags = get_node_tags(inp)
-    for sec in NODE_SECTIONS:
-        if sec in inp:
-            df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}')
+    if COORDINATES in inp:
+        for sec in NODE_SECTIONS:
+            if sec in inp:
+                df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}')
 
-            if sec == STORAGE:
-                df[f'{STORAGE}{label_sep}Curve'] = df[f'{STORAGE}{label_sep}Curve'].astype(str)
+                if sec == STORAGE:
+                    df[f'{STORAGE}{label_sep}Curve'] = df[f'{STORAGE}{label_sep}Curve'].astype(str)
 
-            for sub_sec in [DWF, INFLOWS]:
-                if sub_sec in inp:
-                    x = inp[sub_sec].frame.unstack(1)
-                    x.columns = [f'{label_sep}'.join([sub_sec, c[1], c[0]]) for c in x.columns]
-                    df = df.join(x)
+                for sub_sec in [DWF, INFLOWS]:
+                    if sub_sec in inp:
+                        x = inp[sub_sec].frame.unstack(1)
+                        x.columns = [f'{label_sep}'.join([sub_sec, c[1], c[0]]) for c in x.columns]
+                        df = df.join(x)
 
-            df = df.join(inp[COORDINATES].geo_series).join(nodes_tags)
+                df = df.join(inp[COORDINATES].geo_series).join(nodes_tags)
 
-            GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
-            print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
-        else:
+                GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
+                print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
+            else:
+                print(f'{f"-":^{len(sec)}s}', end=' | ')
+            t0 = time.perf_counter()
+
+        # ---------------------------------
+        links_tags = get_link_tags(inp)
+        complete_vertices(inp)
+        simplify_vertices(inp)
+        for sec in LINK_SECTIONS:
+            if sec in inp:
+                df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}').join(
+                    inp[XSECTIONS].frame.rename(columns=lambda c: f'{XSECTIONS}{label_sep}{c}'))
+
+                if sec == OUTLETS:
+                    df[f'{OUTLETS}{label_sep}Curve'] = df[f'{OUTLETS}{label_sep}Curve'].astype(str)
+
+                if LOSSES in inp:
+                    df = df.join(inp[LOSSES].frame.rename(columns=lambda c: f'{LOSSES}{label_sep}{c}'))
+
+                df = df.join(inp[VERTICES].geo_series).join(links_tags)
+
+                GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
+
+                print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
+            else:
+                print(f'{f"-":^{len(sec)}s}', end=' | ')
+            t0 = time.perf_counter()
+    else:
+        for sec in NODE_SECTIONS + LINK_SECTIONS:
             print(f'{f"-":^{len(sec)}s}', end=' | ')
-        t0 = time.perf_counter()
-
     # ---------------------------------
-    links_tags = get_link_tags(inp)
-    complete_vertices(inp)
-    simplify_vertices(inp)
-    for sec in LINK_SECTIONS:
-        if sec in inp:
-            df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}').join(
-                inp[XSECTIONS].frame.rename(columns=lambda c: f'{XSECTIONS}{label_sep}{c}'))
-
-            if sec == OUTLETS:
-                df[f'{OUTLETS}{label_sep}Curve'] = df[f'{OUTLETS}{label_sep}Curve'].astype(str)
-
-            if LOSSES in inp:
-                df = df.join(inp[LOSSES].frame.rename(columns=lambda c: f'{LOSSES}{label_sep}{c}'))
-
-            df = df.join(inp[VERTICES].geo_series).join(links_tags)
-
-            GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=sec)
-
-            print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(sec)}s}', end=' | ')
-        else:
-            print(f'{f"-":^{len(sec)}s}', end=' | ')
-        t0 = time.perf_counter()
-
-    # ---------------------------------
-    if SUBCATCHMENTS in inp:
+    if POLYGONS in inp:
         df = inp[SUBCATCHMENTS].frame.rename(columns=lambda c: f'{SUBCATCHMENTS}{label_sep}{c}').join(
             inp[SUBAREAS].frame.rename(columns=lambda c: f'{SUBAREAS}{label_sep}{c}')).join(
             inp[INFILTRATION].frame.rename(columns=lambda c: f'{INFILTRATION}{label_sep}{c}')).join(

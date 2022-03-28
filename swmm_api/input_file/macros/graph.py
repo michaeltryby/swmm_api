@@ -34,10 +34,7 @@ def get_path(g, start, end):
 
 
 def get_path_subgraph(base, start, end):
-    if isinstance(base, SwmmInput):
-        g = inp_to_graph(base)
-    else:
-        g = base
+    g = inp_to_graph(base) if isinstance(base, SwmmInput) else base
     sub_list = get_path(g, start=start, end=end)
     sub_graph = subgraph(g, sub_list)
     return sub_list, sub_graph
@@ -52,10 +49,7 @@ def next_links(inp, node, g=None):
 
 
 def next_links_labels(g, node):
-    labels = []
-    for i in g.out_edges(node):
-        labels.append(g.get_edge_data(*i)['label'])
-    return labels
+    return [g.get_edge_data(*i)['label'] for i in g.out_edges(node)]
 
 
 def next_nodes(g, node):
@@ -71,10 +65,7 @@ def previous_links(inp, node, g=None):
 
 
 def previous_links_labels(g, node):
-    labels = []
-    for i in g.in_edges(node):
-        labels.append(g.get_edge_data(*i)['label'])
-    return labels
+    return [g.get_edge_data(*i)['label'] for i in g.in_edges(node)]
 
 
 def previous_nodes(g, node):
@@ -82,15 +73,22 @@ def previous_nodes(g, node):
 
 
 def links_connected(inp, node, g=None):
+    """
+    Get the names of the links connected to the node.
+
+    Args:
+        inp (SwmmInput): inp-data.
+        node (str): name of the node.
+        g (networkx.DiGraph | optionl): graph of the swmm-network.
+
+    Returns:
+        tuple[list[swmm_api.input_file.sections.link._Link]]: list of the upstream and downstream links connected to the node
+    """
     if g is None:
         g = inp_to_graph(inp)
     links = links_dict(inp)
-    next_ = []
-    for i in g.out_edges(node):
-        next_.append(links[g.get_edge_data(*i)['label']])
-    previous_ = []
-    for i in g.in_edges(node):
-        previous_.append(links[g.get_edge_data(*i)['label']])
+    next_ = [links[g.get_edge_data(*i)['label']] for i in g.out_edges(node)]
+    previous_ = [links[g.get_edge_data(*i)['label']] for i in g.in_edges(node)]
     return previous_, next_
 
 
@@ -160,10 +158,7 @@ def get_network_forks(inp):
     # pd.DataFrame.from_dict(forks, orient='index')
     g = inp_to_graph(inp)
     nodes = nodes_dict(inp)
-    forks = {}
-    for n in nodes:
-        forks[n] = number_in_out(g, n)
-    return forks
+    return {n: number_in_out(g, n) for n in nodes}
 
 
 def split_network(inp, keep_node, split_at_node=None, keep_split_node=True, graph=None, init_print=True):

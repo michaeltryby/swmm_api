@@ -1409,49 +1409,48 @@ class Timeseries(BaseSectionObject):
 
     @classmethod
     def _convert_lines(cls, multi_line_args):
-        data = []
         last = None
+        data = []
         last_date = None
 
         for name, *line in multi_line_args:
             # ---------------------------------
-            if line[0].upper() == cls.TYPES.FILE:
-                yield TimeseriesFile(name, (' '.join(line[1:])).strip('"'))
-                last = name
+            # yield last time-series
+            # was the last line a TimeseriesData and is in this line a new name
+            if last is not None and (name != last):  # new series
+                yield TimeseriesData(last, data)
+                data = []
+                last_date = None
 
             # ---------------------------------
-            else:
-                if name != last:
-                    if last is not None:
-                        yield TimeseriesData(last, data)
-                    data = []
-                    last = name
-                    last_date = None
+            # yield file time-series
+            if line[0].upper() == cls.TYPES.FILE:
+                yield TimeseriesFile(name, ' '.join(line[1:]))
+                last = None
+                continue
 
-                # -------------
-                iterator = iter(line)
-                for part in iterator:
-                    if ('/' in part) or (('-' in part) and not part.startswith('-')):
-                        # MM-DD-YYYY or MM/DD/YYYY or MMM-DD-YYYY MMM/DD/YYYY
-                        last_date = part
+            # ---------------------------------
+            # inline time-series
+            last = name
+            parts_in_line = iter(line)
+            for part in parts_in_line:
+                if ('/' in part) or (('-' in part) and not part.startswith('-')):
+                    # MM-DD-YYYY or MM/DD/YYYY or MMM-DD-YYYY MMM/DD/YYYY
+                    last_date = part
 
-                        # HH:MM or HH:MM:SS or H (as float)
-                        time = next(iterator)
-                    else:
-                        # HH:MM or HH:MM:SS or H (as float)
-                        time = part
+                    # HH:MM or HH:MM:SS or H (as float)
+                    time = next(parts_in_line)
+                else:
+                    # HH:MM or HH:MM:SS or H (as float)
+                    time = part
 
-                    if last_date is not None:
-                        index = ' '.join([last_date, time])
-                    else:
-                        index = time
+                data.append((
+                    time if last_date is None else ' '.join([last_date, time]),
+                    float(next(parts_in_line))
+                ))
 
-                    value = float(next(iterator))
-
-                    data.append([index, value])
-
-        # add last timeseries
-        if data and (line[0].upper() != cls.TYPES.FILE):
+        # add last inline time-series if present
+        if data:
             yield TimeseriesData(last, data)
 
 
@@ -1472,14 +1471,13 @@ class TimeseriesFile(Timeseries):
         filename (str): name of a file in which the time series data are stored ``Fname``
     """
 
-    def __init__(self, Name, filename, kind=None):
+    def __init__(self, Name, filename):
         Timeseries.__init__(self, Name)
         self.kind = self.TYPES.FILE
-        self.filename = filename
+        self.filename = filename.strip('"')
 
     def to_inp_line(self):
-        fn = self.filename.strip('"')
-        return f'{self.Name} {self.kind} "{fn}"'
+        return f'{self.Name} {self.kind} "{self.filename}"'
 
 
 class TimeseriesData(Timeseries):
@@ -1566,14 +1564,14 @@ class TimeseriesData(Timeseries):
         Returns:
             pandas.Series: Timeseries
         """
-        datetime, values = zip(*self.data)
-        return pd.Series(index=datetime, data=values, name=self.Name)
+        date_time, values = zip(*self.data)
+        return pd.Series(index=date_time, data=values, name=self.Name)
 
     def to_inp_line(self):
-        f = ''
-        for date_time, value in self.data:
-            f += f'{self.Name} {datetime_to_str(date_time)} {value}\n'
-        return f
+        return '\n'.join(
+            f'{self.Name} {datetime_to_str(date_time)} {value}'
+            for date_time, value in self.data
+        )
 
     @classmethod
     def from_pandas(cls, series, label=None):
@@ -1597,9 +1595,7 @@ class TimeseriesData(Timeseries):
         Returns:
             TimeseriesData: object for inp file
         """
-        if label is None:
-            label = series.name
-        return cls(label, list(zip(series.index, series.values)))
+        return cls(series.name if label is None else label, list(zip(series.index, series.values)))
 
 
 class Tag(BaseSectionObject):
@@ -1613,6 +1609,15 @@ class Tag(BaseSectionObject):
         Link = IDENTIFIERS.Link
 
     def __init__(self, kind, Name, tag, *tags):
+        """
+        Tag object.
+
+        Args:
+            kind (str): Type of object
+            Name (str): label of the object
+            tag (str): tag
+            *tags (str): only for .inp-file reading, if whitespaces are in the tag
+        """
         self.kind = kind.lower().capitalize()
         self.Name = Name
         self.tag = tag

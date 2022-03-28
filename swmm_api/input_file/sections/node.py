@@ -6,19 +6,6 @@ from .._type_converter import to_bool, infer_type
 from ..section_labels import JUNCTIONS, OUTFALLS, STORAGE
 
 
-# NEU in python 3.7
-# from dataclasses import dataclass
-# @dataclass
-# class Junction2(BaseSectionObject):
-#     _identifier = IDENTIFIERS.Name
-#     Name: str
-#     Elevation: float
-#     MaxDepth: float = 0
-#     InitDepth: float = 0
-#     SurDepth: float = 0
-#     Aponded: float = 0
-
-
 class _Node(BaseSectionObject):
     _identifier = IDENTIFIERS.Name
 
@@ -153,11 +140,10 @@ class Outfall(_Node):
                         Outfall.TYPES.TIDAL,
                         Outfall.TYPES.TIMESERIES]:
                 self._data_init(*args)
+            elif len(args) == 3:
+                self._data_init(*args)
             else:
-                if len(args) == 3:
-                    self._data_init(*args)
-                else:
-                    self._no_data_init(*args)
+                self._no_data_init(*args)
         else:
             self.Data = Data
             self.FlapGate = to_bool(FlapGate)

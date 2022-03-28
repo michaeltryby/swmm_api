@@ -42,8 +42,8 @@ def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None
         for section in LINK_SECTIONS:
             if section in inp:
                 links += list(inp[section].filter_keys([node_label], by='FromNode')) + \
-                         list(inp[section].filter_keys([node_label], by='ToNode'))  # type: List[Conduit]
-        links = [l.Name for l in links]  # type: List[str]
+                         list(inp[section].filter_keys([node_label], by='ToNode'))  # type: list[Conduit]
+        links = [l.Name for l in links]  # type: list[str]
 
     for link in links:
         delete_link(inp, link)
@@ -385,7 +385,7 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
 
     # tags
     if (TAGS in inp) and ((Tag.TYPES.Node, old_label) in inp.TAGS):
-        tag = inp[TAGS].pop((Tag.TYPES.Node, old_label))
+        tag = inp[TAGS].pop((Tag.TYPES.Node, old_label))  # type: swmm_api.input_file.sections.Tag
         tag.Name = new_label
         inp.TAGS.add_obj(tag)
 
@@ -489,7 +489,7 @@ def rename_timeseries(inp, old_label, new_label):
         works inplace
     """
     if old_label in inp[TIMESERIES]:
-        obj = inp[TIMESERIES].pop(old_label)
+        obj = inp[TIMESERIES].pop(old_label)  # type: swmm_api.input_file.sections.Timeseries
         obj.Name = new_label
         inp[TIMESERIES].add_obj(obj)
 

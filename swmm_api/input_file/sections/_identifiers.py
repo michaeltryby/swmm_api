@@ -1,14 +1,14 @@
 class IDENTIFIERS:
     """predefined to identify the objects in an input file section and also used in the tags section"""
-    Name = 'Name'
+    Name = 'name'
 
-    Node = 'Node'
-    Subcatch = 'Subcatch'
-    Link = 'Link'
+    Node = 'node'
+    Subcatch = 'subcatch'
+    Link = 'link'
 
-    Gage = 'Gage'
+    Gage = 'gage'
 
-    Constituent = 'Constituent'
+    Constituent = 'constituent'
 
     Pollutant = 'pollutant'
 
