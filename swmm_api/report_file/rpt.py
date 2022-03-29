@@ -836,10 +836,9 @@ class SwmmReport:
             return datetime.timedelta(*v.split(':'))
 
     @staticmethod
-    def _pprint(di):
+    def _pretty_dict(di):
         if not di:
-            print('{}')
-            return
+            return '{}'
         f = ''
         max_len = len(max(di.keys(), key=len)) + 5
         for key, value in di.items():
@@ -854,7 +853,7 @@ class SwmmReport:
                     start = end
             else:
                 f += f'{key:<{max_len}}{value}\n'
-        print(f)
+        return f
 
     def get_errors(self):
         """
@@ -880,7 +879,7 @@ class SwmmReport:
         """
         Print the errors in the report file in a pretty way
         """
-        self._pprint(self.get_errors())
+        print(self._pretty_dict(self.get_errors()))
 
     def get_version_title(self):
         """
@@ -962,7 +961,7 @@ class SwmmReport:
         """
         Print the warnings in the report file in a pretty way.
         """
-        self._pprint(self.get_warnings())
+        print(self._pretty_dict(self.get_warnings()))
 
 
 def read_rpt_file(filename):

@@ -9,6 +9,8 @@ import subprocess
 import os
 from sys import platform as _platform
 
+from swmm_api import SwmmReport
+
 
 class SWMMRunError(UserWarning):
     pass
@@ -27,12 +29,13 @@ def infer_swmm_path():
     if _platform.startswith("win"):
         swmm_path = None
         # script_path = '???/swmm5.exe'
-        for program_files in ['Program Files (x86)', 'Program Files']:
-            for version in ['5.1.015', '5.1.014', '5.1.013']:
-                script_path = os.path.join('C:\\', program_files, 'EPA SWMM {}'.format(version), 'swmm5.exe')
-                if os.path.isfile(script_path):
-                    swmm_path = script_path
-                    break
+        for program_files in ('Program Files (x86)', 'Program Files'):
+            for version in ('5.1.015', '5.1.014', '5.1.013', '5.2.0', '5.2.0 (64-bit)'):
+                for fn_exe in ('runswmm.exe', 'swmm5.exe'):
+                    script_path = os.path.join('C:\\', program_files, 'EPA SWMM {}'.format(version), fn_exe)
+                    if os.path.isfile(script_path):
+                        swmm_path = script_path
+                        break
             if swmm_path is not None:
                 break
 
@@ -91,7 +94,7 @@ def run_swmm_custom(command_line):
     return shell_output
 
 
-def check_swmm_errors(rpt, shell_output):
+def check_swmm_errors(fn_rpt, shell_output):
     msgs = {}
 
     if isinstance(shell_output, str):
@@ -107,11 +110,11 @@ def check_swmm_errors(rpt, shell_output):
             'OUT': stdout,
         })
 
-    if os.path.isfile(rpt):
-        with open(rpt, 'r') as f:
-            rpt_content = f.read()
-        if 'error' in rpt_content.lower():
-            msgs['REPORT'] = rpt_content
+    if os.path.isfile(fn_rpt):
+        rpt = SwmmReport(fn_rpt)
+        errors = rpt.get_errors()
+        if errors:
+            msgs['REPORT'] = rpt._pretty_dict(errors)
     else:
         msgs['REPORT'] = 'NO Report file created!!!'
 

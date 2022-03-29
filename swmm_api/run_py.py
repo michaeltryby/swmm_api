@@ -18,7 +18,7 @@ def run(fn_inp):
         fn_rpt, fn_out = get_result_filenames(fn_inp)
         message = e.args[0] + '\n' + fn_inp
         if os.path.isfile(fn_rpt):
-            message += SwmmReport(fn_rpt).get_errors()
+            message += str(SwmmReport(fn_rpt).get_errors())
 
             with open(fn_rpt, 'r') as f:
                 rpt_content = f.read()
