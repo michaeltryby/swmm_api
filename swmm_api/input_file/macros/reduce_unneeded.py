@@ -150,9 +150,11 @@ def reduce_raingages(inp):
     Returns:
         SwmmInput: inp-file data with filtered RAINGAGES section
     """
+    needed_raingages = set()
     if (SUBCATCHMENTS in inp) and (RAINGAGES in inp):
         needed_raingages = {inp[SUBCATCHMENTS][s].RainGage for s in inp[SUBCATCHMENTS]}
-        inp[RAINGAGES] = inp[RAINGAGES].slice_section(needed_raingages)
+
+    inp[RAINGAGES] = inp[RAINGAGES].slice_section(needed_raingages)
 
 
 def remove_empty_sections(inp):
@@ -179,7 +181,8 @@ def reduce_timeseries(inp):
 
     if RAINGAGES in inp:
         f = inp[RAINGAGES].frame
-        needed_timeseries |= set(f.loc[f['Source'].str.upper() == key, 'Timeseries'])
+        if not f.empty:
+            needed_timeseries |= set(f.loc[f['Source'].str.upper() == key, 'Timeseries'])
 
     if EVAPORATION in inp:
         if key in inp[EVAPORATION]:

@@ -7,6 +7,7 @@ from .graph import get_path_subgraph, links_connected
 from ..section_labels import (MAP, COORDINATES, POLYGONS, SUBCATCHMENTS, VERTICES, JUNCTIONS, STORAGE, OUTFALLS,
                               XSECTIONS, )
 from ..sections import Outfall, Polygon, SubCatchment
+from ...output_file import OBJECTS, VARIABLES
 
 
 def set_inp_dimensions(inp, ax):
@@ -128,7 +129,7 @@ def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
     # ---------------
     nodes_depth = None
     if out is not None:
-        nodes_depth = out.get_part('node', sub_list, 'Depth_above_invert').mean().to_dict()
+        nodes_depth = out.get_part(OBJECTS.NODE, sub_list, VARIABLES.NODE.DEPTH).mean().to_dict()
     # ---------------
     stations_ = list(iter_over_inp_(inp, sub_list, sub_graph))
     stations = dict(stations_)
@@ -167,7 +168,7 @@ def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
 
 
 def get_water_level(inp, start_node, end_node, out, zero_node=None, absolute=True):
-    nodes_depth = out.get_part('node', None, 'Depth_above_invert').mean().to_dict()
+    nodes_depth = out.get_part(OBJECTS.NODE, None, VARIABLES.NODE.DEPTH).mean().to_dict()
     nodes = nodes_dict(inp)
     x_list = []
     water_level_list = []

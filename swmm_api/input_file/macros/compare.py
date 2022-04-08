@@ -6,70 +6,100 @@ from .._type_converter import is_equal
 from ..helpers import BaseSectionObject, _sort_by
 
 
-def compare_sections(s1, s2, precision=3):
-    """
-    compare two inp file sections and get the differences as string output
+class CompareSections:
+    def __init__(self, section_1, section_2, precision=3):
+        """
+        compare two inp file sections
 
-    Args:
-        s1 (InpSection): filename for the first inp file
-        s2 (InpSection): filename for the second inp file
-        precision (int): number of relevant decimal places
+        Args:
+            section_1 (swmm_api.input_file.helpers.InpSection): filename for the first inp file
+            section_2 (swmm_api.input_file.helpers.InpSection): filename for the second inp file
+            precision (int): number of relevant decimal places
+        """
+        self.set_labels_1 = set(section_1.keys())
+        self.set_labels_2 = set(section_2.keys())
+        self.set_labels_equal = set()
+        self.dict_not_equal = {}
 
-    Returns:
-        str: differences of the sections
-    """
-    i1 = set(s1.keys())
-    i2 = set(s2.keys())
-    s_warnings = ''
-    not_in_1 = []
-    not_in_2 = []
-    n_equal = 0
-    not_equal = []
+        # self.equal_section_type = section_1._section_object == section_2._section_object
+        # self.section_1._section_object.__name__
+        # self.label = section_1._label
 
-    for key in sorted(i1 | i2):
-        if (key in i1) and (key in i2):
-            if s1[key] == s2[key]:
-                n_equal += 1
+        for key in sorted(self.set_labels_1 & self.set_labels_2):
+            if section_1[key] == section_2[key]:
+                self.set_labels_equal.add(key)
             else:
                 try:
-                    if not isinstance(s1[key], BaseSectionObject):
-                        not_equal.append(f'{key}: {s1[key]} != {s2[key]}')
+                    if not isinstance(section_1[key], BaseSectionObject):
+                        self.dict_not_equal[key] = f'{section_1[key]} != {section_2[key]}'
                     else:
                         diff = []
-                        for param in s1[key].to_dict_():
-                            if not is_equal(s1[key][param], s2[key][param], precision=precision):
-                                diff.append(f'{param}=({s1[key][param]} != {s2[key][param]})')
+                        for param in section_1[key].to_dict_():
+                            if not is_equal(section_1[key][param], section_2[key][param], precision=precision):
+                                diff.append(f'{param}=({section_1[key][param]} != {section_2[key][param]})')
                         if diff:
-                            not_equal.append(f'{key}: ' + ' | '.join(diff))
+                            self.dict_not_equal[key] = ' | '.join(diff)
+                        else:
+                            self.set_labels_equal.add(key)
                 except:
-                    not_equal.append(f'{key}: can not compare')
+                    self.dict_not_equal[key] = 'can not compare'
 
-        # -----------------------------
-        elif (key in i1) and (key not in i2):
-            not_in_2.append(str(key))
-        elif (key not in i1) and (key in i2):
-            not_in_1.append(str(key))
+        self.set_labels_not_in_1 = self.set_labels_2 - self.set_labels_1
+        self.set_labels_not_in_2 = self.set_labels_1 - self.set_labels_2
 
-    # -----------------------------
-    if not_equal:
-        s_warnings += f'not equal ({len(not_equal)}): \n    ' + '\n    '.join(not_equal) + '\n'
+    @property
+    def len_full(self):
+        return len(self.set_labels_1 | self.set_labels_2)
 
-    if not_in_1:
-        s_warnings += f'not in inp1 ({len(not_in_1)}): ' + ' | '.join(not_in_1) + '\n'
+    def get_diff_string(self):
+        """
+        get the differences as string output
 
-    if not_in_2:
-        s_warnings += f'not in inp2 ({len(not_in_2)}): ' + ' | '.join(not_in_2) + '\n'
+        Returns:
+            str: differences of the sections
+        """
+        s_warnings = ''
+        if self.dict_not_equal:
+            s_warnings += (f'not equal ({len(self.dict_not_equal)}): \n    '
+                           + '\n    '.join([f'{k}: {v}' for k, v in self.dict_not_equal.items()]) + '\n')
 
-    # -----------------------------
-    res = ''
-    if s_warnings:
-        res += s_warnings
-    else:
-        res += 'good!\n'
+        if self.set_labels_not_in_1:
+            s_warnings += (f'not in inp1 ({len(self.set_labels_not_in_1)}): '
+                           + ' | '.join(sorted(self.set_labels_not_in_1)) + '\n')
 
-    res += f'{n_equal}/{len(i1 | i2)} objects are equal\n'
+        if self.set_labels_not_in_2:
+            s_warnings += (f'not in inp2 ({len(self.set_labels_not_in_2)}): '
+                           + ' | '.join(sorted(self.set_labels_not_in_2)) + '\n')
 
-    return res
+        return (s_warnings or 'good!\n') + f'{len(self.set_labels_equal)}/{self.len_full} objects are equal\n'
+
+    def get_diff_count_string(self):
+        """
+        get the number of differences as string output
+
+        Returns:
+            str: differences of the sections
+        """
+        s_warnings = ''
+        if self.dict_not_equal:
+            s_warnings += f'{len(self.dict_not_equal)} are not equal.\n'
+
+        if self.set_labels_not_in_1:
+            s_warnings += f'{len(self.set_labels_not_in_1)} are not in inp1.\n'
+
+        if self.set_labels_not_in_2:
+            s_warnings += f'{len(self.set_labels_not_in_2)} are not in inp2.\n'
+
+        return (s_warnings or 'The  section is equal.\n') + f'{len(self.set_labels_equal)}/{self.len_full} objects are equal\n'
+
+    @property
+    def summary(self):
+        return {
+            'equal': len(self.set_labels_equal),
+            'not in 1': len(self.set_labels_not_in_1),
+            'not in 2': len(self.set_labels_not_in_2),
+            'changes': len(self.dict_not_equal)
+        }
 
 
 def compare_inp_files(fn1, fn2, precision=2, skip_section=None):
@@ -102,7 +132,7 @@ def compare_inp_files(fn1, fn2, precision=2, skip_section=None):
         s += '\n' + '#' * 100 + f'\n[{section}]\n'
 
         if (section in inp1) and (section in inp2):
-            s += compare_sections(inp1[section], inp2[section], precision=precision)
+            s += CompareSections(inp1[section], inp2[section], precision=precision).get_diff_string()
         elif (section not in inp1) and (section in inp2):
             s += f'only in inp2\n'
         elif (section in inp1) and (section not in inp2):

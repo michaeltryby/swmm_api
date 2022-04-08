@@ -1,6 +1,6 @@
 from .check import check_for_nodes, check_for_duplicates
 from .collection import nodes_dict, links_dict, subcatchments_per_node_dict, nodes_subcatchments_dict
-from .compare import compare_sections, compare_inp_files
+from .compare import CompareSections, compare_inp_files
 from .convert import junction_to_storage, junction_to_outfall, conduit_to_orifice
 from .curve import curve_figure
 from .edit import (combine_conduits, combine_conduits_keep_slope, combine_vertices, delete_link, delete_node,
@@ -30,9 +30,9 @@ from .macros import (find_node, find_link, calc_slope, conduit_slopes, conduits_
                      increase_max_node_depth, set_times, combined_subcatchment_frame, delete_sections)
 from .plotting import plot_map, plot_longitudinal
 from .reduce_unneeded import (reduce_curves, reduce_controls, simplify_curves, reduce_raingages,
-                              remove_empty_sections, reduce_timeseries)
+                              remove_empty_sections, reduce_timeseries, reduce_pattern)
 from .split_inp_file import split_inp_to_files, read_split_inp_file
-from .tags import get_node_tags, get_link_tags, get_subcatchment_tags, filter_tags
+from .tags import get_node_tags, get_link_tags, get_subcatchment_tags, filter_tags, delete_tag_group
 
 
 try:
