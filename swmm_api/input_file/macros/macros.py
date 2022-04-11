@@ -125,18 +125,18 @@ def conduits_are_equal(inp: SwmmInput, link0, link1, diff_roughness=0.1, diff_sl
 
     # Diameter values match within a specified percent tolerance (1 %)
     if diff_height is not None:
-        all_checks_out &= _rel_diff(xs0.Geom1, xs1.Geom1) < diff_height
+        all_checks_out &= _rel_diff(xs0.height, xs1.height) < diff_height
 
     # Cross-section shapes must match exactly
-    all_checks_out &= xs0.Shape == xs1.Shape
+    all_checks_out &= xs0.shape == xs1.shape
 
     # Shape curves must match exactly
-    if xs0.Shape == CrossSection.SHAPES.CUSTOM:
-        all_checks_out &= xs0.Curve == xs1.Curve
+    if xs0.shape == CrossSection.SHAPES.CUSTOM:
+        all_checks_out &= xs0.curve == xs1.curve
 
     # Transects must match exactly
-    elif xs0.Shape == CrossSection.SHAPES.IRREGULAR:
-        all_checks_out &= xs0.Tsect == xs1.Tsect
+    elif xs0.shape == CrossSection.SHAPES.IRREGULAR:
+        all_checks_out &= xs0.transect == xs1.transect
 
     # Slope values match within a specified tolerance
     if diff_slope is not None:
@@ -178,7 +178,7 @@ def increase_max_node_depth(inp, node_label):
     node = nodes_dict(inp)[node_label]
     max_height = node.MaxDepth
     for link in previous_ + next_:
-        max_height = max((max_height, inp[XSECTIONS][link.name].Geom1))
+        max_height = max((max_height, inp[XSECTIONS][link.name].height))
     print(f'MaxDepth increased for node "{node_label}" from {node.MaxDepth} to {max_height}')
     node.MaxDepth = max_height
 

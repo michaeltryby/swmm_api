@@ -45,28 +45,28 @@ class SuperConduit(Conduit, CrossSection, Loss, Vertices):
 
     @property
     def curve_obj(self):
-        if self.Shape == CrossSection.SHAPES.CUSTOM:
-            return self.inp.CURVES[self.Curve]
+        if self.shape == CrossSection.SHAPES.CUSTOM:
+            return self.inp.CURVES[self.curve]
 
     @property
     def shape_generator(self):
-        if self.Shape == CrossSection.SHAPES.CUSTOM:
-            return shape_generator.CrossSection.from_curve(self.curve_obj, height=self.Geom1)
-        elif self.Shape == CrossSection.SHAPES.IRREGULAR:
+        if self.shape == CrossSection.SHAPES.CUSTOM:
+            return shape_generator.CrossSection.from_curve(self.curve_obj, height=self.height)
+        elif self.shape == CrossSection.SHAPES.IRREGULAR:
             return  # Todo: I don't know how
-        elif self.Shape in [CrossSection.SHAPES.RECT_OPEN, CrossSection.SHAPES.RECT_CLOSED]:
+        elif self.shape in [CrossSection.SHAPES.RECT_OPEN, CrossSection.SHAPES.RECT_CLOSED]:
             return  # Todo: Rect
         else:
-            return shape_generator.swmm_std_cross_sections(self.Shape, height=self.Geom1)
+            return shape_generator.swmm_std_cross_sections(self.shape, height=self.height)
 
     @property
     def profil_area(self):
-        if self.Shape == CrossSection.SHAPES.CUSTOM:
+        if self.shape == CrossSection.SHAPES.CUSTOM:
             return self.shape_generator.area_v
-        elif self.Shape == CrossSection.SHAPES.IRREGULAR:
+        elif self.shape == CrossSection.SHAPES.IRREGULAR:
             return  # Todo: I don't know how
-        elif self.Shape in [CrossSection.SHAPES.RECT_OPEN, CrossSection.SHAPES.RECT_CLOSED]:
-            return self.Geom1 * self.Geom2
+        elif self.shape in [CrossSection.SHAPES.RECT_OPEN, CrossSection.SHAPES.RECT_CLOSED]:
+            return self.height * self.parameter_2
         else:
             return self.shape_generator.area_v
 

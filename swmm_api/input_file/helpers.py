@@ -581,6 +581,10 @@ def split_line_with_quotes(line):
     return re.findall(r'("[^"]*"|[^" ]+)', line)
 
 
+def free_attributes(key):
+    return key.lower()  # .replace('_', '')
+
+
 ########################################################################################################################
 class BaseSectionObject(ABC):
     """
@@ -620,7 +624,7 @@ class BaseSectionObject(ABC):
         """
         if isinstance(key, (list, tuple, set)):
             return type(key)([self.get(k) for k in key])
-        return self.__getattribute__(key.lower())
+        return self.__getattribute__(free_attributes(key))
 
     def set(self, key, value):
         """
@@ -632,7 +636,7 @@ class BaseSectionObject(ABC):
         """
         if not hasattr(self, key):
             raise SwmmInputWarning(f'{key} not a Object attribute | {self}')
-        self.__setattr__(key.lower(), value)
+        self.__setattr__(free_attributes(key), value)
 
     def __getitem__(self, key):
         return self.get(key)
@@ -746,7 +750,10 @@ class BaseSectionObject(ABC):
             BaseSectionObject or Child: copy of the object
         """
         # return type(self)(*self.values_used)
-        return type(self)(**self.to_dict_())
+        try:
+            return type(self)(**self.to_dict_())
+        except TypeError as e:
+            raise SwmmInputWarning(f'{e} | {self}')
 
     @classmethod
     def create_section(cls, lines=None):

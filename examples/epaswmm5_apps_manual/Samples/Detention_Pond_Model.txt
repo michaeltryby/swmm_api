@@ -1,0 +1,32 @@
+Detention Pond Model
+====================
+This example illustrates the design and analysis of a detention pond
+used to limit post-development peak runoff rates to their pre-
+development levels. The post-development catchment area is the same
+29 acre site used in the Site Drainage Model example, with the
+addition of a storage node placed at the outlet of the catchment.
+This storage unit and its associated outlet structure are designed
+to control the peak runoff rates from the 2-yr, 10-yr, and 100-yr
+design storms.
+
+The example also includes a representation of the pre-development
+catchment area (shown in scaled-down size on the Study Area Map)
+so that its runoff hydrographs for the three design storms can be
+compared to those of the detention pond's outflow.
+
+The pond has a pyramidal shape with a length to width ratio of 2 and
+side wall slope of 2. It is sized so that its volume is close to the
+post- minus pre-development runoff volume for the 100-yr storm leaving
+some amount of freeboard height available. The pond's outlet control
+structure consists of a side orifice placed at pond's invert elevation
+to control outflow for the smaller storm events and a weir placed some
+distance above the pond's invert to limit outflow for the larger events.
+These both discharge into a circular culvert that conveys outflow to
+the drainage system's outfall.
+
+Analyze each of the three design storms, in each case plotting the
+time series of runoff from the pre-development subcatchment and the
+total inflow to the post-development site's outfall node on the same
+graph. Check to see that the pond meets its design goal.
+
+

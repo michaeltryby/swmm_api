@@ -1,0 +1,54 @@
+Site Drainage Model
+===================
+
+This example models runoff quantity and quality in a 39
+acre residential subdivision. It consists of 7 subcatchments
+connected to a system of swales and culverts that convey
+runoff to an outfall. A single pollutant, TSS, is modeled with
+three land uses that produce different rates of buildup and
+washoff. An antecedent dry period of 5 days is used to allow for
+an initial buildup of TSS to occur. Rainfall time series data
+for several 2-hour design storms of different return periods are
+provided.
+
+Here are some suggestions for running this example:
+
+1. The model is set up to analyze the 2-yr 2-hour storm event
+   over a six hour period using Dynamic Wave flow routing with
+   a 15 second variable routing time step and a five minute
+   reporting step. 
+
+2. Run the simulation and view the Status Report, taking note
+   of the Continuity error.
+
+3. Select some different summary output variables (e.g.
+   subcatchment total Runoff, node Hours Flooded, link Max Degree
+   Full) for viewing on the study area map.
+
+4. Then select some output time series variables, such as
+   subcatchment Runoff, link flow, node TSS, to view on the map.
+   Use the Day/Time controls on the Map Browser to move back and
+   forth through time.
+
+   (Note: you may need to edit the map legends so that their
+    colors will capture the range of the variable being viewed.)
+
+5. Try generating some other types of reports, such as a time series
+   plot and a profile plot.
+
+6. Select a different return period storm for the Rain Gage and
+   see how it affects runoff hydrographs and TSS pollutographs.
+
+7. Modify the model to run a continuous simulation as follows:
+   a. Edit the rain gage and change its Data Source to File, click
+      on the File Name field and specify the rain data file named 
+      sta310301.dat.
+   b. Edit the Simulation Options as follows:
+      i. change the Routing Method to Kinematic Wave
+      ii. make the End Date 01-02-2000 (for a 2-year simulation)
+      iii. change the Routing Time Step to 5 minutes.
+
+8. Run the simulation (it may take several minutes). Try generating
+   a Statistics Report to see how the magnitude of various kinds of
+   events (rainfall, runoff, quality, etc.) are distributed over
+   time.

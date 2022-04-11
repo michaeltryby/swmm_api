@@ -832,8 +832,10 @@ class SwmmReport:
                 return datetime.timedelta(seconds=1)
             if '.' in v:
                 return datetime.timedelta(days=v.split('.')[0]) + datetime.timedelta(*v.split('.')[1].split(':'))
+            if v.count(':') == 2:
+                return datetime.timedelta(**dict(zip(('hours', 'minutes', 'seconds'), (int(i) for i in v.strip().split(':')))))
 
-            return datetime.timedelta(*v.split(':'))
+            return datetime.timedelta(*(int(i) for i in v.strip().split(':')))
 
     @staticmethod
     def _pretty_dict(di):

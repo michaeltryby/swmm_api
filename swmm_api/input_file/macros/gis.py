@@ -316,9 +316,9 @@ def gpkg_to_swmm(fn, label_sep='.'):
         inp[TAGS].update(SECTION_TYPES[TAGS].create_section(tags[['type', 'tag']].reset_index().values))
 
     for i in inp[STORAGE]:
-        c = inp[STORAGE][i].Curve
+        c = inp[STORAGE][i].curve
         if isinstance(c, list):
-            inp[STORAGE][i].Curve = [float(j) for j in c[0][1:-1].split(',')]
+            inp[STORAGE][i].curve = [float(j) for j in c[0][1:-1].split(',')]
 
     # ---------------------------------
     for sec in LINK_SECTIONS:
@@ -336,7 +336,7 @@ def gpkg_to_swmm(fn, label_sep='.'):
                     cols = [f'{sub_sec}{label_sep}{i}' for i in inspect.getargspec(SECTION_TYPES[sub_sec]).args[2:]]
                 gdf_sub = gdf[cols].copy().dropna(how='all')
                 if sub_sec == LOSSES:
-                    gdf_sub[f'{LOSSES}{label_sep}FlapGate'] = gdf_sub[f'{LOSSES}{label_sep}FlapGate'] == 1
+                    gdf_sub[f'{LOSSES}{label_sep}has_flap_gate'] = gdf_sub[f'{LOSSES}{label_sep}has_flap_gate'] == 1
                 inp[sub_sec].update(SECTION_TYPES[sub_sec].create_section(gdf_sub.reset_index().values))
 
         inp[VERTICES].update(SECTION_TYPES[VERTICES].create_section_from_geoseries(gdf.geometry))

@@ -51,7 +51,7 @@ def plot_map(inp, sc_connector=True, sc_center=True):  # TODO
     else:
         points = {}
     from shapely import geometry as shp
-    points.update({poly.Subcatch: shp.Polygon(poly.polygon).centroid for poly in inp[POLYGONS].values()})
+    points.update({poly.subcatchment: shp.Polygon(poly.polygon).centroid for poly in inp[POLYGONS].values()})
 
     if POLYGONS in inp:
         for poly in inp[POLYGONS].values():  # type: Polygon
@@ -63,15 +63,15 @@ def plot_map(inp, sc_connector=True, sc_center=True):  # TODO
             # ----------------
             # center point of sub-catchment
             if sc_center:
-                center = points[poly.Subcatch]
+                center = points[poly.subcatchment]
                 ax.scatter(x=center.x, y=center.y, marker='s', c='k', zorder=999)
 
             # ----------------
             # center connector to sub-catchment
             if sc_connector:
-                subcatch = inp[SUBCATCHMENTS][poly.Subcatch]  # type: SubCatchment
+                subcatch = inp[SUBCATCHMENTS][poly.subcatchment]  # type: SubCatchment
                 outlet_point = points[subcatch.Outlet]
-                center = points[poly.Subcatch]
+                center = points[poly.subcatchment]
                 ax.plot([center.x, outlet_point.x], [center.y, outlet_point.y], 'r--')
 
     # ---------------------
@@ -152,14 +152,14 @@ def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
 
         if prior_conduit:
             prior_conduit = prior_conduit[0]
-            profile_height = inp[XSECTIONS][prior_conduit.name].Geom1
+            profile_height = inp[XSECTIONS][prior_conduit.name].height
             sok_ = sok + prior_conduit.offset_downstream
             buk = profile_height + sok_
             _update_res(x - stations[zero_node], sok_, buk, gok, water)
 
         if following_conduit:
             following_conduit = following_conduit[0]
-            profile_height = inp[XSECTIONS][following_conduit.name].Geom1
+            profile_height = inp[XSECTIONS][following_conduit.name].height
             sok_ = sok + following_conduit.offset_upstream
             buk = profile_height + sok_
             _update_res(x - stations[zero_node], sok_, buk, gok, water)

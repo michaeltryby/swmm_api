@@ -27,15 +27,15 @@ def get_cross_section_maker(inp, link_label):
         return
     xs = inp.XSECTIONS[link_label]
 
-    if xs.Shape == CrossSection.SHAPES.CUSTOM:
-        curve = inp.CURVES[xs.Curve]
+    if xs.shape == CrossSection.SHAPES.CUSTOM:
+        curve = inp.CURVES[xs.curve]
         return shape_generator.CrossSection.from_curve(curve, height=VIRTUAL_LENGTH)
-    elif xs.Shape == CrossSection.SHAPES.IRREGULAR:
+    elif xs.shape == CrossSection.SHAPES.IRREGULAR:
         return  # Todo: I don't know how
-    elif xs.Shape in [CrossSection.SHAPES.RECT_OPEN, CrossSection.SHAPES.RECT_CLOSED]:
+    elif xs.shape in [CrossSection.SHAPES.RECT_OPEN, CrossSection.SHAPES.RECT_CLOSED]:
         return  # Todo: Rect
     else:
-        return shape_generator.swmm_std_cross_sections(xs.Shape, height=VIRTUAL_LENGTH)
+        return shape_generator.swmm_std_cross_sections(xs.shape, height=VIRTUAL_LENGTH)
 
 
 def profil_area(inp, link_label):
@@ -54,14 +54,14 @@ def profil_area(inp, link_label):
         return
     xs = inp.XSECTIONS[link_label]
 
-    if xs.Shape == CrossSection.SHAPES.CUSTOM:
-        return cs.area_v / VIRTUAL_LENGTH ** 2 * xs.Geom1
-    elif xs.Shape == CrossSection.SHAPES.IRREGULAR:
+    if xs.shape == CrossSection.SHAPES.CUSTOM:
+        return cs.area_v / VIRTUAL_LENGTH ** 2 * xs.height
+    elif xs.shape == CrossSection.SHAPES.IRREGULAR:
         return  # Todo: I don't know how
-    elif xs.Shape in [CrossSection.SHAPES.RECT_OPEN, CrossSection.SHAPES.RECT_CLOSED]:
-        return xs.Geom1 * xs.Geom2
+    elif xs.shape in [CrossSection.SHAPES.RECT_OPEN, CrossSection.SHAPES.RECT_CLOSED]:
+        return xs.height * xs.parameter_2
     else:
-        return cs.area_v / VIRTUAL_LENGTH ** 2 * xs.Geom1
+        return cs.area_v / VIRTUAL_LENGTH ** 2 * xs.height
 
 
 def velocity(inp, link_label, flow):

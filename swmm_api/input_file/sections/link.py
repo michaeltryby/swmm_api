@@ -110,7 +110,8 @@ class Orifice(_Link):
         SIDE = 'SIDE'
         BOTTOM = 'BOTTOM'
 
-    def __init__(self, name, from_node, to_node, orientation, offset, discharge_coefficient, has_flap_gate=False, hours_to_open=0):
+    def __init__(self, name, from_node, to_node, orientation, offset, discharge_coefficient, has_flap_gate=False,
+                 hours_to_open=0):
         """
         Orifice link information.
 
@@ -176,7 +177,7 @@ class Outlet(_Link):
     _section_label = OUTLETS
 
     class TYPES:
-        """Outlet flow rate."""
+        """How the outlet flow rate is calculated."""
         TABULAR_DEPTH = 'TABULAR/DEPTH'
         TABULAR_HEAD = 'TABULAR/HEAD'
         FUNCTIONAL_DEPTH = 'FUNCTIONAL/DEPTH'
@@ -227,12 +228,12 @@ class Outlet(_Link):
             self.curve_description = curve_description
             self.has_flap_gate = to_bool(has_flap_gate)
 
-    def _tabular_init(self, name_curve, has_flap_gate=False):
+    def _tabular_init(self, curve_name, has_flap_gate=False):
         """
         Init for object which describes the outflow rate (flow units) as a rating curve.
 
         Args:
-            name_curve (str): Name of the rating curve listed in the [``CURVES``] section that describes
+            curve_name (str): Name of the rating curve listed in the [``CURVES``] section that describes
                               outflow rate (flow units) as a function of:
 
                 - water depth above the offset elevation at the inlet node (ft or m) for a TABULAR/DEPTH outlet.
@@ -240,8 +241,12 @@ class Outlet(_Link):
             has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow,
                                   ``NO`` (:obj:`False`) if not (default is ``NO``).
         """
-        self.curve_description = str(name_curve)
+        self.curve_description = str(curve_name)
         self.has_flap_gate = to_bool(has_flap_gate)
+
+    @property
+    def curve_name(self):
+        return self.curve_description is isinstance(self.curve_description, str)
 
     def _functional_init(self, coefficient, exponent, has_flap_gate=False):
         """
@@ -266,63 +271,58 @@ class Outlet(_Link):
 
 class Pump(_Link):
     """
-    Section: [**PUMPS**]
+    Pump link information.
+    
+    Section:
+        [PUMPS]
 
     Purpose:
         Identifies each pump link of the drainage system.
 
-    Format:
-        ::
-
-            Name Node1 Node2 Pcurve (Status Startup Shutoff)
-
-    Format-PCSWMM:
-        ``Name  InletNode  OutletNode  PumpCurve  InitStatus  StartupDepth  ShutoffDepth``
-
-    Format-SWMM-GUI:
-        ``Name  FromNode  ToNode  PumpCurve  Status  Sartup  Shutoff``
-
     Attributes:
-        name (str): name assigned to pump link.
-        from_node (str): name of node on inlet side of pump. ``Node1``
-        to_node (str): name of node on outlet side of pump. ``Node2``
-        Curve (str): name of pump curve listed in the [CURVES] section of the input. ``Pcurve``
-        Status (str): status at start of simulation (either ON or OFF; default is ON).
-        Startup (float): depth at inlet node when pump turns on (ft or m) (default is 0).
-        Shutoff (float): depth at inlet node when pump shuts off (ft or m) (default is 0).
+        name (str): Name assigned to pump link.
+        from_node (str): Name of node on inlet side of pump.
+        to_node (str): Name of node on outlet side of pump.
+        curve_name (str): Name of pump curve listed in the [``CURVES``] section of the input.
+        status (str): Status at start of simulation (either ``ON`` or ``OFF``; default is ``ON``).
+        depth_on (float): Depth at inlet node when pump turns on (ft or m) (default is 0).
+        depth_off (float): Depth at inlet node when pump shuts off (ft or m) (default is 0).
 
     See Section 3.2 for a description of the different types of pumps available.
     """
     _section_label = PUMPS
 
     class STATES:
-        """status at start of simulation (either ON or OFF; default is ON)."""
+        """Status at start of simulation (either ON or ``OFF``; default is ``ON``)."""
         ON = 'ON'
         OFF = 'OFF'
 
-    def __init__(self, name, from_node, to_node, Curve, Status='ON', Startup=0, Shutoff=0):
+    def __init__(self, name, from_node, to_node, curve_name, status='ON', depth_on=0, depth_off=0):
         """
-        Pump
+        Pump link information.
 
         Args:
-            name (str): name assigned to pump link.
-            from_node (str): name of node on inlet side of pump. ``Node1``
-            to_node (str): name of node on outlet side of pump. ``Node2``
-            Curve (str): name of pump curve listed in the [CURVES] section of the input. ``Pcurve``
-            Status (str): status at start of simulation (either ON or OFF; default is ON).
-            Startup (float): depth at inlet node when pump turns on (ft or m) (default is 0).
-            Shutoff (float): depth at inlet node when pump shuts off (ft or m) (default is 0).
+            name (str): Name assigned to pump link.
+            from_node (str): Name of node on inlet side of pump.
+            to_node (str): Name of node on outlet side of pump.
+            curve_name (str): Name of pump curve listed in the [``CURVES``] section of the input.
+            status (str): Status at start of simulation (either ``ON`` or ``OFF``; default is ``ON``).
+            depth_on (float): Depth at inlet node when pump turns on (ft or m) (default is 0).
+            depth_off (float): Depth at inlet node when pump shuts off (ft or m) (default is 0).
         """
         _Link.__init__(self, name, from_node, to_node)
-        self.Curve = str(Curve)
-        self.Status = str(Status)
-        self.Startup = float(Startup)
-        self.Shutoff = float(Shutoff)
+        self.curve_name = str(curve_name)
+        self.status = str(status)
+        self.depth_on = float(depth_on)
+        self.depth_off = float(depth_off)
 
 
 class Weir(_Link):
     """
-    Section: [**WEIRS**]
+    Weir link information.
+
+    Section:
+        [WEIRS]
 
     Purpose:
         Identifies each weir link of the drainage system. Weirs are used to model flow
@@ -365,26 +365,27 @@ class Weir(_Link):
         must be entered even though they do not apply to ``ROADWAY`` weirs.
 
     Attributes:
-        name (str): name assigned to weir link
-        from_node (str): name of node on inlet side of weir. ``Node1``
-        to_node (str): name of node on outlet side of weir. ``Node2``
-        Type (str): ``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or ``ROADWAY``.
-        CrestHeight (float): amount that the weir’s crest is offset above the invert of inlet node (ft or m,
-            expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting). ``CrestHt``
-        Qcoeff (float): weir discharge coefficient (for CFS if using US flow units or CMS if using metric flow
-        units). ``Cd``
-        FlapGate (bool): ``YES`` if flap gate present to prevent reverse flow, ``NO`` if not (default is ``NO``).
-        ``Gated``
-        EndContractions (float): number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir (default is
-        0). ``EC``
-        EndCoeff (float): discharge coefficient for triangular ends of a ``TRAPEZOIDAL`` weir
-                         (for ``CFS`` if using US flow units or ``CMS`` if using metric flow units)
-                         (default is value of Cd). ``Cd2``
-        Surcharge (bool): ``YES`` if the weir can surcharge
-            (have an upstream water level higher than the height of the opening);
-            ``NO`` if it cannot (default is ``YES``). ``Sur``
-        RoadWidth (float): width of road lanes and shoulders for ``ROADWAY`` weir (ft or m). ``Width``
-        RoadSurface (str): type of road surface for ``ROADWAY`` weir: ``PAVED`` or ``GRAVEL``. ``Surface``
+        name (str): Name assigned to weir link
+        from_node (str): Name of node on inlet side of weir.
+        to_node (str): Name of node on outlet side of weir.
+        Type (str): One if :attr:`Weir.TYPES`
+            (``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or ``ROADWAY``).
+        height_crest (float): Amount that the weir’s crest is offset above the invert of inlet node
+            (ft or m, expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
+        discharge_coefficient (float): Weir discharge coefficient
+            (for CFS if using US flow units or CMS if using metric flow units).
+        has_flap_gate (bool): ``YES`` if flap gate present to prevent reverse flow, ``NO`` if not (default is
+        ``NO``).
+        n_end_contractions (float): Number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir
+            (default is 0).
+        discharge_coefficient_end (float): Discharge coefficient for triangular ends of a ``TRAPEZOIDAL`` weir
+            (for ``CFS`` if using US flow units or ``CMS`` if using metric flow units)
+            (default is value of ``discharge_coefficient``).
+        can_surcharge (bool): ``YES`` (:obj:`True`) if the weir can surcharge
+            (have an upstream water level higher than the height of the opening); ``NO`` (:obj:`False`) if it
+            cannot (default is ``YES``).
+        road_width (float): Width of road lanes and shoulders for ``ROADWAY`` weir (ft or m).
+        road_surface (str): Type of road surface for ``ROADWAY`` weir: ``PAVED`` or ``GRAVEL``.
     """
     _section_label = WEIRS
 
@@ -395,46 +396,47 @@ class Weir(_Link):
         TRAPEZOIDAL = 'TRAPEZOIDAL'
         ROADWAY = 'ROADWAY'
 
-    class ROADSURFACES:
+    class ROAD_SURFACES:
         PAVED = 'PAVED'
         GRAVEL = 'GRAVEL'
 
-    def __init__(self, name, from_node, to_node, Type, CrestHeight, Qcoeff, FlapGate=False, EndContractions=0,
-                 EndCoeff=NaN, Surcharge=True, RoadWidth=NaN, RoadSurface=NaN):
+    def __init__(self, name, from_node, to_node, Type, height_crest, discharge_coefficient, has_flap_gate=False,
+                 n_end_contractions=0, discharge_coefficient_end=NaN, can_surcharge=True, road_width=NaN, road_surface=NaN):
         """
-        Weir.
+        Weir link information.
 
         Args:
-            name (str): name assigned to weir link
-            from_node (str): name of node on inlet side of weir. ``Node1``
-            to_node (str): name of node on outlet side of weir. ``Node2``
-            Type (str): ``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or ``ROADWAY``.
-            CrestHeight (float): amount that the weir’s crest is offset above the invert of inlet node (ft or m,
-                expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting). ``CrestHt``
-            Qcoeff (float): weir discharge coefficient (for CFS if using US flow units or CMS if using metric flow
-            units). ``Cd``
-            FlapGate (bool): ``YES`` if flap gate present to prevent reverse flow, ``NO`` if not (default is ``NO``).
-            ``Gated``
-            EndContractions (float): number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir (default is
-            0). ``EC``
-            EndCoeff (float): discharge coefficient for triangular ends of a ``TRAPEZOIDAL`` weir
-                             (for ``CFS`` if using US flow units or ``CMS`` if using metric flow units)
-                             (default is value of Cd). ``Cd2``
-            Surcharge (bool): ``YES`` if the weir can surcharge
-                (have an upstream water level higher than the height of the opening);
-                ``NO`` if it cannot (default is ``YES``). ``Sur``
-            RoadWidth (float): width of road lanes and shoulders for ``ROADWAY`` weir (ft or m). ``Width``
-            RoadSurface (str): type of road surface for ``ROADWAY`` weir: ``PAVED`` or ``GRAVEL``. ``Surface``
+            name (str): Name assigned to weir link
+            from_node (str): Name of node on inlet side of weir.
+            to_node (str): Name of node on outlet side of weir.
+            Type (str): One if :attr:`Weir.TYPES`
+                (``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or ``ROADWAY``).
+            height_crest (float): Amount that the weir’s crest is offset above the invert of inlet node
+                (ft or m, expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
+            discharge_coefficient (float): Weir discharge coefficient
+                (for CFS if using US flow units or CMS if using metric flow units).
+            has_flap_gate (bool): ``YES`` if flap gate present to prevent reverse flow, ``NO`` if not (default is
+            ``NO``).
+            n_end_contractions (float): Number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir
+                (default is 0).
+            discharge_coefficient_end (float): Discharge coefficient for triangular ends of a ``TRAPEZOIDAL`` weir
+                (for ``CFS`` if using US flow units or ``CMS`` if using metric flow units)
+                (default is value of ``discharge_coefficient``).
+            can_surcharge (bool): ``YES`` (:obj:`True`) if the weir can surcharge
+                (have an upstream water level higher than the height of the opening); ``NO`` (:obj:`False`) if it
+                cannot (default is ``YES``).
+            road_width (float): Width of road lanes and shoulders for ``ROADWAY`` weir (ft or m).
+            road_surface (str): Type of road surface for ``ROADWAY`` weir: ``PAVED`` or ``GRAVEL``.
         """
         _Link.__init__(self, name, from_node, to_node)
         self.Type = str(Type)
-        self.CrestHeight = float(CrestHeight)
-        self.Qcoeff = float(Qcoeff)
-        self.FlapGate = to_bool(FlapGate)
-        self.EndContractions = EndContractions
-        if not isinstance(EndCoeff, str) and isnan(EndCoeff):
-            EndCoeff = Qcoeff
-        self.EndCoeff = float(EndCoeff)
-        self.Surcharge = to_bool(Surcharge)
-        self.RoadWidth = float(RoadWidth)
-        self.RoadSurface = RoadSurface
+        self.height_crest = float(height_crest)
+        self.discharge_coefficient = float(discharge_coefficient)
+        self.has_flap_gate = to_bool(has_flap_gate)
+        self.n_end_contractions = n_end_contractions
+        if not isinstance(discharge_coefficient_end, str) and isnan(discharge_coefficient_end):
+            discharge_coefficient_end = discharge_coefficient
+        self.discharge_coefficient_end = float(discharge_coefficient_end)
+        self.can_surcharge = to_bool(can_surcharge)
+        self.road_width = float(road_width)
+        self.road_surface = str(road_surface)

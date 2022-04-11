@@ -1,0 +1,39 @@
+Inlet & Street Drainage Model
+=============================
+
+This example illustrates how to model street inlets with SWMM. The
+same 39 acre study area used in the sample Site Drainage Model will
+be analyzed. Instead of using only surface swales and culverts to
+convey runoff off of the site, a series of streets and below ground
+sewers has been added. There are five street conduits that run through
+subcatchments S1, S2, and S7. Four of these contain inlet drains that
+divert captured street runoff flow into a system of below ground
+sewer pipes (P1 to P8).
+
+To gain a better undertanding of how the model is setup:
+1. Select the Streets category from the Project Browser and view the
+   properties of the two types of street cross-sections made available
+   to the model.
+2. Open the Property Editor for Street1 and by selecting to edit its
+   Shape property you can see which Street cross-section design was
+   assigned to it. Do the same for Street5 and note that it was
+   assigned a different type of Street cross-section.
+3. Now see what inlet designs have been defined for the project by
+   selecting the Inlets category from the Project Browser. There is
+   just one design avaliable whose properties can be viewed by
+   selecting to edit it.
+4. Next see how inlets have been assigned to streets by using Street3
+   as an example. Bring it into the Property Editor, select the Inlets
+   property and click the ellipsis button. An Inlet Usage Editor will
+   appear where you can see that the ComboInlet inlet design has been
+   assigned to it whose captured flow is sent to node J2a. (If the
+   Display Link Symbols map option is in effect an inlet symbol will
+   appear on the street conduit as will a dotted line between the
+   conduit's downstream node and the inlet's capture node).
+
+Run the model for the 2-year design storm event and view the Street
+Flow table in the Summary Report. Note that the maximum spread of
+runoff across the site's streets ranges from 5 to 10 feet. If the
+allowable spread to maintain traffic safety was the width of one
+lane (which is 10 feet for the streets in this project) then this
+arrangement of inlets would be acceptable.

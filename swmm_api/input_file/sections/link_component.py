@@ -11,7 +11,10 @@ from ..section_labels import XSECTIONS, LOSSES, VERTICES
 
 class CrossSection(BaseSectionObject):
     """
-    Section: [**XSECTIONS**]
+    Conduit, orifice, and weir cross-section geometry.
+
+    Section:
+        [XSECTIONS]
 
     Purpose:
         Provides cross-section geometric data for conduit and regulator links of the drainage system.
@@ -22,9 +25,7 @@ class CrossSection(BaseSectionObject):
             Link Shape      Geom1 Geom2             Geom3 Geom4 (Barrels Culvert)
             Link CUSTOM     Geom1       Curve                   (Barrels)
             Link IRREGULAR                    Tsect
-
-    Format-PCSWMM:
-        ``Link Shape Geom1 Geom2 Geom3 Geom4 (Barrels Culvert)``
+            Link STREET                            Street
 
     Remarks:
         The Culvert code number is used only for conduits that act as culverts
@@ -32,17 +33,27 @@ class CrossSection(BaseSectionObject):
 
         The ``CUSTOM`` shape is a closed conduit whose width versus height is described by a user-supplied Shape Curve.
 
-        An ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect object.
+        An ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect
+        object.
+
+        A ``STREET`` cross-section is used to model street conduits and inlet flow capture
+        (see the [``INLETS``] and [``INLETS_USAGE``] sections).
+
+        The Culvert code number is used only for closed conduits acting as culverts that should be
+        analyzed for inlet control conditions using the FHWA HDS-5 methodology.
 
     Attributes:
-        Link (str): name of the conduit, orifice, or weir.
-        Shape (str): cross-section shape (see Tables D-1 below or 3-1 for available shapes).
-        Geom1 (float): full height of the cross-section (ft or m).
+        link (str): name of the conduit, orifice, or weir.
+        shape (str): cross-section shape (see Tables D-1 below or 3-1 for available shapes).
+        height (float): full height of the cross-section (ft or m).
         Geom2-4: auxiliary parameters (width, side slopes, etc.) as listed in Table D-1.
-        Barrels (int): number of barrels (i.e., number of parallel pipes of equal size, slope, and roughness) associated with a conduit (default is 1).
-        Culvert (int): code number from Table A.10 for the conduit’s inlet geometry if it is a culvert subject to possible inlet flow control (leave blank otherwise).
-        Curve (str): name of a Shape Curve in the [``CURVES``] section that defines how width varies with depth.
-        Tsect (str): name of an entry in the [``TRANSECTS``] section that describes the crosssection geometry of an irregular channel.
+        n_barrels (int): number of barrels (i.e., number of parallel pipes of equal size, slope, and roughness)
+                       associated with a conduit (default is 1).
+        culvert (int): code number from Table A.10 for the conduit’s inlet geometry if it is a culvert subject to
+                       possible inlet flow control (leave blank otherwise).
+        curve (str): name of a Shape Curve in the [``CURVES``] section that defines how width varies with depth.
+        transect (str): name of an entry in the [``TRANSECTS``] section that describes the crosssection geometry of an
+                     irregular channel.
     """
     _identifier =IDENTIFIERS.link
     _section_label = XSECTIONS
@@ -50,6 +61,7 @@ class CrossSection(BaseSectionObject):
     class SHAPES:
         IRREGULAR = 'IRREGULAR'  # TransectCoordinates (Natural Channel)
         CUSTOM = 'CUSTOM'  # Full Height, ShapeCurveCoordinates
+        STREET = 'STREET'
 
         CIRCULAR = 'CIRCULAR'  # Full Height = Diameter
         FORCE_MAIN = 'FORCE_MAIN'  # Full Height = Diameter, Roughness
@@ -74,56 +86,66 @@ class CrossSection(BaseSectionObject):
         BASKETHANDLE = 'BASKETHANDLE'  # Full Height
         SEMICIRCULAR = 'SEMICIRCULAR'  # Full Height
 
-    def __init__(self, Link, Shape, Geom1=0, Geom2=0, Geom3=0, Geom4=0, Barrels=1, Culvert=NaN, Tsect=None, Curve=None):
+    def __init__(self, link, shape, height=0, parameter_2=0, parameter_3=0, parameter_4=0, n_barrels=1, culvert=NaN,
+                 transect=None, curve=None, street=None):
         # in SWMM C-code function "link_readXsectParams"
-        self.Link = str(Link)
-        self.Shape = Shape
+        self.link = str(link)
+        self.shape = shape
 
-        self.Geom1 = NaN
-        self.Tsect = NaN
+        self.height = NaN
+        self.transect = NaN
 
-        self.Geom2 = NaN
-        self.Curve = NaN
+        self.parameter_2 = NaN
+        self.curve = NaN
 
-        if Shape == self.SHAPES.IRREGULAR:
-            if Tsect is None:
+        if shape == self.SHAPES.IRREGULAR:
+            if transect is None:
                 # read inp file
-                Tsect = Geom1
-            self.Tsect = str(Tsect)  # name of TransectCoordinates
-        elif Shape == self.SHAPES.CUSTOM:
-            if Curve is None:
-                Curve = Geom2
-            self.Curve = str(Curve)
-            self.Geom1 = float(Geom1)
+                transect = height
+            self.transect = str(transect)  # name of TransectCoordinates
+        elif shape == self.SHAPES.CUSTOM:
+            if curve is None:
+                curve = parameter_2
+            self.curve = str(curve)
+            self.height = float(height)
         else:
-            self.Geom1 = float(Geom1)
-            self.Geom2 = float(Geom2)
+            self.height = float(height)
+            self.parameter_2 = float(parameter_2)
 
-        self.Geom3 = float(Geom3)
-        self.Geom4 = float(Geom4)
-        self.Barrels = int(Barrels)
+        self.parameter_3 = float(parameter_3)
+        self.parameter_4 = float(parameter_4)
+        self.n_barrels = int(n_barrels)
         # according to the c code 6 arguments are needed to not raise an error / nonsense, but you have to
-        if Barrels != 1 or not isinstance(Barrels, str) and ~isnan(Barrels):
-            self.Barrels = int(Barrels)
-        self.Culvert = Culvert
+        if n_barrels != 1 or not isinstance(n_barrels, str) and ~isnan(n_barrels):
+            self.n_barrels = int(n_barrels)
+        self.culvert = culvert
 
     @classmethod
-    def Irregular(cls, Link, Tsect):
-        """
-        ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect object.
-        """
-        return cls(Link, CrossSection.SHAPES.IRREGULAR, Tsect=Tsect)
-
-    @classmethod
-    def Custom(cls, Link, Geom1, Curve):
+    def custom(cls, Link, height, curve):
         """
         ``CUSTOM`` shape is a closed conduit whose width versus height is described by a user-supplied Shape Curve.
         """
-        return cls(Link, CrossSection.SHAPES.CUSTOM, Geom1=Geom1, Curve=Curve)
+        return cls(Link, CrossSection.SHAPES.CUSTOM, height=height, curve=curve)
+
+    @classmethod
+    def irregular(cls, Link, transect):
+        """
+        ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect object.
+        """
+        return cls(Link, CrossSection.SHAPES.IRREGULAR, transect=transect)
+
+    @classmethod
+    def street(cls, Link, transect):
+        """
+        ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect object.
+        """
+        return cls(Link, CrossSection.SHAPES.STREET, street=street)
 
 
 class Loss(BaseSectionObject):
     """
+    Conduit entrance/exit losses and flap valves.
+    
     Section: [**LOSSES**]
 
     Purpose:
@@ -151,52 +173,52 @@ class Loss(BaseSectionObject):
         losses.
 
     Attributes:
-        Link (str): name of conduit ``Conduit``
-        Inlet (float): entrance minor head loss coefficient. ``Kentry``
-        Outlet (float): exit minor head loss coefficient. ``Kexit``
-        Average (float): average minor head loss coefficient across length of conduit. ``Kavg``
-        FlapGate (bool): YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO). ``Flap``
-        SeepageRate (float): Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.) ``Seepage``
+        link (str): name of conduit ``Conduit``
+        entrance (float): entrance minor head loss coefficient. ``Kentry``
+        exit (float): exit minor head loss coefficient. ``Kexit``
+        average (float): average minor head loss coefficient across length of conduit. ``Kavg``
+        has_flap_gate (bool): YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO).
+        ``Flap``
+        seepage_rate (float): Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.) ``Seepage``
     """
     _identifier =IDENTIFIERS.link
     _section_label = LOSSES
 
     class TYPES:
-        INLET = 'Inlet'
-        OUTLET = 'Outlet'
-        AVERAGE = 'Average'
+        ENTRANCE = 'entrance'
+        EXIT = 'exit'
+        AVERAGE = 'average'
 
-    def __init__(self, Link, Inlet=0, Outlet=0, Average=0, FlapGate=False, SeepageRate=0):
+    def __init__(self, link, entrance=0, exit=0, average=0, has_flap_gate=False, seepage_rate=0):
         """
-        Loss object.
+        Conduit entrance/exit losses and flap valves.
 
         Args:
-            Link (str): name of conduit ``Conduit``
-            Inlet (float): entrance minor head loss coefficient. ``Kentry``
-            Outlet (float): exit minor head loss coefficient. ``Kexit``
-            Average (float): average minor head loss coefficient across length of conduit. ``Kavg``
-            FlapGate (bool): YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO). ``Flap``
-            SeepageRate (float): Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.) ``Seepage``
+            link (str): name of conduit
+            entrance (float): Entrance minor head loss coefficient.
+            exit (float): Exit minor head loss coefficient.
+            average (float): Average minor head loss coefficient across length of conduit.
+            has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow,
+                                  ``NO`` (:obj:`False`) if not (default is ``NO``).
+            seepage_rate (float): Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.)
         """
-        self.Link = str(Link)
-        self.Inlet = float(Inlet)
-        self.Outlet = float(Outlet)
-        self.Average = float(Average)
-        self.FlapGate = to_bool(FlapGate)
-        self.SeepageRate = float(SeepageRate)
+        self.link = str(link)
+        self.entrance = float(entrance)
+        self.exit = float(exit)
+        self.average = float(average)
+        self.has_flap_gate = to_bool(has_flap_gate)
+        self.seepage_rate = float(seepage_rate)
 
 
 class Vertices(BaseSectionObject):
     """
-    Section: [**VERTICES**]
+    X,Y coordinates for each interior vertex of polyline links.
+
+    Section:
+        [VERTICES]
 
     Purpose:
         Assigns X,Y coordinates to interior vertex points of curved drainage system links.
-
-    Format:
-        ::
-
-            Link Xcoord Ycoord
 
     Remarks:
         Straight-line links have no interior vertices and therefore are not listed in this section.
@@ -204,27 +226,30 @@ class Vertices(BaseSectionObject):
         Include a separate line for each interior vertex of the link, ordered from the inlet node to the outlet
         node.
 
-    Args:
-        Link (str): name of link.
-        vertices (list[list[float, float]]): vertices relative to origin in lower left of map.
-
-            - Xcoord: horizontal coordinate
-            - Ycoord: vertical coordinate
-
     Attributes:
-        Link (str): name of link.
-        vertices (list[list[float, float]]): vertices relative to origin in lower left of map.
+        link (str): Name of link.
+        vertices (list[list[float, float]]): Vertices relative to origin in lower left of map.
 
-            - Xcoord: horizontal coordinate
-            - Ycoord: vertical coordinate
+            - x_coord: horizontal (x-)coordinate
+            - y_coord: vertical (y-)coordinate
     """
     _identifier =IDENTIFIERS.link
     _table_inp_export = False
     _section_label = VERTICES
     _section_class = InpSectionGeo
 
-    def __init__(self, Link,  vertices):
-        self.Link = str(Link)
+    def __init__(self, link, vertices):
+        """
+        X,Y coordinates for each interior vertex of polyline links.
+
+        Args:
+            link (str): Name of link.
+            vertices (list[list[float, float]]): Vertices relative to origin in lower left of map.
+
+                - x_coord: horizontal (x-)coordinate
+                - y_coord: vertical (y-)coordinate
+        """
+        self.link = str(link)
         self.vertices = vertices
 
     @classmethod
@@ -233,15 +258,15 @@ class Vertices(BaseSectionObject):
         last = None
 
         for line in multi_line_args:
-            Link, x, y = line
+            link, x, y = line
             x = float(x)
             y = float(y)
-            if Link == last:
+            if link == last:
                 vertices.append((x, y))
             else:
                 if last is not None:
                     yield cls(last, vertices)
-                last = Link
+                last = link
                 vertices = [(x, y)]
         # last
         if last is not None:
@@ -249,7 +274,7 @@ class Vertices(BaseSectionObject):
 
     def to_inp_line(self):
         global GIS_FLOAT_FORMAT
-        return '\n'.join([f'{self.Link} {x:{GIS_FLOAT_FORMAT}} {y:{GIS_FLOAT_FORMAT}}' for x, y in self.vertices])
+        return '\n'.join([f'{self.link} {x:{GIS_FLOAT_FORMAT}} {y:{GIS_FLOAT_FORMAT}}' for x, y in self.vertices])
 
     @property
     def frame(self):
@@ -292,15 +317,15 @@ class Vertices(BaseSectionObject):
         return s
 
     @classmethod
-    def from_shapely(cls, Link, line):
+    def from_shapely(cls, link, line):
         """
         Create a Vertices object with a shapely LineString
 
         Args:
-            Link (str): label of the link
+            link (str): label of the link
             line (shapely.geometry.LineString):
 
         Returns:
             Vertices: Vertices object
         """
-        return cls(Link, list(line.coords))
+        return cls(link, list(line.coords))

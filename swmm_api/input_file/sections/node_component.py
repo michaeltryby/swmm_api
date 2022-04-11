@@ -34,9 +34,9 @@ class DryWeatherFlow(BaseSectionObject):
         patterns, listed in any order. See the [PATTERNS] section for more details.
 
     Args:
-        Node (str): name of node where dry weather flow enters.
-        Constituent (str): keyword ``FLOW`` for flow or pollutant name for quality constituent. ``Type``
-        Base (float): average baseline value for corresponding constituent (flow or concentration units).
+        node (str): name of node where dry weather flow enters.
+        constituent (str): keyword ``FLOW`` for flow or pollutant name for quality constituent. ``Type``
+        base_value (float): average baseline value for corresponding constituent (flow or concentration units).
         pattern1 (str, Optional): i.e.: monthly-pattern ``Pat1``
         pattern2 (str, Optional): i.e.: daily-pattern ``Pat2``
         pattern3 (str, Optional): i.e.: hourly-pattern
@@ -48,27 +48,14 @@ class DryWeatherFlow(BaseSectionObject):
     class TYPES:
         FLOW = 'FLOW'
 
-    def __init__(self, Node, Constituent, Base, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN, *patternx):
-        self.Node: str = str(Node)
-        """name of node where dry weather flow enters."""
-
-        self.Constituent: str = Constituent
-        """keyword ``FLOW`` for flow or pollutant name for quality constituent. ``Type``"""
-
-        self.Base: float = float(Base)
-        """average baseline value for corresponding constituent (flow or concentration units)."""
-
-        self.pattern1: str = convert_string(pattern1)
-        """i.e.: monthly-pattern ``Pat1``"""
-
-        self.pattern2: str = convert_string(pattern2)
-        """i.e.: daily-pattern ``Pat2``"""
-
-        self.pattern3: str = convert_string(pattern3)
-        """i.e.: hourly-pattern"""
-
-        self.pattern4: str = convert_string(pattern4)
-        """i.e. weekend-hourly-pattern"""
+    def __init__(self, node, constituent, base_value, pattern1=NaN, pattern2=NaN, pattern3=NaN, pattern4=NaN, *_patterns):
+        self.node = str(node)
+        self.constituent = str(constituent)
+        self.base_value = float(base_value)
+        self.pattern1 = convert_string(pattern1)
+        self.pattern2 = convert_string(pattern2)
+        self.pattern3 = convert_string(pattern3)
+        self.pattern4 = convert_string(pattern4)
 
     def get_pattern_list(self):
         return [self[p] for p in ['pattern1', 'pattern2', 'pattern3', 'pattern4'] if isinstance(self[p], str)]
@@ -114,9 +101,9 @@ class Inflow(BaseSectionObject):
             N176 FLOW FLOW_176 FLOW 1.0 0.5 12.7 FlowPat
 
     Args:
-        Node (str): name of node where external inflow enters.
-        Constituent (str): ``'FLOW'`` or name of pollutant. ``Pollut``
-        TimeSeries (str): name of time series in [``TIMESERIES``] section describing how external flow or pollutant
+        node (str): name of node where external inflow enters.
+        constituent (str): ``'FLOW'`` or name of pollutant. ``Pollut``
+        time_series (str): name of time series in [``TIMESERIES``] section describing how external flow or pollutant
             loading varies with time. ``Tseries``
         Type (str): ``'FLOW'`` or ``CONCEN`` if pollutant inflow is described as a concentration, ``MASS`` if it is
             described as a mass flow rate (default is ``CONCEN``).
@@ -129,9 +116,9 @@ class Inflow(BaseSectionObject):
             periodic basis. ``Pat``
 
     Attributes:
-        Node (str): name of node where external inflow enters.
-        Constituent (str): ``'FLOW'`` or name of pollutant. ``Pollut``
-        TimeSeries (str): name of time series in [``TIMESERIES``] section describing how external flow or pollutant
+        node (str): name of node where external inflow enters.
+        constituent (str): ``'FLOW'`` or name of pollutant. ``Pollut``
+        time_series (str): name of time series in [``TIMESERIES``] section describing how external flow or pollutant
             loading varies with time. ``Tseries``
         Type (str): ``'FLOW'`` or ``CONCEN`` if pollutant inflow is described as a concentration, ``MASS`` if it is
             described as a mass flow rate (default is ``CONCEN``).
@@ -151,19 +138,19 @@ class Inflow(BaseSectionObject):
         CONCEN = 'CONCEN'
         MASS = 'MASS'
 
-    def __init__(self, Node, Constituent=TYPES.FLOW, TimeSeries=None, Type=TYPES.FLOW, Mfactor=1.0, Sfactor=1.0,
+    def __init__(self, node, constituent=TYPES.FLOW, time_series=None, Type=TYPES.FLOW, Mfactor=1.0, Sfactor=1.0,
                  Baseline=0., Pattern=NaN):
-        self.Node = str(Node)
-        self.Constituent = str(Constituent)
-        self.TimeSeries = TimeSeries
+        self.node = str(node)
+        self.constituent = str(constituent)
+        self.time_series = time_series
         self.Type = str(Type)
         self.Mfactor = float(Mfactor)
         self.Sfactor = float(Sfactor)
         self.Baseline = float(Baseline)
         self.Pattern = Pattern
 
-        if (TimeSeries is None) or (TimeSeries == ''):
-            self.TimeSeries = '""'
+        if (time_series is None) or (time_series == ''):
+            self.time_series = '""'
 
 
 class Coordinate(BaseSectionObject):
@@ -179,12 +166,12 @@ class Coordinate(BaseSectionObject):
             Node Xcoord Ycoord
 
     Args:
-        Node (str): name of node.
+        node (str): name of node.
         x (float): horizontal coordinate relative to origin in lower left of map. ``Xcoord``
         y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
 
     Attributes:
-        Node (str): name of node.
+        node (str): name of node.
         x (float): horizontal coordinate relative to origin in lower left of map. ``Xcoord``
         y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
     """
@@ -192,8 +179,8 @@ class Coordinate(BaseSectionObject):
     _section_label = COORDINATES
     _section_class = InpSectionGeo
 
-    def __init__(self, Node, x, y):
-        self.Node = str(Node)
+    def __init__(self, node, x, y):
+        self.node = str(node)
         self.x = float(x)
         self.y = float(y)
 
@@ -204,7 +191,7 @@ class Coordinate(BaseSectionObject):
     def to_inp_line(self):
         # separate function to keep accuracy
         global GIS_FLOAT_FORMAT
-        return f'{self.Node} {self.x:{GIS_FLOAT_FORMAT}} {self.y:{GIS_FLOAT_FORMAT}}'
+        return f'{self.node} {self.x:{GIS_FLOAT_FORMAT}} {self.y:{GIS_FLOAT_FORMAT}}'
 
     @property
     def geo(self):
@@ -259,20 +246,20 @@ class RainfallDependentInfiltrationInflow(BaseSectionObject):
             Node UHgroup SewerArea
 
     Args:
-        Node (str): name of node.
+        node (str): name of node.
         hydrograph (str): name of an RDII unit hydrograph group specified in the [``HYDROGRAPHS``] section.
         sewer_area (float): area of the sewershed which contributes RDII to the node (acres or hectares).
 
     Attributes:
-        Node (str): name of node.
+        node (str): name of node.
         hydrograph (str): name of an RDII unit hydrograph group specified in the [``HYDROGRAPHS``] section.
         sewer_area (float): area of the sewershed which contributes RDII to the node (acres or hectares).
     """
     _identifier = IDENTIFIERS.node
     _section_label = RDII
 
-    def __init__(self, Node, hydrograph, sewer_area):
-        self.Node = str(Node)
+    def __init__(self, node, hydrograph, sewer_area):
+        self.node = str(node)
         self.hydrograph = str(hydrograph)
         self.sewer_area = float(sewer_area)
 
@@ -290,16 +277,20 @@ class Treatment(BaseSectionObject):
             Node Pollut Result = Func
 
     Args:
-        Node (str): Name of node where treatment occurs.
+        node (str): Name of node where treatment occurs.
         pollutant (str): Name of pollutant receiving treatment.
-        result (str): Result computed by treatment function. Choices are C (function computes effluent concentration) R (function computes fractional removal).
-        function (str): mathematical function expressing treatment result in terms of pollutant concentrations, pollutant removals, and other standard variables (see below).
+        result (str): Result computed by treatment function. Choices are C (function computes effluent concentration)
+        R (function computes fractional removal).
+        function (str): mathematical function expressing treatment result in terms of pollutant concentrations,
+        pollutant removals, and other standard variables (see below).
 
     Attributes:
-        Node (str): Name of node where treatment occurs.
+        node (str): Name of node where treatment occurs.
         pollutant (str): Name of pollutant receiving treatment.
-        result (str): Result computed by treatment function. Choices are C (function computes effluent concentration) R (function computes fractional removal).
-        function (str): mathematical function expressing treatment result in terms of pollutant concentrations, pollutant removals, and other standard variables (see below).
+        result (str): Result computed by treatment function. Choices are C (function computes effluent concentration)
+        R (function computes fractional removal).
+        function (str): mathematical function expressing treatment result in terms of pollutant concentrations,
+        pollutant removals, and other standard variables (see below).
 
     Remarks:
         Treatment functions can be any well-formed mathematical expression involving:
@@ -337,8 +328,8 @@ class Treatment(BaseSectionObject):
     _identifier = (IDENTIFIERS.node, IDENTIFIERS.pollutant)
     _section_label = TREATMENT
 
-    def __init__(self, Node, pollutant, result, function):
-        self.Node = str(Node)
+    def __init__(self, node, pollutant, result, function):
+        self.node = str(node)
         self.pollutant = str(pollutant)
         self.result = str(result)
         self.function = str(function)
@@ -358,4 +349,4 @@ class Treatment(BaseSectionObject):
         Returns:
             str: SWMM .inp file compatible string
         """
-        return f'{self.Node} {self.pollutant} {self.result} = {self.function}'
+        return f'{self.node} {self.pollutant} {self.result} = {self.function}'

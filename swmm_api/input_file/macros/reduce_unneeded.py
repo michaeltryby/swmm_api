@@ -152,7 +152,7 @@ def reduce_raingages(inp):
     """
     needed_raingages = set()
     if (SUBCATCHMENTS in inp) and (RAINGAGES in inp):
-        needed_raingages = {inp[SUBCATCHMENTS][s].RainGage for s in inp[SUBCATCHMENTS]}
+        needed_raingages = {inp[SUBCATCHMENTS][s].rain_gage for s in inp[SUBCATCHMENTS]}
 
     inp[RAINGAGES] = inp[RAINGAGES].slice_section(needed_raingages)
 

@@ -86,7 +86,7 @@ def move_flows(inp: SwmmInput, from_node, to_node, only_constituent=None):
 
                 elif section == DWF:
                     # DryWeatherFlow can be easily added when Patterns are equal
-                    inp[section][index_new].Base += obj.Base
+                    inp[section][index_new].base_value += obj.base_value
 
                     # if not all([old[p] == new[p] for p in ['pattern1', 'pattern2', 'pattern3', 'pattern4']]):
                     #     print(f'WARNING: move_flows  from "{from_node}" to "{to_node}". DWF patterns don\'t
@@ -188,10 +188,10 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
         inp[XSECTIONS].add_obj(xs)
 
         if loss:
-            inlet = loss.Inlet if loss.Inlet and (new_node_i == 0) else 0
-            outlet = loss.Outlet if loss.Outlet and (new_node_i == n_new_nodes - 1) else 0
-            average = loss.Average / (n_new_nodes + 1)
-            flap_gate = loss.FlapGate
+            inlet = loss.entrance if loss.entrance and (new_node_i == 0) else 0
+            outlet = loss.exit if loss.exit and (new_node_i == n_new_nodes - 1) else 0
+            average = loss.average / (n_new_nodes + 1)
+            flap_gate = loss.has_flap_gate
 
             if any([inlet, outlet, average, flap_gate]):
                 inp[LOSSES].add_obj(Loss(link.name, inlet, outlet, average, flap_gate))
@@ -524,7 +524,7 @@ def rename_timeseries(inp, old_label, new_label):
         filtered_table = f[f['TimeSeries'] == old_label]
         if not filtered_table.empty:
             for i in filtered_table.index:
-                inp[INFLOWS][i].TimeSeries = new_label
+                inp[INFLOWS][i].time_series = new_label
 
 
 def flip_link_direction(inp, link_label):

@@ -28,7 +28,7 @@ class RainGage(BaseSectionObject):
 
 
     Attributes:
-        Name (str): name assigned to rain gage.
+        name (str): name assigned to rain gage.
         Format (str): form of recorded rainfall, either INTENSITY, VOLUME or CUMULATIVE.
         Interval (str, Timedelta): time interval between gage readings in decimal hours or hours:minutes format
                                     (e.g., 0:15 for 15-minute readings). ``Intvl``
@@ -56,27 +56,28 @@ class RainGage(BaseSectionObject):
         IN = 'IN'
         MM = 'MM'
 
-    def __init__(self, Name, Format, Interval, SCF, Source, *args,
+    def __init__(self, name, Format, Interval, SCF, Source, *args,
                  Timeseries=NaN,
                  Filename=NaN, Station=NaN, Units=NaN):
         """
         Object for section RAINGAGES
 
         Args:
-            Name (str): name assigned to rain gage.
+            name (str): Name assigned to rain gage.
             Format (str): form of recorded rainfall, either INTENSITY, VOLUME or CUMULATIVE.
             Interval (str, Timedelta): time interval between gage readings in decimal hours or hours:minutes format
                                         (e.g., 0:15 for 15-minute readings). ``Intvl``
             SCF (float): snow catch deficiency correction factor (use 1.0 for no adjustment).
             Source (str): one of ``'TIMESERIES'`` ``'FILE'``
             *args: for automatic inp file reading
-            Timeseries (:obj:`str`, optional): name of time series in [TIMESERIES] section with rainfall data. ``Tseries``
+            Timeseries (:obj:`str`, optional): name of time series in [TIMESERIES] section with rainfall data.
+            ``Tseries``
             Filename (str): name of external file with rainfall data.
                             Rainfall files are discussed in Section 11.3 Rainfall Files. ``Fname``
             Station (str): name of recording station used in the rain file. ``Sta``
             Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
         """
-        self.Name = str(Name)
+        self.name = str(name)
         self.Format = Format
         self.Interval = Interval
         self.SCF = float(SCF)
@@ -115,20 +116,20 @@ class Symbol(BaseSectionObject):
             Gage Xcoord Ycoord
 
     Args:
-        Gage (str): name of gage.
+        gage (str): name of gage.
         x (float): horizontal coordinate relative to origin in lower left of map. ``Xcoord``
         y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
 
     Attributes:
-        Gage (str): name of gage.
+        gage (str): name of gage.
         x (float): horizontal coordinate relative to origin in lower left of map. ``Xcoord``
         y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
     """
     _identifier = IDENTIFIERS.gage
     _section_label = SYMBOLS
 
-    def __init__(self, Gage, x, y):
-        self.Gage = str(Gage)
+    def __init__(self, gage, x, y):
+        self.gage = str(gage)
         self.x = float(x)
         self.y = float(y)
 
@@ -179,13 +180,13 @@ class Pattern(BaseSectionObject):
             H1        0.5 0.5 0.5 0.5 0.5 0.5
 
     Args:
-        Name (str): name used to identify the pattern.
+        name (str): name used to identify the pattern.
         Type (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
         Factors (list): multiplier values.
         *factors: for automatic inp file reading
 
     Attributes:
-        Name (str): name used to identify the pattern.
+        name (str): name used to identify the pattern.
         Type (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
         Factors (list): multiplier values.
     """
@@ -198,8 +199,8 @@ class Pattern(BaseSectionObject):
         HOURLY = 'HOURLY'
         WEEKEND = 'WEEKEND'
 
-    def __init__(self, Name, Type, *factors, Factors=None):
-        self.Name = str(Name)
+    def __init__(self, name, Type, *factors, Factors=None):
+        self.name = str(name)
         self.Type = Type
         if Factors is not None:
             self.Factors = Factors
@@ -232,10 +233,10 @@ class Pattern(BaseSectionObject):
             first = True
             for a in np.array_split(self.Factors, int(len(self.Factors) / 6)):
                 if first:
-                    s += f'{self.Name} {self.Type} '
+                    s += f'{self.name} {self.Type} '
                     first = False
                 else:
-                    s += f'\n{self.Name} {" ":<{l}} '
+                    s += f'\n{self.name} {" ":<{l}} '
                 s += ' '.join([type2str(i) for i in a])
             return s
         else:
@@ -271,7 +272,7 @@ class Pollutant(BaseSectionObject):
         system by editing the node's Inflows property.
 
     Attributes:
-        Name (str): name assigned to pollutant.
+        name (str): name assigned to pollutant.
         unit (str): concentration units
 
                 - ``MG/L`` for milligrams per liter
@@ -298,13 +299,13 @@ class Pollutant(BaseSectionObject):
         UG_PER_L = 'UG/L'
         COUNT_PER_L = '#/L'
 
-    def __init__(self, Name, unit, Crain, Cgw, Crdii, Kdecay,
+    def __init__(self, name, unit, Crain, Cgw, Crdii, Kdecay,
                  SnowOnly=False, Co_Pollutant='*', Co_Frac=0, Cdwf=0, Cinit=0):
         """
         Pollutant
 
         Args:
-            Name (str): name assigned to pollutant.
+            name (str): name assigned to pollutant.
             unit (str): concentration units
 
                     - ``MG/L`` for milligrams per liter
@@ -315,7 +316,8 @@ class Pollutant(BaseSectionObject):
             Cgw (float): concentration of pollutant in groundwater (concentration units).
             Crdii (float): concentration of pollutant in inflow/infiltration (concentration units). ``Cii``
             Kdecay (float): first-order decay coefficient (1/days).
-            SnowOnly (bool): ``YES`` if pollutant buildup occurs only when there is snow cover, ``NO`` otherwise (default
+            SnowOnly (bool): ``YES`` if pollutant buildup occurs only when there is snow cover, ``NO`` otherwise (
+            default
                 is ``NO``). ``Sflag``
             Co_Pollutant (str): name of co-pollutant (default is no co-pollutant designated by a ``*``). ``CoPoll``
             Co_Frac (float): fraction of co-pollutant concentration (default is 0). ``CoFract``
@@ -323,7 +325,7 @@ class Pollutant(BaseSectionObject):
             Cinit (float): pollutant concentration throughout the conveyance system at the start of the simulation (
                 default is 0).
         """
-        self.Name = str(Name)
+        self.name = str(name)
         self.unit = str(unit)
         self.Crain = float(Crain)
         self.Cgw = float(Cgw)
@@ -384,7 +386,7 @@ class Transect(BaseSectionObject):
         NC line. ``Nright``
         roughness_channel (float): Manning’s n of main channel portion of channel (use 0 if no change from previous
         NC line. ``Nchanl``
-        Name (str): name assigned to transect.
+        name (str): name assigned to transect.
         bank_station_left (float): station position which ends the left overbank portion of the channel (ft or m).
         ``Xleft``
         bank_station_right (float): station position which begins the right overbank portion of the channel (ft or
@@ -408,7 +410,7 @@ class Transect(BaseSectionObject):
         NC line. ``Nright``
         roughness_channel (float): Manning’s n of main channel portion of channel (use 0 if no change from previous
         NC line. ``Nchanl``
-        Name (str): name assigned to transect.
+        name (str): name assigned to transect.
         bank_station_left (float): station position which ends the left overbank portion of the channel (ft or m).
         ``Xleft``
         bank_station_right (float): station position which begins the right overbank portion of the channel (ft or
@@ -434,10 +436,10 @@ class Transect(BaseSectionObject):
         X1 = 'X1'
         GR = 'GR'
 
-    def __init__(self, Name, station_elevations=None, bank_station_left=0, bank_station_right=0,
+    def __init__(self, name, station_elevations=None, bank_station_left=0, bank_station_right=0,
                  roughness_left=0, roughness_right=0, roughness_channel=0,
                  modifier_stations=0, modifier_elevations=0, modifier_meander=0):
-        self.Name = str(Name)
+        self.name = str(name)
 
         self.roughness_left = None
         self.roughness_right = None
@@ -492,7 +494,7 @@ class Transect(BaseSectionObject):
             elif line[0] == cls.KEYS.X1:
                 if last is not None:
                     yield last
-                last = cls(Name=line[1])
+                last = cls(name=line[1])
                 last.set_bank_stations(*line[3:5])
                 last.set_modifiers(*line[8:])
                 last.set_roughness(*last_roughness)
@@ -510,7 +512,7 @@ class Transect(BaseSectionObject):
             break_every: break every x-th GR station, default: after every station
         """
         s = '{} {} {} {}\n'.format(self.KEYS.NC, self.roughness_left, self.roughness_right, self.roughness_channel)
-        s += '{} {} {} {} {} 0 0 0 {} {} {}\n'.format(self.KEYS.X1, self.Name, self.get_number_stations(),
+        s += '{} {} {} {} {} 0 0 0 {} {} {}\n'.format(self.KEYS.X1, self.name, self.get_number_stations(),
                                                       self.bank_station_left, self.bank_station_right,
                                                       self.modifier_meander, self.modifier_stations,
                                                       self.modifier_elevations, )
@@ -863,8 +865,8 @@ class Control(BaseSectionObject):
             self.relation = relation  # immer "="  # always equal
             self.value = ' '.join(value)
 
-    def __init__(self, Name, conditions, actions, priority=0):
-        self.Name = str(Name)
+    def __init__(self, name, conditions, actions, priority=0):
+        self.name = str(name)
         self.conditions = conditions
         self.actions = actions
         self.priority = int(priority)
@@ -905,7 +907,7 @@ class Control(BaseSectionObject):
         yield cls(*args)
 
     def to_inp_line(self):
-        s = f'{self.LOGIC.RULE} {self.Name}\n'
+        s = f'{self.LOGIC.RULE} {self.name}\n'
         s += '{}\n'.format('\n'.join([c.to_inp_line() for c in self.conditions]))
         s += '{}\n'.format('\n'.join([a.to_inp_line() for a in self.actions]))
         s += f'{self.LOGIC.PRIORITY} {self.priority}\n'
@@ -976,14 +978,14 @@ class Curve(BaseSectionObject):
             PC1 100 5 300 10 500 20
 
     Args:
-        Name (str): name assigned to table
+        name (str): name assigned to table
         Type (str): one of ``STORAGE`` / ``SHAPE`` / ``DIVERSION`` / ``TIDAL`` / ``PUMP1`` / ``PUMP2`` / ``PUMP3`` /
         ``PUMP4`` / ``RATING`` / ``CONTROL``
         points (list[list[float, float]]): tuple of X-value (an independent variable) and  Y-value (an dependent
         variable)
 
     Attributes:
-        Name (str): name assigned to table
+        name (str): name assigned to table
         Type (str): one of ``STORAGE`` / ``SHAPE`` / ``DIVERSION`` / ``TIDAL`` / ``PUMP1`` / ``PUMP2`` / ``PUMP3`` /
         ``PUMP4`` / ``RATING`` / ``CONTROL``
         points (list[list[float, float]]): tuple of X-value (an independent variable) and  Y-value (an dependent
@@ -1029,8 +1031,8 @@ class Curve(BaseSectionObject):
         elif Type == TYPES.CONTROL:
             return ['variable', 'setting']
 
-    def __init__(self, Name, Type, points):
-        self.Name = str(Name)
+    def __init__(self, name, Type, points):
+        self.name = str(name)
         self.Type = Type.upper()
         self.points = points
 
@@ -1068,10 +1070,10 @@ class Curve(BaseSectionObject):
     def to_inp_line(self):
         points = iter(self.points)
         x, y = next(points)
-        f = '{}  {} {:7.4f} {:7.4f}\n'.format(self.Name, self.Type, x, y)
+        f = '{}  {} {:7.4f} {:7.4f}\n'.format(self.name, self.Type, x, y)
         Type = ' ' * len(self.Type)
         for x, y in points:  # [(x,y), (x,y), ...]
-            f += '{}  {} {:7.4f} {:7.4f}\n'.format(self.Name, Type, x, y)
+            f += '{}  {} {:7.4f} {:7.4f}\n'.format(self.name, Type, x, y)
         return f
 
 
@@ -1087,7 +1089,7 @@ class Street(BaseSectionObject):
             Name Tcrown Hcurb Sx nRoad (a W)(Sides Tback Sback nBack)
 
     Attributes:
-        Name(str): name assigned to the street cross-section
+        name(str): name assigned to the street cross-section
         width_crown (float): distance from street’s curb to its crown (ft or m) [Tcrown]
         height_curb (float): curb height (ft or m) [Hcurb]
         slope (float): street cross slope (%) [Sx]
@@ -1107,13 +1109,13 @@ class Street(BaseSectionObject):
     _table_inp_export = True
     _section_label = STREET
 
-    def __init__(self, Name, width_crown, height_curb, slope, n_road, depth_gutter=0, width_gutter=0, sides=2,
+    def __init__(self, name, width_crown, height_curb, slope, n_road, depth_gutter=0, width_gutter=0, sides=2,
                  width_backing=0, slope_backing=0, n_backing=0):
         """
         Street object.
 
         Args:
-            Name(str): name assigned to the street cross-section
+            name(str): name assigned to the street cross-section
             width_crown (float): distance from street’s curb to its crown (ft or m) [Tcrown]
             height_curb (float): curb height (ft or m) [Hcurb]
             slope (float): street cross slope (%) [Sx]
@@ -1125,7 +1127,7 @@ class Street(BaseSectionObject):
             slope_backing (float | optional): street backing slope (%) (default = 0) [Sback]
             n_backing (float | optional): street backing Manning’s roughness coefficient (n) (default = 0) [nBack]
         """
-        self.Name = str(Name)
+        self.name = str(name)
         self.width_crown = float(width_crown)
         self.height_curb = float(height_curb)
         self.slope = float(slope)
@@ -1155,7 +1157,7 @@ class Inlet(BaseSectionObject):
             Name CUSTOM Dcurve/Rcurve
 
     Parameters:
-        Name (str): name assigned to the inlet structure. [Name]
+        name (str): name assigned to the inlet structure. [Name]
         length (float): length of the inlet parallel to the street curb (ft or m). [Length]
         width (float): width of a GRATE or SLOTTED inlet (ft or m). [Width]
         height (float): height of a CURB opening inlet (ft or m). [Height]
@@ -1179,11 +1181,14 @@ class Inlet(BaseSectionObject):
 
         GRATE and DROP_GRATE types can be any of the following:
             - ``P_BAR``-50: Parallel bar grate with bar spacing 17⁄8” on center
-            - ``P_BAR``-50X100: Parallel bar grate with bar spacing 17⁄8” on center and 3⁄8” diameter lateral rods spaced at 4” on center
+            - ``P_BAR``-50X100: Parallel bar grate with bar spacing 17⁄8” on center and 3⁄8” diameter lateral rods
+            spaced at 4” on center
             - ``P_BAR``-30: Parallel bar grate with 11⁄8” on center bar spacing
             - ``CURVED_VANE``: Curved vane grate with 31⁄4” longitudinal bar and 41⁄4” transverse bar spacing on center
-            - ``TILT_BAR``-45: 45 degree tilt bar grate with 21⁄4” longitudinal bar and 4” transverse bar spacing on center
-            - ``TILT_BAR``-30: 30 degree tilt bar grate with 31⁄4” and 4” on center longitudinal and lateral bar spacing respectively
+            - ``TILT_BAR``-45: 45 degree tilt bar grate with 21⁄4” longitudinal bar and 4” transverse bar spacing on
+            center
+            - ``TILT_BAR``-30: 30 degree tilt bar grate with 31⁄4” and 4” on center longitudinal and lateral bar
+            spacing respectively
             - ``RETICULINE``: "Honeycomb" pattern of lateral bars and longitudinal bearing bars
             - ``GENERIC``: A generic grate design.
 
@@ -1226,11 +1231,11 @@ class Inlet(BaseSectionObject):
         INCLINED = 'INCLINED'
         VERTICAL = 'VERTICAL'
 
-    def __init__(self, Name, kind,
+    def __init__(self, name, kind,
                  # length, width, height, grate_type, area_open, velocity_splash, throat_angle
                  ):
         """Inlet object."""
-        self.Name = Name
+        self.name = name
         self.kind = kind
         # self.length = length
         # self.width = width
@@ -1245,9 +1250,9 @@ class Inlet(BaseSectionObject):
 
 
 class InletGrate(Inlet):
-    def __init__(self, Name, kind=Inlet.TYPES.GRATE, length=None, width=None, grate_type=None,  area_open=NaN,
+    def __init__(self, name, kind=Inlet.TYPES.GRATE, length=None, width=None, grate_type=None, area_open=NaN,
                  velocity_splash=NaN):
-        super().__init__(Name, kind)
+        super().__init__(name, kind)
         self.length = length
         self.width = width
         self.grate_type = grate_type
@@ -1256,22 +1261,22 @@ class InletGrate(Inlet):
 
 
 class InletCurb(Inlet):
-    def __init__(self, Name, kind=Inlet.TYPES.CURB, length=None, height=None):
-        super().__init__(Name, kind)
+    def __init__(self, name, kind=Inlet.TYPES.CURB, length=None, height=None):
+        super().__init__(name, kind)
         self.length = length
         self.height = height
 
 
 class InletSlotted(Inlet):
-    def __init__(self, Name, kind=Inlet.TYPES.SLOTTED, length=None, width=None):
-        super().__init__(Name, kind)
+    def __init__(self, name, kind=Inlet.TYPES.SLOTTED, length=None, width=None):
+        super().__init__(name, kind)
         self.length = length
         self.width = width
 
 
 class InletCustom(Inlet):
-    def __init__(self, Name, kind=Inlet.TYPES.CUSTOM, curve=None):
-        super().__init__(Name, kind)
+    def __init__(self, name, kind=Inlet.TYPES.CUSTOM, curve=None):
+        super().__init__(name, kind)
         self.curve = curve
 
 
@@ -1395,7 +1400,7 @@ class Timeseries(BaseSectionObject):
             HY1 32:10 0 34.0 57 35.33 85 48.67 24 50 0
 
     Args:
-        Name (str): name assigned to time series.
+        name (str): name assigned to time series.
     """
     _identifier = IDENTIFIERS.name
     _table_inp_export = False
@@ -1404,8 +1409,8 @@ class Timeseries(BaseSectionObject):
     class TYPES:
         FILE = 'FILE'
 
-    def __init__(self, Name):
-        self.Name = str(Name)
+    def __init__(self, name):
+        self.name = str(name)
 
     @classmethod
     def _convert_lines(cls, multi_line_args):
@@ -1467,17 +1472,17 @@ class TimeseriesFile(Timeseries):
             Name FILE Fname
 
     Args:
-        Name (str): name assigned to time series.
+        name (str): name assigned to time series.
         filename (str): name of a file in which the time series data are stored ``Fname``
     """
 
-    def __init__(self, Name, filename):
-        Timeseries.__init__(self, Name)
+    def __init__(self, name, filename):
+        Timeseries.__init__(self, name)
         self.kind = self.TYPES.FILE
         self.filename = filename.strip('"')
 
     def to_inp_line(self):
-        return f'{self.Name} {self.kind} "{self.filename}"'
+        return f'{self.name} {self.kind} "{self.filename}"'
 
 
 class TimeseriesData(Timeseries):
@@ -1494,7 +1499,7 @@ class TimeseriesData(Timeseries):
             Name Time Value ...
 
     Args:
-        Name (str): name assigned to time series.
+        name (str): name assigned to time series.
         data (list[tuple]): list of index/value tuple with:
 
             - Date: date in Month/Day/Year format (e.g., June 15, 2001 would be 6/15/2001).
@@ -1504,8 +1509,8 @@ class TimeseriesData(Timeseries):
             - Value: value corresponding to given date and time.
     """
 
-    def __init__(self, Name, data):
-        Timeseries.__init__(self, Name)
+    def __init__(self, name, data):
+        Timeseries.__init__(self, name)
         self.data = data
         self._fix_index()
 
@@ -1554,7 +1559,7 @@ class TimeseriesData(Timeseries):
             self.data = list(zip(date_time_new, values))
         except:
             # if the conversion doesn't work - skip it
-            warnings.warn(f'Could not convert Data for Timerseries(Name={self.Name}). First datetime = "{date_time[0]}"')
+            warnings.warn(f'Could not convert Data for Timeseries(Name={self.name}). First datetime = "{date_time[0]}"')
 
     @property
     def frame(self):
@@ -1565,11 +1570,11 @@ class TimeseriesData(Timeseries):
             pandas.Series: Timeseries
         """
         date_time, values = zip(*self.data)
-        return pd.Series(index=date_time, data=values, name=self.Name)
+        return pd.Series(index=date_time, data=values, name=self.name)
 
     def to_inp_line(self):
         return '\n'.join(
-            f'{self.Name} {datetime_to_str(date_time)} {value}'
+            f'{self.name} {datetime_to_str(date_time)} {value}'
             for date_time, value in self.data
         )
 
@@ -1608,18 +1613,18 @@ class Tag(BaseSectionObject):
         Subcatch = 'Subcatch'
         Link = 'Link'
 
-    def __init__(self, kind, Name, tag, *tags):
+    def __init__(self, kind, name, tag, *tags):
         """
         Tag object.
 
         Args:
             kind (str): Type of object
-            Name (str): label of the object
+            name (str): label of the object
             tag (str): tag
             *tags (str): only for .inp-file reading, if whitespaces are in the tag
         """
         self.kind = kind.lower().capitalize()
-        self.Name = Name
+        self.name = name
         self.tag = tag
         if tags:
             self.tag += '_' + '_'.join(tags)
@@ -1738,7 +1743,7 @@ class Hydrograph(BaseSectionObject):
             UH101 JUL MEDIUM 0.011 2.0 2.0
 
     Args:
-        Name (str): name assigned to time series.
+        name (str): name assigned to time series.
     """
     _identifier = IDENTIFIERS.name
     _table_inp_export = False
@@ -1749,8 +1754,8 @@ class Hydrograph(BaseSectionObject):
         MEDIUM = 'MEDIUM'
         LONG = 'LONG'
 
-    def __init__(self, Name, rain_gage, monthly_parameters=None):
-        self.Name = str(Name)
+    def __init__(self, name, rain_gage, monthly_parameters=None):
+        self.name = str(name)
         self.rain_gage = rain_gage
 
         if monthly_parameters is None:
@@ -1768,7 +1773,7 @@ class Hydrograph(BaseSectionObject):
                 if last is not None:
                     yield last
                 last = cls(name, rain_gage=line[0])
-            elif name == last.Name:
+            elif name == last.name:
                 last.monthly_parameters.append(cls.MONTHS.Parameters(name, *line))
         yield last
 
@@ -1793,12 +1798,12 @@ class Hydrograph(BaseSectionObject):
         class Parameters(BaseSectionObject):
             _identifier = IDENTIFIERS.name
 
-            def __init__(self, Name, month, response, response_ratio, time_to_peak, recession_limb_ratio,
+            def __init__(self, name, month, response, response_ratio, time_to_peak, recession_limb_ratio,
                          depth_max=NaN, depth_recovery=NaN, depth_init=NaN):
                 """
 
                 Args:
-                    Name (str): name assigned to a unit hydrograph group.
+                    name (str): name assigned to a unit hydrograph group.
                     month (str):
                     response (str):
                     response_ratio (float):
@@ -1808,7 +1813,7 @@ class Hydrograph(BaseSectionObject):
                     depth_recovery (str):
                     depth_init (str):
                 """
-                self.Name = str(Name)
+                self.name = str(name)
                 self.month = month
                 self.response = response
                 self.response_ratio = float(response_ratio)
@@ -1819,7 +1824,7 @@ class Hydrograph(BaseSectionObject):
                 self.depth_init = depth_init
 
     def to_inp_line(self):
-        s = '{} {}\n'.format(self.Name, self.rain_gage)
+        s = '{} {}\n'.format(self.name, self.rain_gage)
         for hyd in self.monthly_parameters:
             s += hyd.to_inp_line() + '\n'
         return s
@@ -1840,7 +1845,7 @@ class LandUse(BaseSectionObject):
             Name (SweepInterval Availability LastSweep)
 
     Args:
-        Name:
+        name:
             land use name.
         sweep_interval:
             days between street sweeping.
@@ -1852,8 +1857,8 @@ class LandUse(BaseSectionObject):
     _identifier = IDENTIFIERS.name
     _section_label = LANDUSES
 
-    def __init__(self, Name, sweep_interval=NaN, availability=NaN, last_sweep=NaN):
-        self.Name = str(Name)
+    def __init__(self, name, sweep_interval=NaN, availability=NaN, last_sweep=NaN):
+        self.name = str(name)
         self.sweep_interval = float(sweep_interval)
         self.availability = float(availability)
         self.last_sweep = float(last_sweep)
@@ -1872,7 +1877,7 @@ class WashOff(BaseSectionObject):
             Landuse Pollutant FuncType C1 C2 SweepRmvl BmpRmvl
 
     Attributes:
-        landuse:
+        land_use:
             land use name.
         pollutant:
             pollutant name.
@@ -1926,12 +1931,12 @@ class WashOff(BaseSectionObject):
         RC = 'RC'
         EMC = 'EMC'
 
-    def __init__(self, landuse, pollutant, func_type, C1, C2, sweeping_removal, BMP_removal):
+    def __init__(self, land_use, pollutant, func_type, C1, C2, sweeping_removal, BMP_removal):
         """
         WashOff object.
 
         Args:
-            landuse:
+            land_use:
                 land use name.
             pollutant:
                 pollutant name.
@@ -1946,7 +1951,7 @@ class WashOff(BaseSectionObject):
             BMP_removal (float):
                 BMP removal efficiency (percent).
         """
-        self.landuse = landuse
+        self.land_use = land_use
         self.pollutant = pollutant
         self.func_type = func_type
         self.C1 = float(C1)
@@ -1968,7 +1973,7 @@ class BuildUp(BaseSectionObject):
             Landuse Pollutant FuncType C1 C2 C3 PerUnit
 
     Attributes:
-        landuse:
+        land_use:
             land use name.
         pollutant:
             pollutant name.
@@ -2021,12 +2026,12 @@ class BuildUp(BaseSectionObject):
         CURBLENGTH = 'CURBLENGTH'
         CURB = 'CURB'
 
-    def __init__(self, landuse, pollutant, func_type, C1, C2, C3, per_unit):
+    def __init__(self, land_use, pollutant, func_type, C1, C2, C3, per_unit):
         """
         BuildUp object.
 
         Args:
-            landuse:
+            land_use:
                 land use name.
             pollutant:
                 pollutant name.
@@ -2041,7 +2046,7 @@ class BuildUp(BaseSectionObject):
             per_unit (str):
                 ``AREA`` if buildup is per unit area, ``CURBLENGTH`` if per length of curb.
         """
-        self.landuse = landuse
+        self.land_use = land_use
         self.pollutant = pollutant
         self.func_type = func_type
         self.C1 = float(C1)
@@ -2067,7 +2072,7 @@ class SnowPack(BaseSectionObject):
             Name REMOVAL Dplow Fout Fimp Fperv Fimelt (Fsub Scatch)
 
     Args:
-        Name (str):
+        name (str):
             name assigned to snowpack parameter set.
         Cmin (float):
             minimum melt coefficient (in/hr-deg F or mm/hr-deg C).
@@ -2120,8 +2125,8 @@ class SnowPack(BaseSectionObject):
     _section_label = SNOWPACKS
     _table_inp_export = False
 
-    def __init__(self, Name, parts=None):
-        self.Name = str(Name)
+    def __init__(self, name, parts=None):
+        self.name = str(name)
         self.parts = {}
 
         if isinstance(parts, dict):
@@ -2147,7 +2152,7 @@ class SnowPack(BaseSectionObject):
             if last is None:
                 last = cls(name)
 
-            elif name != last.Name:
+            elif name != last.name:
                 yield last
                 last = cls(name)
 
@@ -2228,7 +2233,7 @@ class SnowPack(BaseSectionObject):
         s = ''
         for pack in self.PARTS._possible:
             if self.parts[pack] is not None:
-                s += f'{self.Name} {pack:<8} {self.parts[pack].to_inp_line()}\n'
+                s += f'{self.name} {pack:<8} {self.parts[pack].to_inp_line()}\n'
         return s
 
 
@@ -2247,7 +2252,7 @@ class Aquifer(BaseSectionObject):
             Name Por WP FC Ks Kslp Tslp ETu ETs Seep Ebot Egw Umc (Epat)
 
     Args:
-        Name (str):
+        name (str):
             name assigned to aquifer.
         Por (float):
             soil porosity (volumetric fraction).
@@ -2285,8 +2290,8 @@ class Aquifer(BaseSectionObject):
     _identifier = IDENTIFIERS.name
     _section_label = AQUIFERS
 
-    def __init__(self, Name, Por, WP, FC, Ks, Kslp, Tslp, ETu, ETs, Seep, Ebot, Egw, Umc, Epat=NaN):
-        self.Name = str(Name)
+    def __init__(self, name, Por, WP, FC, Ks, Kslp, Tslp, ETu, ETs, Seep, Ebot, Egw, Umc, Epat=NaN):
+        self.name = str(name)
         self.Por = float(Por)
         self.WP = float(WP)
         self.FC = float(FC)

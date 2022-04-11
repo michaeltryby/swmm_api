@@ -18,8 +18,8 @@ def junction_to_storage(inp, label, *args, **kwargs):
     j = inp[JUNCTIONS].pop(label)  # type: Junction
     if STORAGE not in inp:
         inp[STORAGE] = Storage.create_section()
-    inp[STORAGE].add_obj(Storage(name=label, elevation=j.elevation, MaxDepth=j.depth_max,
-                                 InitDepth=j.depth_init, Apond=j.area_ponded, *args, **kwargs))
+    inp[STORAGE].add_obj(Storage(name=label, elevation=j.elevation, depth_max=j.depth_max,
+                                 depth_init=j.depth_init, depth_surcharge=j.area_ponded, *args, **kwargs))
 
 
 def junction_to_outfall(inp, label, *args, **kwargs):
@@ -41,7 +41,7 @@ def junction_to_outfall(inp, label, *args, **kwargs):
     inp[OUTFALLS].add_obj(Outfall(name=label, elevation=j.elevation, *args, **kwargs))
 
 
-def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0):
+def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, has_flap_gate=False, Orate=0):
     """
     convert :class:`~swmm_api.input_file.inp_sections.link.Conduit` to
     :class:`~swmm_api.input_file.inp_sections.link.Orifice`
@@ -56,7 +56,7 @@ def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0
             the invert of inlet node (ft or m, expressed as either a depth or as an elevation,
             depending on the LINK_OFFSETS option setting).
         Qcoeff (float): discharge coefficient (unitless).
-        FlapGate (bool): YES if flap gate present to prevent reverse flow, NO if not (default is NO).
+        has_flap_gate (bool): YES if flap gate present to prevent reverse flow, NO if not (default is NO).
         Orate (int): time in decimal hours to open a fully closed orifice (or close a fully open one).
                         Use 0 if the orifice can open/close instantaneously.
     """
@@ -64,4 +64,4 @@ def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0
     if ORIFICES not in inp:
         inp[ORIFICES] = Orifice.create_section()
     inp[ORIFICES].add_obj(Orifice(name=label, from_node=c.from_node, to_node=c.to_node,
-                                  orientation=Type, offset=Offset, discharge_coefficient=Qcoeff, has_flap_gate=FlapGate, hours_to_open=Orate))
+                                  orientation=Type, offset=Offset, discharge_coefficient=Qcoeff, has_flap_gate=has_flap_gate, hours_to_open=Orate))

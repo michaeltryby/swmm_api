@@ -300,67 +300,65 @@ class LIDControl(BaseSectionObject):
         _dict = {x._LABEL: x for x in (Surface, Soil, Pavement, Storage, Drain, Drainmat)}
 
     def to_inp_line(self):
-        s = '{} {}\n'.format(self.Name, self.lid_kind)
+        s = '{} {}\n'.format(self.name, self.lid_kind)
         for layer, l in self.layer_dict.items():
-            s += '{} {:<8} '.format(self.Name, layer) + l.to_inp_line() + '\n'
+            s += '{} {:<8} '.format(self.name, layer) + l.to_inp_line() + '\n'
         return s
 
 
 class LIDUsage(BaseSectionObject):
     """
-    Section: [**LID_USAGE**]
+    Assignment of LID controls to subcatchments.
+
+    Section:
+        [LID_USAGE]
 
     Purpose:
         Deploys LID controls within specific subcatchment areas.
 
-    Formats:
-        ::
+    Remarks:
+        If :attr:`LIDUsage.route_to_pervious` is set to 1 and :attr:`LIDUsage.drain_to` set to some other outlet,
+        then only the excess surface flow from the LID unit will be routed back to the subcatchment’s pervious
+        area while the underdrain flow will be sent to :attr:`LIDUsage.drain_to`.
 
-            Subcat LID Number Area Width InitSat FromImp ToPerv (RptFile DrainTo)
+        More than one type of LID process can be deployed within a subcatchment as long
+        as their total area does not exceed that of the subcatchment and the total percent
+        impervious area treated does not exceed 100.
 
-    Args:
-        Subcat (str): name of the subcatchment using the LID process.
-        LID (str): name of an LID process defined in the [LID_CONTROLS] section.
-        Number (int): number of replicate LID units deployed.
-        Area (float): area of each replicate unit (ft^2 or m^2 ).
-        Width (float): width of the outflow face of each identical LID unit (in ft or m). This
+    Attributes:
+        subcatchment (str): Name of the subcatchment using the LID process.
+        lid (str): Name of an LID process defined in the [LID_CONTROLS] section.
+        n_replicate (int): Number of replicate LID units deployed.
+        area (float): Area of each replicate unit (ft^2 or m^2 ).
+        width (float): Width of the outflow face of each identical LID unit (in ft or m). This
             parameter applies to roofs, pavement, trenches, and swales that use
             overland flow to convey surface runoff off of the unit. It can be set to 0 for
             other LID processes, such as bio-retention cells, rain gardens, and rain
             barrels that simply spill any excess captured runoff over their berms.
-        InitSat (float): for bio-retention cells, rain gardens, and green roofs this is the degree to
+        saturation_init (float): For bio-retention cells, rain gardens, and green roofs this is the degree to
             which the unit's soil is initially filled with water (0 % saturation
             corresponds to the wilting point moisture content, 100 % saturation has
             the moisture content equal to the porosity). The storage zone beneath
             the soil zone of the cell is assumed to be completely dry. For other types
             of LIDs it corresponds to the degree to which their storage zone is
             initially filled with water
-        FromImp (float): percent of the impervious portion of the subcatchment’s non-LID area
+        impervious_portion (float): Percent of the impervious portion of the subcatchment’s non-LID area
             whose runoff is treated by the LID practice. (E.g., if rain barrels are used
             to capture roof runoff and roofs represent 60% of the impervious area,
             then the impervious area treated is 60%). If the LID unit treats only direct
             rainfall, such as with a green roof, then this value should be 0. If the LID
             takes up the entire subcatchment then this field is ignored.
-        ToPerv (int): a value of 1 indicates that the surface and drain flow from the LID unit
+        route_to_pervious (int): A value of 1 indicates that the surface and drain flow from the LID unit
             should be routed back onto the pervious area of the subcatchment that
             contains it. This would be a common choice to make for rain barrels,
             rooftop disconnection, and possibly green roofs. The default value is 0.
-        RptFile (str): optional name of a file to which detailed time series results for the LID
+        fn_lid_report (str): Optional name of a file to which detailed time series results for the LID
             will be written. Enclose the name in double quotes if it contains spaces
             and include the full path if it is different than the SWMM input file path.
             Use ‘*’ if not applicable and an entry for DrainTo follows
-        DrainTo (str): optional name of subcatchment or node that receives flow from the unit’s
+        drain_to (str): Optional name of subcatchment or node that receives flow from the unit’s
             drain line, if different from the outlet of the subcatchment that the LID is
             placed in.
-
-    Remarks:
-        If ``ToPerv`` is set to 1 and ``DrainTo`` set to some other outlet, then only the excess
-        surface flow from the LID unit will be routed back to the subcatchment’s pervious
-        area while the underdrain flow will be sent to ``DrainTo``.
-
-        More than one type of LID process can be deployed within a subcatchment as long
-        as their total area does not exceed that of the subcatchment and the total percent
-        impervious area treated does not exceed 100.
 
     Examples:
         ::
@@ -376,17 +374,55 @@ class LIDUsage(BaseSectionObject):
             ;swale 200 ft long by 50 ft wide.
             S2 Swale 1 10000 50 0 0 0 “swale.rpt”
     """
-    _identifier = (IDENTIFIERS.subcatchment, 'LID')
+    _identifier = (IDENTIFIERS.subcatchment, 'lid')
     _section_label = LID_USAGE
 
-    def __init__(self, subcatchment, LID, Number, Area, Width, InitSat, FromImp, ToPerv, RptFile=NaN, DrainTo=NaN):
+    def __init__(self, subcatchment, lid, n_replicate, area, width, saturation_init, impervious_portion, route_to_pervious=0, fn_lid_report=NaN, drain_to=NaN):
+        """
+        Assignment of LID controls to subcatchments.
+
+        Args:
+            subcatchment (str): Name of the subcatchment using the LID process.
+            lid (str): Name of an LID process defined in the [LID_CONTROLS] section.
+            n_replicate (int): Number of replicate LID units deployed.
+            area (float): Area of each replicate unit (ft^2 or m^2 ).
+            width (float): Width of the outflow face of each identical LID unit (in ft or m). This
+                parameter applies to roofs, pavement, trenches, and swales that use
+                overland flow to convey surface runoff off of the unit. It can be set to 0 for
+                other LID processes, such as bio-retention cells, rain gardens, and rain
+                barrels that simply spill any excess captured runoff over their berms.
+            saturation_init (float): For bio-retention cells, rain gardens, and green roofs this is the degree to
+                which the unit's soil is initially filled with water (0 % saturation
+                corresponds to the wilting point moisture content, 100 % saturation has
+                the moisture content equal to the porosity). The storage zone beneath
+                the soil zone of the cell is assumed to be completely dry. For other types
+                of LIDs it corresponds to the degree to which their storage zone is
+                initially filled with water
+            impervious_portion (float): Percent of the impervious portion of the subcatchment’s non-LID area
+                whose runoff is treated by the LID practice. (E.g., if rain barrels are used
+                to capture roof runoff and roofs represent 60% of the impervious area,
+                then the impervious area treated is 60%). If the LID unit treats only direct
+                rainfall, such as with a green roof, then this value should be 0. If the LID
+                takes up the entire subcatchment then this field is ignored.
+            route_to_pervious (int): A value of 1 indicates that the surface and drain flow from the LID unit
+                should be routed back onto the pervious area of the subcatchment that
+                contains it. This would be a common choice to make for rain barrels,
+                rooftop disconnection, and possibly green roofs. The default value is 0.
+            fn_lid_report (str): Optional name of a file to which detailed time series results for the LID
+                will be written. Enclose the name in double quotes if it contains spaces
+                and include the full path if it is different than the SWMM input file path.
+                Use ‘*’ if not applicable and an entry for DrainTo follows
+            drain_to (str): Optional name of subcatchment or node that receives flow from the unit’s
+                drain line, if different from the outlet of the subcatchment that the LID is
+                placed in.
+        """
         self.subcatchment = str(subcatchment)
-        self.LID = str(LID)
-        self.Number = Number
-        self.Area = float(Area)
-        self.Width = float(Width)
-        self.InitSat = float(InitSat)
-        self.FromImp = float(FromImp)
-        self.ToPerv = int(ToPerv)
-        self.RptFile = RptFile
-        self.DrainTo = DrainTo
+        self.lid = str(lid)
+        self.n_replicate = n_replicate
+        self.area = float(area)
+        self.width = float(width)
+        self.saturation_init = float(saturation_init)
+        self.impervious_portion = float(impervious_portion)
+        self.route_to_pervious = int(route_to_pervious)
+        self.fn_lid_report = fn_lid_report
+        self.drain_to = drain_to

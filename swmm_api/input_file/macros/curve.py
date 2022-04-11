@@ -24,7 +24,7 @@ def curve_figure(curve):
     y_label, x_label = curve._get_names(curve.Type)
     ax.set_ylabel(y_label)
     ax.set_xlabel(x_label)
-    ax.set_title('{}: {}'.format(curve.Name, curve.Type))
+    ax.set_title('{}: {}'.format(curve.name, curve.Type))
 
     # -------------------------
     y, x = list(zip(*curve.points))
