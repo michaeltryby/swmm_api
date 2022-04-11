@@ -28,7 +28,7 @@ def filter_nodes(inp, final_nodes):
     # __________________________________________
     for section in [INFLOWS, DWF]:
         if section in inp:
-            inp[section] = inp[section].slice_section(final_nodes, by=IDENTIFIERS.Node)
+            inp[section] = inp[section].slice_section(final_nodes, by=IDENTIFIERS.node)
 
     # __________________________________________
     if TAGS in inp:

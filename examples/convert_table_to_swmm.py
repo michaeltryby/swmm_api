@@ -12,7 +12,7 @@ inp = SwmmInput()
 inp[SEC.JUNCTIONS] = InpSection(Junction)
 inp[SEC.COORDINATES] = InpSection(Coordinate)
 for index, row in df1.iterrows():
-    inp[SEC.JUNCTIONS].add_obj(Junction(str(row.Name), Elevation=row['Sohlhöhe[m NN]'], MaxDepth=row['Deckelhöhe[m NN]']-row['Sohlhöhe[m NN]']))
+    inp[SEC.JUNCTIONS].add_obj(Junction(str(row.Name), elevation=row['Sohlhöhe[m NN]'], depth_max=row['Deckelhöhe[m NN]'] - row['Sohlhöhe[m NN]']))
     inp[SEC.COORDINATES].add_obj(Coordinate(str(row.Name), row['X-Koordinate[m]'], row['Y-Koordinate[m]']))
 
 # ODER

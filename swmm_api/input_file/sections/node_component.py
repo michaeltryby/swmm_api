@@ -42,7 +42,7 @@ class DryWeatherFlow(BaseSectionObject):
         pattern3 (str, Optional): i.e.: hourly-pattern
         pattern4 (str, Optional): i.e.: weekend-hourly-pattern
     """
-    _identifier = (IDENTIFIERS.Node, IDENTIFIERS.Constituent)
+    _identifier = (IDENTIFIERS.node, IDENTIFIERS.constituent)
     _section_label = DWF
 
     class TYPES:
@@ -143,7 +143,7 @@ class Inflow(BaseSectionObject):
         Pattern (str): name of optional time pattern in [PATTERNS] section used to adjust the baseline value on a
             periodic basis. ``Pat``
     """
-    _identifier = (IDENTIFIERS.Node, IDENTIFIERS.Constituent)
+    _identifier = (IDENTIFIERS.node, IDENTIFIERS.constituent)
     _section_label = INFLOWS
 
     class TYPES:
@@ -188,7 +188,7 @@ class Coordinate(BaseSectionObject):
         x (float): horizontal coordinate relative to origin in lower left of map. ``Xcoord``
         y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
     """
-    _identifier = IDENTIFIERS.Node
+    _identifier = IDENTIFIERS.node
     _section_label = COORDINATES
     _section_class = InpSectionGeo
 
@@ -268,7 +268,7 @@ class RainfallDependentInfiltrationInflow(BaseSectionObject):
         hydrograph (str): name of an RDII unit hydrograph group specified in the [``HYDROGRAPHS``] section.
         sewer_area (float): area of the sewershed which contributes RDII to the node (acres or hectares).
     """
-    _identifier = IDENTIFIERS.Node
+    _identifier = IDENTIFIERS.node
     _section_label = RDII
 
     def __init__(self, Node, hydrograph, sewer_area):
@@ -334,7 +334,7 @@ class Treatment(BaseSectionObject):
             ; lead removal is 20% of TSS removal
             Node23 Lead R = 0.2 * R_TSS
     """
-    _identifier = (IDENTIFIERS.Node, IDENTIFIERS.Pollutant)
+    _identifier = (IDENTIFIERS.node, IDENTIFIERS.pollutant)
     _section_label = TREATMENT
 
     def __init__(self, Node, pollutant, result, function):

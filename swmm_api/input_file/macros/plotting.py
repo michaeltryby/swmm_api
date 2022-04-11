@@ -135,7 +135,7 @@ def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
     stations = dict(stations_)
     for node, x in stations_:
         n = nodes[node]
-        sok = n.Elevation
+        sok = n.elevation
         # ---------------
         gok = sok
         if isinstance(n, Outfall):
@@ -152,15 +152,15 @@ def get_longitudinal_data(inp, start_node, end_node, out=None, zero_node=None):
 
         if prior_conduit:
             prior_conduit = prior_conduit[0]
-            profile_height = inp[XSECTIONS][prior_conduit.Name].Geom1
-            sok_ = sok + prior_conduit.OutOffset
+            profile_height = inp[XSECTIONS][prior_conduit.name].Geom1
+            sok_ = sok + prior_conduit.offset_downstream
             buk = profile_height + sok_
             _update_res(x - stations[zero_node], sok_, buk, gok, water)
 
         if following_conduit:
             following_conduit = following_conduit[0]
-            profile_height = inp[XSECTIONS][following_conduit.Name].Geom1
-            sok_ = sok + following_conduit.InOffset
+            profile_height = inp[XSECTIONS][following_conduit.name].Geom1
+            sok_ = sok + following_conduit.offset_upstream
             buk = profile_height + sok_
             _update_res(x - stations[zero_node], sok_, buk, gok, water)
 
@@ -178,7 +178,7 @@ def get_water_level(inp, start_node, end_node, out, zero_node=None, absolute=Tru
     for node, x in stations_:
         x_list.append(x - stations.get(zero_node, 0))
         if absolute:
-            sok = nodes[node].Elevation
+            sok = nodes[node].elevation
         water_level_list.append(sok + nodes_depth[node])
 
     return {COLS.WATER: water_level_list, COLS.STATION: x_list}

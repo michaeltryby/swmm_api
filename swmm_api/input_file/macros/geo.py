@@ -51,9 +51,9 @@ def complete_link_vertices(inp, label_link):
         label_link (str): label of the link
     """
     link = find_link(inp, label_link)
-    inp[VERTICES][label_link].vertices = ([inp[COORDINATES][link.FromNode].point] +
+    inp[VERTICES][label_link].vertices = ([inp[COORDINATES][link.from_node].point] +
                                           inp[VERTICES][label_link].vertices +
-                                          [inp[COORDINATES][link.ToNode].point])
+                                          [inp[COORDINATES][link.to_node].point])
 
 
 def complete_vertices(inp):
@@ -100,12 +100,12 @@ def reduce_vertices(inp, node_range=0.25):
     for link_label in inp.VERTICES:
         l = links[link_label]
         v = inp[VERTICES][link_label].vertices
-        p = inp[COORDINATES][l.FromNode].point
+        p = inp[COORDINATES][l.from_node].point
         if _vec2d_dist(p, v[0]) < node_range:
             v = v[1:]
 
         if v:
-            p = inp[COORDINATES][l.ToNode].point
+            p = inp[COORDINATES][l.to_node].point
             if _vec2d_dist(p, v[-1]) < node_range:
                 v = v[:-1]
 
@@ -122,9 +122,9 @@ def remove_coordinates_from_vertices(inp):
         conduit = inp[CONDUITS][link]  # type: Conduit
         new_vertices = []
         # n1 = inp[COORDINATES][conduit.FromNode]
-        new_vertices.append(inp[COORDINATES][conduit.FromNode])
+        new_vertices.append(inp[COORDINATES][conduit.from_node])
         new_vertices += inp[VERTICES][link].vertices
-        new_vertices.append(inp[COORDINATES][conduit.ToNode])
+        new_vertices.append(inp[COORDINATES][conduit.to_node])
         new_vertices_section[link] = new_vertices
     return new_vertices_section
 

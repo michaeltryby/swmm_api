@@ -44,7 +44,7 @@ class CrossSection(BaseSectionObject):
         Curve (str): name of a Shape Curve in the [``CURVES``] section that defines how width varies with depth.
         Tsect (str): name of an entry in the [``TRANSECTS``] section that describes the crosssection geometry of an irregular channel.
     """
-    _identifier =IDENTIFIERS.Link
+    _identifier =IDENTIFIERS.link
     _section_label = XSECTIONS
 
     class SHAPES:
@@ -158,7 +158,7 @@ class Loss(BaseSectionObject):
         FlapGate (bool): YES if conduit has a flap valve that prevents back flow, NO otherwise. (Default is NO). ``Flap``
         SeepageRate (float): Rate of seepage loss into surrounding soil (in/hr or mm/hr). (Default is 0.) ``Seepage``
     """
-    _identifier =IDENTIFIERS.Link
+    _identifier =IDENTIFIERS.link
     _section_label = LOSSES
 
     class TYPES:
@@ -218,7 +218,7 @@ class Vertices(BaseSectionObject):
             - Xcoord: horizontal coordinate
             - Ycoord: vertical coordinate
     """
-    _identifier =IDENTIFIERS.Link
+    _identifier =IDENTIFIERS.link
     _table_inp_export = False
     _section_label = VERTICES
     _section_class = InpSectionGeo

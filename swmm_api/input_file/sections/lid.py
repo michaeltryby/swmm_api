@@ -90,7 +90,7 @@ class LIDControl(BaseSectionObject):
         The actual dimensions of an LID control are provided in the [LID_USAGE] section when it is
         placed in a particular subcatchment.
     """
-    _identifier = (IDENTIFIERS.Name, 'lid_kind')
+    _identifier = (IDENTIFIERS.name, 'lid_kind')
     _section_label = LID_CONTROLS
     _table_inp_export = False
 
@@ -106,7 +106,7 @@ class LIDControl(BaseSectionObject):
 
         _possible = [BC, RG, GR, IT, PP, RB, RD, VS]
 
-    def __init__(self, Name, lid_kind, layer_dict=None):
+    def __init__(self, name, lid_kind, layer_dict=None):
         """
         Create LID_CONTROLS object
 
@@ -122,7 +122,7 @@ class LIDControl(BaseSectionObject):
                         - VS for vegetative swale.
             layer_dict (dict[str, LIDControl.LAYER_TYPES.Surface]): dict of used layers in control
         """
-        self.Name = str(Name)
+        self.name = str(name)
         self.lid_kind = lid_kind.upper()  # one of LID_TYPES
         self.layer_dict = {} if layer_dict is None else layer_dict
 
@@ -136,7 +136,7 @@ class LIDControl(BaseSectionObject):
                 if last is not None:
                     yield last
                 last = cls(name, lid_kind=line[0].upper())
-            elif name == last.Name:
+            elif name == last.name:
                 surface_kind = line.pop(0).upper()  # one of SURFACE_TYPES
                 last.layer_dict[surface_kind] = cls.LAYER_TYPES._dict[surface_kind](*line)
         yield last
@@ -376,11 +376,11 @@ class LIDUsage(BaseSectionObject):
             ;swale 200 ft long by 50 ft wide.
             S2 Swale 1 10000 50 0 0 0 “swale.rpt”
     """
-    _identifier = (IDENTIFIERS.Subcatch, 'LID')
+    _identifier = (IDENTIFIERS.subcatchment, 'LID')
     _section_label = LID_USAGE
 
-    def __init__(self, Subcatch, LID, Number, Area, Width, InitSat, FromImp, ToPerv, RptFile=NaN, DrainTo=NaN):
-        self.Subcatch = str(Subcatch)
+    def __init__(self, subcatchment, LID, Number, Area, Width, InitSat, FromImp, ToPerv, RptFile=NaN, DrainTo=NaN):
+        self.subcatchment = str(subcatchment)
         self.LID = str(LID)
         self.Number = Number
         self.Area = float(Area)

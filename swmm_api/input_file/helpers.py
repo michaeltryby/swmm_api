@@ -620,7 +620,7 @@ class BaseSectionObject(ABC):
         """
         if isinstance(key, (list, tuple, set)):
             return type(key)([self.get(k) for k in key])
-        return self.__getattribute__(key)
+        return self.__getattribute__(key.lower())
 
     def set(self, key, value):
         """
@@ -632,7 +632,7 @@ class BaseSectionObject(ABC):
         """
         if not hasattr(self, key):
             raise SwmmInputWarning(f'{key} not a Object attribute | {self}')
-        self.__setattr__(key, value)
+        self.__setattr__(key.lower(), value)
 
     def __getitem__(self, key):
         return self.get(key)

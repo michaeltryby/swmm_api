@@ -40,7 +40,7 @@ class RainGage(BaseSectionObject):
         Station (str): name of recording station used in the rain file. ``Sta``
         Units (str): rain depth units used in the rain file, either IN (inches) or MM (millimeters).
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _section_label = RAINGAGES
 
     class FORMATS:
@@ -124,7 +124,7 @@ class Symbol(BaseSectionObject):
         x (float): horizontal coordinate relative to origin in lower left of map. ``Xcoord``
         y (float): vertical coordinate relative to origin in lower left of map. ``Ycoord``
     """
-    _identifier = IDENTIFIERS.Gage
+    _identifier = IDENTIFIERS.gage
     _section_label = SYMBOLS
 
     def __init__(self, Gage, x, y):
@@ -189,7 +189,7 @@ class Pattern(BaseSectionObject):
         Type (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
         Factors (list): multiplier values.
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _section_label = PATTERNS
 
     class TYPES:
@@ -290,7 +290,7 @@ class Pollutant(BaseSectionObject):
         Cinit (float): pollutant concentration throughout the conveyance system at the start of the simulation (
         default is 0).
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _section_label = POLLUTANTS
 
     class UNITS:
@@ -425,7 +425,7 @@ class Transect(BaseSectionObject):
             (ft or m).
             Station (float): distance of a cross-section station from some fixed reference (ft or m).
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _table_inp_export = False
     _section_label = TRANSECTS
 
@@ -757,7 +757,7 @@ class Control(BaseSectionObject):
             AND PUMP N1B STATUS = OFF
 
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _table_inp_export = False
     _section_label = CONTROLS
 
@@ -989,7 +989,7 @@ class Curve(BaseSectionObject):
         points (list[list[float, float]]): tuple of X-value (an independent variable) and  Y-value (an dependent
         variable)
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _table_inp_export = False
     _section_label = CURVES
 
@@ -1103,7 +1103,7 @@ class Street(BaseSectionObject):
         If the street has no depressed gutter (a = 0) then the gutter width entry is ignored. If the
         street has no backing then the three backing parameters can be omitted.
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _table_inp_export = True
     _section_label = STREET
 
@@ -1209,7 +1209,7 @@ class Inlet(BaseSectionObject):
             ; A custom inlet using Curve1 as its capture curve
             InletType3 CUSTOM Curve1
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _table_inp_export = False
     _section_label = INLETS
 
@@ -1397,7 +1397,7 @@ class Timeseries(BaseSectionObject):
     Args:
         Name (str): name assigned to time series.
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _table_inp_export = False
     _section_label = TIMESERIES
 
@@ -1600,13 +1600,13 @@ class TimeseriesData(Timeseries):
 
 class Tag(BaseSectionObject):
     """Section: [**TAGS**]"""
-    _identifier = ('kind', IDENTIFIERS.Name)
+    _identifier = ('kind', IDENTIFIERS.name)
     _section_label = TAGS
 
     class TYPES:
-        Node = IDENTIFIERS.Node
-        Subcatch = IDENTIFIERS.Subcatch
-        Link = IDENTIFIERS.Link
+        Node = 'Node'
+        Subcatch = 'Subcatch'
+        Link = 'Link'
 
     def __init__(self, kind, Name, tag, *tags):
         """
@@ -1740,7 +1740,7 @@ class Hydrograph(BaseSectionObject):
     Args:
         Name (str): name assigned to time series.
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _table_inp_export = False
     _section_label = HYDROGRAPHS
 
@@ -1791,7 +1791,7 @@ class Hydrograph(BaseSectionObject):
         _possible = [JAN, FEB, MAR, APR, MAI, JUN, JUL, AUG, SEP, OCT, NOV, DEC, ALL]
 
         class Parameters(BaseSectionObject):
-            _identifier = IDENTIFIERS.Name
+            _identifier = IDENTIFIERS.name
 
             def __init__(self, Name, month, response, response_ratio, time_to_peak, recession_limb_ratio,
                          depth_max=NaN, depth_recovery=NaN, depth_init=NaN):
@@ -1849,7 +1849,7 @@ class LandUse(BaseSectionObject):
         last_sweep:
             days since last sweeping at start of the simulation.
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _section_label = LANDUSES
 
     def __init__(self, Name, sweep_interval=NaN, availability=NaN, last_sweep=NaN):
@@ -1918,7 +1918,7 @@ class WashOff(BaseSectionObject):
         `:class:swmm_api.input_file.helpers.BaseSectionObject` : Parent class of this one.
         BaseSectionObject : Parent class of this one.
     """
-    _identifier = (IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant)
+    _identifier = (IDENTIFIERS.land_use, IDENTIFIERS.pollutant)
     _section_label = WASHOFF
 
     class FUNCTIONS:
@@ -2008,7 +2008,7 @@ class BuildUp(BaseSectionObject):
         contains buildup rates (as mass per area or curb length per day) as a function of
         time.
     """
-    _identifier = (IDENTIFIERS.Landuse, IDENTIFIERS.Pollutant)
+    _identifier = (IDENTIFIERS.land_use, IDENTIFIERS.pollutant)
     _section_label = BUILDUP
 
     class FUNCTIONS:
@@ -2116,7 +2116,7 @@ class SnowPack(BaseSectionObject):
         transferred onto other areas. The various transfer fractions should sum to no more
         than 1.0. If the line is omitted then no snow removal takes place.
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _section_label = SNOWPACKS
     _table_inp_export = False
 
@@ -2158,7 +2158,7 @@ class SnowPack(BaseSectionObject):
     class PARTS:
         class _Base(BaseSectionObject):
             _table_inp_export = False
-            _identifier = IDENTIFIERS.Name
+            _identifier = IDENTIFIERS.name
             _section_label = SNOWPACKS
 
             def __init__(self, Cmin, Cmax, Tbase, FWF, SD0, FW0):
@@ -2282,7 +2282,7 @@ class Aquifer(BaseSectionObject):
         Local values for ``Ebot``, ``Egw``, and ``Umc`` can be assigned to specific subcatchments in
         the [``GROUNDWATER``] section described below.
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _section_label = AQUIFERS
 
     def __init__(self, Name, Por, WP, FC, Ks, Kslp, Tslp, ETu, ETs, Seep, Ebot, Egw, Umc, Epat=NaN):

@@ -79,7 +79,7 @@ def move_flows(inp: SwmmInput, from_node, to_node, only_constituent=None):
                 index_new = (to_node, constituent)
 
                 obj = inp[section].pop(index_old)
-                obj.Node = to_node
+                obj.node = to_node
 
                 if index_new not in inp[section]:
                     inp[section].add_obj(obj)
@@ -129,21 +129,21 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
     dx = 0
     n_new_nodes = 0
     if intervals:
-        dx = conduit.Length / intervals
+        dx = conduit.length / intervals
         n_new_nodes = intervals - 1
     elif length:
         dx = length
-        n_new_nodes = ceil(conduit.Length / length - 1)
+        n_new_nodes = ceil(conduit.length / length - 1)
 
-    from_node = nodes[conduit.FromNode]
-    to_node = nodes[conduit.ToNode]
+    from_node = nodes[conduit.from_node]
+    to_node = nodes[conduit.to_node]
 
-    from_node_coord = inp[COORDINATES][from_node.Name]
-    to_node_coord = inp[COORDINATES][to_node.Name]
+    from_node_coord = inp[COORDINATES][from_node.name]
+    to_node_coord = inp[COORDINATES][to_node.name]
 
     loss = None
-    if (LOSSES in inp) and (conduit.Name in inp[LOSSES]):
-        loss = inp[LOSSES][conduit.Name]  # type: Loss
+    if (LOSSES in inp) and (conduit.name in inp[LOSSES]):
+        loss = inp[LOSSES][conduit.name]  # type: Loss
 
     new_nodes = []
     new_links = []
@@ -151,40 +151,40 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
     x = dx
     last_node = from_node
     for new_node_i in range(n_new_nodes + 1):
-        if x >= conduit.Length:
+        if x >= conduit.length:
             node = to_node
         else:
-            node = Junction(Name=f'{from_node.Name}_{to_node.Name}_{chr(new_node_i + 97)}',
-                            Elevation=interp(x, [0, conduit.Length], [from_node.Elevation, to_node.Elevation]),
-                            MaxDepth=interp(x, [0, conduit.Length], [from_node.MaxDepth, to_node.MaxDepth]),
-                            InitDepth=interp(x, [0, conduit.Length], [from_node.InitDepth, to_node.InitDepth]),
-                            SurDepth=interp(x, [0, conduit.Length], [from_node.SurDepth, to_node.SurDepth]),
-                            Aponded=float(mean([from_node.Aponded, to_node.Aponded])),
+            node = Junction(name=f'{from_node.name}_{to_node.name}_{chr(new_node_i + 97)}',
+                            elevation=interp(x, [0, conduit.length], [from_node.elevation, to_node.elevation]),
+                            depth_max=interp(x, [0, conduit.length], [from_node.MaxDepth, to_node.MaxDepth]),
+                            depth_init=interp(x, [0, conduit.length], [from_node.InitDepth, to_node.InitDepth]),
+                            depth_surcharge=interp(x, [0, conduit.length], [from_node.SurDepth, to_node.SurDepth]),
+                            area_ponded=float(mean([from_node.Aponded, to_node.Aponded])),
                             )
             new_nodes.append(node)
             inp[JUNCTIONS].add_obj(node)
 
             # TODO: COORDINATES based on vertices
-            inp[COORDINATES].add_obj(Coordinate(node.Name,
-                                                    x=interp(x, [0, conduit.Length],
-                                                                [from_node_coord.x, to_node_coord.x]),
-                                                    y=interp(x, [0, conduit.Length],
-                                                                [from_node_coord.y, to_node_coord.y])))
+            inp[COORDINATES].add_obj(Coordinate(node.name,
+                                                x=interp(x, [0, conduit.length],
+                                                             [from_node_coord.x, to_node_coord.x]),
+                                                y=interp(x, [0, conduit.length],
+                                                             [from_node_coord.y, to_node_coord.y])))
 
-        link = Conduit(Name=f'{conduit.Name}_{chr(new_node_i + 97)}',
-                       FromNode=last_node.Name,
-                       ToNode=node.Name,
-                       Length=dx,
-                       Roughness=conduit.Roughness,
-                       InOffset=0 if new_node_i != 0 else conduit.InOffset,
-                       OutOffset=0 if new_node_i != (n_new_nodes - 1) else conduit.OutOffset,
-                       InitFlow=conduit.InitFlow,
-                       MaxFlow=conduit.MaxFlow)
+        link = Conduit(name=f'{conduit.name}_{chr(new_node_i + 97)}',
+                       from_node=last_node.name,
+                       to_node=node.name,
+                       length=dx,
+                       roughness=conduit.roughness,
+                       offset_upstream=0 if new_node_i != 0 else conduit.offset_upstream,
+                       offset_downstream=0 if new_node_i != (n_new_nodes - 1) else conduit.offset_downstream,
+                       flow_initial=conduit.flow_initial,
+                       flow_max=conduit.flow_max)
         new_links.append(link)
         inp[CONDUITS].add_obj(link)
 
-        xs = inp[XSECTIONS][conduit.Name].copy()
-        xs.Link = link.Name
+        xs = inp[XSECTIONS][conduit.name].copy()
+        xs.link = link.name
         inp[XSECTIONS].add_obj(xs)
 
         if loss:
@@ -194,7 +194,7 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
             flap_gate = loss.FlapGate
 
             if any([inlet, outlet, average, flap_gate]):
-                inp[LOSSES].add_obj(Loss(link.Name, inlet, outlet, average, flap_gate))
+                inp[LOSSES].add_obj(Loss(link.name, inlet, outlet, average, flap_gate))
 
         # TODO: VERTICES
 
@@ -209,7 +209,7 @@ def split_conduit(inp, conduit, intervals=None, length=None, from_inlet=True):
     #     # interpolate coordinates
     #     pass
 
-    delete_link(inp, conduit.Name)
+    delete_link(inp, conduit.name)
 
 
 def combine_vertices(inp: SwmmInput, label1, label2):
@@ -230,7 +230,7 @@ def combine_vertices(inp: SwmmInput, label1, label2):
     if label1 in inp[VERTICES]:
         new_vertices += list(inp[VERTICES][label1].vertices)
 
-    common_node = links_dict(inp)[label1].ToNode
+    common_node = links_dict(inp)[label1].to_node
     if common_node in inp[COORDINATES]:
         new_vertices += [inp[COORDINATES][common_node].point]
 
@@ -265,12 +265,12 @@ def combine_conduits(inp, c1, c2, graph: DiGraph = None):
         c2 = inp[CONDUITS][c2]
     # -------------------------
     if graph:
-        graph.remove_edge(c1.FromNode, c1.ToNode)
+        graph.remove_edge(c1.from_node, c1.to_node)
     # -------------------------
-    if c1.FromNode == c2.ToNode:
+    if c1.from_node == c2.to_node:
         c_first = c2.copy()  # type: Conduit
         c_second = c1.copy()  # type: Conduit
-    elif c1.ToNode == c2.FromNode:
+    elif c1.to_node == c2.from_node:
         c_first = c1.copy()  # type: Conduit
         c_second = c2.copy()  # type: Conduit
     else:
@@ -278,43 +278,43 @@ def combine_conduits(inp, c1, c2, graph: DiGraph = None):
 
     # -------------------------
     # vertices + Coord of middle node
-    combine_vertices(inp, c_first.Name, c_second.Name)
+    combine_vertices(inp, c_first.name, c_second.name)
 
     # -------------------------
     c_new = c1  # type: Conduit
     # -------------------------
-    common_node = c_first.ToNode
-    c_new.FromNode = c_first.FromNode
-    c_new.ToNode = c_second.ToNode
+    common_node = c_first.to_node
+    c_new.from_node = c_first.from_node
+    c_new.to_node = c_second.to_node
     # -------------------------
     if graph:
-        graph.add_edge(c_new.FromNode, c_new.ToNode, label=c_new.Name)
+        graph.add_edge(c_new.from_node, c_new.to_node, label=c_new.name)
 
     if isinstance(c_new, Conduit):
-        c_new.Length = round(c1.Length + c2.Length, 1)
+        c_new.length = round(c1.length + c2.length, 1)
 
         # offsets
-        c_new.InOffset = c_first.InOffset
-        c_new.OutOffset = c_second.OutOffset
+        c_new.offset_upstream = c_first.offset_upstream
+        c_new.offset_downstream = c_second.offset_downstream
 
     # Loss
-    if (LOSSES in inp) and (c_new.Name in inp[LOSSES]):
-        print(f'combine_conduits {c1.Name} and {c2.Name}. BUT WHAT TO DO WITH LOSSES?')
+    if (LOSSES in inp) and (c_new.name in inp[LOSSES]):
+        print(f'combine_conduits {c1.name} and {c2.name}. BUT WHAT TO DO WITH LOSSES?')
         # add losses
         pass
 
-    delete_node(inp, common_node, graph=graph, alt_node=c_new.FromNode)
+    delete_node(inp, common_node, graph=graph, alt_node=c_new.from_node)
     return c_new
 
 
 def combine_conduits_keep_slope(inp, c1, c2, graph: DiGraph = None):
     nodes = nodes_dict(inp)
-    new_out_offset = (- calc_slope(inp, c1) * c2.Length
-                      + c1.OutOffset
-                      + nodes[c1.ToNode].Elevation
-                      - nodes[c2.ToNode].Elevation)
+    new_out_offset = (- calc_slope(inp, c1) * c2.length
+                      + c1.offset_downstream
+                      + nodes[c1.to_node].elevation
+                      - nodes[c2.to_node].elevation)
     c1 = combine_conduits(inp, c1, c2, graph=graph)
-    c1.OutOffset = round(new_out_offset, 2)
+    c1.offset_downstream = round(new_out_offset, 2)
     return c1
 
 
@@ -331,31 +331,31 @@ def dissolve_conduit(inp, c: Conduit, graph: DiGraph = None):
     Returns:
         SwmmInput: inp data
     """
-    common_node = c.FromNode
+    common_node = c.from_node
     for c_old in list(previous_links(inp, common_node, g=graph)):
         if graph:
-            graph.remove_edge(c_old.FromNode, c_old.ToNode)
+            graph.remove_edge(c_old.from_node, c_old.to_node)
 
         c_new = c_old  # type: Conduit
 
         # vertices + Coord of middle node
-        combine_vertices(inp, c_new.Name, c.Name)
+        combine_vertices(inp, c_new.name, c.name)
 
-        c_new.ToNode = c.ToNode
+        c_new.to_node = c.to_node
         # -------------------------
         if graph:
-            graph.add_edge(c_new.FromNode, c_new.ToNode, label=c_new.Name)
+            graph.add_edge(c_new.from_node, c_new.to_node, label=c_new.name)
 
         # Loss
-        if LOSSES in inp and c_new.Name in inp[LOSSES]:
-            print(f'dissolve_conduit {c.Name} in {c_new.Name}. BUT WHAT TO DO WITH LOSSES?')
+        if LOSSES in inp and c_new.name in inp[LOSSES]:
+            print(f'dissolve_conduit {c.name} in {c_new.name}. BUT WHAT TO DO WITH LOSSES?')
 
         if isinstance(c_new, Conduit):
-            c_new.Length = round(c.Length + c_new.Length, 1)
+            c_new.length = round(c.length + c_new.length, 1)
             # offsets
-            c_new.OutOffset = c.OutOffset
+            c_new.offset_downstream = c.offset_downstream
 
-    delete_node(inp, common_node, graph=graph, alt_node=c.ToNode)
+    delete_node(inp, common_node, graph=graph, alt_node=c.to_node)
 
 
 def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
@@ -379,14 +379,14 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
         if (section in inp) and (old_label in inp[section]):
             inp[section][new_label] = inp[section].pop(old_label)
             if hasattr(inp[section][new_label], 'Name'):
-                inp[section][new_label].Name = new_label
+                inp[section][new_label].name = new_label
             else:
-                inp[section][new_label].Node = new_label
+                inp[section][new_label].node = new_label
 
     # tags
     if (TAGS in inp) and ((Tag.TYPES.Node, old_label) in inp.TAGS):
         tag = inp[TAGS].pop((Tag.TYPES.Node, old_label))  # type: swmm_api.input_file.sections.Tag
-        tag.Name = new_label
+        tag.name = new_label
         inp.TAGS.add_obj(tag)
 
     # subcatchment outlets
@@ -401,10 +401,10 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
     # link: from-node and to-node
     previous_links, next_links = links_connected(inp, old_label, g=g)
     for link in previous_links:
-        link.ToNode = new_label
+        link.to_node = new_label
 
     for link in next_links:
-        link.ToNode = new_label
+        link.to_node = new_label
 
     # -------
     # for section in [CONDUITS, PUMPS, ORIFICES, WEIRS, OUTLETS]:
@@ -426,7 +426,7 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
             for constituent in constituents:
                 old_id = (old_label, constituent)
                 if old_id in inp[section]:
-                    inp[section][old_id].Node = new_label
+                    inp[section][old_id].node = new_label
                     inp[section][(new_label, constituent)] = inp[section].pop(old_id)
 
             # -------
@@ -455,9 +455,9 @@ def rename_link(inp: SwmmInput, old_label: str, new_label: str):
         if (section in inp) and (old_label in inp[section]):
             inp[section][new_label] = inp[section].pop(old_label)
             if hasattr(inp[section][new_label], 'Name'):
-                inp[section][new_label].Name = new_label
+                inp[section][new_label].name = new_label
             else:
-                inp[section][new_label].Link = new_label
+                inp[section][new_label].link = new_label
 
     if (TAGS in inp) and ((Tag.TYPES.Link, old_label) in inp.TAGS):
         inp[TAGS][(Tag.TYPES.Link, new_label)] = inp[TAGS].pop((Tag.TYPES.Link, old_label))
@@ -468,9 +468,9 @@ def rename_subcatchment(inp: SwmmInput, old_label: str, new_label: str):
         if (section in inp) and (old_label in inp[section]):
             inp[section][new_label] = inp[section].pop(old_label)
             if hasattr(inp[section][new_label], 'Name'):
-                inp[section][new_label].Name = new_label
+                inp[section][new_label].name = new_label
             else:
-                inp[section][new_label].Subcatch = new_label
+                inp[section][new_label].subcatchment = new_label
 
     if (TAGS in inp) and ((Tag.TYPES.Subcatch, old_label) in inp.TAGS):
         inp[TAGS][(Tag.TYPES.Subcatch, new_label)] = inp[TAGS].pop((Tag.TYPES.Subcatch, old_label))
@@ -490,7 +490,7 @@ def rename_timeseries(inp, old_label, new_label):
     """
     if old_label in inp[TIMESERIES]:
         obj = inp[TIMESERIES].pop(old_label)  # type: swmm_api.input_file.sections.Timeseries
-        obj.Name = new_label
+        obj.name = new_label
         inp[TIMESERIES].add_obj(obj)
 
     key = EvaporationSection.KEYS.TIMESERIES  # TemperatureSection.KEYS.TIMESERIES, ...
@@ -530,7 +530,7 @@ def rename_timeseries(inp, old_label, new_label):
 def flip_link_direction(inp, link_label):
     link = find_link(inp, link_label)
     if link:
-        link.FromNode, link.ToNode = link.ToNode, link.FromNode
+        link.from_node, link.to_node = link.to_node, link.from_node
 
 
 def remove_quality_model(inp):
@@ -547,7 +547,7 @@ def remove_quality_model(inp):
 
     for sec in [INFLOWS, DWF]:
         for k in list(inp[sec].keys()):
-            if inp[sec][k].Constituent != 'FLOW':
+            if inp[sec][k].constituent != 'FLOW':
                 del inp[sec][k]
 
 

@@ -7,32 +7,24 @@ from ..section_labels import JUNCTIONS, OUTFALLS, STORAGE
 
 
 class _Node(BaseSectionObject):
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
 
-    def __init__(self, Name, Elevation):
-        self.Name = str(Name)
-        self.Elevation = float(Elevation)
+    def __init__(self, name, elevation):
+        self.name = str(name)
+        self.elevation = float(elevation)
 
 
 class Junction(_Node):
     """
-    Section: [**JUNCTIONS**]
+    Junction node information.
+
+    Section:
+        [JUNCTIONS]
 
     Purpose:
         Identifies each junction node of the drainage system.
         Junctions are points in space where channels and pipes connect together.
         For sewer systems they can be either connection fittings or manholes.
-
-    Format:
-        ::
-
-            Name Elev (Ymax Y0 Ysur Apond)
-
-    Format-PCSWMM:
-        ``Name  InvertElev  MaxDepth  InitDepth  SurchargeDepth  PondedArea``
-
-    Format-SWMM-GUI:
-        ``Name  Elevation  MaxDepth  InitDepth  SurDepth  Aponded``
 
     Remarks:
         If Ymax is 0 then SWMM sets the maximum depth equal to the distance
@@ -43,32 +35,36 @@ class Junction(_Node):
 
         Surface ponding can only occur when Apond is non-zero and the ALLOW_PONDING analysis option is turned on.
 
-    Args:
-        Name (str): name assigned to junction node.
-        Elevation (float): elevation of junction invert (ft or m). ``Elev``
-        MaxDepth (float): depth from ground to invert elevation (ft or m) (default is 0). ``Ymax``
-        InitDepth (float): water depth at start of simulation (ft or m) (default is 0). ``Y0``
-        SurDepth (float): maximum additional head above ground elevation that manhole junction
-                            can sustain under surcharge conditions (ft or m) (default is 0). ``Ysur``
-        Aponded (float): area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0). ``Apond``
-
     Attributes:
-        Name (str): name assigned to junction node.
-        Elevation (float): elevation of junction invert (ft or m). ``Elev``
-        MaxDepth (float): depth from ground to invert elevation (ft or m) (default is 0). ``Ymax``
-        InitDepth (float): water depth at start of simulation (ft or m) (default is 0). ``Y0``
-        SurDepth (float): maximum additional head above ground elevation that manhole junction
-                            can sustain under surcharge conditions (ft or m) (default is 0). ``Ysur``
-        Aponded (float): area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0). ``Apond``
+        name (str): Name assigned to junction node.
+        elevation (float): Elevation of junction invert (ft or m).
+        depth_max (float): Depth from ground to invert elevation (ft or m) (default is 0).
+        depth_init (float): Water depth at start of simulation (ft or m) (default is 0).
+        depth_surcharge (float): Maximum additional head above ground elevation that manhole junction
+                            can sustain under surcharge conditions (ft or m) (default is 0).
+        area_ponded (float): Area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0).
     """
     _section_label = JUNCTIONS
 
-    def __init__(self, Name, Elevation, MaxDepth=0, InitDepth=0, SurDepth=0, Aponded=0):
-        _Node.__init__(self, Name, Elevation)
-        self.MaxDepth = float(MaxDepth)
-        self.InitDepth = float(InitDepth)
-        self.SurDepth = float(SurDepth)
-        self.Aponded = float(Aponded)
+    def __init__(self, name, elevation, depth_max=0, depth_init=0, depth_surcharge=0, area_ponded=0):
+        """
+        Junction node information.
+
+        Args:
+            name (str): Name assigned to junction node.
+            elevation (float): Elevation of junction invert (ft or m).
+            depth_max (float): Depth from ground to invert elevation (ft or m) (default is 0).
+            depth_init (float): Water depth at start of simulation (ft or m) (default is 0).
+            depth_surcharge (float): Maximum additional head above ground elevation that manhole junction
+                                     can sustain under surcharge conditions (ft or m) (default is 0).
+            area_ponded (float): Area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2)
+                                 (default is 0).
+        """
+        _Node.__init__(self, name, elevation)
+        self.depth_max = float(depth_max)
+        self.depth_init = float(depth_init)
+        self.depth_surcharge = float(depth_surcharge)
+        self.area_ponded = float(area_ponded)
 
 
 class Outfall(_Node):
@@ -95,31 +91,39 @@ class Outfall(_Node):
         ``Name  Elevation  Type  StageData  Gated  RouteTo``
 
     Args:
-        Name (str): name assigned to outfall node.
-        Elevation (float): invert elevation (ft or m). ``Elev``
+        name (str): name assigned to outfall node.
+        elevation (float): invert elevation (ft or m). ``Elev``
         Type (str): one of ``FREE``, ``NORMAL``, ``FIXED``, ``TIDAL``, ``TIMESERIES``
         *args: -Arguments below-
         Data (float | str): one of the following
 
             - Stage (float): elevation of fixed stage outfall (ft or m). for ``FIXED``-Type
-            - Tcurve (str): name of curve in [``CURVES``] section containing tidal height (i.e., outfall stage) v. hour of day over a complete tidal cycle. for ``TIDAL``-Type
-            - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies with time.  for ``TIMESERIES``-Type
+            - Tcurve (str): name of curve in [``CURVES``] section containing tidal height (i.e., outfall stage) v.
+            hour of day over a complete tidal cycle. for ``TIDAL``-Type
+            - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies
+            with time.  for ``TIMESERIES``-Type
 
-        FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
-        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
+        FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents
+        reverse flow. The default is ``NO``. ``Gated``
+        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to
+        route the outfall’s discharge.
 
     Attributes:
-        Name (str): name assigned to outfall node.
-        Elevation (float): invert elevation (ft or m). ``Elev``
+        name (str): name assigned to outfall node.
+        elevation (float): invert elevation (ft or m). ``Elev``
         Type (str): one of ``FREE``, ``NORMAL``, ``FIXED``, ``TIDAL``, ``TIMESERIES``
         Data (float | str): one of the following
 
             - Stage (float): elevation of fixed stage outfall (ft or m). for ``FIXED``-Type
-            - Tcurve (str): name of curve in [``CURVES``] section containing tidal height (i.e., outfall stage) v. hour of day over a complete tidal cycle. for ``TIDAL``-Type
-            - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies with time.  for ``TIMESERIES``-Type
+            - Tcurve (str): name of curve in [``CURVES``] section containing tidal height (i.e., outfall stage) v.
+            hour of day over a complete tidal cycle. for ``TIDAL``-Type
+            - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies
+            with time.  for ``TIMESERIES``-Type
 
-        FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
-        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
+        FlapGate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents
+        reverse flow. The default is ``NO``. ``Gated``
+        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to
+        route the outfall’s discharge.
     """
     _section_label = OUTFALLS
 
@@ -130,8 +134,8 @@ class Outfall(_Node):
         TIDAL = 'TIDAL'
         TIMESERIES = 'TIMESERIES'
 
-    def __init__(self, Name, Elevation, Type, *args, Data=NaN, FlapGate=False, RouteTo=NaN):
-        _Node.__init__(self, Name, Elevation)
+    def __init__(self, name, elevation, Type, *args, Data=NaN, FlapGate=False, RouteTo=NaN):
+        _Node.__init__(self, name, elevation)
         self.Type = Type
         self.Data = NaN
 
@@ -227,15 +231,16 @@ class Storage(_Node):
             //     nodeID  elev  maxDepth  initDepth  TABULAR    curveID  surDepth fEvap (infil) //
 
     Args:
-        Name (str): name assigned to storage node.
-        Elevation (float): invert elevation (ft or m). ``Elev``
+        name (str): name assigned to storage node.
+        elevation (float): invert elevation (ft or m). ``Elev``
         MaxDepth (float): maximum water depth possible (ft or m). ``Ymax``
         InitDepth (float): water depth at the start of the simulation (ft or m). ``Y0``
         Type (str): ``TABULAR`` | ``FUNCTIONAL``
         *args (): -Arguments below-
         Curve (str | list):
 
-            - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth (ft or m) for ``TABULAR`` geometry. ``Acurve``
+            - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth
+            (ft or m) for ``TABULAR`` geometry. ``Acurve``
             - :obj:`list`: ``FUNCTIONAL`` relation between surface area and depth with
 
                - A1 (:obj:`float`): coefficient
@@ -249,14 +254,15 @@ class Storage(_Node):
         IMD (float): soil initial moisture deficit (fraction).
 
     Attributes:
-        Name (str): name assigned to storage node.
-        Elevation (float): invert elevation (ft or m). ``Elev``
+        name (str): name assigned to storage node.
+        elevation (float): invert elevation (ft or m). ``Elev``
         MaxDepth (float): maximum water depth possible (ft or m). ``Ymax``
         InitDepth (float): water depth at the start of the simulation (ft or m). ``Y0``
         Type (str): ``TABULAR`` or ``FUNCTIONAL``
         Curve (str | list):
 
-            - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth (ft or m) for ``TABULAR`` geometry. ``Acurve``
+            - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth
+            (ft or m) for ``TABULAR`` geometry. ``Acurve``
             - :obj:`list`: ``FUNCTIONAL`` relation between surface area and depth with
 
                - A1 (:obj:`float`): coefficient
@@ -275,9 +281,9 @@ class Storage(_Node):
         TABULAR = 'TABULAR'
         FUNCTIONAL = 'FUNCTIONAL'
 
-    def __init__(self, Name: str, Elevation: float, MaxDepth: float, InitDepth: float, Type: str, *args, Curve=None,
+    def __init__(self, name: str, elevation: float, MaxDepth: float, InitDepth: float, Type: str, *args, Curve=None,
                  Apond: float = 0, Fevap: float=0, Psi: float=NaN, Ksat: float=NaN, IMD: float=NaN):
-        _Node.__init__(self, Name, Elevation)
+        _Node.__init__(self, name, elevation)
         self.MaxDepth = float(MaxDepth)
         self.InitDepth = float(InitDepth)
         self.Type = Type

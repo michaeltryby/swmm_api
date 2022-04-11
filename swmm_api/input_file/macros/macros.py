@@ -62,8 +62,8 @@ def calc_slope(inp: SwmmInput, conduit):
         float: slop of the link
     """
     nodes = nodes_dict(inp)
-    return (nodes[conduit.FromNode].Elevation + conduit.InOffset - (
-            nodes[conduit.ToNode].Elevation + conduit.OutOffset)) / conduit.Length
+    return (nodes[conduit.from_node].elevation + conduit.offset_upstream - (
+            nodes[conduit.to_node].elevation + conduit.offset_downstream)) / conduit.length
 
 
 def conduit_slopes(inp: SwmmInput):
@@ -78,7 +78,7 @@ def conduit_slopes(inp: SwmmInput):
     """
     slopes = {}
     for conduit in inp.CONDUITS.values():
-        slopes[conduit.Name] = calc_slope(inp, conduit)
+        slopes[conduit.name] = calc_slope(inp, conduit)
     return pd.Series(slopes)
 
 
@@ -92,9 +92,9 @@ def _rel_diff(a, b):
 
 def _rel_slope_diff(inp: SwmmInput, l0, l1):
     nodes = nodes_dict(inp)
-    slope_res = (nodes[l0.FromNode].Elevation + l0.InOffset
-                 - (nodes[l1.ToNode].Elevation + l1.OutOffset)
-                 ) / (l0.Length + l1.Length)
+    slope_res = (nodes[l0.from_node].elevation + l0.offset_upstream
+                 - (nodes[l1.to_node].elevation + l1.offset_downstream)
+                 ) / (l0.length + l1.length)
     return _rel_diff(calc_slope(inp, l0), slope_res)
 
 
@@ -120,8 +120,8 @@ def conduits_are_equal(inp: SwmmInput, link0, link1, diff_roughness=0.1, diff_sl
     if diff_roughness is not None:
         all_checks_out &= _rel_diff(link0.Roughness, link1.Roughness) < diff_roughness
 
-    xs0 = inp[XSECTIONS][link0.Name]  # type: CrossSection
-    xs1 = inp[XSECTIONS][link1.Name]  # type: CrossSection
+    xs0 = inp[XSECTIONS][link0.name]  # type: CrossSection
+    xs1 = inp[XSECTIONS][link1.name]  # type: CrossSection
 
     # Diameter values match within a specified percent tolerance (1 %)
     if diff_height is not None:
@@ -178,7 +178,7 @@ def increase_max_node_depth(inp, node_label):
     node = nodes_dict(inp)[node_label]
     max_height = node.MaxDepth
     for link in previous_ + next_:
-        max_height = max((max_height, inp[XSECTIONS][link.Name].Geom1))
+        max_height = max((max_height, inp[XSECTIONS][link.name].Geom1))
     print(f'MaxDepth increased for node "{node_label}" from {node.MaxDepth} to {max_height}')
     node.MaxDepth = max_height
 

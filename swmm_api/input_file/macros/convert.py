@@ -18,8 +18,8 @@ def junction_to_storage(inp, label, *args, **kwargs):
     j = inp[JUNCTIONS].pop(label)  # type: Junction
     if STORAGE not in inp:
         inp[STORAGE] = Storage.create_section()
-    inp[STORAGE].add_obj(Storage(Name=label, Elevation=j.Elevation, MaxDepth=j.MaxDepth,
-                                 InitDepth=j.InitDepth, Apond=j.Aponded, *args, **kwargs))
+    inp[STORAGE].add_obj(Storage(name=label, elevation=j.elevation, MaxDepth=j.depth_max,
+                                 InitDepth=j.depth_init, Apond=j.area_ponded, *args, **kwargs))
 
 
 def junction_to_outfall(inp, label, *args, **kwargs):
@@ -38,7 +38,7 @@ def junction_to_outfall(inp, label, *args, **kwargs):
     j = inp[JUNCTIONS].pop(label)  # type: Junction
     if OUTFALLS not in inp:
         inp[OUTFALLS] = Outfall.create_section()
-    inp[OUTFALLS].add_obj(Outfall(Name=label, Elevation=j.Elevation, *args, **kwargs))
+    inp[OUTFALLS].add_obj(Outfall(name=label, elevation=j.elevation, *args, **kwargs))
 
 
 def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0):
@@ -63,5 +63,5 @@ def conduit_to_orifice(inp, label, Type, Offset, Qcoeff, FlapGate=False, Orate=0
     c = inp[CONDUITS].pop(label)  # type: Conduit
     if ORIFICES not in inp:
         inp[ORIFICES] = Orifice.create_section()
-    inp[ORIFICES].add_obj(Orifice(Name=label, FromNode=c.FromNode, ToNode=c.ToNode,
-                                  Type=Type, Offset=Offset, Qcoeff=Qcoeff, FlapGate=FlapGate, Orate=Orate))
+    inp[ORIFICES].add_obj(Orifice(name=label, from_node=c.from_node, to_node=c.to_node,
+                                  orientation=Type, offset=Offset, discharge_coefficient=Qcoeff, has_flap_gate=FlapGate, hours_to_open=Orate))

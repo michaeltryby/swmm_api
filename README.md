@@ -73,7 +73,7 @@ inp = read_inp_file('inputfile.inp')  # type: swmm_api.SwmmInput
 # or 
 inp = SwmmInput.read_file('inputfile.inp')
 
-inp[JUNCTIONS]['J01'].Elevation = 210
+inp[JUNCTIONS]['J01'].elevation = 210
 ```
 
 ### Write the manipulated INP-File

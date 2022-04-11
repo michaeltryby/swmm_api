@@ -37,7 +37,7 @@ class SubCatchment(BaseSectionObject):
         SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow
             accumulation and melting over the subcatchment. ``Spack``
     """
-    _identifier = IDENTIFIERS.Name
+    _identifier = IDENTIFIERS.name
     _section_label = SUBCATCHMENTS
 
     def __init__(self, Name, RainGage, Outlet, Area, Imperv, Width, Slope, CurbLen=0, SnowPack=NaN):
@@ -99,7 +99,7 @@ class SubArea(BaseSectionObject):
 
         PctRouted (float): percent of runoff routed from one type of area to another (default = 100). ``%Routed``
     """
-    _identifier = IDENTIFIERS.Subcatch
+    _identifier = IDENTIFIERS.subcatchment
     _section_label = SUBAREAS
 
     class RoutToOption:
@@ -192,7 +192,7 @@ class Infiltration(BaseSectionObject):
     Attributes:
         Subcatch (str): subcatchment name. ``Subcat``
     """
-    _identifier = IDENTIFIERS.Subcatch
+    _identifier = IDENTIFIERS.subcatchment
     _section_label = INFILTRATION
 
     # _table_inp_export = False
@@ -390,7 +390,7 @@ class Polygon(BaseSectionObject):
             - Xcoord: horizontal coordinate of vertex
             - Ycoord: vertical coordinate of vertex
     """
-    _identifier = IDENTIFIERS.Subcatch
+    _identifier = IDENTIFIERS.subcatchment
     _table_inp_export = False
     _section_label = POLYGONS
     _section_class = InpSectionGeo
@@ -526,7 +526,7 @@ class Loading(BaseSectionObject):
             - InitBuildup: initial buildup of pollutant (lbs/acre or kg/hectare).
 
     """
-    _identifier = IDENTIFIERS.Subcatch
+    _identifier = IDENTIFIERS.subcatchment
     _table_inp_export = False
     _section_label = LOADINGS
 
@@ -601,7 +601,7 @@ class Coverage(BaseSectionObject):
         If no land uses are associated with a subcatchment then no contaminants will appear
         in the runoff from the subcatchment.
     """
-    _identifier = IDENTIFIERS.Subcatch
+    _identifier = IDENTIFIERS.subcatchment
     _section_label = COVERAGES
 
     def __init__(self, Subcatch, land_use_dict=None):
@@ -689,7 +689,7 @@ class GroundwaterFlow(BaseSectionObject):
             ;Constant seepage rate to deep aquifer
             Subactch1 DEEP 0.002
     """
-    _identifier = (IDENTIFIERS.Subcatch, 'kind')
+    _identifier = (IDENTIFIERS.subcatchment, 'kind')
     _section_label = GWF
 
     class TYPES:
@@ -750,7 +750,7 @@ class Groundwater(BaseSectionObject):
             - H_sw = height of surface water at receiving node above aquifer bottom (ft or m),
             - H_cb = height of channel bottom above aquifer bottom (ft or m).
     """
-    _identifier = (IDENTIFIERS.Subcatch, 'Aquifer', IDENTIFIERS.Node)
+    _identifier = (IDENTIFIERS.subcatchment, 'Aquifer', IDENTIFIERS.node)
     _section_label = GROUNDWATER
 
     def __init__(self, Subcatch, Aquifer, Node, Esurf, A1, B1, A2, B2, A3, Dsw, Egwt=NaN, Ebot=NaN, Egw=NaN, Umc=NaN):

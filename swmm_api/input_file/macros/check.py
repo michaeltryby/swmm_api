@@ -20,12 +20,12 @@ def check_for_nodes(inp):
     nodes_missing = set()
     links_corrupt = set()
     for link in links.values():
-        if link.FromNode not in node_labels:
-            nodes_missing.add(link.FromNode)
+        if link.from_node not in node_labels:
+            nodes_missing.add(link.from_node)
             links_corrupt.add(link)
 
-        if link.ToNode not in node_labels:
-            nodes_missing.add(link.ToNode)
+        if link.to_node not in node_labels:
+            nodes_missing.add(link.to_node)
             links_corrupt.add(link)
 
     return links_corrupt, nodes_missing

@@ -23,8 +23,8 @@ def reduce_curves(inp):
     for section in [STORAGE, OUTLETS, PUMPS, XSECTIONS]:
         if section in inp:
             for name in inp[section]:
-                if isinstance(inp[section][name].Curve, str):
-                    used_curves.add(inp[section][name].Curve)
+                if isinstance(inp[section][name].curve_description, str):
+                    used_curves.add(inp[section][name].curve_description)
 
     inp[CURVES] = inp[CURVES].slice_section(used_curves)
 

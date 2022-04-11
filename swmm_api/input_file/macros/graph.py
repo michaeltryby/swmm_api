@@ -24,7 +24,7 @@ def inp_to_graph(inp):
         #     g.add_node(link.FromNode)
         # if link.ToNode not in g:
         #     g.add_node(link.ToNode)
-        g.add_edge(link.FromNode, link.ToNode, label=link.Name)
+        g.add_edge(link.from_node, link.to_node, label=link.name)
     return g
 
 

@@ -347,9 +347,9 @@ def gpkg_to_swmm(fn, label_sep='.'):
 
     if OUTLETS in inp:
         for i in inp[OUTLETS]:
-            c = inp[OUTLETS][i].Curve
+            c = inp[OUTLETS][i].curve_description
             if isinstance(c, list):
-                inp[OUTLETS][i].Curve = [float(j) for j in c[0][1:-1].split(',')]
+                inp[OUTLETS][i].curve_description = [float(j) for j in c[0][1:-1].split(',')]
 
     simplify_vertices(inp)
     reduce_vertices(inp)
@@ -378,4 +378,4 @@ def update_length(inp):
         Works inplace.
     """
     for c in inp.CONDUITS.values():
-        c.Length = inp.VERTICES[c.Name].geo.length
+        c.length = inp.VERTICES[c.name].geo.length

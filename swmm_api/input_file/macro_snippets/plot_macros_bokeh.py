@@ -34,12 +34,12 @@ def plot_map(inp):  # TODO
                     OUTLETS]:
         if section in inp:
             for link in inp[section].values():  # type: swmm_api.input_file.sections.link._Link
-                if link.Name in inp[VERTICES]:
-                    points = [_points(inp[COORDINATES][link.FromNode])] \
-                             + inp[VERTICES][link.Name].vertices \
-                             + [_points(inp[COORDINATES][link.ToNode])]
+                if link.name in inp[VERTICES]:
+                    points = [_points(inp[COORDINATES][link.from_node])] \
+                             + inp[VERTICES][link.name].vertices \
+                             + [_points(inp[COORDINATES][link.to_node])]
                 else:
-                    points = [_points(inp[COORDINATES][link.FromNode]), _points(inp[COORDINATES][link.ToNode])]
+                    points = [_points(inp[COORDINATES][link.from_node]), _points(inp[COORDINATES][link.to_node])]
 
                 x, y = zip(*points)
                 fig.line(x, y, line_color="black", line_width =1)
