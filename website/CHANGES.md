@@ -1,6 +1,6 @@
 # Changelog  
 
-## 0.2.0.19 (Mar ??, 2022)
+## 0.3 (Apr ??, 2022)
 
 removed:
 - CoordinatesGeo (functionality included in Coordinate)
@@ -9,6 +9,9 @@ removed:
 - SwmmInputGeo (functionality included in SwmmInput)
 
 An error will be raised when calling a geo-function and the proper packages are not installed.
+
+Renamed every parameter of the base Objects of the inp-sections.
+The reason for the renaming is that the naming was previously very inconsistent and did not comply with the pip-standard.
 
 ## 0.2.0.18.3 (Mar 01, 2022)
 

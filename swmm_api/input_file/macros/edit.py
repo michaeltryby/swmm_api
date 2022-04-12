@@ -392,7 +392,7 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
     # subcatchment outlets
     if SUBCATCHMENTS in inp:
         for obj in subcatchments_per_node_dict(inp)[old_label]:
-            obj.Outlet = new_label
+            obj.outlet = new_label
         # -------
         # for obj in inp.SUBCATCHMENTS.filter_keys([old_label], 'Outlet'):  # type: SubCatchment
         #     obj.Outlet = new_label

@@ -17,25 +17,26 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-
+import datetime
 import os
 import sys
-# from swmm_api import __version__
 
 sys.path.insert(0, os.path.abspath('..'))
 # print(*sys.path, sep='\n')
+from swmm_api import __version__
 
 # -- Project information -----------------------------------------------------
 
 project = 'swmm_api'
-copyright = '2021, Pichler'
+copyright = f'{datetime.datetime.now().year}, Pichler'
 author = 'Pichler'
 html_logo = "images/swmm_api_logo.svg"
 
 # The short X.Y version
-version = ''
+version = __version__[:3]
 # The full version, including alpha/beta/rc tags
-release = '0.2.0.15'
+# release = '0.2.0.15'
+release = __version__
 
 html_theme_options = {  # https://fontawesome.com/v5.15/icons?d=gallery&p=2
     "icon_links": [
@@ -172,12 +173,12 @@ html_css_files = [
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'swmm_api'
+# htmlhelp_basename = 'swmm_api'
 
 
 # -- Options for LaTeX output ------------------------------------------------
 
-latex_elements = {
+# latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
@@ -193,7 +194,7 @@ latex_elements = {
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
-}
+# }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
@@ -208,10 +209,10 @@ latex_elements = {
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'swmm_api', 'EPA-SWMM API Documentation',
-     [author], 1)
-]
+# man_pages = [
+#     (master_doc, 'swmm_api', 'EPA-SWMM API Documentation',
+#      [author], 1)
+# ]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -219,17 +220,17 @@ man_pages = [
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
-texinfo_documents = [
-    (master_doc, 'SWMM_API', 'SWMM API Documentation',
-     author, 'SWMM_API', 'One line description of project.',
-     'Miscellaneous'),
-]
+# texinfo_documents = [
+#     (master_doc, 'SWMM_API', 'SWMM API Documentation',
+#      author, 'SWMM_API', 'One line description of project.',
+#      'Miscellaneous'),
+# ]
 
 
 # -- Options for Epub output -------------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = project
+# epub_title = project
 
 # The unique identifier of the text. This can be a ISBN number
 # or the project homepage.

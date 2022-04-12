@@ -95,7 +95,7 @@ class RainGage(BaseSectionObject):
                     pass
 
             elif Source == RainGage.SOURCES.FILE:
-                self.Filename = args[0]
+                self.Filename = args[0].strip('"')
                 self.Station = args[1]
                 self.Units = args[2]
 

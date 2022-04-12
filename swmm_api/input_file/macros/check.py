@@ -72,5 +72,5 @@ def check_for_subcatchment_outlets(inp):
         possible_outlets = set(nodes_dict(inp).keys()) | set(inp.SUBCATCHMENTS.keys())
         outlets = inp.SUBCATCHMENTS.frame.Outlet
         outlets_missing = set(outlets) - possible_outlets
-        subcatchments_corrupt = {sc for sc in inp.SUBCATCHMENTS.values() if sc.Outlet in outlets_missing}
+        subcatchments_corrupt = {sc for sc in inp.SUBCATCHMENTS.values() if sc.outlet in outlets_missing}
         return subcatchments_corrupt, outlets_missing

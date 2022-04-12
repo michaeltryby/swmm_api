@@ -94,6 +94,7 @@ class CrossSection(BaseSectionObject):
 
         self.height = NaN
         self.transect = NaN
+        self.street = NaN
 
         self.parameter_2 = NaN
         self.curve = NaN
@@ -103,6 +104,11 @@ class CrossSection(BaseSectionObject):
                 # read inp file
                 transect = height
             self.transect = str(transect)  # name of TransectCoordinates
+        elif shape == self.SHAPES.STREET:
+            if street is None:
+                # read inp file
+                street = height
+            self.street = str(street)  # name of Street section
         elif shape == self.SHAPES.CUSTOM:
             if curve is None:
                 curve = parameter_2
@@ -121,25 +127,25 @@ class CrossSection(BaseSectionObject):
         self.culvert = culvert
 
     @classmethod
-    def custom(cls, Link, height, curve):
+    def custom(cls, link, height, curve):
         """
         ``CUSTOM`` shape is a closed conduit whose width versus height is described by a user-supplied Shape Curve.
         """
-        return cls(Link, CrossSection.SHAPES.CUSTOM, height=height, curve=curve)
+        return cls(link, CrossSection.SHAPES.CUSTOM, height=height, curve=curve)
 
     @classmethod
-    def irregular(cls, Link, transect):
+    def irregular(cls, link, transect):
         """
         ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect object.
         """
-        return cls(Link, CrossSection.SHAPES.IRREGULAR, transect=transect)
+        return cls(link, CrossSection.SHAPES.IRREGULAR, transect=transect)
 
     @classmethod
-    def street(cls, Link, transect):
+    def create_street(cls, link, street):
         """
         ``IRREGULAR`` cross-section is used to model an open channel whose geometry is described by a Transect object.
         """
-        return cls(Link, CrossSection.SHAPES.STREET, street=street)
+        return cls(link, CrossSection.SHAPES.STREET, street=street)
 
 
 class Loss(BaseSectionObject):

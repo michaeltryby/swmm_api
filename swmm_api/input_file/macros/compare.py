@@ -102,6 +102,21 @@ class CompareSections:
         }
 
 
+def compare_sections(sec1, sec2, precision=3):
+    """
+    compare two inp file sections and get the differences as string output
+
+    Args:
+        sec1 (InpSection): filename for the first inp file
+        sec2 (InpSection): filename for the second inp file
+        precision (int): number of relevant decimal places
+
+    Returns:
+        str: differences of the sections
+    """
+    return CompareSections(sec1, sec2, precision=precision).get_diff_string()
+
+
 def compare_inp_files(fn1, fn2, precision=2, skip_section=None):
     """
     compare two inp files and get the differences as string output

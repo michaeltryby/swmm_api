@@ -4,10 +4,11 @@ from shutil import rmtree
 from tqdm.auto import tqdm
 
 from swmm_api import read_inp_file, SwmmReport, SwmmOutput
+from swmm_api.input_file import SEC
 from swmm_api.input_file.sections import Timeseries
 # from swmm_api.run import swmm5_run, get_swmm_version
-from swmm_api.run import get_result_filenames
-from swmm_api.run_py import run_progress, run, get_swmm_version
+from swmm_api.run import get_result_filenames, SWMMRunError, get_swmm_version, swmm5_run as run
+# from swmm_api.run_py import run_progress, run, get_swmm_version
 
 # t = Timeseries.create_section("""KOSTRA 01-01-2021 00:00 0.0
 # KOSTRA 01-01-2021 00:05 1.9999999999999982
@@ -27,11 +28,11 @@ example_dirs = [os.path.join(parent_dir, 'epaswmm5_apps_manual'),
                 os.path.join(parent_dir, 'epaswmm5_apps_manual', 'Samples'),
                 os.path.join(parent_dir, 'epaswmm5_apps_manual', 'Example6-Final_AllSections_GUI')]
 
-example_files = [os.path.join(folder, fn) for folder in example_dirs for fn in os.listdir(folder) if '.inp' in fn]
-example_files = tqdm(example_files, desc='TESTING_ALL_EXAMPLES')
-
 version = get_swmm_version()
 print('Version: ', version)
+
+example_files = [os.path.join(folder, fn) for folder in example_dirs for fn in os.listdir(folder) if '.inp' in fn]
+example_files = tqdm(example_files, desc='TESTING_ALL_EXAMPLES')
 
 
 def _convert_all(rpt):
@@ -83,7 +84,8 @@ def _convert_all(rpt):
             ]
 
     for key in keys:
-        eval(f'rpt.{key}')
+        rpt.__getattribute__(key)
+        # eval(f'rpt.{key}')
 
 
 for fn in example_files:
@@ -92,6 +94,9 @@ for fn in example_files:
     # fn = '/home/markus/PycharmProjects/swmm_api/examples/epaswmm5_apps_manual/Example6-Final+TimeseriesVariation _MP.inp'
 
     if version != '5.1.15' and fn.endswith('Example1_smm5-1-15.inp'):
+        continue
+
+    if '5.2' not in version and 'Samples' in fn:
         continue
 
     # READ
@@ -104,6 +109,15 @@ for fn in example_files:
 
     # test copy
     inp.copy()
+
+    if SEC.RAINGAGES in inp:
+        if 'RainGage' in inp.RAINGAGES:
+            # if isinstance(inp.RAINGAGES['RainGage'].Filename, str):
+            #     print()
+            if inp.RAINGAGES['RainGage'].Filename == 'Record.dat':
+                inp.RAINGAGES['RainGage'].Filename = os.path.join(os.path.dirname(__file__), 'epaswmm5_apps_manual', inp.RAINGAGES['RainGage'].Filename)
+                pass # C:\Users\mp\PycharmProjects\swmm_api\examples\epaswmm5_apps_manual\
+
 
     fn_inp = os.path.join(temp_dir, 'temp.inp')
     fn_rpt, fn_out = get_result_filenames(fn_inp)
@@ -120,9 +134,12 @@ for fn in example_files:
 
     # RUN
     # swmm5_run(inp_fn, init_print=False)
-    run_progress(fn_inp)
-    # run(inp_fn)
-
+    # run_progress(fn_inp)
+    try:
+        run(fn_inp)
+    except SWMMRunError:
+        print(f'Failed: "{fn}"')
+        continue
     # REPORT
     rpt = SwmmReport(fn_rpt)
     _convert_all(rpt)
@@ -134,7 +151,9 @@ for fn in example_files:
     out.to_numpy()
     del out
 
-    os.remove(fn_rpt)
-    os.remove(fn_out)
+    if os.path.isfile(fn_rpt):
+        os.remove(fn_rpt)
+    if os.path.isfile(fn_rpt):
+        os.remove(fn_out)
 
 rmtree(temp_dir)

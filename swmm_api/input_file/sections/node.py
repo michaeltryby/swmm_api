@@ -96,19 +96,16 @@ class Outfall(_Node):
     Attributes:
         name (str): name assigned to outfall node.
         elevation (float): invert elevation (ft or m). ``Elev``
-        Type (str): one of ``FREE``, ``NORMAL``, ``FIXED``, ``TIDAL``, ``TIMESERIES``
-        Data (float | str): one of the following
+        kind (str): one of ``FREE``, ``NORMAL``, ``FIXED``, ``TIDAL``, ``TIMESERIES``
+        data (float | str): one of the following
 
             - Stage (float): elevation of fixed stage outfall (ft or m). for ``FIXED``-Type
             - Tcurve (str): name of curve in [``CURVES``] section containing tidal height (i.e., outfall stage) v.
             hour of day over a complete tidal cycle. for ``TIDAL``-Type
             - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies
             with time.  for ``TIMESERIES``-Type
-
-        has_flap_gate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents
-        reverse flow. The default is ``NO``. ``Gated``
-        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to
-        route the outfall’s discharge.
+        has_flap_gate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
+        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
     """
     _section_label = OUTFALLS
 
@@ -119,13 +116,13 @@ class Outfall(_Node):
         TIDAL = 'TIDAL'
         TIMESERIES = 'TIMESERIES'
 
-    def __init__(self, name, elevation, Type, *args, Data=NaN, has_flap_gate=False, RouteTo=NaN): # Outfall node information.
+    def __init__(self, name, elevation, kind, *args, data=NaN, has_flap_gate=False, RouteTo=NaN): # Outfall node information.
         _Node.__init__(self, name, elevation)
-        self.Type = Type
+        self.kind = kind
         self.Data = NaN
 
         if args:
-            if Type in [Outfall.TYPES.FIXED,
+            if kind in [Outfall.TYPES.FIXED,
                         Outfall.TYPES.TIDAL,
                         Outfall.TYPES.TIMESERIES]:
                 self._data_init(*args)
@@ -134,7 +131,7 @@ class Outfall(_Node):
             else:
                 self._no_data_init(*args)
         else:
-            self.Data = Data
+            self.Data = data
             self.has_flap_gate = to_bool(has_flap_gate)
             self.RouteTo = RouteTo
 
@@ -159,7 +156,7 @@ class Outfall(_Node):
             Data (float | str): one of the following
                 Stage (float): elevation of fixed stage outfall (ft or m).
                 Tcurve (str): name of curve in [CURVES] section containing tidal height (i.e., outfall stage) v.
-                    hour of day over a complete tidal cycle.
+                  hour of day over a complete tidal cycle.
                 Tseries (str): name of time series in [TIMESERIES] section that describes how outfall stage varies
                 with time.
             has_flap_gate (bool): YES or NO depending on whether a flap gate is present that prevents reverse flow. The
@@ -190,12 +187,6 @@ class Storage(_Node):
             Name Elev Ymax Y0 FUNCTIONAL A1 A2 A0 (Apond Fevap Psi Ksat IMD)
             Name Elev Ymax Y0 Shape      L  W  Z  (Ysur  Fevap Psi Ksat IMD)
 
-    Format-PCSWMM:
-        ``Name Elev MaxDepth InitDepth Shape CurveName/Params N/A Fevap Psi Ksat IMD``
-
-    Format-SWMM-GUI:
-        ``Name  InvertElev  MaxDepth  InitDepth  StorageCurve  CurveParams  EvapFrac  InfiltrationParameters``
-
     Remarks:
         A1, A2, and A0 are used in the following expression that relates surface area (ft2 or m2) to water depth
         (ft or m) for a storage unit with ``FUNCTIONAL`` geometry:
@@ -207,27 +198,36 @@ class Storage(_Node):
 
         The dimensions of storage units with other shapes are defined as follows:
             - ``CYLINDRICAL``
-                L = major axis length |
-                W = minor axis width |
-                Z = not used
-            - ``CONICAL``
-                L = major axis length of base |
-                W = minor axis width of base |
-                Z = side slope (run/rise)
-            - ``PARABOLOID``
-                L = major axis length at full height |
-                W = minor axis width at full height |
-                Z = full height
-            - ``PYRAMIDAL``
-                L = base length |
-                W = base width |
-                Z = side slope (run/rise)
 
-        The parameters :attr:`Psi`, :attr:`Ksat`, and :attr:`IMD` need only be supplied if seepage loss through the soil at the bottom and
+                - L = major axis length
+                - W = minor axis width
+                - Z = not used
+
+            - ``CONICAL``
+
+                - L = major axis length of base |
+                - W = minor axis width of base |
+                - Z = side slope (run/rise)
+
+            - ``PARABOLOID``
+
+                - L = major axis length at full height |
+                - W = minor axis width at full height |
+                - Z = full height
+
+            - ``PYRAMIDAL``
+
+                - L = base length |
+                - W = base width |
+                - Z = side slope (run/rise)
+
+        The parameters :attr:`suction_head`, :attr:`hydraulic_conductivity`, and :attr:`moisture_deficit_init`
+        need only be supplied if seepage loss through the soil at the bottom and
         sloped sides of the storage unit should be considered.
-        They are the same Green-Ampt infiltration parameters described in the [``INFILTRATION``] section.
-        If :attr:`Ksat` is zero then no seepage occurs while if :attr:`IMD` is zero then seepage occurs at
-        a constant rate equal to :attr:`Ksat`.
+        They are the same Green-Ampt infiltration parameters described in the [``INFILTRATION``] section. (
+        :class:`InfiltrationGreenAmpt`)
+        If :attr:`hydraulic_conductivity` is zero then no seepage occurs while if :attr:`moisture_deficit_init`
+        is zero then seepage occurs at a constant rate equal to :attr:`hydraulic_conductivity`.
         Otherwise seepage rate will vary with storage depth.
 
     From C-Code:
@@ -238,7 +238,30 @@ class Storage(_Node):
             //     nodeID  elev  maxDepth  initDepth  TABULAR    curveID  surDepth fEvap (infil) //
 
     Attributes:
+         name (str): Name assigned to storage node.
+         elevation (float): Node's invert elevation (ft or m).
+         depth_max (float): Maximum water depth possible (ft or m).
+         depth_init (float): Water depth at the start of the simulation (ft or m).
+         kind (str): One of :attr:`Storage.TYPES` (``TABULAR`` | ``FUNCTIONAL``), or One of :attr:`Storage.SHAPES`
+         *args: -Arguments below-
+         data (str | list):
 
+            - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth
+            (ft or m) for ``TABULAR`` geometry.
+            - :obj:`list`: ``FUNCTIONAL`` relation between surface area and depth with
+
+                - A1 (:obj:`float`): coefficient
+                - A2 (:obj:`float`): exponent
+                - A0 (:obj:`float`): constant
+
+         depth_surcharge: maximum additional pressure head above full depth that a closed storage unit
+            can sustain under surcharge conditions (ft or m) (default is 0).
+         frac_evaporation (float): fraction of potential evaporation from the storage unit’s water surface realized
+            (default is 0).
+         suction_head (float): Soil suction head (inches or mm).
+         hydraulic_conductivity (float): Soil saturated hydraulic conductivity (in/hr or mm/hr).
+         moisture_deficit_init (float): Soil initial moisture deficit (porosity minus moisture content) (fraction).
+         TYPES: ``Storage.TYPES.TABULAR``, ``Storage.TYPES.FUNCTIONAL``
     """
     _section_label = STORAGE
 
@@ -254,58 +277,59 @@ class Storage(_Node):
 
         _possible = (CYLINDRICAL, CONICAL, PARABOLOID, PYRAMIDAL)
 
-    def __init__(self, name, elevation, depth_max, depth_init, Type, *args, Curve=None,
-                 depth_surcharge=0, frac_evaporation=0, Psi=NaN, Ksat=NaN, IMD=NaN):
+    def __init__(self, name, elevation, depth_max, depth_init, kind, *args, data=None,
+                 depth_surcharge=0, frac_evaporation=0,
+                 suction_head=NaN, hydraulic_conductivity=NaN, moisture_deficit_init=NaN):
         """
         Storage node information.
 
         Args:
-            name (str): Name assigned to storage node.
-            elevation (float): Node's invert elevation (ft or m).
-            depth_max (float): Maximum water depth possible (ft or m).
-            depth_init (float): Water depth at the start of the simulation (ft or m).
-            Type (str): One of :attr:`Storage.TYPES` (``TABULAR`` | ``FUNCTIONAL``), or One of :attr:`Storage.SHAPES`
-            *args (): -Arguments below-
-            Curve (str | list):
+             name (str): Name assigned to storage node.
+             elevation (float): Node's invert elevation (ft or m).
+             depth_max (float): Maximum water depth possible (ft or m).
+             depth_init (float): Water depth at the start of the simulation (ft or m).
+             kind (str): One of :attr:`Storage.TYPES` (``TABULAR`` | ``FUNCTIONAL``) or one of :attr:`Storage.SHAPES`
+             ( ``CYLINDRICAL`` | ``CONICAL`` | ``PARABOLOID`` | ``PYRAMIDAL``)
+             *args: -Arguments below-
+             data (str | list):
 
-                - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth
-                (ft or m) for ``TABULAR`` geometry. ``Acurve``
+                - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of
+                depth (ft or m) for ``TABULAR`` geometry.
                 - :obj:`list`: ``FUNCTIONAL`` relation between surface area and depth with
 
-                   - A1 (:obj:`float`): coefficient
-                   - A2 (:obj:`float`): exponent
-                   - A0 (:obj:`float`): constant
+                    - A1 (:obj:`float`): coefficient
+                    - A2 (:obj:`float`): exponent
+                    - A0 (:obj:`float`): constant
 
-            depth_surcharge: maximum additional pressure head above full depth that a closed storage unit
+             depth_surcharge: maximum additional pressure head above full depth that a closed storage unit
                 can sustain under surcharge conditions (ft or m) (default is 0).
-
-            frac_evaporation (float): fraction of potential evaporation from the storage unit’s water surface realized
+             frac_evaporation (float): fraction of potential evaporation from the storage unit’s water surface realized
                 (default is 0).
-
-            suction_head (float): Soil suction head (inches or mm).
-            hydraulic_conductivity (float): Soil saturated hydraulic conductivity (in/hr or mm/hr).
-            moisture_deficit_init (float): Soil initial moisture deficit (porosity minus moisture content) (fraction).
+             suction_head (float): Soil suction head (inches or mm).
+             hydraulic_conductivity (float): Soil saturated hydraulic conductivity (in/hr or mm/hr).
+             moisture_deficit_init (float): Soil initial moisture deficit (porosity minus moisture content) (fraction).
         """
         _Node.__init__(self, name, elevation)
         self.depth_max = float(depth_max)
         self.depth_init = float(depth_init)
-        self.Type = Type
+        self.kind = kind
 
         if args:
-            if Type == Storage.TYPES.TABULAR:
+            if kind == Storage.TYPES.TABULAR:
                 self._tabular_init(*args)
 
-            elif Type == Storage.TYPES.FUNCTIONAL:
+            elif kind == Storage.TYPES.FUNCTIONAL:
                 self._functional_init(*args)
 
-            elif Type in Storage.SHAPES._possible:
+            elif kind in Storage.SHAPES._possible:
                 self._shape_init(*args)
 
             else:
                 raise NotImplementedError()
         else:
-            self.Curve = Curve
-            self._optional_args(depth_surcharge, frac_evaporation, Psi, Ksat, IMD)
+            self.data = data
+            self._optional_args(depth_surcharge, frac_evaporation,
+                                suction_head, hydraulic_conductivity, moisture_deficit_init)
 
     def _functional_init(self, coefficient, exponent, constant, *args, **kwargs):
         """
@@ -323,7 +347,7 @@ class Storage(_Node):
             frac_evaporation (float): fraction of potential evaporation from the storage unit’s water surface realized
                 (default is 0).
         """
-        self.Curve = infer_type([coefficient, exponent, constant])
+        self.data = [float(coefficient), float(exponent), float(constant)]
         self._optional_args(*args, **kwargs)
 
     def _tabular_init(self, Curve, *args, **kwargs):
@@ -338,7 +362,7 @@ class Storage(_Node):
             frac_evaporation (float): fraction of potential evaporation from the storage unit’s water surface realized
                 (default is 0).
         """
-        self.Curve = Curve
+        self.data = Curve
         self._optional_args(*args, **kwargs)
 
     def _shape_init(self, L, W, Z, *args, **kwargs):
@@ -353,7 +377,7 @@ class Storage(_Node):
             frac_evaporation (float): fraction of potential evaporation from the storage unit’s water surface realized
                 (default is 0).
         """
-        self.Curve = infer_type([L, W, Z])
+        self.data = infer_type([L, W, Z])
         self._optional_args(*args, **kwargs)
 
     def _optional_args(self, depth_surcharge=0, frac_evaporation=0, *exfiltration_args, **exfiltration_kwargs):

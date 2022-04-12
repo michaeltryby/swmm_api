@@ -5,10 +5,12 @@ __email__ = "markus.pichler@tugraz.at"
 __version__ = "0.1"
 __license__ = "MIT"
 
-
+import datetime
 from itertools import product
 from numpy import dtype, fromfile
 from pandas import date_range, DataFrame, MultiIndex
+from pandas._libs import OutOfBoundsDatetime
+
 from .extract import SwmmOutExtract
 from .definitions import OBJECTS, VARIABLES
 
@@ -63,8 +65,11 @@ class SwmmOutput(SwmmOutExtract):
         self._data = None
 
         # the main datetime index for the results
-        self.index = date_range(self.start_date + self.report_interval,
+        try:
+            self.index = date_range(self.start_date + self.report_interval,
                                 periods=self.n_periods, freq=self.report_interval)
+        except OutOfBoundsDatetime:
+            self.index = [self.start_date + self.report_interval * i for i in range(self.n_periods)]
 
     def __repr__(self):
         return f'SwmmOutput(file="{self.filename}")'

@@ -119,6 +119,3 @@ LID Sections
 
     LIDControl
     LIDUsage
-
-
-.. currentmodule:: swmm_api.input_file.sections.map_geodata

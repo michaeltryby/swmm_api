@@ -55,7 +55,7 @@ def plot_map(inp):  # TODO
             fig.scatter(x=center.x, y=center.y, marker='square', fill_color='black')
 
             subcatch = inp[SUBCATCHMENTS][poly.subcatchment]  # type: SubCatchment
-            outlet = subcatch.Outlet
+            outlet = subcatch.outlet
             outlet_point = inp[COORDINATES][outlet]
             fig.line([center.x, outlet_point.x], [center.y, outlet_point.y], line_color='red', line_dash="dashed")
 

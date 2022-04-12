@@ -1,6 +1,7 @@
 from numpy import NaN
 
 from ._identifiers import IDENTIFIERS
+from .._type_converter import to_bool
 from ..helpers import BaseSectionObject
 from ..section_labels import LID_USAGE, LID_CONTROLS
 
@@ -227,7 +228,7 @@ class LIDControl(BaseSectionObject):
         class Storage(BaseSectionObject):
             _LABEL = 'STORAGE'
 
-            def __init__(self, Height, Vratio, Seepage, Vclog):
+            def __init__(self, Height, Vratio, Seepage, Vclog, Covrd=True):
                 """
                 Args:
                     Height (float): thickness of the storage layer or height of a rain barrel (inches or mm).
@@ -238,6 +239,7 @@ class LIDControl(BaseSectionObject):
                         floor or liner below the layer then use a value of 0.
                     Vclog (int): number of storage layer void volumes of runoff treated it takes to
                         completely clog the layer. Use a value of 0 to ignore clogging.
+                    Covrd (bool): YES (the default) if a rain barrel is covered, NO if it is not.
 
                 Remarks:
                     Values for Vratio, Seepage, and Vclog are ignored for rain barrels.
@@ -246,11 +248,12 @@ class LIDControl(BaseSectionObject):
                 self.Vratio = float(Vratio)
                 self.Seepage = float(Seepage)
                 self.Vclog = int(Vclog)
+                self.Covrd = to_bool(Covrd)
 
         class Drain(BaseSectionObject):
             _LABEL = 'DRAIN'
 
-            def __init__(self, Coeff, Expon, Offset, Delay, open_level=NaN, close_level=NaN):
+            def __init__(self, Coeff, Expon, Offset, Delay, open_level=NaN, close_level=NaN, Qcurve=NaN):
                 """
                 Args:
                     Coeff (float): coefficient C that determines the rate of flow through the drain as a
@@ -266,13 +269,20 @@ class LIDControl(BaseSectionObject):
                         begins). A value of 0 signifies that the barrel's drain line is always open
                         and drains continuously. This parameter is ignored for other types of
                         LIDs.
+                    Hopen (): The height of water (in inches or mm) in the drain's Storage Layer that causes
+                        the drain to automatically open. Use 0 to disable this feature.
+                    Hclose (): The height of water (in inches or mm) in the drain's Storage Layer that causes
+                        the drain to automatically close. Use 0 to disable this feature.
+                    Qcurve (): The name of an optional Control Curve that adjusts the computed drain flow as
+                        a function of the head of water above the drain. Leave blank if not applicable.
                 """
                 self.Coeff = float(Coeff)
                 self.Expon = float(Expon)
                 self.Offset = float(Offset)
                 self.Delay = Delay  # acc. to documentation  / for Rain Barrels only
-                # self.open_level = open_level  # to in documentation
-                # self.close_level = close_level  # to in documentation
+                self.open_level = open_level  # not in documentation of 5.1 but in 5.2
+                self.close_level = close_level  # not in documentation of 5.1 but in 5.2
+                self.Qcurve = Qcurve
 
         class Drainmat(BaseSectionObject):
             _LABEL = 'DRAINMAT'
@@ -288,16 +298,30 @@ class LIDControl(BaseSectionObject):
                 self.Vratio = float(Vratio)
                 self.Rough = float(Rough)
 
+        class Removals(BaseSectionObject):
+            _LABEL = 'REMOVALS'
+
+            def __init__(self, *pollutant_removal_rate):
+                """
+                Args:
+                    Pollut (): name of a pollutant
+                    Rmvl (): the percent removal the LID achieves for the pollutant (several pollutant
+                        removals can be placed on the same line or specified in separate REMOVALS
+                        lines).
+                """
+                self.pollutant_removal_rate = pollutant_removal_rate
+
         SURFACE = Surface._LABEL
         SOIL = Soil._LABEL
         PAVEMENT = Pavement._LABEL
         STORAGE = Storage._LABEL
         DRAIN = Drain._LABEL
         DRAINMAT = Drainmat._LABEL
+        REMOVALS = Removals._LABEL
 
-        _possible = [SURFACE, SOIL, PAVEMENT, STORAGE, DRAIN, DRAINMAT]
+        _possible = [SURFACE, SOIL, PAVEMENT, STORAGE, DRAIN, DRAINMAT, REMOVALS]
 
-        _dict = {x._LABEL: x for x in (Surface, Soil, Pavement, Storage, Drain, Drainmat)}
+        _dict = {x._LABEL: x for x in (Surface, Soil, Pavement, Storage, Drain, Drainmat, Removals)}
 
     def to_inp_line(self):
         s = '{} {}\n'.format(self.name, self.lid_kind)

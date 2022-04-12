@@ -70,7 +70,7 @@ def plot_map(inp, sc_connector=True, sc_center=True):  # TODO
             # center connector to sub-catchment
             if sc_connector:
                 subcatch = inp[SUBCATCHMENTS][poly.subcatchment]  # type: SubCatchment
-                outlet_point = points[subcatch.Outlet]
+                outlet_point = points[subcatch.outlet]
                 center = points[poly.subcatchment]
                 ax.plot([center.x, outlet_point.x], [center.y, outlet_point.y], 'r--')
 

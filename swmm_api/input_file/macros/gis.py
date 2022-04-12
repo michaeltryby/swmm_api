@@ -189,7 +189,7 @@ def get_subcatchment_connectors(inp):
     res = {}
     for p in tqdm(inp[POLYGONS], total=len(inp[POLYGONS].keys()), desc='get_subcatchment_connectors'):
         c = inp[POLYGONS][p].geo.centroid
-        o = inp[SUBCATCHMENTS][p].Outlet
+        o = inp[SUBCATCHMENTS][p].outlet
         if o not in inp[COORDINATES]:
             print(inp[SUBCATCHMENTS][p])
             continue

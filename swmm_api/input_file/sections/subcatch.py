@@ -20,54 +20,38 @@ class SubCatchment(BaseSectionObject):
         Identifies each sub-catchment within the study area. Subcatchments are land area
         units which generate runoff from rainfall.
 
-    Format:
-        ::
-
-            Name Rgage OutID Area %Imperv Width Slope Clength (Spack)
-
-    Format-PCSWMM:
-        ``Name RainGage Outlet Area %Imperv Width %Slope CurbLen SnowPack``
-
     Attributes:
-        name (str): name assigned to subcatchment.
-        rain_gage (str): name of rain gage in [RAINGAGES] section assigned to subcatchment. ``Rgage``
-        Outlet (str): name of node or subcatchment that receives runoff from subcatchment. ``OutID``
-        Area (float): area of subcatchment (acres or hectares).
-        Imperv (float): percent imperviousness of subcatchment. ``%Imperv``
-        Width (float): characteristic width of subcatchment (ft or meters).
-        Slope (float): subcatchment slope (percent).
-        CurbLen (float): total curb length (any length units). Use 0 if not applicable. ``Clength``
-        SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow
-            accumulation and melting over the subcatchment. ``Spack``
+
     """
     _identifier = IDENTIFIERS.name
     _section_label = SUBCATCHMENTS
 
-    def __init__(self, name, rain_gage, Outlet, Area, Imperv, Width, Slope, CurbLen=0, SnowPack=NaN):
+    def __init__(self, name, rain_gage, outlet, area, imperviousness, width, slope, curb_length=0, snow_pack=NaN):
         """
         Basic subcatchment information.
 
         Args:
-            name (str): name assigned to subcatchment.
-            rain_gage (str): name of rain gage in [RAINGAGES] section assigned to subcatchment. ``Rgage``
-            Outlet (str): name of node or subcatchment that receives runoff from subcatchment. ``OutID``
-            Area (float): area of subcatchment (acres or hectares).
-            Imperv (float): percent imperviousness of subcatchment. ``%Imperv``
-            Width (float): characteristic width of subcatchment (ft or meters).
-            Slope (float): subcatchment slope (percent).
-            CurbLen (float): total curb length (any length units). Use 0 if not applicable. ``Clength``
-            SnowPack (str): optional name of snow pack object (from [SNOWPACKS] section) that characterizes snow
-                accumulation and melting over the subcatchment. ``Spack``
+            name (str): Name assigned to subcatchment.
+
+            rain_gage (str): Name of rain gage in [``RAINGAGES`` ` ``RAINGAGES`` :class:`RainGage` `_ ] section assigned to subcatchment.
+            outlet (str): Name of node or subcatchment that receives runoff from subcatchment.
+            area (float): Area of subcatchment (acres or hectares).
+            imperviousness (float): Percent imperviousness of subcatchment.
+            width (float): Characteristic width of subcatchment (ft or meters).
+            slope (float): Subcatchment slope (percent).
+            curb_length (float): Total curb length (any length units). Use 0 if not applicable.
+            snow_pack (str): Optional name of snow pack object (from [``SNOWPACKS``] section) that characterizes snow
+                accumulation and melting over the subcatchment.
         """
         self.name = str(name)
         self.rain_gage = str(rain_gage)
-        self.Outlet = str(Outlet)
-        self.Area = float(Area)
-        self.Imperv = float(Imperv)
-        self.Width = float(Width)
-        self.Slope = float(Slope)
-        self.CurbLen = float(CurbLen)
-        self.SnowPack = SnowPack
+        self.outlet = str(outlet)
+        self.area = float(area)
+        self.imperviousness = float(imperviousness)
+        self.width = float(width)
+        self.slope = float(slope)
+        self.curb_length = float(curb_length)
+        self.snow_pack = snow_pack
 
 
 class SubArea(BaseSectionObject):
@@ -143,7 +127,12 @@ class SubArea(BaseSectionObject):
 
 class Infiltration(BaseSectionObject):
     """
-    Section: [**INFILTRATION**]
+    Subcatchment infiltration parameters.
+
+    ABSTRACT parent class. Use child classes!
+
+    Section:
+        [INFILTRATION]
 
     Purpose:
         Supplies infiltration parameters for each subcatchment.
@@ -152,48 +141,17 @@ class Infiltration(BaseSectionObject):
     Formats:
         ::
 
-            Subcat MaxRate MinRate Decay DryTime MaxInf
-            Subcat Psi Ksat IMD
-            Subcat CurveNo Ksat DryTime
-
-    Remarks:
-        Subcat
-            subcatchment name.
-
-        For Horton and Modified Horton Infiltration:
-            MaxRate
-                maximum infiltration rate on Horton curve (in/hr or mm/hr).
-            MinRate
-                minimum infiltration rate on Horton curve (in/hr or mm/hr).
-            Decay
-                decay rate constant of Horton curve (1/hr).
-            DryTime
-                time it takes for fully saturated soil to dry (days).
-            MaxInf
-                maximum infiltration volume possible (0 if not applicable) (in or mm).
-
-        For Green-Ampt and Modified Green-Ampt Infiltration:
-            Psi
-                soil capillary suction (in or mm).
-            Ksat
-                soil saturated hydraulic conductivity (in/hr or mm/hr).
-            IMD
-             initial soil moisture deficit (volume of voids / total volume).
-
-        For Curve-Number Infiltration:
-            CurveNo
-                SCS Curve Number.
-            Ksat
-                soil saturated hydraulic conductivity (in/hr or mm/hr)
-                (This property has been deprecated and is no longer used.)
-            DryTime
-                time it takes for fully saturated soil to dry (days).
-
-    Args:
-        subcatchment (str): subcatchment name. ``Subcat``
+            Subcat MaxRate MinRate Decay DryTime MaxInf (Method)
+            Subcat Psi Ksat IMD (Method)
+            Subcat CurveNo Ksat DryTime (Method)
 
     Attributes:
-        subcatchment (str): subcatchment name. ``Subcat``
+        subcatchment (str): Subcatchment name.
+
+    See Also:
+        - :class:`InfiltrationHorton` : child class of this one.
+        - :class:`InfiltrationGreenAmpt` : child class of this one.
+        - :class:`InfiltrationCurveNumber` : child class of this one.
     """
     _identifier = IDENTIFIERS.subcatchment
     _section_label = INFILTRATION
@@ -204,6 +162,12 @@ class Infiltration(BaseSectionObject):
     # infil_readParams
 
     def __init__(self, subcatchment):
+        """
+        Subcatchment infiltration parameters.
+
+        Args:
+            subcatchment (str): Subcatchment name.
+        """
         self.subcatchment = str(subcatchment)
 
     @classmethod
@@ -224,7 +188,7 @@ class Infiltration(BaseSectionObject):
             if last_arg in INFILTRATION_DICT:
                 sub_class_id = last_arg
                 subcls = INFILTRATION_DICT[last_arg]
-                args = args[:-1]
+                # args = args[:-1]
 
         if subcls != InfiltrationHorton:
             args = args[:3]
@@ -239,121 +203,136 @@ class Infiltration(BaseSectionObject):
 
 class InfiltrationHorton(Infiltration):
     """
-    Section: [**INFILTRATION**]
+    Subcatchment infiltration parameters for the (modified) Horton method.
 
-    For Horton and Modified Horton Infiltration
+    Section:
+        [INFILTRATION]
 
     Purpose:
         Supplies infiltration parameters for each subcatchment.
         Rainfall lost to infiltration only occurs over the pervious sub-area of a subcatchment.
 
-    Formats:
-        ::
-
-            Subcat MaxRate MinRate Decay DryTime MaxInf
-
-    Format-PCSWMM:
-        ``Subcatchment MaxRate MinRate Decay DryTime MaxInfil``
-
-    Args:
-        subcatchment (str): subcatchment name. ``Subcat``
-        MaxRate (float): maximum infiltration rate on Horton curve (in/hr or mm/hr).
-        MinRate (float): minimum infiltration rate on Horton curve (in/hr or mm/hr).
-        Decay (float): decay rate constant of Horton curve (1/hr).
-        DryTime (float): time it takes for fully saturated soil to dry (days).
-        MaxInf (float): maximum infiltration volume possible (0 if not applicable) (in or mm).
-
     Attributes:
-        subcatchment (str): subcatchment name. ``Subcat``
-        MaxRate (float): maximum infiltration rate on Horton curve (in/hr or mm/hr).
-        MinRate (float): minimum infiltration rate on Horton curve (in/hr or mm/hr).
-        Decay (float): decay rate constant of Horton curve (1/hr).
-        DryTime (float): time it takes for fully saturated soil to dry (days).
-        MaxInf (float): maximum infiltration volume possible (0 if not applicable) (in or mm).
+        subcatchment (str): Subcatchment name.
+        rate_max (float): Maximum infiltration rate on Horton curve (in/hr or mm/hr).
+        rate_min (float): Minimum infiltration rate on Horton curve (in/hr or mm/hr).
+        decay (float): Decay rate constant of Horton curve (1/hr).
+        time_dry (float): Time it takes for fully saturated soil to dry (days).
+        volume_max (float): Maximum infiltration volume possible (0 if not applicable) (in or mm).
+        kind (str, Optional): Method to use -> ``HORTON`` or ``MODIFIED_HORTON`` (new in 5.1.015).
+
+    See Also:
+        - :class:`Infiltration`: abstract parent class of this one.
+        - :class:`InfiltrationGreenAmpt`: child class of this one.
+        - :class:`InfiltrationCurveNumber`: child class of this one.
     """
 
-    def __init__(self, subcatchment, MaxRate, MinRate, Decay, DryTime, MaxInf, kind=None):
+    def __init__(self, subcatchment, rate_max, rate_min, decay, time_dry, volume_max, kind=None):
+        """
+        Subcatchment infiltration parameters for the (modified) Horton method.
+
+        Args:
+            subcatchment (str): Subcatchment name.
+            rate_max (float): Maximum infiltration rate on Horton curve (in/hr or mm/hr).
+            rate_min (float): Minimum infiltration rate on Horton curve (in/hr or mm/hr).
+            decay (float): Decay rate constant of Horton curve (1/hr).
+            time_dry (float): Time it takes for fully saturated soil to dry (days).
+            volume_max (float): Maximum infiltration volume possible (0 if not applicable) (in or mm).
+            kind (str, Optional): Method to use -> ``HORTON`` or ``MODIFIED_HORTON`` (new in 5.1.015).
+        """
         Infiltration.__init__(self, subcatchment)
-        self.MaxRate = float(MaxRate)
-        self.MinRate = float(MinRate)
-        self.Decay = float(Decay)
-        self.DryTime = float(DryTime)
-        self.MaxInf = float(MaxInf)
-        self.kind = NaN
+        self.rate_max = float(rate_max)
+        self.rate_min = float(rate_min)
+        self.decay = float(decay)
+        self.time_dry = float(time_dry)
+        self.volume_max = float(volume_max)
+        self.kind = NaN if kind is None else kind
 
 
 class InfiltrationGreenAmpt(Infiltration):
     """
-    Section: [**INFILTRATION**]
-
-    For Green-Ampt and Modified Green-Ampt Infiltration
+    Subcatchment infiltration parameters for the (modified) Green-Ampt method.
+    
+    Section:
+        [INFILTRATION]
 
     Purpose:
         Supplies infiltration parameters for each subcatchment.
         Rainfall lost to infiltration only occurs over the pervious sub-area of a subcatchment.
 
-    Formats:
-        ::
-
-            Subcat Psi Ksat IMD
-
-    Args:
-        subcatchment (str): subcatchment name. ``Subcat``
-        Psi (float): soil capillary suction (in or mm).
-        Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
-        IMD (float): initial soil moisture deficit (volume of voids / total volume).
-
     Attributes:
-        subcatchment (str): subcatchment name. ``Subcat``
-        Psi (float): soil capillary suction (in or mm).
-        Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr).
-        IMD (float): initial soil moisture deficit (volume of voids / total volume).
+        subcatchment (str): Subcatchment name.
+        suction_head (float): Soil suction head (inches or mm).
+        hydraulic_conductivity (float): Soil saturated hydraulic conductivity (in/hr or mm/hr).
+        moisture_deficit_init (float): Soil initial moisture deficit (porosity minus moisture content) (fraction).
+        kind (str, Optional): Method to use -> ``GREEN_AMPT`` or ``MODIFIED_GREEN_AMPT`` (new in 5.1.015).
+
+    See Also:
+        - :class:`Infiltration`: abstract parent class of this one.
+        - :class:`InfiltrationHorton`: child class of this one.
+        - :class:`InfiltrationCurveNumber`: child class of this one.
     """
 
-    def __init__(self, subcatchment, Psi, Ksat, IMD, kind=None):
+    def __init__(self, subcatchment, suction_head, hydraulic_conductivity, moisture_deficit_init, kind=None):
+        """
+        Subcatchment infiltration parameters for the (modified) Green-Ampt method.
+        
+        Args:
+            subcatchment (str): Subcatchment name.
+            suction_head (float): Soil suction head (inches or mm).
+            hydraulic_conductivity (float): Soil saturated hydraulic conductivity (in/hr or mm/hr).
+            moisture_deficit_init (float): Soil initial moisture deficit (porosity minus moisture content) (fraction).
+            kind (str, Optional): Method to use -> ``GREEN_AMPT`` or ``MODIFIED_GREEN_AMPT`` (new in 5.1.015).
+        """
         Infiltration.__init__(self, subcatchment)
-        self.Psi = float(Psi)
-        self.Ksat = float(Ksat)
-        self.IMD = float(IMD)
-        self.kind = NaN
+        self.suction_head = float(suction_head)
+        self.hydraulic_conductivity = float(hydraulic_conductivity)
+        self.moisture_deficit_init = float(moisture_deficit_init)
+        self.kind = NaN if kind is None else kind
 
 
 class InfiltrationCurveNumber(Infiltration):
     """
-    Section: [**INFILTRATION**]
+    Subcatchment infiltration parameters for the Curve-Number method.
 
-    For Curve-Number Infiltration:
+    Section:
+        [INFILTRATION]
 
     Purpose:
         Supplies infiltration parameters for each subcatchment.
         Rainfall lost to infiltration only occurs over the pervious sub-area of a subcatchment.
 
-    Formats:
-        ::
-
-            Subcat CurveNo Ksat DryTime
-
-    Args:
-        subcatchment (str): subcatchment name. ``Subcat``
-        CurveNo: SCS Curve Number.
-        Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr)
-            (This property has been deprecated and is no longer used.)
-        DryTime (float): time it takes for fully saturated soil to dry (days).
-
     Attributes:
-        subcatchment (str): subcatchment name. ``Subcat``
-        CurveNo: SCS Curve Number.
-        Ksat (float): soil saturated hydraulic conductivity (in/hr or mm/hr)
+        subcatchment (str): Subcatchment name.
+        curve_no: SCS Curve Number.
+        hydraulic_conductivity (float): Soil saturated hydraulic conductivity (in/hr or mm/hr)
             (This property has been deprecated and is no longer used.)
-        DryTime (float): time it takes for fully saturated soil to dry (days).
+        time_dry (float): Time it takes for fully saturated soil to dry (days).
+        kind (str, Optional): Method to use -> ``CURVE_NUMBER`` (new in 5.1.015).
+
+    See Also:
+        - :class:`Infiltration`: abstract parent class of this one.
+        - :class:`InfiltrationHorton`: child class of this one.
+        - :class:`InfiltrationGreenAmpt`: child class of this one.
     """
 
-    def __init__(self, subcatchment, CurveNo, Ksat, DryTime, kind=None):
+    def __init__(self, subcatchment, curve_no, hydraulic_conductivity, time_dry, kind=None):
+        """
+        Subcatchment infiltration parameters for the Curve-Number method.
+
+        Args:
+            subcatchment (str): Subcatchment name.
+            curve_no: SCS Curve Number.
+            hydraulic_conductivity (float): Soil saturated hydraulic conductivity (in/hr or mm/hr)
+                (This property has been deprecated and is no longer used.)
+            time_dry (float): Time it takes for fully saturated soil to dry (days).
+            kind (str, Optional): Method to use -> ``CURVE_NUMBER`` (new in 5.1.015).
+        """
         Infiltration.__init__(self, subcatchment)
-        self.CurveNo = CurveNo
-        self.Ksat = float(Ksat)
-        self.DryTime = float(DryTime)
-        self.kind = NaN
+        self.curve_no = curve_no
+        self.hydraulic_conductivity = float(hydraulic_conductivity)
+        self.time_dry = float(time_dry)
+        self.kind = NaN if kind is None else kind
 
 
 INFILTRATION_DICT = {
