@@ -182,16 +182,13 @@ class Pattern(BaseSectionObject):
             H1        0.9 0.8 0.7 0.6 0.5 0.5
             H1        0.5 0.5 0.5 0.5 0.5 0.5
 
-    Args:
-        name (str): name used to identify the pattern.
-        cycle (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
-        factors (list): multiplier values.
-        *_factors: for automatic inp file reading
 
     Attributes:
-        name (str): name used to identify the pattern.
-        cycle (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
-        factors (list): multiplier values.
+        name (str): Name used to identify the pattern.
+        cycle (str): One of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``.
+        factors (list): Multiplier values.
+
+        CYCLES: Predefined names for: ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``.
 
     Usage:
         - :attr:`Inflow.pattern`
@@ -210,6 +207,15 @@ class Pattern(BaseSectionObject):
         WEEKEND = 'WEEKEND'
 
     def __init__(self, name, cycle, *_factors, factors=None):
+        """
+        Periodic multipliers referenced in other sections.
+
+        Args:
+            name (str): Name used to identify the pattern.
+            cycle (str): One of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``.
+            factors (list): Multiplier values.
+            *_factors: for automatic inp file reading
+        """
         self.name = str(name)
         self.cycle = cycle
         if factors is not None:
