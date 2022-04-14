@@ -721,7 +721,7 @@ class BaseSectionObject(ABC):
 
     def to_inp_line(self):
         """
-        convert object to one line of the ``.inp``-file
+        Convert object to one line of the ``.inp``-file.
 
         for ``.inp``-file writing
 

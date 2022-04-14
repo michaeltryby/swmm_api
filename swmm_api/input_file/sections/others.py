@@ -5,7 +5,7 @@ import pandas as pd
 from numpy import NaN
 
 from ._identifiers import IDENTIFIERS
-from .._type_converter import infer_type, to_bool, str_to_datetime, datetime_to_str, type2str
+from .._type_converter import infer_type, to_bool, str_to_datetime, datetime_to_str, type2str, convert_string
 from ..helpers import BaseSectionObject, split_line_with_quotes
 from ..section_labels import *
 
@@ -184,47 +184,47 @@ class Pattern(BaseSectionObject):
 
     Args:
         name (str): name used to identify the pattern.
-        Type (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
-        Factors (list): multiplier values.
-        *factors: for automatic inp file reading
+        cycle (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
+        factors (list): multiplier values.
+        *_factors: for automatic inp file reading
 
     Attributes:
         name (str): name used to identify the pattern.
-        Type (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
-        Factors (list): multiplier values.
+        cycle (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
+        factors (list): multiplier values.
 
     Usage:
         - :attr:`Inflow.pattern`
         - :attr:`DryWeatherFlow.pattern1`, ...
         - :class:`EvaporationSection` with the key `RECOVERY`
-        - :attr:`Aquifer.Epat`
+        - :attr:`Aquifer.pattern`
         - :class:`AdjustmentsSection` with the keys `N_PERV`, `DSTORE`, `INFIL`
     """
     _identifier = IDENTIFIERS.name
     _section_label = PATTERNS
 
-    class TYPES:
+    class CYCLES:
         MONTHLY = 'MONTHLY'
         DAILY = 'DAILY'
         HOURLY = 'HOURLY'
         WEEKEND = 'WEEKEND'
 
-    def __init__(self, name, Type, *factors, Factors=None):
+    def __init__(self, name, cycle, *_factors, factors=None):
         self.name = str(name)
-        self.Type = Type
-        if Factors is not None:
-            self.Factors = Factors
-        elif isinstance(factors[0], (list, tuple)):
-            self.Factors = factors[0]
+        self.cycle = cycle
+        if factors is not None:
+            self.factors = factors
+        elif isinstance(_factors[0], (list, tuple)):
+            self.factors = _factors[0]
         else:
-            self.Factors = list(float(f) for f in factors)
+            self.factors = list(float(f) for f in _factors)
 
     @classmethod
     def _convert_lines(cls, multi_line_args):
         args = []
         for line in multi_line_args:
-            if line[1] in [cls.TYPES.MONTHLY, cls.TYPES.DAILY,
-                           cls.TYPES.HOURLY, cls.TYPES.WEEKEND]:
+            if line[1] in [cls.CYCLES.MONTHLY, cls.CYCLES.DAILY,
+                           cls.CYCLES.HOURLY, cls.CYCLES.WEEKEND]:
                 if args:
                     yield cls(*args)
                 args = line
@@ -235,15 +235,15 @@ class Pattern(BaseSectionObject):
             yield cls(*args)
 
     def to_inp_line(self):
-        if self.Type in (self.TYPES.MONTHLY, self.TYPES.HOURLY, self.TYPES.WEEKEND):
+        if self.cycle in (self.CYCLES.MONTHLY, self.CYCLES.HOURLY, self.CYCLES.WEEKEND):
             s = ''
             import numpy as np
 
-            l = len(self.Type)
+            l = len(self.cycle)
             first = True
-            for a in np.array_split(self.Factors, int(len(self.Factors) / 6)):
+            for a in np.array_split(self.factors, int(len(self.factors) / 6)):
                 if first:
-                    s += f'{self.name} {self.Type} '
+                    s += f'{self.name} {self.cycle} '
                     first = False
                 else:
                     s += f'\n{self.name} {" ":<{l}} '
@@ -339,7 +339,10 @@ class Pollutant(BaseSectionObject):
 
 class Transect(BaseSectionObject):
     """
-    Section: [**TRANSECTS**]
+    Transect geometry for conduits with irregular cross-sections.
+
+    Section:
+        [TRANSECTS]
 
     Purpose:
         Describes the cross-section geometry of natural channels or conduits with irregular shapes
@@ -378,53 +381,22 @@ class Transect(BaseSectionObject):
         account
         for its longer length.
 
-    Args:
-        roughness_left (float): Manning’s n of right overbank portion of channel (use 0 if no change from previous NC
-        line). ``Nleft``
-        roughness_right (float): Manning’s n of right overbank portion of channel (use 0 if no change from previous
-        NC line. ``Nright``
-        roughness_channel (float): Manning’s n of main channel portion of channel (use 0 if no change from previous
-        NC line. ``Nchanl``
-        name (str): name assigned to transect.
-        bank_station_left (float): station position which ends the left overbank portion of the channel (ft or m).
-        ``Xleft``
-        bank_station_right (float): station position which begins the right overbank portion of the channel (ft or
-        m). ``Xright``
-        modifier_meander (float): meander modifier that represents the ratio of the length of a meandering main
-        channel to the length of the overbank area that surrounds it (use 0 if not applicable). ``Lfactor``
-        modifier_stations (float): factor by which distances between stations should be multiplied to increase (or
-        decrease) the width of the channel (enter 0 if not applicable). ``Wfactor``
-        modifier_elevations (float): amount added (or subtracted) from the elevation of each station (ft or m).
-        ``Eoffset``
-        station_elevations (list[list[float, float]]): of the tuple:
-
-            Elev (float): elevation of the channel bottom at a cross-section station relative to some fixed reference
-            (ft or m).
-            Station (float): distance of a cross-section station from some fixed reference (ft or m).
-
     Attributes:
-        roughness_left (float): Manning’s n of right overbank portion of channel (use 0 if no change from previous NC
-        line). ``Nleft``
-        roughness_right (float): Manning’s n of right overbank portion of channel (use 0 if no change from previous
-        NC line. ``Nright``
-        roughness_channel (float): Manning’s n of main channel portion of channel (use 0 if no change from previous
-        NC line. ``Nchanl``
         name (str): name assigned to transect.
-        bank_station_left (float): station position which ends the left overbank portion of the channel (ft or m).
-        ``Xleft``
-        bank_station_right (float): station position which begins the right overbank portion of the channel (ft or
-        m). ``Xright``
-        modifier_meander (float): meander modifier that represents the ratio of the length of a meandering main
-        channel to the length of the overbank area that surrounds it (use 0 if not applicable). ``Lfactor``
-        modifier_stations (float): factor by which distances between stations should be multiplied to increase (or
-        decrease) the width of the channel (enter 0 if not applicable). ``Wfactor``
-        modifier_elevations (float): amount added (or subtracted) from the elevation of each station (ft or m).
-        ``Eoffset``
         station_elevations (list[list[float, float]]): of the tuple:
 
-            Elev (float): elevation of the channel bottom at a cross-section station relative to some fixed reference
-            (ft or m).
+            Elev (float): elevation of the channel bottom at a cross-section station relative to some fixed reference (ft or m).
             Station (float): distance of a cross-section station from some fixed reference (ft or m).
+
+        bank_station_left (float): station position which ends the left overbank portion of the channel (ft or m).
+        bank_station_right (float): station position which begins the right overbank portion of the channel (ft or m).
+        roughness_left (float): Manning’s n of right overbank portion of channel (use 0 if no change from previous NC line).
+        roughness_right (float): Manning’s n of right overbank portion of channel (use 0 if no change from previous NC line.
+        roughness_channel (float): Manning’s n of main channel portion of channel (use 0 if no change from previous NC line.
+        modifier_stations (float): factor by which distances between stations should be multiplied to increase (or decrease) the width of the channel (enter 0 if not applicable). ``Wfactor``
+        modifier_elevations (float): amount added (or subtracted) from the elevation of each station (ft or m).
+        modifier_meander (float): meander modifier that represents the ratio of the length of a meandering main
+            channel to the length of the overbank area that surrounds it (use 0 if not applicable).
     """
     _identifier = IDENTIFIERS.name
     _table_inp_export = False
@@ -438,6 +410,26 @@ class Transect(BaseSectionObject):
     def __init__(self, name, station_elevations=None, bank_station_left=0, bank_station_right=0,
                  roughness_left=0, roughness_right=0, roughness_channel=0,
                  modifier_stations=0, modifier_elevations=0, modifier_meander=0):
+        """
+        Transect geometry for conduits with irregular cross-sections.
+
+        Args:
+            name (str): name assigned to transect.
+            station_elevations (list[list[float, float]]): of the tuple:
+
+                Elev (float): elevation of the channel bottom at a cross-section station relative to some fixed reference (ft or m).
+                Station (float): distance of a cross-section station from some fixed reference (ft or m).
+
+            bank_station_left (float): station position which ends the left overbank portion of the channel (ft or m).
+            bank_station_right (float): station position which begins the right overbank portion of the channel (ft or m).
+            roughness_left (float): Manning’s n of right overbank portion of channel (use 0 if no change from previous NC line).
+            roughness_right (float): Manning’s n of right overbank portion of channel (use 0 if no change from previous NC line.
+            roughness_channel (float): Manning’s n of main channel portion of channel (use 0 if no change from previous NC line.
+            modifier_stations (float): factor by which distances between stations should be multiplied to increase (or decrease) the width of the channel (enter 0 if not applicable). ``Wfactor``
+            modifier_elevations (float): amount added (or subtracted) from the elevation of each station (ft or m).
+            modifier_meander (float): meander modifier that represents the ratio of the length of a meandering main
+                channel to the length of the overbank area that surrounds it (use 0 if not applicable).
+        """
         self.name = str(name)
 
         self.roughness_left = None
@@ -507,22 +499,23 @@ class Transect(BaseSectionObject):
 
     def to_inp_line(self, break_every=1):
         """
+        Convert object to one line of the ``.inp``-file.
+
         Args:
             break_every: break every x-th GR station, default: after every station
         """
-        s = '{} {} {} {}\n'.format(self.KEYS.NC, self.roughness_left, self.roughness_right, self.roughness_channel)
-        s += '{} {} {} {} {} 0 0 0 {} {} {}\n'.format(self.KEYS.X1, self.name, self.get_number_stations(),
-                                                      self.bank_station_left, self.bank_station_right,
-                                                      self.modifier_meander, self.modifier_stations,
-                                                      self.modifier_elevations, )
+        s = f'{self.KEYS.NC} {self.roughness_left} {self.roughness_right} {self.roughness_channel}\n' \
+            f'{self.KEYS.X1} {self.name} {self.get_number_stations()} {self.bank_station_left} ' \
+            f'{ self.bank_station_right} 0 0 0 {self.modifier_meander} {self.modifier_stations} ' \
+            f'{self.modifier_elevations}\n'
         if break_every == 1:
             for x, y in self.station_elevations:
-                s += '{} {} {}\n'.format(self.KEYS.GR, x, y)
+                s += f'{self.KEYS.GR} {x} {y}\n'
         else:
             s += self.KEYS.GR
             i = 0
             for x, y in self.station_elevations:
-                s += ' {} {}'.format(x, y)
+                s += f' {x} {y}'
                 i += 1
                 if i == break_every:
                     i = 0
@@ -2238,58 +2231,65 @@ class SnowPack(BaseSectionObject):
 
 class Aquifer(BaseSectionObject):
     """
-    Section: [**AQUIFERS**]
+    Groundwater aquifer parameters.
+
+    Section:
+        [AQUIFERS]
 
     Purpose:
         Supplies parameters for each unconfined groundwater aquifer in the study area.
         Aquifers consist of two zones – a lower saturated zone and an upper unsaturated
         zone with a moving boundary between the two.
 
-    Formats:
-        ::
-
-            Name Por WP FC Ks Kslp Tslp ETu ETs Seep Ebot Egw Umc (Epat)
-
-    Args:
-        name (str):
-            name assigned to aquifer.
-        Por (float):
-            soil porosity (volumetric fraction).
-        WP (float):
-            soil wilting point (volumetric fraction).
-        FC (float):
-            soil field capacity (volumetric fraction).
-        Ks (float):
-            saturated hydraulic conductivity (in/hr or mm/hr).
-        Kslp (float):
-            slope of the logarithm of hydraulic conductivity versus moisture deficit (i.e., porosity minus moisture
-            content) curve (in/hr or mm/hr).
-        Tslp (float):
-            slope of soil tension versus moisture content curve (inches or mm).
-        ETu (float):
-            fraction of total evaporation available for evapotranspiration in the upper unsaturated zone.
-        ETs (float):
-            maximum depth into the lower saturated zone over which evapotranspiration can occur (ft or m).
-        Seep (float):
-            seepage rate from saturated zone to deep groundwater when water table is at ground surface (in/hr or mm/hr).
-        Ebot (float):
-            elevation of the bottom of the aquifer (ft or m).
-        Egw (float):
-            groundwater table elevation at start of simulation (ft or m).
-        Umc (float):
-            unsaturated zone moisture content at start of simulation (volumetric fraction).
-        Epat (float):
-            name of optional monthly time pattern used to adjust the upper zone evaporation fraction for different
-            months of the year.
-
     Remarks:
         Local values for ``Ebot``, ``Egw``, and ``Umc`` can be assigned to specific subcatchments in
-        the [``GROUNDWATER``] section described below.
+        the [``GROUNDWATER``] section (:class:`Groundwater`) described below.
+
+    Attributes:
+        name (str): name assigned to aquifer.
+        Por (float): soil porosity (volumetric fraction).
+        WP (float): soil wilting point (volumetric fraction).
+        FC (float): soil field capacity (volumetric fraction).
+        Ks (float): saturated hydraulic conductivity (in/hr or mm/hr).
+        Kslp (float): slope of the logarithm of hydraulic conductivity versus moisture deficit (i.e., porosity minus
+            moisture content) curve (in/hr or mm/hr).
+        Tslp (float): slope of soil tension versus moisture content curve (inches or mm).
+        ETu (float): fraction of total evaporation available for evapotranspiration in the upper unsaturated zone.
+        ETs (float): maximum depth into the lower saturated zone over which evapotranspiration can occur (ft or m).
+        Seep (float): seepage rate from saturated zone to deep groundwater when water table is at ground surface (
+            in/hr or mm/hr).
+        Ebot (float): elevation of the bottom of the aquifer (ft or m).
+        Egw (float): groundwater table elevation at start of simulation (ft or m).
+        Umc (float): unsaturated zone moisture content at start of simulation (volumetric fraction).
+        pattern (float): name of optional monthly time pattern used to adjust the upper zone evaporation
+            fraction for different months of the year.
     """
     _identifier = IDENTIFIERS.name
     _section_label = AQUIFERS
 
-    def __init__(self, name, Por, WP, FC, Ks, Kslp, Tslp, ETu, ETs, Seep, Ebot, Egw, Umc, Epat=NaN):
+    def __init__(self, name, Por, WP, FC, Ks, Kslp, Tslp, ETu, ETs, Seep, Ebot, Egw, Umc, pattern=NaN):
+        """
+        Groundwater aquifer parameters.
+
+        Args:
+            name (str): name assigned to aquifer.
+            Por (float): soil porosity (volumetric fraction).
+            WP (float): soil wilting point (volumetric fraction).
+            FC (float): soil field capacity (volumetric fraction).
+            Ks (float): saturated hydraulic conductivity (in/hr or mm/hr).
+            Kslp (float): slope of the logarithm of hydraulic conductivity versus moisture deficit (i.e.,
+                porosity minus moisture content) curve (in/hr or mm/hr).
+            Tslp (float): slope of soil tension versus moisture content curve (inches or mm).
+            ETu (float): fraction of total evaporation available for evapotranspiration in the upper unsaturated zone.
+            ETs (float): maximum depth into the lower saturated zone over which evapotranspiration can occur (ft or m).
+            Seep (float): seepage rate from saturated zone to deep groundwater when water table is at ground surface
+                (in/hr or mm/hr).
+            Ebot (float): elevation of the bottom of the aquifer (ft or m).
+            Egw (float): groundwater table elevation at start of simulation (ft or m).
+            Umc (float): unsaturated zone moisture content at start of simulation (volumetric fraction).
+            pattern (str, Optional): name of optional monthly time pattern used to adjust the upper zone
+                evaporation fraction for different months of the year.
+        """
         self.name = str(name)
         self.Por = float(Por)
         self.WP = float(WP)
@@ -2303,4 +2303,4 @@ class Aquifer(BaseSectionObject):
         self.Ebot = float(Ebot)
         self.Egw = float(Egw)
         self.Umc = float(Umc)
-        self.Epat = float(Epat)
+        self.pattern = convert_string(pattern)

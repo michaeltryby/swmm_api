@@ -24,7 +24,14 @@ class DryWeatherFlow(BaseSectionObject):
         The patterns can be any combination of monthly, daily, hourly and weekend hourly
         patterns, listed in any order. See the [PATTERNS] section for more details.
 
-
+    Attributes:
+        node (str): name of node where dry weather flow enters.
+        constituent (str): keyword ``FLOW`` for flow or pollutant name for quality constituent. ``Type``
+        base_value (float): average baseline value for corresponding constituent (flow or concentration units).
+        pattern1 (str, Optional): Names of a time pattern in the [``PATTERNS``] section (:class:`Pattern`).
+        pattern2 (str, Optional): Names of a time pattern in the [``PATTERNS``] section (:class:`Pattern`).
+        pattern3 (str, Optional): Names of a time pattern in the [``PATTERNS``] section (:class:`Pattern`).
+        pattern4 (str, Optional): Names of a time pattern in the [``PATTERNS``] section (:class:`Pattern`).
     """
     _identifier = (IDENTIFIERS.node, IDENTIFIERS.constituent)
     _section_label = DWF
@@ -74,12 +81,6 @@ class Inflow(BaseSectionObject):
             Node FLOW   Tseries  (FLOW (1.0     Sfactor Base Pat))
             Node Pollut Tseries  (Type (Mfactor Sfactor Base Pat))
 
-    Formats-PCSWMM:
-        ``Node Parameter TimeSeries ParamType UnitsFactor ScaleFactor BaselineValue BaselinePattern``
-
-    Formats-SWMM-GUI:
-        ``Node Constituent TimeSeries Type Mfactor Sfactor Baseline Pattern``
-
     Remarks:
         External inflows are represented by both a constant and time varying component as follows:
         | Inflow = (Baseline value)*(Pattern factor) + (Scaling factor)*(Time series value)
@@ -109,11 +110,11 @@ class Inflow(BaseSectionObject):
             loading varies with time.
         kind (str): ``FLOW`` or ``CONCEN`` if pollutant inflow is described as a concentration, ``MASS`` if it is
             described as a mass flow rate (default is ``CONCEN``).
-        mass_convert_factor (float): the factor that converts the inflow’s mass flow rate units into the
+        mass_unit_factor (float): the factor that converts the inflow’s mass flow rate units into the
         project’s mass units per
             second, where the project’s mass units are those specified for the pollutant in the [POLLUTANTS]
             section (:class:`Pollutant`) (default is 1.0 - see example below).
-        scaling_factor (float): scaling factor that multiplies the recorded time series values (default is 1.0).
+        scale_factor (float): scaling factor that multiplies the recorded time series values (default is 1.0).
         base_value (float): constant baseline value added to the time series value (default is 0.0). ``Base``
         pattern (str): name of optional time pattern in [PATTERNS] section used to adjust the baseline value on a
             periodic basis.
@@ -126,8 +127,8 @@ class Inflow(BaseSectionObject):
         CONCEN = 'CONCEN'
         MASS = 'MASS'
 
-    def __init__(self, node, constituent=TYPES.FLOW, time_series=None, kind=TYPES.FLOW, mass_convert_factor=1.0,
-                 scaling_factor=1.0, base_value=0., pattern=NaN):
+    def __init__(self, node, constituent=TYPES.FLOW, time_series=None, kind=TYPES.FLOW, mass_unit_factor=1.0,
+                 scale_factor=1.0, base_value=0., pattern=NaN):
         """
         External hydrograph/pollutograph inflow at nodes.
 
@@ -139,11 +140,11 @@ class Inflow(BaseSectionObject):
                 loading varies with time.
             kind (str): ``FLOW`` or ``CONCEN`` if pollutant inflow is described as a concentration, ``MASS`` if it is
                 described as a mass flow rate (default is ``CONCEN``).
-            mass_convert_factor (float): the factor that converts the inflow’s mass flow rate units into the
+            mass_unit_factor (float): the factor that converts the inflow’s mass flow rate units into the
             project’s mass units per
                 second, where the project’s mass units are those specified for the pollutant in the [POLLUTANTS]
                 section (:class:`Pollutant`) (default is 1.0 - see example below).
-            scaling_factor (float): scaling factor that multiplies the recorded time series values (default is 1.0).
+            scale_factor (float): scaling factor that multiplies the recorded time series values (default is 1.0).
             base_value (float): constant baseline value added to the time series value (default is 0.0). ``Base``
             pattern (str): name of optional time pattern in [PATTERNS] section used to adjust the baseline value on a
                 periodic basis.
@@ -152,8 +153,8 @@ class Inflow(BaseSectionObject):
         self.constituent = str(constituent)
         self.time_series = time_series
         self.kind = str(kind)
-        self.mass_convert_factor = float(mass_convert_factor)
-        self.scaling_factor = float(scaling_factor)
+        self.mass_unit_factor = float(mass_unit_factor)
+        self.scale_factor = float(scale_factor)
         self.base_value = float(base_value)
         self.pattern = convert_string(pattern)
 
