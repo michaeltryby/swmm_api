@@ -46,7 +46,7 @@ class SuperConduit(Conduit, CrossSection, Loss, Vertices):
     @property
     def curve_obj(self):
         if self.shape == CrossSection.SHAPES.CUSTOM:
-            return self.inp.CURVES[self.curve]
+            return self.inp.CURVES[self.curve_name]
 
     @property
     def shape_generator(self):

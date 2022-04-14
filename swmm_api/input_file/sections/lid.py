@@ -383,6 +383,8 @@ class LIDUsage(BaseSectionObject):
         drain_to (str): Optional name of subcatchment or node that receives flow from the unit’s
             drain line, if different from the outlet of the subcatchment that the LID is
             placed in.
+        from_pervious (float): optional percent of the pervious portion of the subcatchment’s non-LID area
+            whose runoff is treated by the LID practice. The default value is 0.
 
     Examples:
         ::
@@ -401,7 +403,7 @@ class LIDUsage(BaseSectionObject):
     _identifier = (IDENTIFIERS.subcatchment, 'lid')
     _section_label = LID_USAGE
 
-    def __init__(self, subcatchment, lid, n_replicate, area, width, saturation_init, impervious_portion, route_to_pervious=0, fn_lid_report=NaN, drain_to=NaN):
+    def __init__(self, subcatchment, lid, n_replicate, area, width, saturation_init, impervious_portion, route_to_pervious=0, fn_lid_report=NaN, drain_to=NaN, from_pervious=NaN):
         """
         Assignment of LID controls to subcatchments.
 
@@ -439,6 +441,8 @@ class LIDUsage(BaseSectionObject):
             drain_to (str): Optional name of subcatchment or node that receives flow from the unit’s
                 drain line, if different from the outlet of the subcatchment that the LID is
                 placed in.
+            from_pervious (float): optional percent of the pervious portion of the subcatchment’s non-LID area
+                whose runoff is treated by the LID practice. The default value is 0.
         """
         self.subcatchment = str(subcatchment)
         self.lid = str(lid)
@@ -450,3 +454,4 @@ class LIDUsage(BaseSectionObject):
         self.route_to_pervious = int(route_to_pervious)
         self.fn_lid_report = fn_lid_report
         self.drain_to = drain_to
+        self.from_pervious = from_pervious

@@ -136,7 +136,10 @@ class Symbol(BaseSectionObject):
 
 class Pattern(BaseSectionObject):
     """
-    Section: [**PATTERNS**]
+    Periodic multipliers referenced in other sections.
+
+    Section:
+        [PATTERNS]
 
     Purpose:
         Specifies time pattern of dry weather flow or quality in the form of adjustment factors
@@ -152,19 +155,19 @@ class Pattern(BaseSectionObject):
             Name WEEKEND Factor1  Factor2  ...  Factor24
 
     Remarks:
-        The MONTHLY format is used to set monthly pattern factors for dry weather flow constituents.
+        The ``MONTHLY`` format is used to set monthly pattern factors for dry weather flow constituents.
 
-        The DAILY format is used to set dry weather pattern factors for each day of the week, where Sunday is day 1.
+        The ``DAILY`` format is used to set dry weather pattern factors for each day of the week, where Sunday is day 1.
 
-        The HOURLY format is used to set dry weather factors for each hour of the day starting from midnight.
-        If these factors are different for weekend days than for weekday days then the WEEKEND format can be used
+        The ``HOURLY`` format is used to set dry weather factors for each hour of the day starting from midnight.
+        If these factors are different for weekend days than for weekday days then the ``WEEKEND`` format can be used
         to specify hourly adjustment factors just for weekends.
 
         More than one line can be used to enter a pattern’s factors by repeating the pattern’s name
         (but not the pattern type) at the beginning of each additional line.
 
         The pattern factors are applied as multipliers to any baseline dry weather flows or quality
-        concentrations supplied in the [DWF] section.
+        concentrations supplied in the [``DWF``] (:class:`DryWeatherFlow`) section.
 
     Examples:
         ::
@@ -189,6 +192,13 @@ class Pattern(BaseSectionObject):
         name (str): name used to identify the pattern.
         Type (str): one of ``MONTHLY``, ``DAILY``, ``HOURLY``, ``WEEKEND``
         Factors (list): multiplier values.
+
+    Usage:
+        - :attr:`Inflow.pattern`
+        - :attr:`DryWeatherFlow.pattern1`, ...
+        - :class:`EvaporationSection` with the key `RECOVERY`
+        - :attr:`Aquifer.Epat`
+        - :class:`AdjustmentsSection` with the keys `N_PERV`, `DSTORE`, `INFIL`
     """
     _identifier = IDENTIFIERS.name
     _section_label = PATTERNS
@@ -245,27 +255,21 @@ class Pattern(BaseSectionObject):
 
 class Pollutant(BaseSectionObject):
     """
-    Section: [**POLLUTANTS**]
+    Pollutant information.
+
+    Section:
+        [POLLUTANTS]
 
     Purpose:
         Identifies the pollutants being analyzed.
 
-    Format:
-        ::
-
-            Name Units Crain Cgw Cii Kd (Sflag CoPoll CoFract Cdwf Cinit)
-
-    Format-PCSWMM:
-        ``Name Units Crain Cgw Crdii Kdecay SnowOnly Co-Pollutant Co-Frac Cdwf Cinit``
-
     Remarks:
         ``FLOW`` is a reserved word and cannot be used to name a pollutant.
 
-        Parameters Sflag through Cinit can be omitted if they assume their default values.
-        If there is no co-pollutant but non-default values for Cdwf or Cinit, then enter an asterisk (``*``)
-        for the co-pollutant name.
+        If there is no co-pollutant but non-default values for :attr:`Pollutant.c_dwf` or :attr:`Pollutant.c_init`,
+        then enter an asterisk (``*``) for the co-pollutant name (:attr:`Pollutant.co_pollutant`).
 
-        When pollutant X has a co-pollutant Y, it means that fraction CoFract of pollutant Y's runoff
+        When pollutant X has a co-pollutant Y, it means that fraction :attr:`Pollutant.co_fraction` of pollutant Y's runoff
         concentration is added to pollutant X's runoff concentration when wash off from a subcatchment is computed.
 
         The dry weather flow concentration can be overridden for any specific node of the conveyance
@@ -279,17 +283,15 @@ class Pollutant(BaseSectionObject):
                 - ``UG/L`` for micrograms per liter
                 - ``#/L`` for direct count per liter
 
-        Crain (float): concentration of pollutant in rainfall (concentration units).
-        Cgw (float): concentration of pollutant in groundwater (concentration units).
-        Crdii (float): concentration of pollutant in inflow/infiltration (concentration units). ``Cii``
-        Kdecay (float): first-order decay coefficient (1/days).
-        SnowOnly (bool): ``YES`` if pollutant buildup occurs only when there is snow cover, ``NO`` otherwise (default
-        is ``NO``). ``Sflag``
-        Co_Pollutant (str): name of co-pollutant (default is no co-pollutant designated by a ``*``). ``CoPoll``
-        Co_Frac (float): fraction of co-pollutant concentration (default is 0). ``CoFract``
-        Cdwf (float): pollutant concentration in dry weather flow (default is 0).
-        Cinit (float): pollutant concentration throughout the conveyance system at the start of the simulation (
-        default is 0).
+        c_rain (float): Concentration of pollutant in rainfall (concentration units).
+        c_gw (float): Concentration of pollutant in groundwater (concentration units).
+        c_rdii (float): Concentration of pollutant in inflow/infiltration (concentration units).
+        decay (float): First-order decay coefficient (1/days).
+        snow_only (bool): ``YES`` (:obj:`True`) if pollutant buildup occurs only when there is snow cover, ``NO`` (:obj:`False`) otherwise (default is ``NO``).
+        co_pollutant (str): name of co-pollutant (default is no co-pollutant designated by a ``*``).
+        co_fraction (float): fraction of co-pollutant concentration (default is 0).
+        c_dwf (float): pollutant concentration in dry weather flow (default is 0).
+        c_init (float): pollutant concentration throughout the conveyance system at the start of the simulation (default is 0).
     """
     _identifier = IDENTIFIERS.name
     _section_label = POLLUTANTS
@@ -299,10 +301,10 @@ class Pollutant(BaseSectionObject):
         UG_PER_L = 'UG/L'
         COUNT_PER_L = '#/L'
 
-    def __init__(self, name, unit, Crain, Cgw, Crdii, Kdecay,
-                 SnowOnly=False, Co_Pollutant='*', Co_Frac=0, Cdwf=0, Cinit=0):
+    def __init__(self, name, unit, c_rain, c_gw, c_rdii, decay,
+                 snow_only=False, co_pollutant='*', co_fraction=0, c_dwf=0, c_init=0):
         """
-        Pollutant
+        Pollutant information.
 
         Args:
             name (str): name assigned to pollutant.
@@ -312,30 +314,27 @@ class Pollutant(BaseSectionObject):
                     - ``UG/L`` for micrograms per liter
                     - ``#/L`` for direct count per liter
 
-            Crain (float): concentration of pollutant in rainfall (concentration units).
-            Cgw (float): concentration of pollutant in groundwater (concentration units).
-            Crdii (float): concentration of pollutant in inflow/infiltration (concentration units). ``Cii``
-            Kdecay (float): first-order decay coefficient (1/days).
-            SnowOnly (bool): ``YES`` if pollutant buildup occurs only when there is snow cover, ``NO`` otherwise (
-            default
-                is ``NO``). ``Sflag``
-            Co_Pollutant (str): name of co-pollutant (default is no co-pollutant designated by a ``*``). ``CoPoll``
-            Co_Frac (float): fraction of co-pollutant concentration (default is 0). ``CoFract``
-            Cdwf (float): pollutant concentration in dry weather flow (default is 0).
-            Cinit (float): pollutant concentration throughout the conveyance system at the start of the simulation (
-                default is 0).
+            c_rain (float): Concentration of pollutant in rainfall (concentration units).
+            c_gw (float): Concentration of pollutant in groundwater (concentration units).
+            c_rdii (float): Concentration of pollutant in inflow/infiltration (concentration units).
+            decay (float): First-order decay coefficient (1/days).
+            snow_only (bool, Optional): ``YES`` (:obj:`True`) if pollutant buildup occurs only when there is snow cover, ``NO`` (:obj:`False`) otherwise (default is ``NO``).
+            co_pollutant (str, Optional): name of co-pollutant (default is no co-pollutant designated by a ``*``).
+            co_fraction (float, Optional): fraction of co-pollutant concentration (default is 0).
+            c_dwf (float, Optional): pollutant concentration in dry weather flow (default is 0).
+            c_init (float, Optional): pollutant concentration throughout the conveyance system at the start of the simulation (default is 0).
         """
         self.name = str(name)
         self.unit = str(unit)
-        self.Crain = float(Crain)
-        self.Cgw = float(Cgw)
-        self.Crdii = float(Crdii)
-        self.Kdecay = float(Kdecay)
-        self.SnowOnly = to_bool(SnowOnly)
-        self.Co_Pollutant = str(Co_Pollutant)
-        self.Co_Frac = float(Co_Frac)
-        self.Cdwf = float(Cdwf)
-        self.Cinit = float(Cinit)
+        self.c_rain = float(c_rain)
+        self.c_gw = float(c_gw)
+        self.c_rdii = float(c_rdii)
+        self.decay = float(decay)
+        self.co_pollutant = to_bool(snow_only)
+        self.co_pollutant = str(co_pollutant)
+        self.co_fraction = float(co_fraction)
+        self.c_dwf = float(c_dwf)
+        self.c_init = float(c_init)
 
 
 class Transect(BaseSectionObject):

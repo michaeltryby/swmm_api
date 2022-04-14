@@ -3,7 +3,7 @@ import datetime
 import re
 import types
 from abc import ABC
-from inspect import isfunction, isclass
+from inspect import isfunction, isclass, getdoc, signature
 import warnings
 from numpy import isnan
 from pandas import DataFrame, Series
@@ -184,7 +184,7 @@ class InpSectionGeneric(CustomDict):
         """
         # size of the longest key (number of characters)
         max_len = len(max(self.keys(), key=len))
-        return '\n'.join(f'{key.ljust(max_len)}  {type2str(value)}' for key, value in self.items())
+        return '\n'.join(f'{(key if isinstance(key, str) else " ".join(key)).ljust(max_len)}  {type2str(value)}' for key, value in self.items())
 
     @classmethod
     def create_section(cls):
@@ -487,6 +487,9 @@ class InpSection(CustomDict):
                 return tuple()
 
             if isinstance(by, (list, set, tuple)):
+                if (set(f.columns) & set(by)) != set(by):
+                    raise SwmmInputWarning(f'{set(by) - set(f.columns)} not available. possible={f.columns.tolist()}')
+
                 f_filtered = f[by].isin(keys).all(axis=1)
                 # filtered_keys = (k for k in self if any(map(lambda b: self[k][b] in keys, by)))
 
@@ -740,7 +743,10 @@ class BaseSectionObject(ABC):
         Returns:
             BaseSectionObject: object of the ``.inp``-file section
         """
-        return cls(*line_args)
+        try:
+            return cls(*line_args)
+        except TypeError as e:
+            raise TypeError(f'{e} | {cls.__name__}{line_args}\n\n__init__{signature(cls.__init__)}\n\n{getdoc(cls.__init__)}')
 
     def copy(self):
         """

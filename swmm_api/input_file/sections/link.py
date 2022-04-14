@@ -374,7 +374,7 @@ class Weir(_Link):
             (ft or m, expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
         discharge_coefficient (float): Weir discharge coefficient
             (for CFS if using US flow units or CMS if using metric flow units).
-        has_flap_gate (bool): ``YES`` if flap gate present to prevent reverse flow, ``NO`` if not (default is
+        has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow, ``NO`` (:obj:`False`) if not (default is
         ``NO``).
         n_end_contractions (float): Number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir
             (default is 0).
@@ -415,7 +415,7 @@ class Weir(_Link):
                 (ft or m, expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
             discharge_coefficient (float): Weir discharge coefficient
                 (for CFS if using US flow units or CMS if using metric flow units).
-            has_flap_gate (bool): ``YES`` if flap gate present to prevent reverse flow, ``NO`` if not (default is
+            has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow, ``NO`` (:obj:`False`) if not (default is
             ``NO``).
             n_end_contractions (float): Number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir
                 (default is 0).

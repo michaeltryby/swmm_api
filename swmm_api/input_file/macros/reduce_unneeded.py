@@ -23,8 +23,8 @@ def reduce_curves(inp):
     for section in [STORAGE, OUTLETS, PUMPS, XSECTIONS]:
         if section in inp:
             for name in inp[section]:
-                if isinstance(inp[section][name].curve_description, str):
-                    used_curves.add(inp[section][name].curve_description)
+                if isinstance(inp[section][name].curve_name, str):
+                    used_curves.add(inp[section][name].curve_name)
 
     inp[CURVES] = inp[CURVES].slice_section(used_curves)
 
@@ -42,7 +42,7 @@ def reduce_pattern(inp):
 
     if INFLOWS in inp:
         #  optional time pattern used to adjust the baseline value on a periodic basis
-        used_pattern |= set(inp[INFLOWS].frame['Pattern'].dropna().values)
+        used_pattern |= set(inp[INFLOWS].frame['pattern'].dropna().values)
 
     if DWF in inp:
         for i in range(1, 5):

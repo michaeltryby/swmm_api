@@ -55,6 +55,22 @@ def get_result_filenames(inp_fn):
     return inp_fn.replace('.inp', '.rpt'), inp_fn.replace('.inp', '.out')
 
 
+def delete_swmm_files(fn_inp, including_inp=False):
+    """
+    Delete the swmm project files.
+
+    Helpful if you run just a temporary test.
+
+    Args:
+        fn_inp (str): filename of the inp-file
+        including_inp (bool): if the inp-file should also be deleted.
+    """
+    fn_rpt, fn_out = get_result_filenames(fn_inp)
+    for fn in (fn_out, fn_rpt, (fn_inp if including_inp else None)):
+        if fn is not None and os.path.isfile(fn):
+            os.remove(fn)
+
+
 def get_swmm_command_line_auto(inp, rpt_dir=None, out_dir=None, create_out=True, swmm_path=None):
     base_filename = os.path.basename(inp).replace('.inp', '')
     inp_dir = os.path.dirname(inp)

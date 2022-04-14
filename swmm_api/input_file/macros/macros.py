@@ -132,7 +132,7 @@ def conduits_are_equal(inp: SwmmInput, link0, link1, diff_roughness=0.1, diff_sl
 
     # Shape curves must match exactly
     if xs0.shape == CrossSection.SHAPES.CUSTOM:
-        all_checks_out &= xs0.curve == xs1.curve
+        all_checks_out &= xs0.curve_name == xs1.curve_name
 
     # Transects must match exactly
     elif xs0.shape == CrossSection.SHAPES.IRREGULAR:

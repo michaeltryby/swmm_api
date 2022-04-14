@@ -51,7 +51,7 @@ class CrossSection(BaseSectionObject):
                        associated with a conduit (default is 1).
         culvert (int): code number from Table A.10 for the conduit’s inlet geometry if it is a culvert subject to
                        possible inlet flow control (leave blank otherwise).
-        curve (str): name of a Shape Curve in the [``CURVES``] section that defines how width varies with depth.
+        curve_name (str): name of a Shape Curve in the [``CURVES``] section that defines how width varies with depth.
         transect (str): name of an entry in the [``TRANSECTS``] section that describes the crosssection geometry of an
                      irregular channel.
     """
@@ -87,7 +87,7 @@ class CrossSection(BaseSectionObject):
         SEMICIRCULAR = 'SEMICIRCULAR'  # Full Height
 
     def __init__(self, link, shape, height=0, parameter_2=0, parameter_3=0, parameter_4=0, n_barrels=1, culvert=NaN,
-                 transect=None, curve=None, street=None):
+                 transect=None, curve_name=None, street=None):
         # in SWMM C-code function "link_readXsectParams"
         self.link = str(link)
         self.shape = shape
@@ -97,7 +97,7 @@ class CrossSection(BaseSectionObject):
         self.street = NaN
 
         self.parameter_2 = NaN
-        self.curve = NaN
+        self.curve_name = NaN
 
         if shape == self.SHAPES.IRREGULAR:
             if transect is None:
@@ -110,9 +110,9 @@ class CrossSection(BaseSectionObject):
                 street = height
             self.street = str(street)  # name of Street section
         elif shape == self.SHAPES.CUSTOM:
-            if curve is None:
-                curve = parameter_2
-            self.curve = str(curve)
+            if curve_name is None:
+                curve_name = parameter_2
+            self.curve_name = str(curve_name)
             self.height = float(height)
         else:
             self.height = float(height)

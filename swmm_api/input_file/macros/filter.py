@@ -56,7 +56,7 @@ def filter_links_within_nodes(inp, final_nodes):
     final_links = set()
     for section in LINK_SECTIONS:
         if section in inp:
-            inp[section] = inp[section].slice_section(final_nodes, by=['FromNode', 'ToNode'])
+            inp[section] = inp[section].slice_section(final_nodes, by=['from_node', 'to_node'])
             final_links |= set(inp[section].keys())
 
     # __________________________________________

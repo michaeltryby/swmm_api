@@ -827,6 +827,23 @@ class AdjustmentsSection(InpSectionGeneric):
 
         The same adjustment is applied for each time period within a given month and is repeated for that
         month in each subsequent year being simulated.
+
+
+    Climate Adjustments are optional modifications applied to the temperature, evaporation rate,
+    and rainfall intensity that SWMM would otherwise use at each time step of a simulation. Separate
+    sets of adjustments that vary periodically by month of the year can be assigned to these variables.
+    They provide a simple way to examine the effects of future climate change without having to
+    modify the original climatic time series.
+
+    A set of monthly adjustments can also be applied to the hydraulic conductivity used in computing
+    rainfall infiltration on all pervious land surfaces, including those in all LID units, and for exfiltration
+    from all storage nodes and conduits. These can reflect the increase of hydraulic conductivity with
+    increasing temperature or the effect that seasonal changes in land surface conditions, such as
+    frozen ground, can have on infiltration capacity. They can be overridden for individual
+    subcatchments (and their LID units) by assigning a monthly infiltration adjustment Time Pattern
+    to a subcatchment. Monthly adjustment time patterns for depression storage and pervious
+    surface roughness coefficient (Mannings n) can also be specified for individual subcatchments
+
     """
     _label = ADJUSTMENTS
 
@@ -836,12 +853,17 @@ class AdjustmentsSection(InpSectionGeneric):
         RAINFALL = 'RAINFALL'
         CONDUCTIVITY = 'CONDUCTIVITY'
 
-        _possible = [TEMPERATURE, EVAPORATION, RAINFALL, CONDUCTIVITY]
+        N_PERV = 'N-PERV'
+        DSTORE = 'DSTORE'
+        INFIL = 'INFIL'
+
+        _global = (TEMPERATURE, EVAPORATION, RAINFALL, CONDUCTIVITY)
+        _subcatchment = (N_PERV, DSTORE, INFIL)
 
     @classmethod
     def from_inp_lines(cls, lines):
         """
-        read ``.inp``-file lines and create an section object
+        Read ``.inp``-file lines and create a section object.
 
         Args:
             lines (str | list[list[str]]): lines in the section of the ``.inp``-file
@@ -852,9 +874,17 @@ class AdjustmentsSection(InpSectionGeneric):
         data = cls()
         for key, *factors in line_iter(lines):
             key = key.upper()
-            assert len(factors) == 12
-            assert key in cls.KEYS._possible
-            data[key] = [float(i) for i in factors]
+            if key in cls.KEYS._global:
+                assert len(factors) == 12
+                data[key] = [float(i) for i in factors]
+            elif key in cls.KEYS._subcatchment:
+                subcatchment, pattern = factors
+                data[(key, subcatchment)] = pattern  # todo: might not work, have to test first
+                # if subcatchment not in data:
+                #     data[subcatchment] = {}
+                # data[subcatchment][key] = pattern
+            else:
+                raise NotImplementedError(f'ADJUSTMENTS: "{key}" is not implemented!')
         return data
 
 

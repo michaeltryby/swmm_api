@@ -517,7 +517,7 @@ def rename_timeseries(inp, old_label, new_label):
         filtered_table = f[(f['Type'] == key) & (f['Data'] == old_label)]
         if not filtered_table.empty:
             for i in filtered_table.index:
-                inp[OUTFALLS][i].Data = new_label
+                inp[OUTFALLS][i].data = new_label
 
     if INFLOWS in inp:
         f = inp[INFLOWS].frame

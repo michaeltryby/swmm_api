@@ -28,7 +28,7 @@ def get_cross_section_maker(inp, link_label):
     xs = inp.XSECTIONS[link_label]
 
     if xs.shape == CrossSection.SHAPES.CUSTOM:
-        curve = inp.CURVES[xs.curve]
+        curve = inp.CURVES[xs.curve_name]
         return shape_generator.CrossSection.from_curve(curve, height=VIRTUAL_LENGTH)
     elif xs.shape == CrossSection.SHAPES.IRREGULAR:
         return  # Todo: I don't know how

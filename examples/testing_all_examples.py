@@ -1,10 +1,14 @@
 import os
+import time
 from shutil import rmtree
 
 from tqdm.auto import tqdm
 
+import warnings
+
 from swmm_api import read_inp_file, SwmmReport, SwmmOutput
 from swmm_api.input_file import SEC
+from swmm_api.input_file.helpers import SwmmInputWarning
 from swmm_api.input_file.sections import Timeseries
 # from swmm_api.run import swmm5_run, get_swmm_version
 from swmm_api.run import get_result_filenames, SWMMRunError, get_swmm_version, swmm5_run as run
@@ -15,6 +19,7 @@ from swmm_api.run import get_result_filenames, SWMMRunError, get_swmm_version, s
 # KOSTRA 01-01-2021 00:10 2.8000000000000007""")
 # exit()
 
+warnings.filterwarnings('ignore', category=SwmmInputWarning)
 
 """if no error occur pretty much everything works (or more test cases are needed)"""
 
@@ -29,10 +34,10 @@ example_dirs = [os.path.join(parent_dir, 'epaswmm5_apps_manual'),
                 os.path.join(parent_dir, 'epaswmm5_apps_manual', 'Example6-Final_AllSections_GUI')]
 
 version = get_swmm_version()
-print('Version: ', version)
+print(f'Version: {version}')
+print()
 
 example_files = [os.path.join(folder, fn) for folder in example_dirs for fn in os.listdir(folder) if '.inp' in fn]
-example_files = tqdm(example_files, desc='TESTING_ALL_EXAMPLES')
 
 
 def _convert_all(rpt):
@@ -88,72 +93,77 @@ def _convert_all(rpt):
         # eval(f'rpt.{key}')
 
 
-for fn in example_files:
-    example_files.set_postfix_str(str(list(example_files.iterable)[example_files.n]))
-    # print(fn)
-    # fn = '/home/markus/PycharmProjects/swmm_api/examples/epaswmm5_apps_manual/Example6-Final+TimeseriesVariation _MP.inp'
+failed = list()
 
-    if version != '5.1.15' and fn.endswith('Example1_smm5-1-15.inp'):
-        continue
+with tqdm(example_files, desc='TESTING_ALL_EXAMPLES') as example_files:
+    for fn in example_files:
+        example_files.set_postfix_str(str(list(example_files.iterable)[example_files.n]))
+        # print(fn)
+        # fn = '/home/markus/PycharmProjects/swmm_api/examples/epaswmm5_apps_manual/Example6-Final+TimeseriesVariation _MP.inp'
 
-    if '5.2' not in version and 'Samples' in fn:
-        continue
+        if version != '5.1.15' and fn.endswith('Example1_smm5-1-15.inp'):
+            continue
 
-    # READ
-    inp = read_inp_file(fn)
+        if '5.2' not in version and 'Samples' in fn:
+            continue
 
-    # MANIPULATE
+        # READ
+        inp = read_inp_file(fn)
 
-    # convert all
-    inp.force_convert_all()
+        # MANIPULATE
 
-    # test copy
-    inp.copy()
+        # convert all
+        inp.force_convert_all()
 
-    if SEC.RAINGAGES in inp:
-        if 'RainGage' in inp.RAINGAGES:
-            # if isinstance(inp.RAINGAGES['RainGage'].Filename, str):
-            #     print()
-            if inp.RAINGAGES['RainGage'].Filename == 'Record.dat':
-                inp.RAINGAGES['RainGage'].Filename = os.path.join(os.path.dirname(__file__), 'epaswmm5_apps_manual', inp.RAINGAGES['RainGage'].Filename)
-                pass # C:\Users\mp\PycharmProjects\swmm_api\examples\epaswmm5_apps_manual\
+        # test copy
+        inp.copy()
+
+        if SEC.RAINGAGES in inp:
+            if 'RainGage' in inp.RAINGAGES:
+                # if isinstance(inp.RAINGAGES['RainGage'].Filename, str):
+                #     print()
+                if inp.RAINGAGES['RainGage'].Filename == 'Record.dat':
+                    inp.RAINGAGES['RainGage'].Filename = os.path.join(os.path.dirname(__file__), 'epaswmm5_apps_manual', inp.RAINGAGES['RainGage'].Filename)
+                    pass # C:\Users\mp\PycharmProjects\swmm_api\examples\epaswmm5_apps_manual\
 
 
-    fn_inp = os.path.join(temp_dir, 'temp.inp')
-    fn_rpt, fn_out = get_result_filenames(fn_inp)
+        fn_inp = os.path.join(temp_dir, 'temp.inp')
+        fn_rpt, fn_out = get_result_filenames(fn_inp)
 
-    # WRITE
-    inp.REPORT['INPUT'] = True
-    inp.REPORT['CONTINUITY'] = True
-    inp.REPORT['FLOWSTATS'] = True
-    inp.REPORT['CONTROLS'] = True
-    inp.REPORT['SUBCATCHMENTS'] = 'ALL'
-    inp.REPORT['NODES'] = 'ALL'
-    inp.REPORT['LINKS'] = 'ALL'
-    inp.write_file(fn_inp)
+        # WRITE
+        inp.REPORT['INPUT'] = True
+        inp.REPORT['CONTINUITY'] = True
+        inp.REPORT['FLOWSTATS'] = True
+        inp.REPORT['CONTROLS'] = True
+        inp.REPORT['SUBCATCHMENTS'] = 'ALL'
+        inp.REPORT['NODES'] = 'ALL'
+        inp.REPORT['LINKS'] = 'ALL'
+        inp.write_file(fn_inp)
 
-    # RUN
-    # swmm5_run(inp_fn, init_print=False)
-    # run_progress(fn_inp)
-    try:
-        run(fn_inp)
-    except SWMMRunError:
-        print(f'Failed: "{fn}"')
-        continue
-    # REPORT
-    rpt = SwmmReport(fn_rpt)
-    _convert_all(rpt)
-    # print(rpt.get_warnings())
-    del rpt
+        # RUN
+        # swmm5_run(inp_fn, init_print=False)
+        # run_progress(fn_inp)
+        try:
+            run(fn_inp)
+        except SWMMRunError:
+            failed.append(fn)
+            continue
+        # REPORT
+        rpt = SwmmReport(fn_rpt)
+        _convert_all(rpt)
+        # print(rpt.get_warnings())
+        del rpt
 
-    # OUTPUT
-    out = SwmmOutput(fn_out)
-    out.to_numpy()
-    del out
+        # OUTPUT
+        out = SwmmOutput(fn_out)
+        out.to_numpy()
+        del out
 
-    if os.path.isfile(fn_rpt):
-        os.remove(fn_rpt)
-    if os.path.isfile(fn_rpt):
-        os.remove(fn_out)
+        if os.path.isfile(fn_rpt):
+            os.remove(fn_rpt)
+        if os.path.isfile(fn_rpt):
+            os.remove(fn_out)
 
 rmtree(temp_dir)
+
+print('FAILED:', *failed, sep='\n  - ')

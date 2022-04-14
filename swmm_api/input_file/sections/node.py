@@ -104,8 +104,10 @@ class Outfall(_Node):
             hour of day over a complete tidal cycle. for ``TIDAL``-Type
             - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies
             with time.  for ``TIMESERIES``-Type
-        has_flap_gate (bool, Optional): ``YES`` or ``NO`` depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``. ``Gated``
-        RouteTo (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
+        has_flap_gate (bool, Optional): ``YES`` (:obj:`True`) or ``NO`` (:obj:`False`) depending on whether a flap gate is present that prevents
+        reverse flow. The default is ``NO``. ``Gated``
+        route_to (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to
+        route the outfall’s discharge.
     """
     _section_label = OUTFALLS
 
@@ -116,10 +118,10 @@ class Outfall(_Node):
         TIDAL = 'TIDAL'
         TIMESERIES = 'TIMESERIES'
 
-    def __init__(self, name, elevation, kind, *args, data=NaN, has_flap_gate=False, RouteTo=NaN): # Outfall node information.
+    def __init__(self, name, elevation, kind, *args, data=NaN, has_flap_gate=False, route_to=NaN): # Outfall node information.
         _Node.__init__(self, name, elevation)
         self.kind = kind
-        self.Data = NaN
+        self.data = NaN
 
         if args:
             if kind in [Outfall.TYPES.FIXED,
@@ -131,24 +133,24 @@ class Outfall(_Node):
             else:
                 self._no_data_init(*args)
         else:
-            self.Data = data
+            self.data = data
             self.has_flap_gate = to_bool(has_flap_gate)
-            self.RouteTo = RouteTo
+            self.route_to = route_to
 
-    def _no_data_init(self, has_flap_gate=False, RouteTo=NaN):
+    def _no_data_init(self, has_flap_gate=False, route_to=NaN):
         """
         if no keyword arguments used
 
         Args:
             has_flap_gate (bool): YES or NO depending on whether a flap gate is present that prevents reverse flow. The
             default is NO.
-            RouteTo (str): optional name of a subcatchment that receives the outfall's discharge.
+            route_to (str): optional name of a subcatchment that receives the outfall's discharge.
                            The default is not to route the outfall’s discharge.
         """
         self.has_flap_gate = to_bool(has_flap_gate)
-        self.RouteTo = RouteTo
+        self.route_to = route_to
 
-    def _data_init(self, Data=NaN, has_flap_gate=False, RouteTo=NaN):
+    def _data_init(self, Data=NaN, has_flap_gate=False, route_to=NaN):
         """
         if not keyword arguments were used
 
@@ -161,12 +163,12 @@ class Outfall(_Node):
                 with time.
             has_flap_gate (bool): YES or NO depending on whether a flap gate is present that prevents reverse flow. The
             default is NO.
-            RouteTo (str): optional name of a subcatchment that receives the outfall's discharge.
+            route_to (str): optional name of a subcatchment that receives the outfall's discharge.
                            The default is not to route the outfall’s discharge.
         """
-        self.Data = Data
+        self.data = Data
         self.has_flap_gate = to_bool(has_flap_gate)
-        self.RouteTo = RouteTo
+        self.route_to = route_to
 
 
 class Storage(_Node):
@@ -350,19 +352,19 @@ class Storage(_Node):
         self.data = [float(coefficient), float(exponent), float(constant)]
         self._optional_args(*args, **kwargs)
 
-    def _tabular_init(self, Curve, *args, **kwargs):
+    def _tabular_init(self, curve_name, *args, **kwargs):
         """
         for storage type ``'TABULAR'``
 
         Args:
-            Curve (str): name of curve in [CURVES] section with surface area (ft2 or m2)
+            curve_name (str): name of curve in [CURVES] section with surface area (ft2 or m2)
                 as a function of depth (ft or m) for TABULAR geometry.
             depth_surcharge: maximum additional pressure head above full depth that a closed storage unit
                 can sustain under surcharge conditions (ft or m) (default is 0).
             frac_evaporation (float): fraction of potential evaporation from the storage unit’s water surface realized
                 (default is 0).
         """
-        self.data = Curve
+        self.data = curve_name
         self._optional_args(*args, **kwargs)
 
     def _shape_init(self, L, W, Z, *args, **kwargs):
@@ -406,3 +408,8 @@ class Storage(_Node):
         self.suction_head = float(suction_head)
         self.hydraulic_conductivity = float(hydraulic_conductivity)
         self.moisture_deficit_init = float(moisture_deficit_init)
+
+    @property
+    def curve_name(self):
+        if self.kind == Storage.TYPES.TABULAR:
+            return self.data

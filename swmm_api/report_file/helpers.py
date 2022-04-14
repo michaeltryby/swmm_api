@@ -287,3 +287,14 @@ class ContinuityVariables:
         self.VOL_HM3 = f'Volume_{u.VOL1}'
         self.VOL_1e6L = f'Volume_10^6 {u.VOL2}'
         self.DEPTH_MM = f'Depth_{u.DEPTH1}'
+
+#
+
+def main():
+    import pandas as pd
+    pd.read_csv('swmm_warnings.csv', index_col=0, sep=';').to_json('swmm_warnings.json', orient='index', indent=4)
+    pd.read_csv('swmm_errors.csv', index_col=0, sep=';').to_json('swmm_errors.json', orient='index', indent=4)
+
+
+if __name__ == '__main__':
+    main()

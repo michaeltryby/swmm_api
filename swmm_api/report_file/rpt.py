@@ -859,7 +859,7 @@ class SwmmReport:
 
     def get_errors(self):
         """
-        malicious objects per error.
+        Malicious objects per error.
 
         Returns:
             dict[str, (str | bool | list[str])]: key is the error and value is a object label, a list of object-label or a bool
@@ -897,7 +897,7 @@ class SwmmReport:
 
     def get_warnings(self):
         """
-        malicious objects per warning.
+        Malicious objects per warning.
 
         Returns:
             dict[str, (str | bool | list[str])]: key is the warning and value is a object label, a list of object-label or a bool

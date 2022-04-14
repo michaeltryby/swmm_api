@@ -215,14 +215,10 @@ def convert_string(x) -> str:
     if pd.isna(x):
         return x
     x = str(x)
-    if ' ' in x:
-        return f'"{x}"'
-    else:
-        s = x.strip('"')
-        if s == '':
-            return np.NaN
-        else:
-            return s
+    s = x.strip(' "')
+    if s == '':
+        return np.NaN
+    return s
 
 
 GIS_FLOAT_FORMAT = '0.3f'
