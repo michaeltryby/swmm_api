@@ -181,6 +181,7 @@ def reduce_timeseries(inp):
 
     if RAINGAGES in inp:
         f = inp[RAINGAGES].frame
+        # type: Raingage
         if not f.empty:
             needed_timeseries |= set(f.loc[f['Source'].str.upper() == key, 'Timeseries'])
 
@@ -194,10 +195,10 @@ def reduce_timeseries(inp):
 
     if OUTFALLS in inp:
         f = inp[OUTFALLS].frame
-        needed_timeseries |= set(f.loc[f['Type'].str.upper() == key, 'Data'])
+        needed_timeseries |= set(f.loc[f['kind'].str.upper() == key, 'data'])
 
     if INFLOWS in inp:
         f = inp[INFLOWS].frame
-        needed_timeseries |= set(f['TimeSeries'])
+        needed_timeseries |= set(f['time_series'])
 
     inp[TIMESERIES] = inp[TIMESERIES].slice_section(needed_timeseries)

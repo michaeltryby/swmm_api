@@ -120,9 +120,9 @@ def filter_subcatchments(inp, final_nodes):
     if SUBCATCHMENTS in inp:
         sub_orig = inp[SUBCATCHMENTS].copy()
         # all with an outlet to final_nodes
-        inp[SUBCATCHMENTS] = inp[SUBCATCHMENTS].slice_section(final_nodes, by='Outlet')
+        inp[SUBCATCHMENTS] = inp[SUBCATCHMENTS].slice_section(final_nodes, by='outlet')
         # all with an outlet to an subcatchment
-        inp[SUBCATCHMENTS].update(sub_orig.slice_section(inp[SUBCATCHMENTS].keys(), by='Outlet'))
+        inp[SUBCATCHMENTS].update(sub_orig.slice_section(inp[SUBCATCHMENTS].keys(), by='outlet'))
 
         # __________________________________________
         for section in [SUBAREAS, INFILTRATION, POLYGONS]:

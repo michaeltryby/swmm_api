@@ -336,7 +336,7 @@ class Pollutant(BaseSectionObject):
         self.c_gw = float(c_gw)
         self.c_rdii = float(c_rdii)
         self.decay = float(decay)
-        self.co_pollutant = to_bool(snow_only)
+        self.snow_only = to_bool(snow_only)
         self.co_pollutant = str(co_pollutant)
         self.co_fraction = float(co_fraction)
         self.c_dwf = float(c_dwf)
@@ -1474,7 +1474,7 @@ class TimeseriesFile(Timeseries):
         filename (str): name of a file in which the time series data are stored ``Fname``
     """
 
-    def __init__(self, name, filename):
+    def __init__(self, name, filename, kind=Timeseries.TYPES.FILE):
         Timeseries.__init__(self, name)
         self.kind = self.TYPES.FILE
         self.filename = filename.strip('"')
