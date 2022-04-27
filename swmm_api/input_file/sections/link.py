@@ -134,7 +134,7 @@ class Orifice(_Link):
         self.offset = float(offset)
         self.discharge_coefficient = float(discharge_coefficient)
         self.has_flap_gate = to_bool(has_flap_gate)
-        self.hours_to_open = int(hours_to_open)
+        self.hours_to_open = float(hours_to_open)
 
 
 class Outlet(_Link):
