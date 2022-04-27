@@ -111,7 +111,7 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
                 df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}')
 
                 if sec == STORAGE:
-                    df[f'{STORAGE}{label_sep}Curve'] = df[f'{STORAGE}{label_sep}Curve'].astype(str)
+                    df[f'{STORAGE}{label_sep}data'] = df[f'{STORAGE}{label_sep}data'].astype(str)
 
                 for sub_sec in [DWF, INFLOWS]:
                     if sub_sec in inp:
@@ -137,7 +137,7 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
                     inp[XSECTIONS].frame.rename(columns=lambda c: f'{XSECTIONS}{label_sep}{c}'))
 
                 if sec == OUTLETS:
-                    df[f'{OUTLETS}{label_sep}Curve'] = df[f'{OUTLETS}{label_sep}Curve'].astype(str)
+                    df[f'{OUTLETS}{label_sep}curve_description'] = df[f'{OUTLETS}{label_sep}curve_description'].astype(str)
 
                 if LOSSES in inp:
                     df = df.join(inp[LOSSES].frame.rename(columns=lambda c: f'{LOSSES}{label_sep}{c}'))
@@ -161,10 +161,11 @@ def write_geo_package(inp, gpkg_fn, driver='GPKG', label_sep='.', crs="EPSG:3263
             inp[POLYGONS].geo_series).join(get_subcatchment_tags(inp))
 
         GeoDataFrame(df).to_file(gpkg_fn, driver=driver, layer=SUBCATCHMENTS)
-        gs_connector = get_subcatchment_connectors(inp)
-        GeoDataFrame(gs_connector).to_file(gpkg_fn, driver=driver, layer=SUBCATCHMENTS + '_connector')
 
         print(f'{f"{time.perf_counter() - t0:0.1f}s":^{len(SUBCATCHMENTS)}s}')
+
+        gs_connector = get_subcatchment_connectors(inp)
+        GeoDataFrame(gs_connector).to_file(gpkg_fn, driver=driver, layer=SUBCATCHMENTS + '_connector')
     else:
         print(f'{f"-":^{len(SUBCATCHMENTS)}s}', end=' | ')
 
@@ -187,13 +188,23 @@ def get_subcatchment_connectors(inp):
     from shapely.geometry import LineString
 
     res = {}
-    for p in tqdm(inp[POLYGONS], total=len(inp[POLYGONS].keys()), desc='get_subcatchment_connectors'):
+
+    n_polygons = len(inp[POLYGONS].keys())
+    if n_polygons > 1000:
+        iterator = tqdm(inp[POLYGONS], total=n_polygons, desc='get_subcatchment_connectors')
+    else:
+        iterator = inp[POLYGONS]
+
+    for p in iterator:
         c = inp[POLYGONS][p].geo.centroid
         o = inp[SUBCATCHMENTS][p].outlet
-        if o not in inp[COORDINATES]:
+        if o in inp[COORDINATES]:
+            res[p] = LineString([inp[COORDINATES][o].point, (c.x, c.y)])
+        elif o in inp[POLYGONS]:
+            res[p] = LineString([inp[POLYGONS][o].geo.centroid, (c.x, c.y)])
+        else:
             print(inp[SUBCATCHMENTS][p])
             continue
-        res[p] = LineString([inp[COORDINATES][o].point, (c.x, c.y)])
 
     gs = GeoSeries(res, crs=inp[POLYGONS]._crs)
     gs.index.name = 'Subcatchment'
@@ -224,7 +235,7 @@ def links_geo_data_frame(inp, label_sep='.'):
                 inp[XSECTIONS].frame.rename(columns=lambda c: f'{XSECTIONS}{label_sep}{c}'))
 
             if sec == OUTLETS:
-                df[f'{OUTLETS}{label_sep}Curve'] = df[f'{OUTLETS}{label_sep}Curve'].astype(str)
+                df[f'{OUTLETS}{label_sep}curve_description'] = df[f'{OUTLETS}{label_sep}curve_description'].astype(str)
 
             if LOSSES in inp:
                 df = df.join(inp[LOSSES].frame.rename(columns=lambda c: f'{LOSSES}{label_sep}{c}'))
@@ -258,7 +269,7 @@ def nodes_geo_data_frame(inp, label_sep='.'):
             df = inp[sec].frame.rename(columns=lambda c: f'{sec}{label_sep}{c}')
 
             if sec == STORAGE:
-                df[f'{STORAGE}{label_sep}Curve'] = df[f'{STORAGE}{label_sep}Curve'].astype(str)
+                df[f'{STORAGE}{label_sep}data'] = df[f'{STORAGE}{label_sep}data'].astype(str)
 
             for sub_sec in [DWF, INFLOWS]:
                 if sub_sec in inp:
@@ -296,7 +307,7 @@ def gpkg_to_swmm(fn, label_sep='.'):
     for sec in NODE_SECTIONS:
         if sec not in fiona.listlayers(fn):
             continue
-        gdf = read_file(fn, layer=sec).set_index('Name')
+        gdf = read_file(fn, layer=sec).set_index('name')
 
         cols = gdf.columns[gdf.columns.str.startswith(sec)]
         inp[sec] = SECTION_TYPES[sec].create_section(gdf[cols].reset_index().fillna(NaN).values)
@@ -356,7 +367,7 @@ def gpkg_to_swmm(fn, label_sep='.'):
 
     # ---------------------------------
     if SUBCATCHMENTS in fiona.listlayers(fn):
-        gdf = read_file(fn, layer=SUBCATCHMENTS).set_index('Name')
+        gdf = read_file(fn, layer=SUBCATCHMENTS).set_index('name')
 
         for sec in [SUBCATCHMENTS, SUBAREAS, INFILTRATION]:
             cols = gdf.columns[gdf.columns.str.startswith(sec)]

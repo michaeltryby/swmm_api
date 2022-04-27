@@ -151,7 +151,8 @@ LID1             SURFACE    0.0        0.0        0.1        1.0        5
 LID1             PAVEMENT   2          0.15       0          100        0          0          0         
 LID1             SOIL       2          0.5        0.2        0.1        0.5        10.0       3.5       
 LID1             STORAGE    2          0.75       0.5        0         
-LID1             DRAIN      3          0.5        6          6          1          2                    
+LID1            	DRAIN     	0         	0         	0         	6         	0         	0
+LID1            	REMOVALS  	TSS       	1
 
 [LID_USAGE]
 ;;Subcatchment   LID Process      Number  Area       Width      InitSat    FromImp    ToPerv     RptFile                  DrainTo          FromPerv  

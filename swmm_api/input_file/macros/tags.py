@@ -9,7 +9,7 @@ from ..sections import Tag
 
 
 def _get_tags_frame(inp, part=None):
-    if TAGS in inp:
+    if TAGS in inp and inp[TAGS]:
         df_tags = inp[TAGS].frame
         if part in df_tags.index.levels[0]:
             return inp[TAGS].frame.xs(part, axis=0, level=0)

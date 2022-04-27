@@ -9,10 +9,11 @@ import warnings
 from swmm_api import read_inp_file, SwmmReport, SwmmOutput
 from swmm_api.input_file import SEC
 from swmm_api.input_file.helpers import SwmmInputWarning
+from swmm_api.input_file.macros import write_geo_package
 from swmm_api.input_file.sections import Timeseries
-# from swmm_api.run import swmm5_run, get_swmm_version
-from swmm_api.run import get_result_filenames, SWMMRunError, get_swmm_version, swmm5_run as run
-# from swmm_api.run_py import run_progress, run, get_swmm_version
+# from swmm_api.run_py import get_swmm_version, run
+from swmm_api.run import get_swmm_version, swmm5_run as run
+from swmm_api.run import get_result_filenames, SWMMRunError
 
 # t = Timeseries.create_section("""KOSTRA 01-01-2021 00:00 0.0
 # KOSTRA 01-01-2021 00:05 1.9999999999999982
@@ -93,7 +94,7 @@ def _convert_all(rpt):
         # eval(f'rpt.{key}')
 
 
-failed = list()
+failed = []
 
 with tqdm(example_files, desc='TESTING_ALL_EXAMPLES') as example_files:
     for fn in example_files:
@@ -145,9 +146,13 @@ with tqdm(example_files, desc='TESTING_ALL_EXAMPLES') as example_files:
         # run_progress(fn_inp)
         try:
             run(fn_inp)
-        except SWMMRunError:
-            failed.append(fn)
+        except SWMMRunError as e:
+            failed.append(f'{fn}{e}')
             continue
+        except UnicodeDecodeError as e:
+            failed.append(f'{fn} ({e})')
+            continue
+
         # REPORT
         rpt = SwmmReport(fn_rpt)
         _convert_all(rpt)

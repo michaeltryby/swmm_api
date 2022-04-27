@@ -309,7 +309,7 @@ class LIDControl(BaseSectionObject):
                         removals can be placed on the same line or specified in separate REMOVALS
                         lines).
                 """
-                self.pollutant_removal_rate = pollutant_removal_rate
+                self.pollutant_removal_rate = list(pollutant_removal_rate)
 
         SURFACE = Surface._LABEL
         SOIL = Soil._LABEL
