@@ -251,6 +251,10 @@ class SwmmOutput(SwmmOutExtract):
         else:
             if data.size == 0:
                 return DataFrame()
+
+            if data.shape[0] != self.index.size:
+                data = data[:self.index.size]
+
             df = DataFrame(data, index=self.index, dtype=float)
 
         # -----------
