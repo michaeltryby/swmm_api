@@ -67,7 +67,7 @@ class SwmmOutput(SwmmOutExtract):
         # the main datetime index for the results
         try:
             self.index = date_range(self.start_date + self.report_interval,
-                                periods=self.n_periods, freq=self.report_interval)
+                                    periods=self.n_periods, freq=self.report_interval)
         except OutOfBoundsDatetime:
             self.index = [self.start_date + self.report_interval * i for i in range(self.n_periods)]
 

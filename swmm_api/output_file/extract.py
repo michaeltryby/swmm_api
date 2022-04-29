@@ -97,6 +97,7 @@ class SwmmOutExtract(BinaryReader):
         self.fp.seek(0, SEEK_SET)
         magic_num_start = self._next()
 
+        self.run_failed = False
         # ____
         # check errors
         if magic_num_start != _MAGIC_NUMBER:
@@ -106,9 +107,11 @@ class SwmmOutExtract(BinaryReader):
             warn('Ending magic number incorrect.', SwmmOutExtractWarning)
             # raise SwmmExtractValueError('Ending magic number incorrect.')
             _n_periods = 0
+            self.run_failed = True
         elif error_code != 0:
             warn(f'Error code "{error_code}" in output file indicates a problem with the run.', SwmmOutExtractWarning)
             # raise SwmmExtractValueError(f'Error code "{error_code}" in output file indicates a problem with the run.')
+            self.run_failed = True
 
         # ---
         # read additional parameters from start of file

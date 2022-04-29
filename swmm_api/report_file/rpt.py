@@ -6,6 +6,8 @@ __version__ = "0.1"
 __license__ = "MIT"
 
 import datetime
+import os.path
+
 import pandas as pd
 
 from .helpers import (_get_title_of_part, _remove_lines, _part_to_frame, _continuity_part_to_dict, ReportUnitConversion,
@@ -105,6 +107,12 @@ class SwmmReport:
         #
         # })
 
+    def is_empty(self):
+        return not bool(self._raw_parts)
+
+    def is_file(self):
+        return os.path.isfile(self._filename)
+
     def _report_to_dict(self):
         """
         convert the report file into a dictionary depending on the different parts
@@ -112,8 +120,14 @@ class SwmmReport:
         Returns:
             dict[str, str]: dictionary of parts of the report file
         """
+        if not self.is_file():
+            return
+
         with open(self._filename, 'r') as file:
             lines = file.readlines()
+
+        if not lines:
+            return
 
         self._raw_parts['Simulation Infos'] = ''.join(lines[-3:])
         lines = lines[:-3]

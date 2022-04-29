@@ -514,14 +514,14 @@ def rename_timeseries(inp, old_label, new_label):
 
     if OUTFALLS in inp:
         f = inp[OUTFALLS].frame
-        filtered_table = f[(f['Type'] == key) & (f['Data'] == old_label)]
+        filtered_table = f[(f['kind'] == key) & (f['data'] == old_label)]
         if not filtered_table.empty:
             for i in filtered_table.index:
                 inp[OUTFALLS][i].data = new_label
 
     if INFLOWS in inp:
         f = inp[INFLOWS].frame
-        filtered_table = f[f['TimeSeries'] == old_label]
+        filtered_table = f[f['time_series'] == old_label]
         if not filtered_table.empty:
             for i in filtered_table.index:
                 inp[INFLOWS][i].time_series = new_label
