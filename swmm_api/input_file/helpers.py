@@ -585,7 +585,8 @@ def split_line_with_quotes(line):
 
 
 def free_attributes(key):
-    return key.lower()  # .replace('_', '')
+    # TODO maybe laster?!
+    return key  # .lower()  # .replace('_', '')
 
 
 ########################################################################################################################
@@ -686,7 +687,7 @@ class BaseSectionObject(ABC):
         Returns:
             tuple[any]: Attribute values used for the object
         """
-        return (v for v in self.values if not (isinstance(v, float) and isnan(v)))
+        return tuple(v for v in self.values if not (isinstance(v, float) and isnan(v)))
 
     def __iter__(self):
         for k, v in self.to_dict_().items():

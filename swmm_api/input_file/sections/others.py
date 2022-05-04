@@ -1037,7 +1037,7 @@ class Curve(BaseSectionObject):
     @classmethod
     def _convert_lines(cls, multi_line_args):
         last = None
-        Type = None
+        kind = None
         points = []
         for name, *line in multi_line_args:
             remains = iter(line)
@@ -1046,11 +1046,11 @@ class Curve(BaseSectionObject):
                 # new curve line
                 if last is not None:
                     # first return previous curve
-                    yield cls(last, Type, points)
+                    yield cls(last, kind, points)
                 # reset variables
                 points = []
                 last = name
-                Type = next(remains)
+                kind = next(remains)
 
             # points in current line
             for a in remains:
@@ -1059,7 +1059,7 @@ class Curve(BaseSectionObject):
 
         # last
         if last is not None:
-            yield cls(last, Type, points)
+            yield cls(last, kind, points)
 
     @property
     def frame(self):

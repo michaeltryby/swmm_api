@@ -32,8 +32,8 @@ from .plotting import plot_map, plot_longitudinal
 from .reduce_unneeded import (reduce_curves, reduce_controls, simplify_curves, reduce_raingages,
                               remove_empty_sections, reduce_timeseries, reduce_pattern)
 from .split_inp_file import split_inp_to_files, read_split_inp_file
+from .summerize import print_summary
 from .tags import get_node_tags, get_link_tags, get_subcatchment_tags, filter_tags, delete_tag_group
-
 
 try:
     from .cross_section_curve import (get_cross_section_maker, profil_area, velocity)

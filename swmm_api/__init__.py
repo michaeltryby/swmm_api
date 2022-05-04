@@ -1,4 +1,4 @@
-__version__ = '0.3a3'
+__version__ = '0.3a4'
 from .input_file import read_inp_file, SwmmInput
 from .report_file import read_rpt_file, SwmmReport
 from .output_file import read_out_file, SwmmOutput, out2frame
