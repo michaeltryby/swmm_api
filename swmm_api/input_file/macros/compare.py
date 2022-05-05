@@ -117,7 +117,7 @@ def compare_sections(sec1, sec2, precision=3):
     return CompareSections(sec1, sec2, precision=precision).get_diff_string()
 
 
-def compare_inp_files(fn1, fn2, precision=2, skip_section=None):
+def compare_inp_files(fn1, fn2, precision=2, skip_section=None, sep='\n' + '#' * 100):
     """
     compare two inp files and get the differences as string output
 
@@ -133,27 +133,32 @@ def compare_inp_files(fn1, fn2, precision=2, skip_section=None):
     s = f'Comparing \n' \
         f'   "{fn1}" (=inp1)\n' \
         f'   to\n' \
-        f'   "{fn2}" (=inp2)\n\n'
+        f'   "{fn2}" (=inp2)\n'
     inp1 = SwmmInput.read_file(fn1)
     inp2 = SwmmInput.read_file(fn2)
 
     sections = set(inp1.keys()) | set(inp2.keys())
 
-    for section in sorted(sections, key=_sort_by):
+    for section in sections:  # sorted(sections, key=_sort_by):
         if skip_section is not None and section in skip_section:
             continue
         if section in [TITLE]:
             continue
-        s += '\n' + '#' * 100 + f'\n[{section}]\n'
 
         if (section in inp1) and (section in inp2):
-            s += CompareSections(inp1[section], inp2[section], precision=precision).get_diff_string()
+            ss = CompareSections(inp1[section], inp2[section], precision=precision).get_diff_string()
         elif (section not in inp1) and (section in inp2):
-            s += f'only in inp2\n'
+            ss = f'only in inp2\n'
         elif (section in inp1) and (section not in inp2):
-            s += f'only in inp1\n'
+            ss = f'only in inp1\n'
         else:
-            s += f'not in both inps\n'  # should not happen
+            ss = f'not in both inps\n'  # should not happen
+
+        if 'good' in ss:
+            continue
+
+        s += f'{sep}\n[{section}]\n'
+        s += ss
 
     inp_version_control(inp1, inp2)
 
