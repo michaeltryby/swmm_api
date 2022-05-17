@@ -9,7 +9,12 @@ _RECORDSIZE = 4
 class BinaryReader(abc.ABC):
     def __init__(self, filename):
         self.fp = None
-        self.fp = open(filename, "rb")
+        if all([hasattr(filename, i) for i in ['tell', 'seek', 'read', 'close']]):
+            self.fp = filename
+            self.filename = '<stream>'
+        else:
+            self.filename = filename
+            self.fp = open(filename, "rb")
 
     @abc.abstractmethod
     def __repr__(self):
@@ -39,16 +44,6 @@ class BinaryReader(abc.ABC):
 
     def __del__(self):
         self.close()
-
-    @property
-    def filename(self):
-        """
-        path and filename of the .out-file
-
-        Returns:
-            str: path and filename of the .out-file
-        """
-        return self.fp.name
 
     def _set_position(self, offset, whence=SEEK_SET):
         if self.fp.tell() != offset:
