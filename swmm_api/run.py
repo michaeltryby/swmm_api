@@ -21,24 +21,43 @@ def get_swmm_command_line(swmm_path, inp, rpt, out):
     return cmd, inp, rpt, out
 
 
+SWMM_PATH = None
+
+
 def infer_swmm_path():
+    global SWMM_PATH
+
+    if SWMM_PATH is not None:
+        return SWMM_PATH
+
     # UNIX
     swmm_path = 'swmm5'
 
     # WINDOWS
     if _platform.startswith("win"):
+        sys_path = os.environ['PATH'].split(';')
+        possible_exe = [fn
+                        for pth in sys_path if os.path.isdir(pth)
+                        for fn in os.listdir(pth) if 'swmm' in fn and fn.endswith('.exe') and fn.lower() != 'epaswmm5.exe']
+
         swmm_path = None
         # script_path = '???/swmm5.exe'
-        for program_files in ('Program Files (x86)', 'Program Files'):
-            for version in ('5.1.015', '5.1.014', '5.1.013', '5.2.0', '5.2.0 (64-bit)'):
+        for program_files in ('PROGRAMFILES', 'PROGRAMFILES(X86)'):
+            for version in ('5.1', '5.1.015', '5.1.014', '5.1.013', '5.2.0', '5.2.0 (64-bit)'):
                 for fn_exe in ('runswmm.exe', 'swmm5.exe'):
-                    script_path = os.path.join('C:\\', program_files, 'EPA SWMM {}'.format(version), fn_exe)
+                    script_path = os.path.join(os.environ[program_files], 'EPA SWMM {}'.format(version), fn_exe)
                     if os.path.isfile(script_path):
                         swmm_path = script_path
                         break
             if swmm_path is not None:
                 break
 
+    try:
+        get_swmm_version_base(swmm_path)
+    except FileNotFoundError:
+        raise SWMMRunError('Path to SWMM command line executable not found. Pleas pass a custom path to the swmm5.exe using the "swmm_path" argument.')
+
+    SWMM_PATH = swmm_path
     return swmm_path
 
 
@@ -142,8 +161,9 @@ def check_swmm_errors(fn_rpt, shell_output):
 
 def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False, create_out=True, swmm_path=None):
     """
-    run a simulation with an EPA-SWMM input-file
-    default working directory is input-file directory
+    Run a simulation with an EPA-SWMM input-file.
+
+    The default working directory is the input-file directory.
 
     Args:
         inp (str): path to input file
@@ -151,6 +171,10 @@ def swmm5_run(inp, rpt_dir=None, out_dir=None, init_print=False, create_out=True
         out_dir (str): directory in which the output-file is written.
         init_print (bool): if the default commandline output should be printed
         create_out (bool): if the out-file should be created
+        swmm_path (str): custom path to the command line swmm executable. i.e. 'C:\\Program Files\\EPA SWMM 5.2.0 (64-bit)\\runswmm.exe'.
+                UNIX users should place the path to the swmm executable in the system path and name the file 'swmm5'.
+                Default: the api will search in the standard paths for the swmm exe.
+                Be aware that the 'epaswmm5.exe' is the graphical user interface and will not work for this api.
 
     Returns:
         tuple[str, str, str]: INP-, RPT- and OUT-filename
@@ -198,6 +222,25 @@ def _run_parallel(variable, func=swmm5_run, processes=4):
 
 
 def get_swmm_version():
+    """
+    Get the swmm version used for simulation with the API.
+
+    Returns:
+        str: swmm version
+    """
     swmm_path = infer_swmm_path()
-    shell_output = subprocess.run([swmm_path, '--version'], capture_output=True)
-    return shell_output.stdout.decode().strip()
+    return get_swmm_version_base(swmm_path)
+
+
+def get_swmm_version_base(swmm_path):
+    """
+    Get the swmm version.
+
+    Args:
+        swmm_path (str): Path to swmm CLI exe.
+
+    Returns:
+        str: swmm version
+    """
+    shell_output = subprocess.check_output([swmm_path, '--version'])
+    return shell_output.decode().strip()
