@@ -72,6 +72,6 @@ def subcatchments_per_node_dict(inp):
     """
     if SUBCATCHMENTS in inp:
         di = {n: [] for n in nodes_dict(inp)}
-        for s in inp.SUBCATCHMENTS.items():
-            di[s.Outlet].append(s)
+        for s in inp.SUBCATCHMENTS.values():
+            di[s.outlet].append(s)
         return di

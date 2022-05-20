@@ -10,7 +10,7 @@ from ..inp import SwmmInput
 from ..section_labels import *
 from ..section_lists import LINK_SECTIONS, NODE_SECTIONS
 from ..sections import TimeseriesFile
-from ..sections.link import _Link
+from ..sections.link import _Link, Conduit, Weir, Outlet, Orifice
 from ..sections.link_component import CrossSection
 
 """
@@ -118,7 +118,7 @@ def conduits_are_equal(inp: SwmmInput, link0, link1, diff_roughness=0.1, diff_sl
 
     # Roughness values match within a specified percent tolerance
     if diff_roughness is not None:
-        all_checks_out &= _rel_diff(link0.Roughness, link1.Roughness) < diff_roughness
+        all_checks_out &= _rel_diff(link0.roughness, link1.roughness) < diff_roughness
 
     xs0 = inp[XSECTIONS][link0.name]  # type: CrossSection
     xs1 = inp[XSECTIONS][link1.name]  # type: CrossSection

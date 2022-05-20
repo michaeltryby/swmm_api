@@ -41,8 +41,8 @@ def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None
         links = []
         for section in LINK_SECTIONS:
             if section in inp:
-                links += list(inp[section].filter_keys([node_label], by='FromNode')) + \
-                         list(inp[section].filter_keys([node_label], by='ToNode'))  # type: list[Conduit]
+                links += list(inp[section].filter_keys([node_label], by='from_node')) + \
+                         list(inp[section].filter_keys([node_label], by='to_node'))  # type: list[Conduit]
         links = [l.Name for l in links]  # type: list[str]
 
     for link in links:
@@ -50,6 +50,7 @@ def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None
 
     if alt_node is not None:
         move_flows(inp, node_label, alt_node)
+        reconnect_subcatchments(inp, node_label, alt_node)
 
 
 def move_flows(inp: SwmmInput, from_node, to_node, only_constituent=None):
@@ -99,6 +100,29 @@ def move_flows(inp: SwmmInput, from_node, to_node, only_constituent=None):
 
             # else:
             #     print(f'Nothing to move from "{from_node}" [{section}]')
+
+
+def reconnect_subcatchments(inp: SwmmInput, from_node, to_node):
+    """
+    Reconnect sub-catchements from one node to another.
+
+    Args:
+        inp (SwmmInput): inp data
+        from_node (str): first node label
+        to_node (str): second node label
+
+    Notes:
+        works inplace
+    """
+    if SUBCATCHMENTS not in inp:
+        return
+
+    df = inp.SUBCATCHMENTS.frame
+    sc_search = df.outlet == from_node
+    for sc_label in sc_search[sc_search].index:
+        inp.SUBCATCHMENTS[sc_label].outlet = to_node
+    # for sc in subcatchments_per_node_dict(inp)[from_node]:
+    #     sc.outlet = to_node
 
 
 def delete_link(inp: SwmmInput, link):
@@ -394,8 +418,8 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
         for obj in subcatchments_per_node_dict(inp)[old_label]:
             obj.outlet = new_label
         # -------
-        # for obj in inp.SUBCATCHMENTS.filter_keys([old_label], 'Outlet'):  # type: SubCatchment
-        #     obj.Outlet = new_label
+        # for obj in inp.SUBCATCHMENTS.filter_keys([old_label], 'outlet'):  # type: SubCatchment
+        #     obj.outlet = new_label
         # -------
 
     # link: from-node and to-node
@@ -409,10 +433,10 @@ def rename_node(inp: SwmmInput, old_label: str, new_label: str, g=None):
     # -------
     # for section in [CONDUITS, PUMPS, ORIFICES, WEIRS, OUTLETS]:
     #     if section in inp:
-    #         for obj in inp[section].filter_keys([old_label], 'FromNode'):  # type: _Link
+    #         for obj in inp[section].filter_keys([old_label], 'from_node'):  # type: _Link
     #             obj.FromNode = new_label
     #
-    #         for obj in inp[section].filter_keys([old_label], 'ToNode'):  # type: _Link
+    #         for obj in inp[section].filter_keys([old_label], 'to_node'):  # type: _Link
     #             obj.ToNode = new_label
     # -------
 

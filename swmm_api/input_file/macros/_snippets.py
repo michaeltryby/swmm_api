@@ -75,9 +75,9 @@ following:
 #     if isinstance(node, str):
 #         node = find_node(inp, node)
 #     # create new section with only
-#     c1 = inp[sec.CONDUITS].slice_section([node.Name], 'ToNode')
+#     c1 = inp[sec.CONDUITS].slice_section([node.Name], 'to_node')
 #     if c1:
-#         c2 = inp[sec.CONDUITS].slice_section([node.Name], 'FromNode')
+#         c2 = inp[sec.CONDUITS].slice_section([node.Name], 'from_node')
 #         inp = combine_conduits(inp, c1, c2)
 #     else:
 #         inp = delete_node(node.Name)

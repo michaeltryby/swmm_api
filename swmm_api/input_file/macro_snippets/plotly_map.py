@@ -22,7 +22,7 @@ def plotly_map(inp, fn):  # TODO
         if edge_kind not in inp:
             continue
 
-        nodes = inp[edge_kind][['FromNode', 'ToNode']].stack().values
+        nodes = inp[edge_kind][['from_node', 'to_node']].stack().values
         x = coords.lookup(nodes, ['x'] * len(nodes))
         y = coords.lookup(nodes, ['y'] * len(nodes))
 
@@ -65,7 +65,7 @@ def plotly_mapX(inp, fn):
     #     if edge_kind not in inp:
     #         continue
     #
-    #     nodes = inp[edge_kind][['FromNode', 'ToNode']].stack().values
+    #     nodes = inp[edge_kind][['from_node', 'to_node']].stack().values
     #     x = coords.lookup(nodes, ['x'] * len(nodes))
     #     y = coords.lookup(nodes, ['y'] * len(nodes))
     #

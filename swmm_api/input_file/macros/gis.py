@@ -181,7 +181,7 @@ def get_subcatchment_connectors(inp):
         geopandas.GeoSeries: line objects between subcatchment outlets and centroids
     """
     # centroids = inp[s.POLYGONS].geo_series.centroid
-    # outlets = inp[s.SUBCATCHMENTS].frame.Outlet
+    # outlets = inp[s.SUBCATCHMENTS].frame.outlet
     # junctions = inp[s.COORDINATES].geo_series.reindex(outlets.values)
     # junctions.index = outlets.index
     from geopandas import GeoSeries
