@@ -97,7 +97,7 @@ def reduce_vertices(inp, node_range=0.25):
     """
     links = links_dict(inp)
 
-    for link_label in inp.VERTICES:
+    for link_label in list(inp.VERTICES.keys()):
         l = links[link_label]
         v = inp[VERTICES][link_label].vertices
         p = inp[COORDINATES][l.from_node].point
@@ -113,20 +113,6 @@ def reduce_vertices(inp, node_range=0.25):
             inp[VERTICES][link_label].vertices = v
         else:
             del inp[VERTICES][link_label]
-
-
-def remove_coordinates_from_vertices(inp):
-    # SNIPPET ?!?
-    new_vertices_section = {}
-    for link in inp[VERTICES]:  # type: str
-        conduit = inp[CONDUITS][link]  # type: Conduit
-        new_vertices = []
-        # n1 = inp[COORDINATES][conduit.FromNode]
-        new_vertices.append(inp[COORDINATES][conduit.from_node])
-        new_vertices += inp[VERTICES][link].vertices
-        new_vertices.append(inp[COORDINATES][conduit.to_node])
-        new_vertices_section[link] = new_vertices
-    return new_vertices_section
 
 
 def simplify_link_vertices(vertices, dist=1.):
