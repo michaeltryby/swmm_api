@@ -390,3 +390,18 @@ def update_length(inp):
     """
     for c in inp.CONDUITS.values():
         c.length = inp.VERTICES[c.name].geo.length
+
+
+def update_area(inp, decimals=4):
+    """
+    Set the area of all subcatchments based on the area of the polygons.
+
+    Args:
+        inp (SwmmInput): inp data
+        decimals (int): decimal places for the new value
+
+    .. Important::
+        Works inplace.
+    """
+    for sc in inp.SUBCATCHMENTS.values():
+        sc.area = round(inp.POLYGONS[sc.name].geo.area, decimals-4) * 1e-4  # m² to ha
