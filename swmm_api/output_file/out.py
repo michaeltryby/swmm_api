@@ -7,7 +7,7 @@ __license__ = "MIT"
 
 import datetime
 from itertools import product
-from numpy import dtype, fromfile
+from numpy import dtype, fromfile, frombuffer
 from pandas import date_range, DataFrame, MultiIndex
 from pandas._libs import OutOfBoundsDatetime
 
@@ -120,7 +120,10 @@ class SwmmOutput(SwmmOutExtract):
             types = [('datetime', 'f8')]
             types += list(map(lambda i: ('/'.join(i), 'f4'), self._columns_raw))
             self.fp.seek(self._pos_start_output, 0)
-            self._data = fromfile(self.fp, dtype=dtype(types))
+            try:
+                self._data = fromfile(self.fp, dtype=dtype(types))
+            except:
+                self._data = frombuffer(self.fp.read1(), dtype=dtype(types), count=self.n_periods)
         return self._data
 
     def to_frame(self):
