@@ -1,6 +1,6 @@
 # Changelog  
 
-## 0.3 (Apr ??, 2022)
+## 0.3 (Jun ??, 2022)
 
 removed:
 - CoordinatesGeo (functionality included in Coordinate)

@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pandas as pd
 from matplotlib import patches
 
 from .collection import nodes_dict, links_dict
@@ -20,16 +21,22 @@ def set_inp_dimensions(inp, ax):
     ax.set_ylim(y_min, y_max)
 
 
-def plot_map(inp, sc_connector=True, sc_center=True):  # TODO
+def plot_map(inp, sc_connector=True, sc_center=True,
+             custom_node_size=None,
+             color_link_default='y',
+             node_size_default=30,
+             node_size_max=60,
+             node_cmap=None):  # TODO
     """
+    Get the map-plot of the system.
 
     Args:
         inp ():
 
     Returns:
-        matplotlib.Figure, matplotlib.Axes:
+        (plt.Figure, plt.Axes): figure and axis of the plot
     """
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots()  # type: plt.Figure, plt.Axes
 
     # for name, node in coords[::80].iterrows():
     #     ax.text(node.x, node.y, name, horizontalalignment='center', verticalalignment='baseline')
@@ -43,7 +50,7 @@ def plot_map(inp, sc_connector=True, sc_center=True):  # TODO
     if VERTICES in inp:
         for link, vertices in inp[VERTICES].items():
             x, y = zip(*vertices.vertices)
-            ax.plot(x, y, 'y-')
+            ax.plot(x, y, color=color_link_default, ls='-', solid_capstyle='round', solid_joinstyle='round')
 
     # ---------------------
     if COORDINATES in inp:
@@ -83,18 +90,49 @@ def plot_map(inp, sc_connector=True, sc_center=True):  # TODO
             OUTFALLS: {'marker': '^', 'color': 'r'},
 
         }
-        ax.scatter(x=coords.x, y=coords.y,
-                   marker=node_style[JUNCTIONS]['marker'], c=node_style[JUNCTIONS]['color'],
-                   edgecolors='k', zorder=999)
+        # ax.scatter(x=coords.x, y=coords.y,
+        #            marker=node_style[JUNCTIONS]['marker'], c=node_style[JUNCTIONS]['color'],
+        #            edgecolors='k', zorder=999)
 
-        for section in [STORAGE, OUTFALLS]:
+        for section in [JUNCTIONS, STORAGE, OUTFALLS]:
             if section in inp:
                 is_in_sec = coords.index.isin(inp[section].keys())
+
+                color = node_style[section]['color']
+                point_sizes = node_size_default
+
+                if custom_node_size:
+                    point_sizes = pd.Series(index=coords[is_in_sec].index, data=0)
+
+                    for i in custom_node_size:
+                        if i in point_sizes:
+                            point_sizes[i] = custom_node_size[i]
+
+                    point_sizes = point_sizes.values
+
+                    color = point_sizes
+
+                    values = custom_node_size.values()
+                    diff_values = max(values)-min(values)
+
+                    def new_size(value):
+                        return (value - min(values)) / diff_values * (node_size_max-node_size_default) + node_size_default
+
                 ax.scatter(x=coords[is_in_sec].x, y=coords[is_in_sec].y,
-                           marker=node_style[section]['marker'], c=node_style[section]['color'],
-                           edgecolors='k', zorder=9999)
+                           marker=node_style[section]['marker'],
+                           c=color,
+                           edgecolors='k', zorder=9999,
+                           s=[new_size(i) for i in point_sizes],
+                           cmap=node_cmap,
+                           vmin=0.001,
+                           vmax=max(custom_node_size.values()),
+                           linewidths=0.5)
 
     # ---------------------
+    if node_cmap:
+        cb = fig.colorbar(ax.collections[0], ax=ax, location='bottom', label='Ereignisse', pad=0, shrink=0.3,
+                          ticks=range(0, 13, 2)
+                          )
     fig.tight_layout()
     return fig, ax
 
