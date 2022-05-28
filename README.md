@@ -21,10 +21,13 @@ And you can read the RPT- and OUT-files as a pandas DataFrame for further analys
 
 This package is based on the command line SWMM syntax. ([see Appendix D in the SWMM User Manual 5.1](https://www.epa.gov/water-research/storm-water-management-model-swmm-version-51-users-manual))
 
-## Install the package:
+## Install the package
 ```bash
 pip install swmm-api
 ```
+
+## Documentation
+[Link](https://markuspichler.gitlab.io/swmm_api) to the documentation of the api and some example jupyter notebook.
 
 ## Alternative packages
 
