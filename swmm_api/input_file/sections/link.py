@@ -332,7 +332,7 @@ class Weir(_Link):
         diversions and storage node outlets.
 
     Remarks:
-        The geometry of a weir’s opening is described in the [``XSECTIONS``] section.
+        The geometry of a weir’s opening is described in the [``XSECTIONS``] section (:class:`CrossSection`).
         The following shapes must be used with each type of weir:
 
         ==============  ===================
