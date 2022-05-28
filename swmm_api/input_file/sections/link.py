@@ -389,19 +389,13 @@ class Weir(_Link):
             name (str): Name assigned to weir link
             from_node (str): Name of node on inlet side of weir.
             to_node (str): Name of node on outlet side of weir.
-            form (str): One if :attr:`Weir.TYPES` (``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or
-            ``ROADWAY``).
+            form (str): One if :attr:`Weir.TYPES` (``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or ``ROADWAY``).
             height_crest (float): Amount that the weir’s crest is offset above the invert of inlet node (ft or m,
             expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
-            discharge_coefficient (float): Weir discharge coefficient (for CFS if using US flow units or CMS if using
-            metric flow units).
-            has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow,
-            ``NO`` (:obj:`False`) if not (default is ``NO``).
-            n_end_contractions (float): Number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir (
-            default is 0).
-            discharge_coefficient_end (float): Discharge coefficient for triangular ends of a ``TRAPEZOIDAL`` weir (
-            for ``CFS`` if using US flow units or ``CMS`` if using metric flow units) (default is value of
-            ``discharge_coefficient``).
+            discharge_coefficient (float): Weir discharge coefficient (for CFS if using US flow units or CMS if using metric flow units).
+            has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow, ``NO`` (:obj:`False`) if not (default is ``NO``).
+            n_end_contractions (float): Number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir (default is 0).
+            discharge_coefficient_end (float): Discharge coefficient for triangular ends of a ``TRAPEZOIDAL`` weir (for ``CFS`` if using US flow units or ``CMS`` if using metric flow units) (default is value of ``discharge_coefficient``).
             can_surcharge (bool): ``YES`` (:obj:`True`) if the weir can surcharge (have an upstream water level
             higher than the height of the opening); ``NO`` (:obj:`False`) if it cannot (default is ``YES``).
             road_width (float): Width of road lanes and shoulders for ``ROADWAY`` weir (ft or m).
