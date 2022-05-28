@@ -289,6 +289,8 @@ class Pump(_Link):
         depth_on (float): Depth at inlet node when pump turns on (ft or m) (default is 0).
         depth_off (float): Depth at inlet node when pump shuts off (ft or m) (default is 0).
 
+        STATES: On of ``ON``, ``OFF``
+
     See Section 3.2 for a description of the different types of pumps available.
     """
     _section_label = PUMPS
