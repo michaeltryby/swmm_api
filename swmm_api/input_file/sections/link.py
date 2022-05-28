@@ -153,10 +153,9 @@ class Outlet(_Link):
         name (str): Name assigned to outlet link.
         from_node (str): Name of node on inlet end of link.
         to_node (str): Name of node on outflow end of link.
-        offset (float): Amount that the outlet is offset above the invert of inlet node
-            (ft or m, expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
-        curve_type (str): One of :attr:`Outlet.TYPES`
-        *args: Only for automatic input file reading ...
+        offset (float): Amount that the outlet is offset above the invert of inlet node.
+            (ft or m, expressed as either a depth or as an elevation, depending on the ``LINK_OFFSETS`` option setting).
+        curve_type (str): One of :attr:`Outlet.TYPES`.
         curve_description (str | tuple[float, float]):
 
             - :obj:`str`: ``name_curve`` Name of the rating curve listed in the [``CURVES``] section that
@@ -173,6 +172,8 @@ class Outlet(_Link):
 
         has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow,
                               ``NO`` (:obj:`False`) if not (default is ``NO``).
+
+        TYPES: Has following attributes -> ``TABULAR_DEPTH``, ``TABULAR_HEAD``, ``FUNCTIONAL_DEPTH``, ``FUNCTIONAL_HEAD``
     """
     _section_label = OUTLETS
 
@@ -328,68 +329,46 @@ class Weir(_Link):
         Identifies each weir link of the drainage system. Weirs are used to model flow
         diversions and storage node outlets.
 
-    Format:
-        ::
-
-            Name Node1 Node2 Type CrestHt Cd (Gated EC Cd2 Sur (Width Surface))
-
-    Format-PCSWMM:
-        ``Name InletNode OutletNode WeirType CrestHeight DischCoeff FlapGate EndCon EndCoeff Surcharge RoadWidth
-        RoadSurf``
-
-    Format-SWMM-GUI:
-        ``Name FromNode ToNode Type CrestHt Qcoeff Gated EndCon EndCoeff Surcharge RoadWidth RoadSurf``
-
     Remarks:
-        The geometry of a weir’s opening is described in the [XSECTIONS] section.
+        The geometry of a weir’s opening is described in the [``XSECTIONS``] section.
         The following shapes must be used with each type of weir:
 
-        =============  ===================
-        Weir Type      Cross-Section Shape
-        =============  ===================
-        Transverse     ``RECT_OPEN``
-        Sideflow       ``RECT_OPEN``
-        V-Notch        ``TRIANGULAR``
-        Trapezoidal    ``TRAPEZOIDAL``
-        Roadway        ``RECT_OPEN``
-        =============  ===================
+        ==============  ===================
+        Weir Form       Cross-Section Shape
+        ==============  ===================
+        ``TRANSVERSE``  ``RECT_OPEN``
+        ``SIDEFLOW``    ``RECT_OPEN``
+        ``V-NOTCH``     ``TRIANGULAR``
+        ``TRAPEZOIDAL`` ``TRAPEZOIDAL``
+        ``ROADWAY``     ``RECT_OPEN``
+        ==============  ===================
 
-        The ``ROADWAY`` weir is a broad crested rectangular weir used model roadway crossings usually in conjunction
-        with
-        culvert-type conduits. It uses the FHWA HDS-5 method to determine a discharge coefficient as a function of flow
-        depth and roadway width and surface.
-        If no roadway data are provided then the weir behaves as a ``TRANSVERSE`` weir with Cd as its discharge
-        coefficient.
+        The ``ROADWAY`` weir is a broad crested rectangular weir used model roadway crossings usually in conjunction with culvert-type conduits.
+        It uses the FHWA HDS-5 method to determine a discharge coefficient as a function of flow depth and roadway width and surface.
+        If no roadway data are provided then the weir behaves as a ``TRANSVERSE`` weir with :attr:`discharge_coefficient` as its discharge coefficient.
         Note that if roadway data are provided, then values for the other optional weir parameters
-        (``NO`` for Gated, 0 for EC, 0 for Cd2, and ``NO`` for Sur)
+        (``NO`` for :attr:`has_flap_gate`, 0 for :attr:`n_end_contractions`, 0 for :attr:`discharge_coefficient_end`, and ``NO`` for :attr:`can_surcharge`)
         must be entered even though they do not apply to ``ROADWAY`` weirs.
 
     Attributes:
         name (str): Name assigned to weir link
         from_node (str): Name of node on inlet side of weir.
         to_node (str): Name of node on outlet side of weir.
-        Type (str): One if :attr:`Weir.TYPES`
-            (``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or ``ROADWAY``).
-        height_crest (float): Amount that the weir’s crest is offset above the invert of inlet node
-            (ft or m, expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
-        discharge_coefficient (float): Weir discharge coefficient
-            (for CFS if using US flow units or CMS if using metric flow units).
-        has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow, ``NO`` (:obj:`False`) if not (default is
-        ``NO``).
-        n_end_contractions (float): Number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir
-            (default is 0).
-        discharge_coefficient_end (float): Discharge coefficient for triangular ends of a ``TRAPEZOIDAL`` weir
-            (for ``CFS`` if using US flow units or ``CMS`` if using metric flow units)
-            (default is value of ``discharge_coefficient``).
-        can_surcharge (bool): ``YES`` (:obj:`True`) if the weir can surcharge
-            (have an upstream water level higher than the height of the opening); ``NO`` (:obj:`False`) if it
-            cannot (default is ``YES``).
+        form (str): One if :attr:`Weir.TYPES` (``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or ``ROADWAY``).
+        height_crest (float): Amount that the weir’s crest is offset above the invert of inlet node (ft or m, expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
+        discharge_coefficient (float): Weir discharge coefficient (for CFS if using US flow units or CMS if using metric flow units).
+        has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow, ``NO`` (:obj:`False`) if not (default is ``NO``).
+        n_end_contractions (float): Number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir (default is 0).
+        discharge_coefficient_end (float): Discharge coefficient for triangular ends of a ``TRAPEZOIDAL`` weir (for ``CFS`` if using US flow units or ``CMS`` if using metric flow units) (default is value of ``discharge_coefficient``).
+        can_surcharge (bool): ``YES`` (:obj:`True`) if the weir can surcharge (have an upstream water level higher than the height of the opening); ``NO`` (:obj:`False`) if it cannot (default is ``YES``).
         road_width (float): Width of road lanes and shoulders for ``ROADWAY`` weir (ft or m).
         road_surface (str): Type of road surface for ``ROADWAY`` weir: ``PAVED`` or ``GRAVEL``.
+
+        FORMS: Constants, one of ``TRANSVERSE``, ``SIDEFLOW``, ``V_NOTCH``, ``TRAPEZOIDAL``, ``ROADWAY``.
     """
     _section_label = WEIRS
 
-    class TYPES:
+    class FORMS:
         TRANSVERSE = 'TRANSVERSE'
         SIDEFLOW = 'SIDEFLOW'
         V_NOTCH = 'V-NOTCH'
@@ -400,8 +379,9 @@ class Weir(_Link):
         PAVED = 'PAVED'
         GRAVEL = 'GRAVEL'
 
-    def __init__(self, name, from_node, to_node, Type, height_crest, discharge_coefficient, has_flap_gate=False,
+    def __init__(self, name, from_node, to_node, form, height_crest, discharge_coefficient, has_flap_gate=False,
                  n_end_contractions=0, discharge_coefficient_end=NaN, can_surcharge=True, road_width=NaN, road_surface=NaN):
+
         """
         Weir link information.
 
@@ -409,27 +389,26 @@ class Weir(_Link):
             name (str): Name assigned to weir link
             from_node (str): Name of node on inlet side of weir.
             to_node (str): Name of node on outlet side of weir.
-            Type (str): One if :attr:`Weir.TYPES`
-                (``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or ``ROADWAY``).
-            height_crest (float): Amount that the weir’s crest is offset above the invert of inlet node
-                (ft or m, expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
-            discharge_coefficient (float): Weir discharge coefficient
-                (for CFS if using US flow units or CMS if using metric flow units).
-            has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow, ``NO`` (:obj:`False`) if not (default is
-            ``NO``).
-            n_end_contractions (float): Number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir
-                (default is 0).
-            discharge_coefficient_end (float): Discharge coefficient for triangular ends of a ``TRAPEZOIDAL`` weir
-                (for ``CFS`` if using US flow units or ``CMS`` if using metric flow units)
-                (default is value of ``discharge_coefficient``).
-            can_surcharge (bool): ``YES`` (:obj:`True`) if the weir can surcharge
-                (have an upstream water level higher than the height of the opening); ``NO`` (:obj:`False`) if it
-                cannot (default is ``YES``).
+            form (str): One if :attr:`Weir.TYPES` (``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or
+            ``ROADWAY``).
+            height_crest (float): Amount that the weir’s crest is offset above the invert of inlet node (ft or m,
+            expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
+            discharge_coefficient (float): Weir discharge coefficient (for CFS if using US flow units or CMS if using
+            metric flow units).
+            has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow,
+            ``NO`` (:obj:`False`) if not (default is ``NO``).
+            n_end_contractions (float): Number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir (
+            default is 0).
+            discharge_coefficient_end (float): Discharge coefficient for triangular ends of a ``TRAPEZOIDAL`` weir (
+            for ``CFS`` if using US flow units or ``CMS`` if using metric flow units) (default is value of
+            ``discharge_coefficient``).
+            can_surcharge (bool): ``YES`` (:obj:`True`) if the weir can surcharge (have an upstream water level
+            higher than the height of the opening); ``NO`` (:obj:`False`) if it cannot (default is ``YES``).
             road_width (float): Width of road lanes and shoulders for ``ROADWAY`` weir (ft or m).
             road_surface (str): Type of road surface for ``ROADWAY`` weir: ``PAVED`` or ``GRAVEL``.
         """
         _Link.__init__(self, name, from_node, to_node)
-        self.Type = str(Type)
+        self.form = str(form)
         self.height_crest = float(height_crest)
         self.discharge_coefficient = float(discharge_coefficient)
         self.has_flap_gate = to_bool(has_flap_gate)
