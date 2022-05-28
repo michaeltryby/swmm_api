@@ -390,8 +390,7 @@ class Weir(_Link):
             from_node (str): Name of node on inlet side of weir.
             to_node (str): Name of node on outlet side of weir.
             form (str): One if :attr:`Weir.TYPES` (``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or ``ROADWAY``).
-            height_crest (float): Amount that the weir’s crest is offset above the invert of inlet node (ft or m,
-            expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
+            height_crest (float): Amount that the weir’s crest is offset above the invert of inlet node (ft or m, expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
             discharge_coefficient (float): Weir discharge coefficient (for CFS if using US flow units or CMS if using metric flow units).
             has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow, ``NO`` (:obj:`False`) if not (default is ``NO``).
             n_end_contractions (float): Number of end contractions for ``TRANSVERSE`` or ``TRAPEZOIDAL`` weir (default is 0).
