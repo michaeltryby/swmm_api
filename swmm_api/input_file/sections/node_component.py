@@ -75,22 +75,18 @@ class Inflow(BaseSectionObject):
     Purpose:
         Specifies external hydrographs and pollutographs that enter the drainage system at specific nodes.
 
-    Formats:
-        ::
-
-            Node FLOW   Tseries  (FLOW (1.0     Sfactor Base Pat))
-            Node Pollut Tseries  (Type (Mfactor Sfactor Base Pat))
-
     Remarks:
         External inflows are represented by both a constant and time varying component as follows:
-        | Inflow = (Baseline value)*(Pattern factor) + (Scaling factor)*(Time series value)
+
+            Inflow = (Baseline value)*(Pattern factor) + (Scaling factor)*(Time series value)
 
         If an external inflow of a pollutant concentration is specified for a node,
-        then there must also be an external inflow of FLOW provided for the same node, unless the node is an Outfall.
+        then there must also be an external inflow of ``FLOW`` provided for the same node, unless the node is an Outfall.
         In that case a pollutant can enter the system during periods
         when the outfall is submerged and reverse flow occurs.
+        External pollutant mass inflows do not require a ``FLOW`` inflow.
 
-    Examples:
+    Examples in the .inp-file:
         ::
 
             NODE2  FLOW N2FLOW
@@ -104,20 +100,15 @@ class Inflow(BaseSectionObject):
 
     Attributes:
         node (str): name of node where external inflow enters.
-        constituent (str): ``'FLOW'`` or name of pollutant.
-        time_series (str): name of time series in [``TIMESERIES``] section (:class:`TimeSeries`) describing how
-        external flow or pollutant
-            loading varies with time.
-        kind (str): ``FLOW`` or ``CONCEN`` if pollutant inflow is described as a concentration, ``MASS`` if it is
-            described as a mass flow rate (default is ``CONCEN``).
-        mass_unit_factor (float): the factor that converts the inflow’s mass flow rate units into the
-        project’s mass units per
-            second, where the project’s mass units are those specified for the pollutant in the [POLLUTANTS]
-            section (:class:`Pollutant`) (default is 1.0 - see example below).
+        constituent (str): ``FLOW`` or name of pollutant (:attr:`Pollutant.name`).
+        time_series (str): name of time series in [``TIMESERIES``] section (:class:`Timeseries`) describing how external flow or pollutant loading varies with time.
+        kind (str): ``FLOW`` or ``CONCEN`` if pollutant inflow is described as a concentration, ``MASS`` if it is described as a mass flow rate (default is ``CONCEN``). (see :attr:`Inflow.TYPES`)
+        mass_unit_factor (float): the factor that converts the inflow’s mass flow rate units into the project’s mass units per second, where the project’s mass units are those specified for the pollutant in the [``POLLUTANTS``] section (:class:`Pollutant`) (default is 1.0).
         scale_factor (float): scaling factor that multiplies the recorded time series values (default is 1.0).
-        base_value (float): constant baseline value added to the time series value (default is 0.0). ``Base``
-        pattern (str): name of optional time pattern in [PATTERNS] section used to adjust the baseline value on a
-            periodic basis.
+        base_value (float): constant baseline value added to the time series value (default is 0.0).
+        pattern (str): name of optional time pattern in [``PATTERNS``] section (:class:`Pattern`) used to adjust the baseline value on a periodic basis.
+
+        TYPES: Enum-like for the attribute :attr:`Inflow.kind` with following members -> {``FLOW`` | ``CONCEN`` | ``MASS``}
     """
     _identifier = (IDENTIFIERS.node, IDENTIFIERS.constituent)
     _section_label = INFLOWS
@@ -134,20 +125,13 @@ class Inflow(BaseSectionObject):
 
         Args:
             node (str): name of node where external inflow enters.
-            constituent (str): ``'FLOW'`` or name of pollutant.
-            time_series (str): name of time series in [``TIMESERIES``] section (:class:`TimeSeries`) describing how
-            external flow or pollutant
-                loading varies with time.
-            kind (str): ``FLOW`` or ``CONCEN`` if pollutant inflow is described as a concentration, ``MASS`` if it is
-                described as a mass flow rate (default is ``CONCEN``).
-            mass_unit_factor (float): the factor that converts the inflow’s mass flow rate units into the
-            project’s mass units per
-                second, where the project’s mass units are those specified for the pollutant in the [POLLUTANTS]
-                section (:class:`Pollutant`) (default is 1.0 - see example below).
+            constituent (str): ``'FLOW'`` or name of pollutant (:attr:`Pollutant.name`).
+            time_series (str): name of time series in [``TIMESERIES``] section (:class:`Timeseries`) describing how external flow or pollutant loading varies with time.
+            kind (str): ``FLOW`` or ``CONCEN`` if pollutant inflow is described as a concentration, ``MASS`` if it is described as a mass flow rate (default is ``CONCEN``). (see :attr:`Inflow.TYPES`)
+            mass_unit_factor (float): the factor that converts the inflow’s mass flow rate units into the project’s mass units persecond, where the project’s mass units are those specified for the pollutant in the [``POLLUTANTS``] section (:class:`Pollutant`) (default is 1.0).
             scale_factor (float): scaling factor that multiplies the recorded time series values (default is 1.0).
-            base_value (float): constant baseline value added to the time series value (default is 0.0). ``Base``
-            pattern (str): name of optional time pattern in [PATTERNS] section used to adjust the baseline value on a
-                periodic basis.
+            base_value (float): constant baseline value added to the time series value (default is 0.0).
+            pattern (str): name of optional time pattern in [``PATTERNS``] section (:class:`Pattern`) used to adjust the baseline value on a periodic basis.
         """
         self.node = str(node)
         self.constituent = str(constituent)
@@ -164,7 +148,10 @@ class Inflow(BaseSectionObject):
 
 class Coordinate(BaseSectionObject):
     """
-    Section: [**COORDINATES**]
+    X,Y coordinates for nodes.
+
+    Section:
+        [COORDINATES]
 
     Purpose:
         Assigns X,Y coordinates to drainage system nodes.

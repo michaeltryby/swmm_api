@@ -26,38 +26,46 @@ class SwmmOutput(SwmmOutExtract):
 
     Attributes:
         index (pandas.DatetimeIndex): Index of the timeseries of the data.
-        flow_unit (str): Flow unit. One of ['CMS', 'LPS', 'MLD', 'CFS', 'GPM', 'MGD']
-        labels (dict[str, list]): dictionary of the object labels as list (value) for each object type
-            (keys are: ``'link'``, ``'node'``, ``'subcatchment'``)
+        flow_unit (str): Flow unit. One of [`CMS`, `LPS`, `MLD`, `CFS`, `GPM`, `MGD`]
+        labels (dict[str, list]): dictionary of the object labels as list (value) for each object type (keys are: ``link``, ``node``, ``subcatchment``)
         model_properties (dict[str, [dict[str, list]]]): property values for the subcatchments, nodes and links.
             The Properties for the objects are.
 
-                    - ``subcatchment``
-                      - [area]
-                    - ``node``
-                      - [type, invert, max. depth]
-                    - ``link``
-                      - type,
-                      - offsets
+                - ``subcatchment``
+
+                    - [area]
+
+                - ``node``
+
+                    - [type, invert, max. depth]
+
+                - ``link``
+
+                    - type,
+                    - offsets
+
                         - ht. above start node invert (ft),
                         - ht. above end node invert (ft),
-                      - max. depth,
-                      - length
+
+                    - max. depth,
+                    - length
 
         pollutant_units (dict[str, str]): Units per pollutant.
         report_interval (datetime.timedelta): Intervall of the index.
         start_date (datetime.datetime): Start date of the data.
         swmm_version (str): SWMM Version
         variables (dict[str, list]): variables per object-type inclusive the pollutants.
+        fp (file-like): Stream of the open file.
+        filename (str): Path to the .out-file.
 
     .. _swmmtoolbox: https://github.com/timcera/swmmtoolbox
     """
     def __init__(self, filename):
         """
-        SWMM Output file (xxx.out).
+        Read the SWMM Output file (xxx.out).
 
         Args:
-            filename(str): path to .rpt file
+            filename(str): Path to the .out-file.
         """
         SwmmOutExtract.__init__(self, filename)
 

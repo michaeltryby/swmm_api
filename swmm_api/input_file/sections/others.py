@@ -69,7 +69,7 @@ class RainGage(BaseSectionObject):
                                         (e.g., 0:15 for 15-minute readings). ``Intvl``
             SCF (float): snow catch deficiency correction factor (use 1.0 for no adjustment).
             Source (str): one of ``'TIMESERIES'`` ``'FILE'``
-            *args: for automatic inp file reading
+            *args: -Arguments below- (for automatic input file reader.)
             Timeseries (:obj:`str`, optional): name of time series in [TIMESERIES] section with rainfall data.
             ``Tseries``
             Filename (str): name of external file with rainfall data.

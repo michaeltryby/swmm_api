@@ -102,6 +102,8 @@ class Orifice(_Link):
                               ``NO`` (:obj:`False`) if not (default is ``NO``).
         hours_to_open (int): Time in decimal hours to open a fully closed orifice (or close a fully open one).
                              Use 0 if the orifice can open/close instantaneously.
+
+        ORIENTATION: Enum-like for the attribute :attr:`Orifice.orientation` with following members -> {``SIDE`` | ``BOTTOM``}
     """
     _section_label = ORIFICES
 
@@ -168,12 +170,12 @@ class Outlet(_Link):
 
                 - water depth (ft or m) above the offset elevation at the inlet node for a FUNCTIONAL/DEPTH outlet.
                 - head difference (ft or m) between the inlet and outflow nodes for a FUNCTIONAL/HEAD outlet.
-                  (i.e., Q = C1H^C2 where H is either depth or head).
+                  (i.e., :math:`Q = C1*H^{C2}` where H is either depth or head).
 
         has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow,
                               ``NO`` (:obj:`False`) if not (default is ``NO``).
 
-        TYPES: Has following attributes -> ``TABULAR_DEPTH``, ``TABULAR_HEAD``, ``FUNCTIONAL_DEPTH``, ``FUNCTIONAL_HEAD``
+        TYPES: Enum-like for the attribute :attr:`Outlet.curve_type` with following members -> {``TABULAR_DEPTH`` | ``TABULAR_HEAD`` | ``FUNCTIONAL_DEPTH`` | ``FUNCTIONAL_HEAD``}
     """
     _section_label = OUTLETS
 
@@ -195,7 +197,7 @@ class Outlet(_Link):
             offset (float): Amount that the outlet is offset above the invert of inlet node
                 (ft or m, expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
             curve_type (str): One of :attr:`Outlet.TYPES`
-            *args: Only for automatic input file reading ...
+            *args: -Arguments below- (for automatic input file reader.)
             curve_description (str | tuple[float, float]):
 
                 - :obj:`str`: ``name_curve`` Name of the rating curve listed in the [``CURVES``] section that
@@ -289,14 +291,14 @@ class Pump(_Link):
         depth_on (float): Depth at inlet node when pump turns on (ft or m) (default is 0).
         depth_off (float): Depth at inlet node when pump shuts off (ft or m) (default is 0).
 
-        STATES: On of ``ON``, ``OFF``
+        STATES: Enum-like for the attribute :attr:`Pump.status` with following members -> {``ON`` | ``OFF``}
 
     See Section 3.2 for a description of the different types of pumps available.
     """
     _section_label = PUMPS
 
     class STATES:
-        """Status at start of simulation (either ON or ``OFF``; default is ``ON``)."""
+        """Status at start of simulation (either ``ON`` or ``OFF``; default is ``ON``)."""
         ON = 'ON'
         OFF = 'OFF'
 
@@ -356,7 +358,7 @@ class Weir(_Link):
         name (str): Name assigned to weir link
         from_node (str): Name of node on inlet side of weir.
         to_node (str): Name of node on outlet side of weir.
-        form (str): One if :attr:`Weir.FORMS` (``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or ``ROADWAY``).
+        form (str): One of :attr:`Weir.FORMS` (``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or ``ROADWAY``).
         height_crest (float): Amount that the weir’s crest is offset above the invert of inlet node (ft or m, expressed as either a depth or as an elevation, depending on the LINK_OFFSETS option setting).
         discharge_coefficient (float): Weir discharge coefficient (for CFS if using US flow units or CMS if using metric flow units).
         has_flap_gate (bool): ``YES`` (:obj:`True`) if flap gate present to prevent reverse flow, ``NO`` (:obj:`False`) if not (default is ``NO``).
@@ -366,11 +368,13 @@ class Weir(_Link):
         road_width (float): Width of road lanes and shoulders for ``ROADWAY`` weir (ft or m).
         road_surface (str): Type of road surface for ``ROADWAY`` weir: ``PAVED`` or ``GRAVEL``.
 
-        FORMS: Constants, one of ``TRANSVERSE``, ``SIDEFLOW``, ``V_NOTCH``, ``TRAPEZOIDAL``, ``ROADWAY``.
+        FORMS: Enum-like for the attribute :attr:`Weir.form` with following members -> {``TRANSVERSE`` | ``SIDEFLOW`` | ``V_NOTCH`` | ``TRAPEZOIDAL`` | ``ROADWAY``}
+        ROAD_SURFACES: Enum-like for the attribute :attr:`Weir.road_surface` with following members -> {``ROADWAY`` | ``PAVED`` | ``GRAVEL``}
     """
     _section_label = WEIRS
 
     class FORMS:
+        """Form of the weir crest, one of {``TRANSVERSE``, ``SIDEFLOW``, ``V-NOTCH``, ``TRAPEZOIDAL`` or ``ROADWAY``}."""
         TRANSVERSE = 'TRANSVERSE'
         SIDEFLOW = 'SIDEFLOW'
         V_NOTCH = 'V-NOTCH'
@@ -378,6 +382,7 @@ class Weir(_Link):
         ROADWAY = 'ROADWAY'
 
     class ROAD_SURFACES:
+        """Type of road surface for ``ROADWAY`` weir: ``PAVED`` or ``GRAVEL``."""
         PAVED = 'PAVED'
         GRAVEL = 'GRAVEL'
 

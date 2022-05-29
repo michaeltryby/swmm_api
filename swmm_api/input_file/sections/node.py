@@ -27,13 +27,13 @@ class Junction(_Node):
         For sewer systems they can be either connection fittings or manholes.
 
     Remarks:
-        If Ymax is 0 then SWMM sets the maximum depth equal to the distance
+        If :attr:`Junction.depth_max` is 0 then SWMM sets the maximum depth equal to the distance
         from the invert to the top of the highest connecting link.
 
-        If the junction is part of a force main section of the system then set Ysur
+        If the junction is part of a force main section of the system then set :attr:`Junction.depth_surcharge`
         to the maximum pressure that the system can sustain.
 
-        Surface ponding can only occur when Apond is non-zero and the ALLOW_PONDING analysis option is turned on.
+        Surface ponding can only occur when :attr:`Junction.area_ponded` is non-zero and the ``ALLOW_PONDING`` analysis option is turned on.
 
     Attributes:
         name (str): Name assigned to junction node.
@@ -42,7 +42,7 @@ class Junction(_Node):
         depth_init (float): Water depth at start of simulation (ft or m) (default is 0).
         depth_surcharge (float): Maximum additional head above ground elevation that manhole junction
                             can sustain under surcharge conditions (ft or m) (default is 0).
-        area_ponded (float): Area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2) (default is 0).
+        area_ponded (float): Area subjected to surface ponding once water depth exceeds :attr:`Junction.depth_max` (ft2 or m2) (default is 0).
     """
     _section_label = JUNCTIONS
 
@@ -55,10 +55,8 @@ class Junction(_Node):
             elevation (float): Elevation of junction invert (ft or m).
             depth_max (float): Depth from ground to invert elevation (ft or m) (default is 0).
             depth_init (float): Water depth at start of simulation (ft or m) (default is 0).
-            depth_surcharge (float): Maximum additional head above ground elevation that manhole junction
-                                     can sustain under surcharge conditions (ft or m) (default is 0).
-            area_ponded (float): Area subjected to surface ponding once water depth exceeds Ymax (ft2 or m2)
-                                 (default is 0).
+            depth_surcharge (float): Maximum additional head above ground elevation that manhole junction can sustain under surcharge conditions (ft or m) (default is 0).
+            area_ponded (float): Area subjected to surface ponding once water depth exceeds :attr:`Junction.depth_max` (ft2 or m2) (default is 0).
         """
         _Node.__init__(self, name, elevation)
         self.depth_max = float(depth_max)
@@ -78,7 +76,7 @@ class Outfall(_Node):
         Identifies each outfall node (i.e., final downstream boundary) of the drainage system and the corresponding
         water stage elevation. Only one link can be incident on an outfall node.
 
-    Formats:
+    Formats in .inp-file:
         ::
 
             Name Elev FREE               (Gated) (RouteTo)
@@ -87,27 +85,20 @@ class Outfall(_Node):
             Name Elev TIDAL      Tcurve  (Gated) (RouteTo)
             Name Elev TIMESERIES Tseries (Gated) (RouteTo)
 
-    Formats-PCSWMM:
-        ``Name  InvertElev  OutfallType  Stage/Table/TimeSeries  TideGate  RouteTo``
-
-    Format-SWMM-GUI:
-        ``Name  Elevation  Type  StageData  Gated  RouteTo``
-
     Attributes:
         name (str): name assigned to outfall node.
-        elevation (float): invert elevation (ft or m). ``Elev``
-        kind (str): one of ``FREE``, ``NORMAL``, ``FIXED``, ``TIDAL``, ``TIMESERIES``
+        elevation (float): invert elevation (ft or m).
+        kind (str): one of ``FREE``, ``NORMAL``, ``FIXED``, ``TIDAL``, ``TIMESERIES`` (or use :attr:`Outfall.TYPES`)
         data (float | str): one of the following
 
-            - Stage (float): elevation of fixed stage outfall (ft or m). for ``FIXED``-Type
-            - Tcurve (str): name of curve in [``CURVES``] section containing tidal height (i.e., outfall stage) v.
-            hour of day over a complete tidal cycle. for ``TIDAL``-Type
-            - Tseries (str): name of time series in [``TIMESERIES``] section that describes how outfall stage varies
-            with time.  for ``TIMESERIES``-Type
-        has_flap_gate (bool, Optional): ``YES`` (:obj:`True`) or ``NO`` (:obj:`False`) depending on whether a flap gate is present that prevents
-        reverse flow. The default is ``NO``. ``Gated``
-        route_to (str, Optional): name of a subcatchment that receives the outfall's discharge. The default is not to
-        route the outfall’s discharge.
+            - Stage (float): elevation of fixed stage outfall (ft or m). (for ``FIXED``-Type)
+            - Tcurve (str): name of curve in [``CURVES``] section (:class:`Curve`) containing tidal height (i.e., outfall stage) v. hour of day over a complete tidal cycle. (for ``TIDAL``-Type)
+            - Tseries (str): name of time series in [``TIMESERIES``] section (:class:`Timeseries`) that describes how outfall stage varies with time. (for ``TIMESERIES``-Type)
+
+        has_flap_gate (bool): ``YES`` (:obj:`True`) or ``NO`` (:obj:`False`) depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``.
+        route_to (str): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
+        
+        TYPES: Enum-like for the attribute :attr:`Outfall.kind` with following members -> {``FREE`` | ``NORMAL`` | ``FIXED`` | ``TIDAL`` | ``TIMESERIES``}
     """
     _section_label = OUTFALLS
 
@@ -119,6 +110,23 @@ class Outfall(_Node):
         TIMESERIES = 'TIMESERIES'
 
     def __init__(self, name, elevation, kind, *args, data=NaN, has_flap_gate=False, route_to=NaN): # Outfall node information.
+        """
+        Outfall node information.
+
+        Args:
+            name (str): name assigned to outfall node.
+            elevation (float): invert elevation (ft or m).
+            kind (str): one of ``FREE``, ``NORMAL``, ``FIXED``, ``TIDAL``, ``TIMESERIES`` (or use :attr:`Outfall.TYPES`)
+            *args: -Arguments below- (for automatic input file reader.)
+            data (float | str): one of the following
+
+                - Stage (float): elevation of fixed stage outfall (ft or m). (for ``FIXED``-Type)
+                - Tcurve (str): name of curve in [``CURVES``] section (:class:`Curve`) containing tidal height (i.e., outfall stage) v. hour of day over a complete tidal cycle. (for ``TIDAL``-Type)
+                - Tseries (str): name of time series in [``TIMESERIES``] section (:class:`Timeseries`) that describes how outfall stage varies with time. (for ``TIMESERIES``-Type)
+
+            has_flap_gate (bool): ``YES`` (:obj:`True`) or ``NO`` (:obj:`False`) depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``.
+            route_to (str): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
+        """
         _Node.__init__(self, name, elevation)
         self.kind = kind
         self.data = NaN
@@ -139,32 +147,28 @@ class Outfall(_Node):
 
     def _no_data_init(self, has_flap_gate=False, route_to=NaN):
         """
-        if no keyword arguments used
+        Init function if no keyword arguments were used and outfall has no data.
 
         Args:
-            has_flap_gate (bool): YES or NO depending on whether a flap gate is present that prevents reverse flow. The
-            default is NO.
-            route_to (str): optional name of a subcatchment that receives the outfall's discharge.
-                           The default is not to route the outfall’s discharge.
+            has_flap_gate (bool): ``YES`` (:obj:`True`) or ``NO`` (:obj:`False`) depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``.
+            route_to (str): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
         """
         self.has_flap_gate = to_bool(has_flap_gate)
         self.route_to = route_to
 
     def _data_init(self, Data=NaN, has_flap_gate=False, route_to=NaN):
         """
-        if not keyword arguments were used
+        Init function if no keyword arguments were used and outfall has data.
 
         Args:
-            Data (float | str): one of the following
-                Stage (float): elevation of fixed stage outfall (ft or m).
-                Tcurve (str): name of curve in [CURVES] section containing tidal height (i.e., outfall stage) v.
-                  hour of day over a complete tidal cycle.
-                Tseries (str): name of time series in [TIMESERIES] section that describes how outfall stage varies
-                with time.
-            has_flap_gate (bool): YES or NO depending on whether a flap gate is present that prevents reverse flow. The
-            default is NO.
-            route_to (str): optional name of a subcatchment that receives the outfall's discharge.
-                           The default is not to route the outfall’s discharge.
+            data (float | str): one of the following
+
+                - Stage (float): elevation of fixed stage outfall (ft or m). (for ``FIXED``-Type)
+                - Tcurve (str): name of curve in [``CURVES``] section (:class:`Curve`) containing tidal height (i.e., outfall stage) v. hour of day over a complete tidal cycle. (for ``TIDAL``-Type)
+                - Tseries (str): name of time series in [``TIMESERIES``] section (:class:`Timeseries`) that describes how outfall stage varies with time. (for ``TIMESERIES``-Type)
+
+            has_flap_gate (bool): ``YES`` (:obj:`True`) or ``NO`` (:obj:`False`) depending on whether a flap gate is present that prevents reverse flow. The default is ``NO``.
+            route_to (str): name of a subcatchment that receives the outfall's discharge. The default is not to route the outfall’s discharge.
         """
         self.data = Data
         self.has_flap_gate = to_bool(has_flap_gate)
@@ -182,7 +186,7 @@ class Storage(_Node):
         Identifies each storage node of the drainage system.
         Storage nodes can have any shape as specified by a surface area versus water depth relation.
 
-    Format:
+    Format in .inp-file:
         ::
 
             Name Elev Ymax Y0 TABULAR    Acurve   (Apond Fevap Psi Ksat IMD)
@@ -193,7 +197,7 @@ class Storage(_Node):
         A1, A2, and A0 are used in the following expression that relates surface area (ft2 or m2) to water depth
         (ft or m) for a storage unit with ``FUNCTIONAL`` geometry:
 
-        Area = A0 + A1 * Depth ^ A2
+        :math:`Area = A0 + A1 * Depth ^ {A2}`
 
         For ``TABULAR`` geometry, the surface area curve will be extrapolated outwards to meet the unit's maximum depth
         if need be.
@@ -207,20 +211,20 @@ class Storage(_Node):
 
             - ``CONICAL``
 
-                - L = major axis length of base |
-                - W = minor axis width of base |
+                - L = major axis length of base
+                - W = minor axis width of base
                 - Z = side slope (run/rise)
 
             - ``PARABOLOID``
 
-                - L = major axis length at full height |
-                - W = minor axis width at full height |
+                - L = major axis length at full height
+                - W = minor axis width at full height
                 - Z = full height
 
             - ``PYRAMIDAL``
 
-                - L = base length |
-                - W = base width |
+                - L = base length
+                - W = base width
                 - Z = side slope (run/rise)
 
         The parameters :attr:`suction_head`, :attr:`hydraulic_conductivity`, and :attr:`moisture_deficit_init`
@@ -232,38 +236,29 @@ class Storage(_Node):
         is zero then seepage occurs at a constant rate equal to :attr:`hydraulic_conductivity`.
         Otherwise seepage rate will vary with storage depth.
 
-    From C-Code:
-        ::
-
-            //  Format of input line is:
-            //     nodeID  elev  maxDepth  initDepth  FUNCTIONAL a1 a2 a0 surDepth fEvap (infil) //(5.1.013)
-            //     nodeID  elev  maxDepth  initDepth  TABULAR    curveID  surDepth fEvap (infil) //
-
     Attributes:
          name (str): Name assigned to storage node.
          elevation (float): Node's invert elevation (ft or m).
          depth_max (float): Maximum water depth possible (ft or m).
          depth_init (float): Water depth at the start of the simulation (ft or m).
-         kind (str): One of :attr:`Storage.TYPES` (``TABULAR`` | ``FUNCTIONAL``), or One of :attr:`Storage.SHAPES`
-         *args: -Arguments below-
+         kind (str): One of :attr:`Storage.TYPES` (``TABULAR`` | ``FUNCTIONAL``), or :attr:`Storage.SHAPES`
          data (str | list):
 
-            - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth
-            (ft or m) for ``TABULAR`` geometry.
+            - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth (ft or m) for ``TABULAR`` geometry.
             - :obj:`list`: ``FUNCTIONAL`` relation between surface area and depth with
 
                 - A1 (:obj:`float`): coefficient
                 - A2 (:obj:`float`): exponent
                 - A0 (:obj:`float`): constant
 
-         depth_surcharge: maximum additional pressure head above full depth that a closed storage unit
-            can sustain under surcharge conditions (ft or m) (default is 0).
-         frac_evaporation (float): fraction of potential evaporation from the storage unit’s water surface realized
-            (default is 0).
+         depth_surcharge (float): maximum additional pressure head above full depth that a closed storage unit can sustain under surcharge conditions (ft or m) (default is 0).
+         frac_evaporation (float): fraction of potential evaporation from the storage unit’s water surface realized (default is 0).
          suction_head (float): Soil suction head (inches or mm).
          hydraulic_conductivity (float): Soil saturated hydraulic conductivity (in/hr or mm/hr).
          moisture_deficit_init (float): Soil initial moisture deficit (porosity minus moisture content) (fraction).
-         TYPES: ``Storage.TYPES.TABULAR``, ``Storage.TYPES.FUNCTIONAL``
+
+         TYPES: Enum-like for the attribute :attr:`Storage.kind` with following members -> {``TABULAR`` | ``FUNCTIONAL``}
+         SHAPES: Enum-like for the attribute :attr:`Storage.kind` with following members -> {``CYLINDRICAL`` | ``CONICAL`` | ``PARABOLOID`` | ``PYRAMIDAL``}
     """
     _section_label = STORAGE
 
@@ -290,23 +285,19 @@ class Storage(_Node):
              elevation (float): Node's invert elevation (ft or m).
              depth_max (float): Maximum water depth possible (ft or m).
              depth_init (float): Water depth at the start of the simulation (ft or m).
-             kind (str): One of :attr:`Storage.TYPES` (``TABULAR`` | ``FUNCTIONAL``) or one of :attr:`Storage.SHAPES`
-             ( ``CYLINDRICAL`` | ``CONICAL`` | ``PARABOLOID`` | ``PYRAMIDAL``)
-             *args: -Arguments below-
+             kind (str): One of :attr:`Storage.TYPES` (``TABULAR`` | ``FUNCTIONAL``) or :attr:`Storage.SHAPES` ( ``CYLINDRICAL`` | ``CONICAL`` | ``PARABOLOID`` | ``PYRAMIDAL``)
+             *args: -Arguments below- (for automatic input file reader.)
              data (str | list):
 
-                - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of
-                depth (ft or m) for ``TABULAR`` geometry.
+                - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth (ft or m) for ``TABULAR`` geometry.
                 - :obj:`list`: ``FUNCTIONAL`` relation between surface area and depth with
 
                     - A1 (:obj:`float`): coefficient
                     - A2 (:obj:`float`): exponent
                     - A0 (:obj:`float`): constant
 
-             depth_surcharge: maximum additional pressure head above full depth that a closed storage unit
-                can sustain under surcharge conditions (ft or m) (default is 0).
-             frac_evaporation (float): fraction of potential evaporation from the storage unit’s water surface realized
-                (default is 0).
+             depth_surcharge (float): maximum additional pressure head above full depth that a closed storage unit can sustain under surcharge conditions (ft or m) (default is 0).
+             frac_evaporation (float): fraction of potential evaporation from the storage unit’s water surface realized (default is 0).
              suction_head (float): Soil suction head (inches or mm).
              hydraulic_conductivity (float): Soil saturated hydraulic conductivity (in/hr or mm/hr).
              moisture_deficit_init (float): Soil initial moisture deficit (porosity minus moisture content) (fraction).
@@ -411,5 +402,6 @@ class Storage(_Node):
 
     @property
     def curve_name(self):
+        """Name of the curve if storage-kind is ``TABULAR``"""
         if self.kind == Storage.TYPES.TABULAR:
             return self.data

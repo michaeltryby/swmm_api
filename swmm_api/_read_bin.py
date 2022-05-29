@@ -7,6 +7,16 @@ _RECORDSIZE = 4
 
 
 class BinaryReader(abc.ABC):
+    """
+    Parent class for reading the binary output (.out)- and hotstart-files.
+
+    Attributes:
+        fp (file-like): Stream of the open file.
+        filename (str): Path to the .out-file.
+
+    Args:
+        filename (str): Path to the .out-file.
+    """
     def __init__(self, filename):
         self.fp = None
         if all([hasattr(filename, i) for i in ['tell', 'seek', 'read', 'close']]):

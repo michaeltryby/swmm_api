@@ -77,6 +77,11 @@ class SwmmOutExtract(BinaryReader):
         start_date (datetime.datetime): Start date of the data.
         swmm_version (str): SWMM Version
         variables (dict[str, list]): variables per object-type inclusive the pollutants.
+        fp (file-like): Stream of the open file.
+        filename (str): Path to the .out-file.
+
+    Args:
+        filename (str): Path to the .out-file.
     """
 
     def __init__(self, filename):

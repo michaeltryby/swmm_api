@@ -233,7 +233,6 @@ class Storage(_Node):
          depth_max (float): Maximum water depth possible (ft or m).
          depth_init (float): Water depth at the start of the simulation (ft or m).
          kind (str): One of :attr:`Storage.TYPES` (``TABULAR`` | ``FUNCTIONAL``), or One of :attr:`Storage.SHAPES`
-         *args: -Arguments below-
          data (str | list):
 
             - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of depth
@@ -280,7 +279,7 @@ class Storage(_Node):
              depth_init (float): Water depth at the start of the simulation (ft or m).
              kind (str): One of :attr:`Storage.TYPES` (``TABULAR`` | ``FUNCTIONAL``) or one of :attr:`Storage.SHAPES`
              ( ``CYLINDRICAL`` | ``CONICAL`` | ``PARABOLOID`` | ``PYRAMIDAL``)
-             *args: -Arguments below-
+             *args: -Arguments below- (for automatic input file reader.)
              data (str | list):
 
                 - :obj:`str`: name of curve in [``CURVES``] section with surface area (ft2 or m2) as a function of
