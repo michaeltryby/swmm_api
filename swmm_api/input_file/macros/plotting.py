@@ -26,7 +26,8 @@ def plot_map(inp, sc_connector=True, sc_center=True,
              color_link_default='y',
              node_size_default=30,
              node_size_max=60,
-             node_cmap=None):  # TODO
+             node_cmap=None,
+             cmap_label=None, value_node_min=0.001, value_node_max=None, make_cmap_bar=True):  # TODO
     """
     Get the map-plot of the system.
 
@@ -114,24 +115,29 @@ def plot_map(inp, sc_connector=True, sc_center=True,
 
                     values = custom_node_size.values()
                     diff_values = max(values)-min(values)
-
+                    if value_node_min is None:
+                        value_node_min = min(values)
                     def new_size(value):
-                        return (value - min(values)) / diff_values * (node_size_max-node_size_default) + node_size_default
+                        if (diff_values == 0)  or (node_size_max == node_size_default):
+                            return node_size_default
+                        return (value - value_node_min) / diff_values * (node_size_max-node_size_default) + node_size_default
 
+                if value_node_max is None:
+                    value_node_max = max(custom_node_size.values())
                 ax.scatter(x=coords[is_in_sec].x, y=coords[is_in_sec].y,
                            marker=node_style[section]['marker'],
                            c=color,
                            edgecolors='k', zorder=9999,
                            s=[new_size(i) for i in point_sizes],
                            cmap=node_cmap,
-                           vmin=0.001,
-                           vmax=max(custom_node_size.values()),
+                           vmin=value_node_min,
+                           vmax=value_node_max,
                            linewidths=0.5)
 
     # ---------------------
-    if node_cmap:
-        cb = fig.colorbar(ax.collections[0], ax=ax, location='bottom', label='Ereignisse', pad=0, shrink=0.3,
-                          ticks=range(0, 13, 2)
+    if make_cmap_bar and node_cmap:
+        cb = fig.colorbar(ax.collections[0], ax=ax, location='bottom', label=cmap_label, pad=0, shrink=0.3,
+                          # ticks=range(0, 13, 2)
                           )
     fig.tight_layout()
     return fig, ax
