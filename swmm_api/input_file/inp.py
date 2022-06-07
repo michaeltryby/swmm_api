@@ -4,7 +4,7 @@ import warnings
 
 from .helpers import (section_to_string, CustomDict, convert_section, InpSection,
                       InpSectionGeneric, SECTION_ORDER_DEFAULT, check_order, SECTIONS_ORDER_MP, head_to_str,
-                      iter_section_lines, SwmmInputWarning, BaseSectionObject)
+                      iter_section_lines, SwmmInputWarning, BaseSectionObject, detect_encoding, )
 from .section_types import SECTION_TYPES
 from .section_labels import *
 from .sections import *
@@ -50,7 +50,7 @@ class SwmmInput(CustomDict):
                     self[sec].update(d[sec])
 
     @classmethod
-    def read_file(cls, filename, custom_converter=None, force_ignore_case=False, encoding='iso-8859-1'):
+    def read_file(cls, filename, custom_converter=None, force_ignore_case=False, encoding=None):
         """
         read ``.inp``-file and convert the sections in pythonic objects
 
@@ -67,9 +67,14 @@ class SwmmInput(CustomDict):
             SwmmInput: dict-like data of the sections in the ``.inp``-file
         """
         inp = cls(custom_section_handler=custom_converter)
+
+        if encoding is None:
+            encoding = detect_encoding(filename)
+
         if os.path.isfile(filename) or filename.endswith('.inp'):
             with open(filename, 'r', encoding=encoding) as inp_file:
                 txt = inp_file.read()
+
         else:
             txt = filename
 
