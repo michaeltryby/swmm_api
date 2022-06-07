@@ -1,10 +1,10 @@
 import shape_generator
 from .macros import find_link
+from .. import SEC
 from ..sections import CrossSection, Pump
 from ..inp import SwmmInput
-
-
-VIRTUAL_LENGTH = 100
+from shape_generator.swmm_predefined import (Egg, Circular, CircularFilled, RectangularOpen, RectangularClosed,
+                                             RectangularRound, RectangularTriangular, Triangular, Parabolic, Power)
 
 
 def get_cross_section_maker(inp, link_label):
@@ -20,22 +20,67 @@ def get_cross_section_maker(inp, link_label):
     Returns:
         shape_generator.CrossSection: cross-section object of the selected link
     """
-    c = find_link(inp, link_label)
-    if c is None:
-        return  # not found
-    if isinstance(c, Pump):
+    if SEC.XSECTIONS not in inp:
         return
-    xs = inp.XSECTIONS[link_label]
 
+    if link_label not in inp.XSECTIONS:
+        return
+
+    return to_cross_section_maker(inp.XSECTIONS[link_label], inp)
+
+
+def to_cross_section_maker(xs: CrossSection, inp: SwmmInput=None):
     if xs.shape == CrossSection.SHAPES.CUSTOM:
         curve = inp.CURVES[xs.curve_name]
-        return shape_generator.CrossSection.from_curve(curve, height=VIRTUAL_LENGTH)
+        return shape_generator.CrossSection.from_curve(curve, height=xs.height)
+
     elif xs.shape == CrossSection.SHAPES.IRREGULAR:
         return  # Todo: I don't know how
-    elif xs.shape in [CrossSection.SHAPES.RECT_OPEN, CrossSection.SHAPES.RECT_CLOSED]:
-        return  # Todo: Rect
+
+    elif xs.shape  == CrossSection.SHAPES.CIRCULAR:
+        return Circular(xs.height, label=xs.link)
+    elif xs.shape  == CrossSection.SHAPES.FILLED_CIRCULAR:
+        return CircularFilled(xs.height, xs.parameter_2, label=xs.link)
+    elif xs.shape  == CrossSection.SHAPES.EGG:
+        return Egg(xs.height, label=xs.link)
+    elif xs.shape  == CrossSection.SHAPES.RECT_OPEN:
+        return RectangularOpen(xs.height, xs.parameter_2, label=xs.link)
+    elif xs.shape == CrossSection.SHAPES.RECT_CLOSED:
+        return RectangularClosed(xs.height, xs.parameter_2, label=xs.link)
+    elif xs.shape == CrossSection.SHAPES.RECT_ROUND:
+        return RectangularRound(xs.height, xs.parameter_2, xs.parameter_3, label=xs.link)
+    elif xs.shape == CrossSection.SHAPES.RECT_TRIANGULAR:
+        return RectangularTriangular(xs.height, xs.parameter_2, xs.parameter_3, label=xs.link)
+
+    elif xs.shape == CrossSection.SHAPES.TRIANGULAR:
+        return Triangular(xs.height, xs.parameter_2, label=xs.link)
+
+    elif xs.shape in (CrossSection.SHAPES.CIRCULAR,
+                      CrossSection.SHAPES.EGG,
+                      CrossSection.SHAPES.HORSESHOE,
+                      CrossSection.SHAPES.GOTHIC,
+                      CrossSection.SHAPES.CATENARY,
+                      CrossSection.SHAPES.SEMIELLIPTICAL,
+                      CrossSection.SHAPES.BASKETHANDLE,
+                      CrossSection.SHAPES.SEMICIRCULAR):
+        # ++ only Height ++
+        return shape_generator.swmm_std_cross_sections(xs.shape, height=xs.height, label=xs.link)
+
+    elif xs.shape in (CrossSection.SHAPES.ARCH,
+        CrossSection.SHAPES.HORIZ_ELLIPSE,
+        CrossSection.SHAPES.VERT_ELLIPSE):
+        # ++ Height+Width ++
+        return shape_generator.swmm_std_cross_sections(xs.shape, height=xs.height, width=xs.parameter_2, label=xs.link)
+
+    elif xs.shape == CrossSection.SHAPES.PARABOLIC:
+        return Parabolic(xs.height, xs.parameter_2, label=xs.link)
+    elif xs.shape == CrossSection.SHAPES.POWER:
+        return Power(xs.height, xs.parameter_2, xs.parameter_3, label=xs.link)
+
     else:
-        return shape_generator.swmm_std_cross_sections(xs.shape, height=VIRTUAL_LENGTH)
+        # CrossSection.SHAPES.TRAPEZOIDAL
+        # CrossSection.SHAPES.MODBASKETHANDLE
+        return  # Todo: ??? Not Implemented
 
 
 def profil_area(inp, link_label):
@@ -50,23 +95,13 @@ def profil_area(inp, link_label):
         float: area of the cross-section in m²
     """
     cs = get_cross_section_maker(inp, link_label)
-    if cs is None:
-        return
-    xs = inp.XSECTIONS[link_label]
-
-    if xs.shape == CrossSection.SHAPES.CUSTOM:
-        return cs.area_v / VIRTUAL_LENGTH ** 2 * xs.height
-    elif xs.shape == CrossSection.SHAPES.IRREGULAR:
-        return  # Todo: I don't know how
-    elif xs.shape in [CrossSection.SHAPES.RECT_OPEN, CrossSection.SHAPES.RECT_CLOSED]:
-        return xs.height * xs.parameter_2
-    else:
-        return cs.area_v / VIRTUAL_LENGTH ** 2 * xs.height
+    if cs is not None:
+        return cs.area_v
 
 
-def velocity(inp, link_label, flow):
-    # TODO
-    cs = get_cross_section_maker(inp, link_label)
-    if cs is None:
-        return
-    xs = inp.XSECTIONS[link_label]
+# def velocity(inp, link_label, flow):
+#     # TODO
+#     cs = get_cross_section_maker(inp, link_label)
+#     if cs is None:
+#         return
+#     xs = inp.XSECTIONS[link_label]
