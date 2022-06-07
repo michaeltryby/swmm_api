@@ -24,6 +24,8 @@ class SwmmInput(CustomDict):
         super().__init__(*args, **kwargs)
         self._converter = SECTION_TYPES.copy()
 
+        self._default_encoding = None
+
         if custom_section_handler is not None:
             self._converter.update(custom_section_handler)
 
@@ -70,6 +72,8 @@ class SwmmInput(CustomDict):
 
         if encoding is None:
             encoding = detect_encoding(filename)
+
+        inp._default_encoding = encoding
 
         if os.path.isfile(filename) or filename.endswith('.inp'):
             with open(filename, 'r', encoding=encoding) as inp_file:
@@ -195,7 +199,7 @@ class SwmmInput(CustomDict):
             f += section_to_string(self._data[head], fast=fast, sort_objects_alphabetical=sort_objects_alphabetical)
         return f
 
-    def write_file(self, filename, fast=True, encoding='iso-8859-1', custom_sections_order=None,
+    def write_file(self, filename, fast=True, encoding=None, custom_sections_order=None,
                    sort_objects_alphabetical=False, per_line=False):
         """
         Write a new ``.inp``-file.
@@ -211,6 +215,13 @@ class SwmmInput(CustomDict):
             per_line (bool): weather to write the data line per line (=True) or section per section (=False) into the
                 file. line per line has an advantage for big files (> 1 GB) and uses less memory (RAM).
         """
+
+        if encoding is None:
+            encoding = self._default_encoding
+
+        if encoding is None:
+            encoding = 'utf-8'
+
         with open(filename, 'w', encoding=encoding) as f:
             for head in self._get_section_headers(custom_sections_order):
                 if not self._data[head]:  # if section is empty
