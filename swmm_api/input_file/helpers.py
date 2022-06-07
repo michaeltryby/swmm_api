@@ -1094,7 +1094,7 @@ def detect_encoding(filename):
     import subprocess
     import os
     if "linux" in sys.platform:
-        shell_output = subprocess.check_output(['file', '-i', filename])
+        shell_output = subprocess.check_output(['file', '-i', filename]).decode().strip()
     else:
         try:
             shell_output = subprocess.check_output(f'bash -ic "file -i {os.path.basename(filename)}"',

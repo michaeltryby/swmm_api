@@ -1,4 +1,5 @@
-from swmm_api.input_file.macros.plotting import plot_map, plot_longitudinal
+from swmm_api.input_file.macros.plotting_longitudinal import plot_longitudinal
+from swmm_api.input_file.macros import plot_map
 from swmm_api import read_inp_file
 
 inp = read_inp_file('epaswmm5_apps_manual/Example6-Final _MP.inp')

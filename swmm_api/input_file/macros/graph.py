@@ -3,6 +3,7 @@ from networkx import DiGraph, all_simple_paths, subgraph, node_connected_compone
 from ..inp import SwmmInput
 from .collection import nodes_dict, links_dict
 from .filter import create_sub_inp
+from ..section_labels import SUBCATCHMENTS
 
 
 def inp_to_graph(inp):
@@ -257,3 +258,32 @@ def conduit_iter_over_inp(inp, start, end):
     #             break
     #     if not found or (node is not None and (node == end)):
     #         break
+
+def inp_to_graph2(inp):
+    """
+    Create a network of the model with the networkx package.
+
+    Args:
+        inp (SwmmInput): inp-file data
+
+    Returns:
+        networkx.DiGraph: networkx graph of the model
+    """
+    # g = nx.Graph()
+    g = DiGraph()
+    for node_label, node in nodes_dict(inp).items():
+        g.add_node(node_label, obj=node)
+
+    if SUBCATCHMENTS in inp:
+        for sc_label, sc in inp[SUBCATCHMENTS].items():
+            g.add_node(sc.name, obj=sc)
+        for sc in inp.SUBCATCHMENTS.values():
+            g.add_edge(sc.name, sc.outlet, label=f'Outlet({sc.name})')
+
+    for link in links_dict(inp).values():
+        # if link.FromNode not in g:
+        #     g.add_node(link.FromNode)
+        # if link.ToNode not in g:
+        #     g.add_node(link.ToNode)
+        g.add_edge(link.from_node, link.to_node, label=link.name, obj=link)
+    return g
