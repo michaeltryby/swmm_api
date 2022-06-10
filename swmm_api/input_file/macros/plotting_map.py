@@ -1,15 +1,13 @@
-import pandas as pd
+import copy
+
 from matplotlib import pyplot as plt, patches, cm
+from matplotlib.colors import Normalize
 
 from swmm_api import SwmmInput
 from swmm_api.input_file.macros import complete_vertices
 from swmm_api.input_file.section_labels import (MAP, VERTICES, POLYGONS, COORDINATES, SUBCATCHMENTS, JUNCTIONS, STORAGE,
                                                 OUTFALLS, )
 from swmm_api.input_file.sections import Polygon, SubCatchment
-
-
-from matplotlib.colors import Normalize
-import copy
 
 
 def get_matplotlib_colormap(cmap, set_under='lightgray', set_bad='k'):
@@ -90,6 +88,8 @@ def add_link_map(ax: plt.Axes, inp: SwmmInput,
             new_width = get_auto_size_function(value_min, value_max, line_width_default, line_width_max)
         else:
             new_width = lambda _: line_width_default
+            if values_dict is None:
+                values_dict = {}
 
         if cmap:
             cmap_ = get_matplotlib_colormap(cmap, set_under='lightgray', set_bad='k')
@@ -98,7 +98,7 @@ def add_link_map(ax: plt.Axes, inp: SwmmInput,
 
         for link, vertices in inp[VERTICES].items():
             x, y = zip(*vertices.vertices)
-            value = values_dict[link]
+            value = values_dict.get(link, 0)
 
             ax.plot(x, y,
                     color=color_default if not cmap else cmapper(value),

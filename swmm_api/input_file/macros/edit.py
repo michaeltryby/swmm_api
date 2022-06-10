@@ -1,4 +1,3 @@
-from networkx import DiGraph
 from numpy import interp, mean, ceil
 
 from .collection import nodes_dict, links_dict, subcatchments_per_node_dict
@@ -10,14 +9,14 @@ from ..section_lists import NODE_SECTIONS, LINK_SECTIONS, SUBCATCHMENT_SECTIONS,
 from ..sections import Tag, DryWeatherFlow, Junction, Coordinate, Conduit, Loss, Vertices, EvaporationSection
 
 
-def delete_node(inp: SwmmInput, node_label, graph: DiGraph = None, alt_node=None):
+def delete_node(inp, node_label, graph=None, alt_node=None):
     """
-    delete node in inp data
+    Delete node in inp data.
 
     Args:
         inp (SwmmInput): inp data
         node_label (str): label of node to delete
-        graph (DiGraph): networkx graph of model
+        graph (networkx.DiGraph): networkx graph of model
         alt_node (str): node label | optional: move flows to this node
 
     .. Important::
@@ -267,7 +266,7 @@ def combine_vertices(inp: SwmmInput, label1, label2):
         inp[VERTICES].add_obj(vertices_class(label1, vertices=new_vertices))
 
 
-def combine_conduits(inp, c1, c2, graph: DiGraph = None):
+def combine_conduits(inp, c1, c2, graph=None):
     """
     combine the two conduits to one keep attributes of the first (c1)
 
@@ -331,7 +330,23 @@ def combine_conduits(inp, c1, c2, graph: DiGraph = None):
     return c_new
 
 
-def combine_conduits_keep_slope(inp, c1, c2, graph: DiGraph = None):
+def combine_conduits_keep_slope(inp, c1, c2, graph=None):
+    """
+    Combine the two conduits to one keep attributes of the first (c1)
+    and keep the slope of c1 by adding a downstream offset.
+
+    Args:
+        inp (SwmmInput): inp data
+        c1 (str | Conduit): conduit 1 to combine
+        c2 (str | Conduit): conduit 2 to combine
+        graph (networkx.DiGraph): optional, runs faster with graph (inp representation)
+
+    Returns:
+        Conduit: new combined conduit
+
+    .. Important::
+        works inplace
+    """
     nodes = nodes_dict(inp)
     new_out_offset = (- calc_slope(inp, c1) * c2.length
                       + c1.offset_downstream
@@ -342,15 +357,14 @@ def combine_conduits_keep_slope(inp, c1, c2, graph: DiGraph = None):
     return c1
 
 
-def dissolve_conduit(inp, c: Conduit, graph: DiGraph = None):
+def dissolve_conduit(inp, c, graph=None):
     """
-    combine the two conduits to one
+    Dissolve a conduit.
 
     Args:
         inp (SwmmInput): inp data
-        c1 (str | Conduit): conduit 1 to combine
-        c2 (str | Conduit): conduit 2 to combine
-        keep_first (bool): keep first (of conduit 1) cross-section; else use second (of conduit 2)
+        c (str | Conduit): conduit 1 to combine
+        graph (networkx.DiGraph): optional, runs faster with graph (inp representation)
 
     Returns:
         SwmmInput: inp data
